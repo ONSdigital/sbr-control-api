@@ -3,11 +3,11 @@
 # ~~~~
 
 # Searching Feature
-GET     /link                       controllers.SearchController.retrieveLinks(id: Option[String] ?= None)
-GET     /link                       controllers.SearchController.retrieveLinks(date: Option[String] ?= None, id: Option[String] ?= None)
+GET     /link                       controllers.v1.SearchController.retrieveLinksById(id: Option[String] ?= None)
+GET     /link                       controllers.v1.SearchController.retrieveLinks(date: Option[String] ?= None, id: Option[String] ?= None)
 
-GET     /enterprise                 controllers.SearchController.retrieveEnterprise(id: Option[String] ?= None)
-GET     /enterprise                 controllers.SearchController.retrieveEnterprise(date: Option[String] ?= None, id: Option[String] ?= None)
+GET     /enterprise                 controllers.v1.SearchController.retrieveEnterpriseById(id: Option[String] ?= None)
+GET     /enterprise                 controllers.v1.SearchController.retrieveEnterprise(date: Option[String] ?= None, id: Option[String] ?= None)
 
 GET     /                           controllers.HomeController.status
 OPTIONS /*all                       controllers.HomeController.preflight(all: String)

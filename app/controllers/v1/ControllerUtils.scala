@@ -9,7 +9,6 @@ import scala.concurrent.Future
 import uk.gov.ons.sbr.data.controller.UnitController
 import uk.gov.ons.sbr.data.controller.EnterpriseController
 
-
 /**
  * Created by haqa on 10/07/2017.
  */
@@ -28,7 +27,5 @@ trait ControllerUtils extends Controller with StrictLogging {
         InternalServerError(s"{err = '${err}'}")
       }
   }
-  
-
 
 }

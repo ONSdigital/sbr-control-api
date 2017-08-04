@@ -1,6 +1,6 @@
 package controllers.v1
 
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{ Action, AnyContent }
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
@@ -8,13 +8,11 @@ import io.swagger.annotations._
 
 import scala.util.Try
 
-
 /**
-  * Created by haqa on 04/08/2017.
-  */
+ * Created by haqa on 04/08/2017.
+ */
 @Api("Search")
 class SearchController extends ControllerUtils {
-
 
   //public api
   @ApiOperation(
@@ -25,19 +23,18 @@ class SearchController extends ControllerUtils {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-//    new ApiResponse(code = 200, response = classOf[Enterprise], responseContainer = "JSONObject", message = "Success -> Record(s) found for id."),
-//    new ApiResponse(code = 400, responseContainer = "JSONObject", message = "Client Side Error -> Required parameter was not found.")
+    //    new ApiResponse(code = 200, response = classOf[Enterprise], responseContainer = "JSONObject", message = "Success -> Record(s) found for id."),
+    //    new ApiResponse(code = 400, responseContainer = "JSONObject", message = "Client Side Error -> Required parameter was not found.")
     new ApiResponse(code = 200, responseContainer = "JsValue", message = "Success -> Retrieved Links for given id.")
   ))
-  def retrieveLinks (
-      @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
-    ): Action[AnyContent] = Action { implicit request =>
+  def retrieveLinksById(
+    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
+  ): Action[AnyContent] = Action { implicit request =>
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
     val tree = requestLinks.findUnits(key)
     tree
     NoContent
   }
-
 
   //public api
   @ApiOperation(
@@ -50,18 +47,17 @@ class SearchController extends ControllerUtils {
   @ApiResponses(Array(
     new ApiResponse(code = 200, responseContainer = "JsValue", message = "Success -> Retrieved Links for given id and date.")
   ))
-  def retrieveLinks (
-      @ApiParam(value = "Identifier creation date", example = "2017/11", required = true) date: Option[String],
-      @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
-    ) : Action[AnyContent] = Action { implicit request =>
+  def retrieveLinks(
+    @ApiParam(value = "Identifier creation date", example = "2017/11", required = true) date: Option[String],
+    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
+  ): Action[AnyContent] = Action { implicit request =>
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
     val rawDate: String = Try(getQueryString(request, "date")).getOrElse("")
-    val yearAndMonth : YearMonth = YearMonth.parse(rawDate, DateTimeFormatter.ofPattern("yyyy-MM"))
+    val yearAndMonth: YearMonth = YearMonth.parse(rawDate, DateTimeFormatter.ofPattern("yyyy-MM"))
     val tree = requestLinks.findUnits(yearAndMonth, key)
     tree
     NoContent
   }
-
 
   //public api
   @ApiOperation(
@@ -74,13 +70,12 @@ class SearchController extends ControllerUtils {
   @ApiResponses(Array(
     new ApiResponse(code = 200, responseContainer = "JsValue", message = "Success -> Record found for given id.")
   ))
-  def retrieveEnterprise (id: Option[String]) : Action[AnyContent] = Action { implicit request =>
+  def retrieveEnterpriseById(id: Option[String]): Action[AnyContent] = Action { implicit request =>
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
     val enterprise = requestEnterprise.getEnterprise(key)
     enterprise
     NoContent
   }
-
 
   //public api
   @ApiOperation(
@@ -91,19 +86,18 @@ class SearchController extends ControllerUtils {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-        new ApiResponse(code = 200, responseContainer = "JsValue", message = "Success -> Record found for given id and date.")
+    new ApiResponse(code = 200, responseContainer = "JsValue", message = "Success -> Record found for given id and date.")
   ))
-  def retrieveEnterprise (
-      @ApiParam(value = "Identifier creation date", example = "2017/11", required = true) date: Option[String],
-      @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
-    ) : Action[AnyContent] = Action { implicit request =>
+  def retrieveEnterprise(
+    @ApiParam(value = "Identifier creation date", example = "2017/11", required = true) date: Option[String],
+    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
+  ): Action[AnyContent] = Action { implicit request =>
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
     val rawDate: String = Try(getQueryString(request, "date")).getOrElse("")
-    val yearAndMonth : YearMonth = YearMonth.parse(rawDate, DateTimeFormatter.ofPattern("yyyy-MM"))
+    val yearAndMonth: YearMonth = YearMonth.parse(rawDate, DateTimeFormatter.ofPattern("yyyy-MM"))
     val enterprise = requestEnterprise.getEnterprise(yearAndMonth, key)
     enterprise
     NoContent
   }
-
 
 }
