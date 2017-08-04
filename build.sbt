@@ -4,20 +4,31 @@ import sbtassembly.AssemblyPlugin.autoImport._
 
 licenses := Seq("MIT-License" -> url("https://opensource.org/licenses/MIT"))
 
+// key-bindings
+lazy val ITest = config("it") extend(Test)
+
 lazy val Versions = new {
   val scala = "2.11.11"
-  val version = "0.1-SNAPSHOT"
+  val appVersion = "0.1-SNAPSHOT"
   val scapegoatVersion = "1.1.0"
   val util = "0.27.8"
 }
 
-
 lazy val Constant = new {
-  val appName = "ons-sbr-api"
-  val detail = Versions.version
+  val appName = "ons-sbr-control-api"
+  val detail = Versions.appVersion
   val organisation = "ons"
   val team = "sbr"
 }
+
+lazy val testSettings = Seq(
+  sourceDirectory in ITest := baseDirectory.value / "/test/it",
+  javaSource in ITest := baseDirectory.value / "/test/it",
+  resourceDirectory in ITest := baseDirectory.value / "/test/resources",
+  scalaSource in ITest := baseDirectory.value / "test/it",
+
+  parallelExecution in Test := false
+)
 
 lazy val commonSettings = Seq (
   scalaVersion := Versions.scala,
@@ -51,17 +62,18 @@ lazy val commonSettings = Seq (
   coverageExcludedPackages := ".*Routes.*;.*ReverseRoutes.*;.*javascript.*"
 )
 
-
-
 lazy val api = (project in file("."))
   .enablePlugins(BuildInfoPlugin, GitVersioning, GitBranchPrompt, PlayScala)
+  .configs(ITest)
+  .settings( inConfig(ITest)(Defaults.testSettings) : _*)
   .settings(commonSettings: _*)
+  .settings(testSettings:_*)
   .settings(
     name := Constant.appName,
-    moduleName := "ons-sbr-api",
-    version := Versions.version,
+    moduleName := "control-api",
+    version := Versions.appVersion,
     buildInfoPackage := "controllers",
-    // LastUpdateController - gives us last compile time and tagging info
+    // gives us last compile time and tagging info
     buildInfoKeys := Seq[BuildInfoKey](
       organization,
       name,
@@ -69,6 +81,7 @@ lazy val api = (project in file("."))
       scalaVersion,
       sbtVersion,
       BuildInfoKey.action("gitVersion") {
+        // todo git-tag@date
       git.formattedShaVersion.?.value.getOrElse(Some("Unknown")).getOrElse("Unknown") +"@"+ git.formattedDateVersion.?.value.getOrElse("")
     }),
     // di router -> swagger
@@ -89,7 +102,7 @@ lazy val api = (project in file("."))
       excludeAll ExclusionRule("commons-logging", "commons-logging")
     ),
     // assembly
-    assemblyJarName in assembly := s"sbr-api-${Versions.version}.jar",
+    assemblyJarName in assembly := s"sbr-api-${Versions.appVersion}.jar",
     assemblyMergeStrategy in assembly := {
       case PathList("javax", "servlet", xs @ _*)                         => MergeStrategy.last
       case PathList("org", "apache", xs @ _*)                            => MergeStrategy.last
@@ -102,7 +115,5 @@ lazy val api = (project in file("."))
         oldStrategy(x)
     },
     mainClass in assembly := Some("play.core.server.ProdServerStart"),
-    fullClasspath in assembly += Attributed.blank(PlayKeys.playPackageAssets.value),
-    // test
-    parallelExecution in Test := false
+    fullClasspath in assembly += Attributed.blank(PlayKeys.playPackageAssets.value)
   )

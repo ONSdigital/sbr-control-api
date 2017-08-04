@@ -10,8 +10,8 @@ import io.swagger.models.properties.Property
  */
 class SwaggerConfigurationFilter extends SwaggerSpecFilter {
 
-  private val parametersNotAllowed: List[String] = List("none", "none")
-  private val propertiesNotAllowed: List[String] = List("none")
+  private val parametersNotAllowed: List[String] = List()
+  private val propertiesNotAllowed: List[String] = List()
   private val opertaionsNotAllowed: List[String] = List()
 
   def isParamAllowed(
@@ -41,6 +41,5 @@ class SwaggerConfigurationFilter extends SwaggerSpecFilter {
   ): Boolean = true
 
   def filter(terms: List[String], f: => String): Boolean =
-    //    !terms.map(x => if (f == x) false else true).contains(false)
-    !terms.map(x => !(f == x)).contains(false)
+    !terms.contains(f)
 }
