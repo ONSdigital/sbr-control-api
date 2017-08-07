@@ -1,12 +1,16 @@
 package controllers.v1
 
-import play.api.mvc.{ Action, AnyContent }
-import java.time.YearMonth
-import java.time.format.DateTimeFormatter
+import play.api.mvc.{Action, AnyContent}
+import java.time.{DateTimeException, YearMonth}
+import java.util.Optional
 
 import io.swagger.annotations._
+import uk.gov.ons.sbr.data.domain.Enterprise
 
 import scala.util.Try
+import utils.Utilities.errAsJson
+
+import scala.concurrent.Future
 
 /**
  * Created by haqa on 04/08/2017.
@@ -50,13 +54,18 @@ class SearchController extends ControllerUtils {
   def retrieveLinks(
     @ApiParam(value = "Identifier creation date", example = "2017/11", required = true) date: Option[String],
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
-  ): Action[AnyContent] = Action { implicit request =>
-    val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    val rawDate: String = Try(getQueryString(request, "date")).getOrElse("")
-    val yearAndMonth: YearMonth = YearMonth.parse(rawDate, DateTimeFormatter.ofPattern("yyyy-MM"))
-    val tree = requestLinks.findUnits(yearAndMonth, key)
-    tree
-    NoContent
+  ): Action[AnyContent] = Action.async { implicit request =>
+    val res = unpackParams(request) match {
+      case (x: String, Some(y: YearMonth)) =>
+        Future {
+          requestLinks.findUnits(y, x) }.map {
+          case x => Ok(x)
+          case _ => BadRequest("")
+        }
+      case (_, None) => futureResult(BadRequest(errAsJson(BAD_REQUEST,"bad_request",
+        s"cannot_parse_date with exception ${new DateTimeException("could not parse date to YearMonth")}")))
+    }
+    res
   }
 
   //public api
@@ -91,13 +100,18 @@ class SearchController extends ControllerUtils {
   def retrieveEnterprise(
     @ApiParam(value = "Identifier creation date", example = "2017/11", required = true) date: Option[String],
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
-  ): Action[AnyContent] = Action { implicit request =>
-    val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    val rawDate: String = Try(getQueryString(request, "date")).getOrElse("")
-    val yearAndMonth: YearMonth = YearMonth.parse(rawDate, DateTimeFormatter.ofPattern("yyyy-MM"))
-    val enterprise = requestEnterprise.getEnterprise(yearAndMonth, key)
-    enterprise
-    NoContent
+  ): Action[AnyContent] = Action.async { implicit request =>
+    val res = unpackParams(request) match {
+      case (x: String, Some(y: YearMonth)) =>
+        Future {
+          requestEnterprise.getEnterprise(y, x) }.map {
+            case x => Ok(x)
+            case _ => BadRequest(errAsJson(BAD_REQUEST,"",""))
+        }
+      case (_, None) => futureResult(BadRequest(errAsJson(BAD_REQUEST,"bad_request",
+        s"cannot_parse_date with exception ${new DateTimeException("could not parse date to YearMonth")}")))
+    }
+    res
   }
 
 }

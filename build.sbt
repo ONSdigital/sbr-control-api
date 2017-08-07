@@ -11,7 +11,7 @@ lazy val Versions = new {
   val scala = "2.11.11"
   val appVersion = "0.1-SNAPSHOT"
   val scapegoatVersion = "1.1.0"
-  val util = "0.27.8"
+//  val util = "0.27.8"
 }
 
 lazy val Constant = new {
@@ -26,8 +26,14 @@ lazy val testSettings = Seq(
   javaSource in ITest := baseDirectory.value / "/test/it",
   resourceDirectory in ITest := baseDirectory.value / "/test/resources",
   scalaSource in ITest := baseDirectory.value / "test/it",
-
+  // test setup
   parallelExecution in Test := false
+)
+
+lazy val Resolvers = Seq(
+  Resolver.typesafeRepo("releases"),
+//  Resolver.bintrayRepo("outworkers", "oss-releases"),
+  "Hadoop Releases" at "https://repository.cloudera.com/content/repositories/releases/"
 )
 
 lazy val commonSettings = Seq (
@@ -55,10 +61,7 @@ lazy val commonSettings = Seq (
     "-Ywarn-unused-import", //  Warn when imports are unused (don't want IntelliJ to do it automatically)
     "-Ywarn-numeric-widen" // Warn when numerics are widened
   ),
-  resolvers ++= Seq(
-    Resolver.typesafeRepo("releases"),
-    Resolver.bintrayRepo("outworkers", "oss-releases")
-  ),
+  resolvers ++= Resolvers,
   coverageExcludedPackages := ".*Routes.*;.*ReverseRoutes.*;.*javascript.*"
 )
 
@@ -91,25 +94,31 @@ lazy val api = (project in file("."))
     buildInfoOptions += BuildInfoOption.BuildTime,
     libraryDependencies ++= Seq (
       filters,
+      "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "2.0.0"           % Test,
       "org.webjars"                  %%    "webjars-play"        %    "2.5.0-3",
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.6.0",
-      "com.outworkers"               %%    "util-parsers-cats"   %    Versions.util,
-      "com.outworkers"               %%    "util-play"           %    Versions.util,
-      "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "2.0.0"           % Test,
+//      "com.outworkers"               %%    "util-parsers-cats"   %    Versions.util,
+//      "com.outworkers"               %%    "util-play"           %    Versions.util,
       "io.swagger"                   %%    "swagger-play2"       %    "1.5.3",
       "org.webjars"                  %     "swagger-ui"          %    "2.2.10-1",
-      "com.typesafe"                 %      "config"             %    "1.3.1"
+      "com.typesafe"                 %     "config"              %    "1.3.1",
+      // hbase
+      "org.apache.hadoop"            %     "hadoop-common"       %    "2.6.0",
+      "org.apache.hbase"             %     "hbase-common"        %    "1.3.1",
+      "org.apache.hbase"             %     "hbase-client"        %    "1.3.1"
       excludeAll ExclusionRule("commons-logging", "commons-logging")
     ),
     // assembly
     assemblyJarName in assembly := s"sbr-api-${Versions.appVersion}.jar",
     assemblyMergeStrategy in assembly := {
-      case PathList("javax", "servlet", xs @ _*)                         => MergeStrategy.last
+      case PathList("io", "netty", xs@_*)                                => MergeStrategy.last
+      case PathList("javax", "xml", xs@_*)                               => MergeStrategy.last
       case PathList("org", "apache", xs @ _*)                            => MergeStrategy.last
       case PathList("org", "slf4j", xs @ _*)                             => MergeStrategy.first
       case PathList("META-INF", "io.netty.versions.properties", xs @ _*) => MergeStrategy.last
-      case PathList("org", "slf4j", xs @ _*)                             => MergeStrategy.first
+      case "META-INF/native/libnetty-transport-native-epoll.so"          => MergeStrategy.last
       case "application.conf"                                            => MergeStrategy.first
+      case "logback.xml"                                                 => MergeStrategy.first
       case x =>
         val oldStrategy = (assemblyMergeStrategy in assembly).value
         oldStrategy(x)
