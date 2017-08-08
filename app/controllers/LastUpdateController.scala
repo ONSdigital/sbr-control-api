@@ -3,7 +3,6 @@ package controllers.v1
 import javax.inject.{ Inject, Singleton }
 
 import com.typesafe.config.Config
-import com.outworkers.util.play._
 import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
 import play.api.mvc.{ Action, AnyContent, Result }
 import play.api.libs.json.Json
@@ -32,9 +31,12 @@ class LastUpdateController @Inject() (implicit val config: Config) extends Contr
     )
   }
 
+  /**
+    * move future resp
+    */
   def generate: Future[Result] = {
-    val res = Ok(Json.obj("status" -> "OK", "bi-api-deployed-date" -> s"${BuildInfo.builtAtMillis}")).future
-    res
+    val res = Ok(Json.obj("status" -> "OK", "bi-api-deployed-date" -> s"${BuildInfo.builtAtMillis}"))
+    futureResult(res)
   }
 
 }

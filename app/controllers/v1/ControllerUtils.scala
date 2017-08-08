@@ -2,15 +2,19 @@ package controllers.v1
 
 import java.time.YearMonth
 import java.time.format.{DateTimeFormatter, DateTimeParseException}
+import java.util.{Optional}
 
 import play.api.mvc.{AnyContent, Controller, Request, Result}
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.util.{Failure, Success, Try}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.ons.sbr.data.controller.UnitController
 import uk.gov.ons.sbr.data.controller.EnterpriseController
 import utils.Utilities.errAsJson
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.collection.JavaConversions._
 
 /**
  * Created by haqa on 10/07/2017.
@@ -43,21 +47,48 @@ trait ControllerUtils extends Controller with StrictLogging {
     }
   }
 
+  protected def futureResult(r: Result) = Future.successful(r)
 
-  protected def futureResult (r: Result) = Future.successful(r)
+  protected def futureErr(ex: Exception) = Future.failed(ex)
 
-  protected def futureErr (ex: Exception) = Future.failed(ex)
+  protected def futureTryRes[T](f: Try[T]) = Future.fromTry(f)
 
-  protected def futureTryRes [T](f: Try[T]) = Future.fromTry(f)
-
-
-  protected def resultMatcher [T, Z] (f: Z => T, msg: Option[String]) : Future[Result] = {
+  @deprecated("Moved to resultMatcher with f param", "feature/data-retrieval [Tue 8 Aug 2017 - 11:35]")
+  protected def resultMatcher[Z](v: Optional[Z], msg: Option[String])(implicit ec: ExecutionContext): Future[Result] = {
     Future {
-      f }.map {
-      case x => Ok(x)
-      case _ => BadRequest(errAsJson(BAD_REQUEST,"bad_request", s"${msg.getOrElse("Could not find requested id")}"))
+      optionConverter(v)
+    }.map {
+      case Some(x) => Ok(x)
+      case None => NotFound(errAsJson(NOT_FOUND, "bad_request", s"${msg.getOrElse("Could not find requested id")}"))
     }
   }
+
+
+
+  /**
+    * @note - simplify - get rid of AnyRef
+    *
+    * @param v - value param to convert
+    * @param f - scala conversion function
+    * @tparam Z - java data type for value param
+    * @return Future[Result]
+    */
+  protected def resultMatcher[Z](v: Optional[Z], f:  Optional[Z] => AnyRef, msg: Option[String]): Future[Result] = {
+    Future {
+      f(v)
+    }.map {
+      case Some(x) => Ok(x)
+      // bad request
+      case None => NotFound(errAsJson(NOT_FOUND, "bad_request", s"${msg.getOrElse("Could not find requested id")}"))
+    }
+  }
+
+  protected def optionConverter[A](o: Optional[A]): Option[A] = if (o.isPresent) Some(o.get) else None
+
+  /**
+    * @tparam B  - could be enterprise or unit in next iteration and combine func
+    */
+  protected def toScalaList[B](l: Optional[java.util.List[B]]) : Option[List[B]] = if (l.isPresent) Some(l.get.toList) else None
 
 
 }

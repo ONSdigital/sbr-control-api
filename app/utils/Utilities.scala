@@ -32,6 +32,6 @@ object Utilities {
     res
   }
 
-  def unquote (s: String) = s.replace("\"", "")
+  def unquote(s: String) = s.replace("\"", "")
 
 }

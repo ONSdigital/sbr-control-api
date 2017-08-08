@@ -1,16 +1,18 @@
 package controllers.v1
 
-import play.api.mvc.{Action, AnyContent}
-import java.time.{DateTimeException, YearMonth}
+import play.api.mvc.{ Action, AnyContent }
+import java.time.{ DateTimeException, YearMonth }
 import java.util.Optional
 
 import io.swagger.annotations._
 import uk.gov.ons.sbr.data.domain.Enterprise
+import uk.gov.ons.sbr.data.domain.Unit
 
 import scala.util.Try
 import utils.Utilities.errAsJson
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by haqa on 04/08/2017.
@@ -57,12 +59,15 @@ class SearchController extends ControllerUtils {
   ): Action[AnyContent] = Action.async { implicit request =>
     val res = unpackParams(request) match {
       case (x: String, Some(y: YearMonth)) =>
-        Future {
-          requestLinks.findUnits(y, x) }.map {
-          case x => Ok(x)
-          case _ => BadRequest("")
-        }
-      case (_, None) => futureResult(BadRequest(errAsJson(BAD_REQUEST,"bad_request",
+//        Future {
+//          requestLinks.findUnits(y, x)
+//        }.map {
+//          case x => Ok(x)
+//          case _ => BadRequest("")
+//        }
+        val resp: Optional[java.util.List[Unit]] = requestLinks.findUnits(y, x)
+        resultMatcher[java.util.List[Unit]](resp, toScalaList[Unit], None)
+      case (_, None) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
         s"cannot_parse_date with exception ${new DateTimeException("could not parse date to YearMonth")}")))
     }
     res
@@ -103,12 +108,10 @@ class SearchController extends ControllerUtils {
   ): Action[AnyContent] = Action.async { implicit request =>
     val res = unpackParams(request) match {
       case (x: String, Some(y: YearMonth)) =>
-        Future {
-          requestEnterprise.getEnterprise(y, x) }.map {
-            case x => Ok(x)
-            case _ => BadRequest(errAsJson(BAD_REQUEST,"",""))
-        }
-      case (_, None) => futureResult(BadRequest(errAsJson(BAD_REQUEST,"bad_request",
+        // need a try and catch here
+        val resp: Optional[Enterprise] = requestEnterprise.getEnterprise(y, x);
+        resultMatcher[Enterprise](resp, optionConverter[Enterprise], None)
+      case (_, None) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
         s"cannot_parse_date with exception ${new DateTimeException("could not parse date to YearMonth")}")))
     }
     res
