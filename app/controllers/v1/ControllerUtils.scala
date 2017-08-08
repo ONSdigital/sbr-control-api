@@ -1,14 +1,15 @@
 package controllers.v1
 
 import java.time.YearMonth
-import java.time.format.{DateTimeFormatter, DateTimeParseException}
-import java.util.{Optional}
+import java.time.format.{ DateTimeFormatter, DateTimeParseException }
+import java.util.{ Optional }
+import uk.gov.ons.sbr.data.domain.{ Unit, Enterprise }
 
-import play.api.mvc.{AnyContent, Controller, Request, Result}
+import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import com.typesafe.scalalogging.StrictLogging
 
-import scala.util.{Failure, Success, Try}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{ Failure, Success, Try }
+import scala.concurrent.{ ExecutionContext, Future }
 import uk.gov.ons.sbr.data.controller.UnitController
 import uk.gov.ons.sbr.data.controller.EnterpriseController
 import utils.Utilities.errAsJson
@@ -38,7 +39,7 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected def unpackParams(request: Request[AnyContent]) = {
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
     val rawDate: String = Try(getQueryString(request, "date")).getOrElse("")
-    val yearAndMonth = Try(YearMonth.parse(rawDate, DateTimeFormatter.ofPattern("yyyy-MM")))
+    val yearAndMonth = Try(YearMonth.parse(rawDate, DateTimeFormatter.ofPattern("yyyyMM")))
     yearAndMonth match {
       case Success(s) => key -> Some(s)
       case Failure(ex: DateTimeParseException) =>
@@ -54,41 +55,39 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected def futureTryRes[T](f: Try[T]) = Future.fromTry(f)
 
   @deprecated("Moved to resultMatcher with f param", "feature/data-retrieval [Tue 8 Aug 2017 - 11:35]")
-  protected def resultMatcher[Z](v: Optional[Z], msg: Option[String])(implicit ec: ExecutionContext): Future[Result] = {
+  protected def resultMatcher[Z](v: Optional[Enterprise], msg: Option[String])(implicit ec: ExecutionContext): Future[Result] = {
     Future {
       optionConverter(v)
     }.map {
-      case Some(x) => Ok(x)
+      case Some(x) => Ok("")
       case None => NotFound(errAsJson(NOT_FOUND, "bad_request", s"${msg.getOrElse("Could not find requested id")}"))
     }
   }
 
-
-
   /**
-    * @note - simplify - get rid of AnyRef
-    *
-    * @param v - value param to convert
-    * @param f - scala conversion function
-    * @tparam Z - java data type for value param
-    * @return Future[Result]
-    */
-  protected def resultMatcher[Z](v: Optional[Z], f:  Optional[Z] => AnyRef, msg: Option[String]): Future[Result] = {
+   * @note - simplify - get rid of AnyRef
+   *
+   * @param v - value param to convert
+   * @param f - scala conversion function
+   * @tparam Z - java data type for value param
+   * @return Future[Result]
+   */
+  protected def resultMatcher[Z](v: Optional[Z], f: Optional[Z] => AnyRef, msg: Option[String]): Future[Result] = {
     Future {
       f(v)
     }.map {
-      case Some(x) => Ok(x)
+      case Some(x) => Ok(s"${x}")
       // bad request
       case None => NotFound(errAsJson(NOT_FOUND, "bad_request", s"${msg.getOrElse("Could not find requested id")}"))
     }
   }
 
+
   protected def optionConverter[A](o: Optional[A]): Option[A] = if (o.isPresent) Some(o.get) else None
 
   /**
-    * @tparam B  - could be enterprise or unit in next iteration and combine func
-    */
-  protected def toScalaList[B](l: Optional[java.util.List[B]]) : Option[List[B]] = if (l.isPresent) Some(l.get.toList) else None
-
+   * @tparam B  - could be enterprise or unit in next iteration and combine func
+   */
+  protected def toScalaList[B](l: Optional[java.util.List[B]]): Option[List[B]] = if (l.isPresent) Some(l.get.toList) else None
 
 }

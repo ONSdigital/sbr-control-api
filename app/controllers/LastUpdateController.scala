@@ -32,8 +32,8 @@ class LastUpdateController @Inject() (implicit val config: Config) extends Contr
   }
 
   /**
-    * move future resp
-    */
+   * move future resp
+   */
   def generate: Future[Result] = {
     val res = Ok(Json.obj("status" -> "OK", "bi-api-deployed-date" -> s"${BuildInfo.builtAtMillis}"))
     futureResult(res)
