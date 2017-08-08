@@ -5,8 +5,7 @@ import java.time.{ DateTimeException, YearMonth }
 import java.util.Optional
 
 import io.swagger.annotations._
-import uk.gov.ons.sbr.data.domain.Enterprise
-import uk.gov.ons.sbr.data.domain.Unit
+import uk.gov.ons.sbr.data.domain.{ Enterprise, Unit }
 
 import scala.util.Try
 import utils.Utilities.errAsJson
@@ -75,11 +74,13 @@ class SearchController extends ControllerUtils {
   @ApiResponses(Array(
     new ApiResponse(code = 200, responseContainer = "JsValue", message = "Success -> Record found for given id.")
   ))
-  def retrieveEnterpriseById(id: Option[String]): Action[AnyContent] = Action { implicit request =>
+  def retrieveEnterpriseById(id: Option[String]): Action[AnyContent] = Action.async { implicit request =>
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    val enterprise = requestEnterprise.getEnterprise(key)
+    println(s"Your key is: ${key}")
+    val resp = requestEnterprise.getEnterprise(key)
+    val enterprise = resultMatcher[Enterprise](resp, optionConverter, None)
     enterprise
-    NoContent
+    //    NoContent
   }
 
   //public api
