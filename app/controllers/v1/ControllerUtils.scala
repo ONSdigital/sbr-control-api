@@ -98,14 +98,4 @@ trait ControllerUtils extends Controller with StrictLogging {
       BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception ${ex}"))
   }
 
-    @deprecated("Moved back to individual SearchController method", "feature/data-retrieval [Wed 9 Aug 2017 - 16:29]")
-    protected def sendHBaseRequest[Z, X](f: Z => X, unpacked: RequestEvaluation): Option[X] = {
-      val resp = unpacked match {
-        case (u: IdRequest) => Some(f(u.id))
-        case (u: ReferencePeriod) => Some(f(u.period, u.id))
-        case (u: InvalidReferencePeriod) => None
-      }
-      resp
-    }
-
 }
