@@ -4,7 +4,7 @@ import java.time.YearMonth
 import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import uk.gov.ons.sbr.data.domain.{ AbstractPeriodEntity, Enterprise, StatisticalUnit }
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import com.typesafe.scalalogging.StrictLogging
 import models.Links
@@ -25,20 +25,19 @@ import scala.collection.JavaConversions._
  */
 trait ControllerUtils extends Controller with StrictLogging {
 
-  protected val connect = HBaseConnector.getInstance().connect()
+  //initialise
+  HBaseConnector.getInstance().connect()
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
 
-  protected def getQueryString(request: Request[AnyContent], elem: String): String = request.getQueryString(elem).getOrElse("")
+  protected def futureResult(r: Result) = Future.successful(r)
 
-  protected[this] def resultAsResponse(f: => Future[Result]): Future[Result] = Try(f) match {
-    case Success(g) => g
-    case Failure(err) =>
-      logger.error("Unable to produce response.", err)
-      Future.successful {
-        InternalServerError(s"{err = '${err}'}")
-      }
-  }
+  protected def futureErr(ex: Exception) = Future.failed(ex)
+
+  protected def futureTryRes[T](f: Try[T]) = Future.fromTry(f)
+
+  protected def getQueryString(request: Request[AnyContent], elem: String): String =
+    request.getQueryString(elem).getOrElse("")
 
   protected def unpackParams(request: Request[AnyContent]) = {
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
@@ -52,47 +51,37 @@ trait ControllerUtils extends Controller with StrictLogging {
     }
   }
 
-  protected def futureResult(r: Result) = Future.successful(r)
+  protected def optionConverter(o: Optional[Enterprise]): Option[Enterprise] =
+    if (o.isPresent) Some(o.get) else None
 
-  protected def futureErr(ex: Exception) = Future.failed(ex)
-
-  protected def futureTryRes[T](f: Try[T]) = Future.fromTry(f)
+  protected def toScalaList(l: Optional[java.util.List[StatisticalUnit]]): Option[List[StatisticalUnit]] =
+    if (l.isPresent) Some(l.get.toList) else None
 
   /**
    * @note - simplify - get rid of AnyRef rep with t.param X
    *
    * @param v - value param to convert
    * @param f - scala conversion function
+   * @param msg - overriding msg option
    * @tparam Z - java data type for value param
    * @return Future[Result]
    */
   protected def resultMatcher[Z](v: Optional[Z], f: Optional[Z] => AnyRef,
-    msg: Option[String]): Future[Result] = {
+                                 msg: Option[String] = None): Future[Result] = {
     Future {
       f(v)
     }.map {
-      // snd error control for failure to parse to json
-      case Some(x: List[StatisticalUnit]) => Ok(Links.toJson(x))
-      case Some(x: Enterprise) => Ok(EnterpriseKey.toJson(x))
-      case None => NotFound(errAsJson(NOT_FOUND, "bad_request", s"${msg.getOrElse("Could not find requested id")}"))
+      case Some(x: List[StatisticalUnit]) => tryAsResponse[List[StatisticalUnit]](Links.toJson, x)
+      case Some(x: Enterprise) => tryAsResponse[Enterprise](EnterpriseKey.toJson, x)
+      case None => BadRequest(errAsJson(BAD_REQUEST, "bad_request", "Could not parse returned response"))
     }
   }
 
-  @deprecated("Migrated to resultMatcher with tparam T", "feature/data-retrieval [Wed 9 Aug 2017 - 10:02]")
-  protected def resultMatcher2[Z](v: Optional[Z], f: Optional[Z] => AnyRef, msg: Option[String]): Future[Result] = {
-    Future {
-      f(v)
-    }.map {
-      case Some(x) => Ok(s"$x")
-      // bad request
-      case None => NotFound(errAsJson(NOT_FOUND, "bad_request", s"${msg.getOrElse("Could not find requested id")}"))
-    }
+  private[this] def tryAsResponse[T](f: T => JsValue, v: T): Result = Try(f(v)) match {
+    case Success(s) => Ok(s)
+    case Failure(ex) =>
+      logger.error("Failed to parse instance to expected json format", ex)
+      BadRequest(errAsJson(BAD_REQUEST,"bad_request",s"Could not perform action ${f.toString} with exception ${ex}"))
   }
-
-  protected def optionConverter(o: Optional[Enterprise]): Option[Enterprise] =
-    if (o.isPresent) Some(o.get) else None
-
-  protected def toScalaList(l: Optional[java.util.List[StatisticalUnit]]): Option[List[StatisticalUnit]] =
-    if (l.isPresent) Some(l.get.toList) else None
 
 }

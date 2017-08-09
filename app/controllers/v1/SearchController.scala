@@ -1,13 +1,13 @@
 package controllers.v1
 
-import play.api.mvc.{ Action, AnyContent }
-import java.time.{ DateTimeException, YearMonth }
+import play.api.mvc.{Action, AnyContent}
+import java.time.{DateTimeException, YearMonth}
 import java.util.Optional
 
 import io.swagger.annotations._
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import utils.Utilities.errAsJson
 
 /**
@@ -56,7 +56,7 @@ class SearchController extends ControllerUtils {
     val res = unpackParams(request) match {
       case (x: String, Some(y: YearMonth)) =>
         val resp: Optional[java.util.List[StatisticalUnit]] = requestLinks.findUnits(y, x)
-        resultMatcher[java.util.List[StatisticalUnit]](resp, toScalaList, None)
+        resultMatcher[java.util.List[StatisticalUnit]](resp, toScalaList)
       case (_, None) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
         s"cannot_parse_date with exception ${new DateTimeException("could not parse date to YearMonth")}")))
     }
@@ -76,9 +76,8 @@ class SearchController extends ControllerUtils {
   ))
   def retrieveEnterpriseById(id: Option[String]): Action[AnyContent] = Action.async { implicit request =>
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    println(s"Your key is: ${key}")
     val resp = requestEnterprise.getEnterprise(key)
-    val enterprise = resultMatcher[Enterprise](resp, optionConverter, None)
+    val enterprise = resultMatcher[Enterprise](resp, optionConverter)
     enterprise
     //    NoContent
   }
@@ -101,12 +100,22 @@ class SearchController extends ControllerUtils {
     val res = unpackParams(request) match {
       case (x: String, Some(y: YearMonth)) =>
         // need a try and catch here
-        val resp: Optional[Enterprise] = requestEnterprise.getEnterpriseForReferencePeriod(y, x)
-        resultMatcher[Enterprise](resp, optionConverter, None)
+//        val resp = requestEnterprise.getEnterpriseForReferencePeriod(y, x)
+//        resultMatcher[Enterprise](resp, optionConverter)
+
+        val resp = Try (requestEnterprise.getEnterpriseForReferencePeriod(y, x)) match {
+          case Success(s) => resultMatcher[Enterprise](s, optionConverter)
+          case Failure(ex) => futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"${ex}")))
+        }
+        resp
+        // NOT_FOUND
       case (_, None) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
         s"cannot_parse_date with exception ${new DateTimeException("could not parse date to YearMonth")}")))
     }
     res
   }
+
+
+  def hbaseResponse ()
 
 }

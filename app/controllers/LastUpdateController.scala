@@ -26,9 +26,7 @@ class LastUpdateController @Inject() (implicit val config: Config) extends Contr
     new ApiResponse(code = 200, message = "Success - Displays json list of dates for official development.")
   ))
   def latestListings: Action[AnyContent] = Action.async {
-    resultAsResponse(
       generate
-    )
   }
 
   /**
