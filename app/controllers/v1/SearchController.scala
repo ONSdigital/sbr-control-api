@@ -1,17 +1,15 @@
 package controllers.v1
 
-import java.io.IOException
-
 import play.api.mvc.{ Action, AnyContent }
-import java.time.{ DateTimeException, YearMonth }
 import java.util.Optional
 
 import io.swagger.annotations._
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
-import utils.{ IdRequest, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation }
+import utils.{ IdRequest, InvalidReferencePeriod, ReferencePeriod }
 
 import scala.util.{ Failure, Success, Try }
 import utils.Utilities.errAsJson
+import utils.Properties.minKeyLength
 
 /**
  * Created by haqa on 04/08/2017.
@@ -34,11 +32,22 @@ class SearchController extends ControllerUtils {
   ))
   def retrieveLinksById(
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
-  ): Action[AnyContent] = Action { implicit request =>
+  ): Action[AnyContent] = Action.async { implicit request =>
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    val tree = requestLinks.findUnits(key)
-    tree
-    NoContent
+    val res = key match {
+      case key if key.length >= minKeyLength =>
+        Try(requestLinks.findUnits(key)) match {
+          case Success(s) => if (s.isPresent) {
+            resultMatcher[java.util.List[StatisticalUnit]](s, toScalaList)
+          } else {
+            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id $key")))
+          }
+          case Failure(ex) =>
+            futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
+        }
+      case _ => futureResult(BadRequest(errAsJson(400, "missing_query", "No query specified.")))
+    }
+    res
   }
 
   //public api
@@ -59,13 +68,19 @@ class SearchController extends ControllerUtils {
     val res = unpackParams(request) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestLinks.findUnits(x.period, x.id)) match {
-          // NOT_FOUND --> it succeeded but no result was found
-          case Success(s) => resultMatcher[java.util.List[StatisticalUnit]](s, toScalaList)
-          case Failure(ex) => futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"${ex}")))
+          case Success(s) => if (s.isPresent) {
+            resultMatcher[java.util.List[StatisticalUnit]](s, toScalaList)
+          } else {
+            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")))
+          }
+          case Failure(ex) =>
+            futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
         }
         resp
       case (e: InvalidReferencePeriod) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
         s"cannot parse date with exception ${e.exception}")))
+      case (_: IdRequest) => futureResult(BadRequest(errAsJson(400, "missing_query", "No query specified.")))
+
     }
     res
   }
@@ -83,22 +98,21 @@ class SearchController extends ControllerUtils {
   ))
   def retrieveEnterpriseById(id: Option[String]): Action[AnyContent] = Action.async { implicit request =>
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    key match {
+    val res = key match {
       case key if key.length >= minKeyLength =>
-        val resp = Try(requestEnterprise.getEnterprise(key)) match {
-          // NOT_FOUND --> it succeeded but no result was found - x or Nil
-          case Success(s: Optional[Enterprise]) => resultMatcher[Enterprise](s, optionConverter)
-          /**
-            * @Fix - should not be an ioException ->
-            */
-          case Failure(io: IOException) =>
+        Try(requestEnterprise.getEnterprise(key)) match {
+          case Success(s: Optional[Enterprise]) => if (s.isPresent) {
+            resultMatcher[Enterprise](s, optionConverter)
+          } else {
             futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id $key")))
+          }
           case Failure(ex) =>
             futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
         }
-        resp
-      case _ => futureResult(BadRequest(errAsJson(400, "missing_query", "No query specified.")))
+      case _ =>
+        futureResult(BadRequest(errAsJson(400, "missing_query", "No query specified.")))
     }
+    res
   }
 
   //public api
@@ -119,19 +133,19 @@ class SearchController extends ControllerUtils {
     val res = unpackParams(request) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestEnterprise.getEnterpriseForReferencePeriod(x.period, x.id)) match {
-          // NOT_FOUND --> it succeeded but no result was found - x or Nil
-          case Success(s: Optional[Enterprise]) => resultMatcher[Enterprise](s, optionConverter)
-          /**
-           * @Fix - should not be an ioException ->
-           */
-          case Failure(io: IOException) =>
+          case Success(s: Optional[Enterprise]) => if (s.isPresent) {
+            resultMatcher[Enterprise](s, optionConverter)
+          } else {
             futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")))
+          }
           case Failure(ex) =>
             futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
         }
         resp
       case (e: InvalidReferencePeriod) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
         s"cannot parse date with exception ${e.exception}")))
+      case (_: IdRequest) => futureResult(BadRequest(errAsJson(400, "missing_query", "No query specified.")))
+
     }
     res
   }

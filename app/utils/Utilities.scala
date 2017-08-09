@@ -3,6 +3,7 @@ package utils
 import java.io.File
 
 import play.api.libs.json._
+import uk.gov.ons.sbr.data.domain.Enterprise
 
 /**
  * Created by haqa on 05/07/2017.

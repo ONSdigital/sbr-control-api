@@ -7,10 +7,10 @@ import com.typesafe.config.{ Config, ConfigFactory }
  */
 object Properties {
 
-  private[this] val config: Config = ConfigFactory.load
+    private[this] val config: Config = ConfigFactory.load
+  //  def config: Config
 
-  val host: String = config.getString("legal.units.source.host")
   val requestTimeout: Int = config.getInt("request.timeout")
-  val minKeyLength: Int = config.getInt("minLengthKey")
+  val minKeyLength: Int = config.getInt("search.minLengthKey")
 
 }

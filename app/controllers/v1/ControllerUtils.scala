@@ -1,23 +1,24 @@
 package controllers.v1
 
 import java.time.YearMonth
-import java.time.format.{DateTimeFormatter, DateTimeParseException}
+import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
-import play.api.mvc.{AnyContent, Controller, Request, Result}
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import com.typesafe.scalalogging.StrictLogging
 import models.Links
 import models.units.EnterpriseKey
 import play.api.libs.json.JsValue
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 import scala.concurrent.Future
 import uk.gov.ons.sbr.data.controller._
 import uk.gov.ons.sbr.data.hbase.HBaseConnector
-import utils.{IdRequest, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation}
 import utils.Utilities.errAsJson
+import utils.Properties.minKeyLength
 
+import utils.{ IdRequest, RequestEvaluation, ReferencePeriod, InvalidKey, InvalidReferencePeriod }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
 
@@ -30,7 +31,7 @@ trait ControllerUtils extends Controller with StrictLogging {
   HBaseConnector.getInstance().connect()
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
-  protected val minKeyLength = 8
+  protected val minKeyLength = 4
 
   protected def futureResult(r: Result) = Future.successful(r)
 
@@ -41,35 +42,19 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected def getQueryString(request: Request[AnyContent], elem: String): String =
     request.getQueryString(elem).getOrElse("")
 
-  @deprecated("Migrated to new unpackParams", "feature/data-retrieval [Wed 9 Aug 2017 - 15:07]")
-  protected def unpackParams2(request: Request[AnyContent]): RequestEvaluation = {
-    val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    val rawDate: String = Try(getQueryString(request, "date")).getOrElse("")
-    val yearAndMonth = Try(YearMonth.parse(rawDate, DateTimeFormatter.ofPattern("yyyyMM")))
-    val res: RequestEvaluation = yearAndMonth match {
-      case Success(s) => ReferencePeriod(key, s)
-      case Failure(ex: DateTimeParseException) =>
-        logger.error("cannot parse date to YearMonth object", ex)
-        InvalidReferencePeriod(key, ex)
-    }
-    res
-  }
-
-
   protected def unpackParams(request: Request[AnyContent]): RequestEvaluation = {
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
     val rawDate = Try(getQueryString(request, "date"))
     rawDate match {
       case Success(s) =>
         validateYearMonth(key, s)
-      // fails if date does not exist - failure [type]
       case _ =>
-        IdRequest(key)
+        if (key.length >= minKeyLength) { IdRequest(key) } else { InvalidKey(key) }
     }
   }
 
-  //convert date to java format
-  private def validateYearMonth (key: String, raw: String) = {
+  //convert date to java format with err handle
+  private def validateYearMonth(key: String, raw: String) = {
     val yearAndMonth = Try(YearMonth.parse(raw, DateTimeFormatter.ofPattern("yyyyMM")))
     val res: RequestEvaluation = yearAndMonth match {
       case Success(s) => ReferencePeriod(key, s)
@@ -113,21 +98,14 @@ trait ControllerUtils extends Controller with StrictLogging {
       BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception ${ex}"))
   }
 
-  /**
-   *
-   * @param f
-   * @param r - hbase request method
-   * @tparam Z - hbase request method input
-   * @tparam X - hbase request method response
-   * @return
-   */
-  protected def sendHBaseRequest[Z, X](f: Z => X, r: Request[AnyContent]) = {
-    val unpacked = unpackParams(r)
-    val resp = unpacked match {
-      case (u: IdRequest) => f(u.id)
-      case (u: ReferencePeriod) => f(u.period, u.id)
+    @deprecated("Moved back to individual SearchController method", "feature/data-retrieval [Wed 9 Aug 2017 - 16:29]")
+    protected def sendHBaseRequest[Z, X](f: Z => X, unpacked: RequestEvaluation): Option[X] = {
+      val resp = unpacked match {
+        case (u: IdRequest) => Some(f(u.id))
+        case (u: ReferencePeriod) => Some(f(u.period, u.id))
+        case (u: InvalidReferencePeriod) => None
+      }
+      resp
     }
-    resp
-  }
 
 }
