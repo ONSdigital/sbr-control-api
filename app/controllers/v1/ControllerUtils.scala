@@ -4,9 +4,12 @@ import java.time.YearMonth
 import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 
-import uk.gov.ons.sbr.data.domain.{ Enterprise, Unit }
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import com.typesafe.scalalogging.StrictLogging
+import models.Links
+import models.units.EnterpriseKey
+import play.api.libs.json.JsValue
 
 import scala.util.{ Failure, Success, Try }
 import scala.concurrent.Future
@@ -63,11 +66,24 @@ trait ControllerUtils extends Controller with StrictLogging {
    * @tparam Z - java data type for value param
    * @return Future[Result]
    */
-  protected def resultMatcher[Z](v: Optional[Z], f: Optional[Z] => AnyRef, msg: Option[String]): Future[Result] = {
+  protected def resultMatcher[Z](v: Optional[Z], f: Optional[Z] => AnyRef,
+    msg: Option[String]): Future[Result] = {
     Future {
       f(v)
     }.map {
-      case Some(x) => Ok(s"${x}")
+      // snd error control for failure to parse to json
+      case Some(x: List[StatisticalUnit]) => Ok(Links.toJson(x))
+      case Some(x: Enterprise) => Ok(EnterpriseKey.toJson(x))
+      case None => NotFound(errAsJson(NOT_FOUND, "bad_request", s"${msg.getOrElse("Could not find requested id")}"))
+    }
+  }
+
+  @deprecated("Migrated to resultMatcher with tparam T", "feature/data-retrieval [Wed 9 Aug 2017 - 10:02]")
+  protected def resultMatcher2[Z](v: Optional[Z], f: Optional[Z] => AnyRef, msg: Option[String]): Future[Result] = {
+    Future {
+      f(v)
+    }.map {
+      case Some(x) => Ok(s"$x")
       // bad request
       case None => NotFound(errAsJson(NOT_FOUND, "bad_request", s"${msg.getOrElse("Could not find requested id")}"))
     }
@@ -76,17 +92,7 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected def optionConverter(o: Optional[Enterprise]): Option[Enterprise] =
     if (o.isPresent) Some(o.get) else None
 
-  protected def toScalaList(l: Optional[java.util.List[Unit]]): Option[List[Unit]] =
+  protected def toScalaList(l: Optional[java.util.List[StatisticalUnit]]): Option[List[StatisticalUnit]] =
     if (l.isPresent) Some(l.get.toList) else None
-
-  /**
-    * @temp - object values
-    */
-  protected def getAll (o: Optional[Enterprise]) = {
-    val g = o.get
-    println(g.getKey)
-    println(g.getVariables)
-  }
-  
 
 }
