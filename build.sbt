@@ -2,7 +2,7 @@ import play.sbt.PlayScala
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
 import sbtassembly.AssemblyPlugin.autoImport._
 
-licenses := Seq("MIT-License" -> url("https://opensource.org/licenses/MIT"))
+licenses := Seq("MIT-License" -> url("https://github.com/ONSdigital/sbr-control-api/blob/master/LICENSE"))
 
 // key-bindings
 lazy val ITest = config("it") extend(Test)
@@ -11,7 +11,6 @@ lazy val Versions = new {
   val scala = "2.11.11"
   val appVersion = "0.1-SNAPSHOT"
   val scapegoatVersion = "1.1.0"
-//  val util = "0.27.8"
 }
 
 lazy val Constant = new {
@@ -32,7 +31,6 @@ lazy val testSettings = Seq(
 
 lazy val Resolvers = Seq(
   Resolver.typesafeRepo("releases"),
-//  Resolver.bintrayRepo("outworkers", "oss-releases"),
   "Hadoop Releases" at "https://repository.cloudera.com/content/repositories/releases/"
 )
 
@@ -97,8 +95,6 @@ lazy val api = (project in file("."))
       "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "2.0.0"           % Test,
       "org.webjars"                  %%    "webjars-play"        %    "2.5.0-3",
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",
-//      "com.outworkers"               %%    "util-parsers-cats"   %    "0.27.8",
-//      "com.outworkers"               %%    "util-play"           %    "0.27.8",
       "io.swagger"                   %%    "swagger-play2"       %    "1.5.3",
       "org.webjars"                  %     "swagger-ui"          %    "2.2.10-1",
       "com.typesafe"                 %     "config"              %    "1.3.1",

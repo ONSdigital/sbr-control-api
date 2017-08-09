@@ -1,5 +1,7 @@
 package controllers.v1
 
+import java.io.IOException
+
 import play.api.mvc.{ Action, AnyContent }
 import java.time.{ DateTimeException, YearMonth }
 import java.util.Optional
@@ -81,10 +83,22 @@ class SearchController extends ControllerUtils {
   ))
   def retrieveEnterpriseById(id: Option[String]): Action[AnyContent] = Action.async { implicit request =>
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    val resp = requestEnterprise.getEnterprise(key)
-    val enterprise = resultMatcher[Enterprise](resp, optionConverter)
-    enterprise
-    //    NoContent
+    key match {
+      case key if key.length >= minKeyLength =>
+        val resp = Try(requestEnterprise.getEnterprise(key)) match {
+          // NOT_FOUND --> it succeeded but no result was found - x or Nil
+          case Success(s: Optional[Enterprise]) => resultMatcher[Enterprise](s, optionConverter)
+          /**
+            * @Fix - should not be an ioException ->
+            */
+          case Failure(io: IOException) =>
+            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id $key")))
+          case Failure(ex) =>
+            futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
+        }
+        resp
+      case _ => futureResult(BadRequest(errAsJson(400, "missing_query", "No query specified.")))
+    }
   }
 
   //public api
@@ -105,9 +119,15 @@ class SearchController extends ControllerUtils {
     val res = unpackParams(request) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestEnterprise.getEnterpriseForReferencePeriod(x.period, x.id)) match {
-          // NOT_FOUND --> it succeeded but no result was found
-          case Success(s) => resultMatcher[Enterprise](s, optionConverter)
-          case Failure(ex) => futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"${ex}")))
+          // NOT_FOUND --> it succeeded but no result was found - x or Nil
+          case Success(s: Optional[Enterprise]) => resultMatcher[Enterprise](s, optionConverter)
+          /**
+           * @Fix - should not be an ioException ->
+           */
+          case Failure(io: IOException) =>
+            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")))
+          case Failure(ex) =>
+            futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
         }
         resp
       case (e: InvalidReferencePeriod) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
