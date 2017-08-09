@@ -4,7 +4,7 @@ import java.time.YearMonth
 import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 
-import uk.gov.ons.sbr.data.domain.{ AbstractPeriodEntity, Enterprise, StatisticalUnit }
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import com.typesafe.scalalogging.StrictLogging
 import models.Links
@@ -15,6 +15,7 @@ import scala.util.{ Failure, Success, Try }
 import scala.concurrent.Future
 import uk.gov.ons.sbr.data.controller._
 import uk.gov.ons.sbr.data.hbase.HBaseConnector
+import utils.{ InvalidReferencePeriod, ReferencePeriod, RequestEvaluation }
 import utils.Utilities.errAsJson
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,7 +40,8 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected def getQueryString(request: Request[AnyContent], elem: String): String =
     request.getQueryString(elem).getOrElse("")
 
-  protected def unpackParams(request: Request[AnyContent]) = {
+  @deprecated("Migrated to unpackParams", "feature/feature/data-retrieval [Wed 9 Aug 2017 - 13:59]")
+  protected def unpackParams2(request: Request[AnyContent]) = {
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
     val rawDate: String = Try(getQueryString(request, "date")).getOrElse("")
     val yearAndMonth = Try(YearMonth.parse(rawDate, DateTimeFormatter.ofPattern("yyyyMM")))
@@ -47,8 +49,21 @@ trait ControllerUtils extends Controller with StrictLogging {
       case Success(s) => key -> Some(s)
       case Failure(ex: DateTimeParseException) =>
         logger.error("cannot parse date to YearMonth object", ex)
-        key -> None
+        key -> Some(ex)
     }
+  }
+
+  protected def unpackParams(request: Request[AnyContent]): RequestEvaluation = {
+    val key: String = Try(getQueryString(request, "id")).getOrElse("")
+    val rawDate: String = Try(getQueryString(request, "date")).getOrElse("")
+    val yearAndMonth = Try(YearMonth.parse(rawDate, DateTimeFormatter.ofPattern("yyyyMM")))
+    val res: RequestEvaluation = yearAndMonth match {
+      case Success(s) => ReferencePeriod(key, s)
+      case Failure(ex: DateTimeParseException) =>
+        logger.error("cannot parse date to YearMonth object", ex)
+        InvalidReferencePeriod(key, ex)
+    }
+    res
   }
 
   protected def optionConverter(o: Optional[Enterprise]): Option[Enterprise] =
@@ -67,7 +82,7 @@ trait ControllerUtils extends Controller with StrictLogging {
    * @return Future[Result]
    */
   protected def resultMatcher[Z](v: Optional[Z], f: Optional[Z] => AnyRef,
-                                 msg: Option[String] = None): Future[Result] = {
+    msg: Option[String] = None): Future[Result] = {
     Future {
       f(v)
     }.map {
@@ -81,7 +96,7 @@ trait ControllerUtils extends Controller with StrictLogging {
     case Success(s) => Ok(s)
     case Failure(ex) =>
       logger.error("Failed to parse instance to expected json format", ex)
-      BadRequest(errAsJson(BAD_REQUEST,"bad_request",s"Could not perform action ${f.toString} with exception ${ex}"))
+      BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception ${ex}"))
   }
-
+  
 }

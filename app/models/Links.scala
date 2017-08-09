@@ -28,8 +28,10 @@ object Links {
   // convert map.UnitType -> map.UnitType.toString
   def toStringMap(m: Map[UnitType, String]): Map[String, String] = { m map { case (k, v) => k.toString -> v } }
 
-  def toCC(x: List[StatisticalUnit]): List[Links] = x.map(u => Links(u.getKey,
-    toStringMap(u.getLinks.getParents.toMap), u.getLinks.getChildJsonString, u.getType.toString))
+  def toCC(x: List[StatisticalUnit]): List[Links] = x.map(u => Links(
+    u.getKey,
+    toStringMap(u.getLinks.getParents.toMap), u.getLinks.getChildJsonString, u.getType.toString
+  ))
 
   def toJson(u: List[StatisticalUnit]): JsValue = Json.toJson(toCC(u))
 

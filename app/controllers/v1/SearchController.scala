@@ -1,13 +1,14 @@
 package controllers.v1
 
-import play.api.mvc.{Action, AnyContent}
-import java.time.{DateTimeException, YearMonth}
+import play.api.mvc.{ Action, AnyContent }
+import java.time.{ DateTimeException, YearMonth }
 import java.util.Optional
 
 import io.swagger.annotations._
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import utils.{ IdRequest, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation }
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 import utils.Utilities.errAsJson
 
 /**
@@ -54,11 +55,15 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
     val res = unpackParams(request) match {
-      case (x: String, Some(y: YearMonth)) =>
-        val resp: Optional[java.util.List[StatisticalUnit]] = requestLinks.findUnits(y, x)
-        resultMatcher[java.util.List[StatisticalUnit]](resp, toScalaList)
-      case (_, None) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
-        s"cannot_parse_date with exception ${new DateTimeException("could not parse date to YearMonth")}")))
+      case (x: ReferencePeriod) =>
+        val resp = Try(requestLinks.findUnits(x.period, x.id)) match {
+          // NOT_FOUND --> it succeeded but no result was found
+          case Success(s) => resultMatcher[java.util.List[StatisticalUnit]](s, toScalaList)
+          case Failure(ex) => futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"${ex}")))
+        }
+        resp
+      case (e: InvalidReferencePeriod) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
+        s"cannot parse date with exception ${e.exception}")))
     }
     res
   }
@@ -98,24 +103,17 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
     val res = unpackParams(request) match {
-      case (x: String, Some(y: YearMonth)) =>
-        // need a try and catch here
-//        val resp = requestEnterprise.getEnterpriseForReferencePeriod(y, x)
-//        resultMatcher[Enterprise](resp, optionConverter)
-
-        val resp = Try (requestEnterprise.getEnterpriseForReferencePeriod(y, x)) match {
+      case (x: ReferencePeriod) =>
+        val resp = Try(requestEnterprise.getEnterpriseForReferencePeriod(x.period, x.id)) match {
+          // NOT_FOUND --> it succeeded but no result was found
           case Success(s) => resultMatcher[Enterprise](s, optionConverter)
           case Failure(ex) => futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"${ex}")))
         }
         resp
-        // NOT_FOUND
-      case (_, None) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
-        s"cannot_parse_date with exception ${new DateTimeException("could not parse date to YearMonth")}")))
+      case (e: InvalidReferencePeriod) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
+        s"cannot parse date with exception ${e.exception}")))
     }
     res
   }
-
-
-  def hbaseResponse ()
 
 }
