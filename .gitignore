@@ -8,6 +8,7 @@ target
 /RUNNING_PID
 *.DS_Store
 project/project/
+lib
 
 .cache
 .history
