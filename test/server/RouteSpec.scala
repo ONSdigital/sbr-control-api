@@ -34,6 +34,10 @@ class RouteSpec extends TestUtils {
     }
   }
 
+  "SearchController" in {
+
+  }
+
   "VersionController" should {
     "display list of versions" in {
       val version = fakeRequest("/version")

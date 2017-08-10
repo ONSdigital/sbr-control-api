@@ -1,23 +1,22 @@
 package models
 
-import play.api.libs.json.{ OFormat, Json, JsValue }
-
-import uk.gov.ons.sbr.data.domain.{ StatisticalUnit }
+import io.swagger.annotations.ApiModelProperty
+import play.api.libs.json.{ JsValue, Json, OFormat }
+import uk.gov.ons.sbr.data.domain.StatisticalUnit
 import uk.gov.ons.sbr.data.domain.UnitType
 
 import scala.collection.JavaConversions._
-//import scala.collection.immutable.Map
 
 /**
  * Created by haqa on 08/08/2017.
  */
 
-//@ImplementedBy()
 case class Links(
-  id: String,
-  parents: Map[String, String],
-  children: String,
-  unitType: String
+  @ApiModelProperty(value = "Unit identifier", example = "", required = true, hidden = false) id: String,
+  @ApiModelProperty(value = "A map of parents of returned id [Type, Value]", example = "",
+    dataType = "Map[String,String]") parents: Map[String, String],
+  @ApiModelProperty(value = "A string of all related children", example = "") children: String,
+  @ApiModelProperty(value = "Type of Unit returned", example = "") unitType: String
 )
 
 object Links {

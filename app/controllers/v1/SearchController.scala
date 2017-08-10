@@ -4,8 +4,10 @@ import play.api.mvc.{ Action, AnyContent }
 import java.util.Optional
 
 import io.swagger.annotations._
+import models.Links
+import models.units.EnterpriseKey
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
-import utils.{ IdRequest, InvalidReferencePeriod, ReferencePeriod }
+import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod }
 
 import scala.util.{ Failure, Success, Try }
 import utils.Utilities.errAsJson
@@ -26,9 +28,11 @@ class SearchController extends ControllerUtils {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    //    new ApiResponse(code = 200, response = classOf[Enterprise], responseContainer = "JSONObject", message = "Success -> Record(s) found for id."),
-    //    new ApiResponse(code = 400, responseContainer = "JSONObject", message = "Client Side Error -> Required parameter was not found.")
-    new ApiResponse(code = 200, responseContainer = "JsValue", message = "Success -> Retrieved Links for given id.")
+    new ApiResponse(code = 200, response = classOf[Links], responseContainer = "JsValue", message = "Ok -> Retrieved Links for given id."),
+    new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
+    new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
+    new ApiResponse(code = 500, responseContainer = "JsValue",
+      message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveLinksById(
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
@@ -45,7 +49,10 @@ class SearchController extends ControllerUtils {
           case Failure(ex) =>
             futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
         }
-      case _ => futureResult(BadRequest(errAsJson(400, "missing_query", "No query specified.")))
+      case _ =>
+        futureResult(
+          BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
+        )
     }
     res
   }
@@ -59,10 +66,14 @@ class SearchController extends ControllerUtils {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, responseContainer = "JsValue", message = "Success -> Retrieved Links for given id and date.")
+    new ApiResponse(code = 200, response = classOf[Links], responseContainer = "JsValue", message = "Ok -> Retrieved Links for given id."),
+    new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
+    new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
+    new ApiResponse(code = 500, responseContainer = "JsValue",
+      message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveLinks(
-    @ApiParam(value = "Identifier creation date", example = "2017/11", required = true) date: Option[String],
+    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: Option[String],
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
     val res = unpackParams(request) match {
@@ -79,8 +90,10 @@ class SearchController extends ControllerUtils {
         resp
       case (e: InvalidReferencePeriod) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
         s"cannot parse date with exception ${e.exception}")))
-      case (_: IdRequest) => futureResult(BadRequest(errAsJson(400, "missing_query", "No query specified.")))
-
+      case _ =>
+        futureResult(
+          BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
+        )
     }
     res
   }
@@ -94,13 +107,19 @@ class SearchController extends ControllerUtils {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, responseContainer = "JsValue", message = "Success -> Record found for given id.")
+    new ApiResponse(code = 200, response = classOf[EnterpriseKey], responseContainer = "JsValue", message = "Ok -> Retrieved Enterprise for given id."),
+    new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
+    new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
+    new ApiResponse(code = 500, responseContainer = "JsValue",
+      message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
-  def retrieveEnterpriseById(id: Option[String]): Action[AnyContent] = Action.async { implicit request =>
+  def retrieveEnterpriseById(
+    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: Option[String]
+  ): Action[AnyContent] = Action.async { implicit request =>
     val key: String = Try(getQueryString(request, "id")).getOrElse("")
     val res = key match {
-      case key if key.length >= minKeyLength =>
-        Try(requestEnterprise.getEnterprise(key)) match {
+      case k if k.length >= minKeyLength =>
+        Try(requestEnterprise.getEnterprise(k)) match {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
             resultMatcher[Enterprise](s, optionConverter)
           } else {
@@ -110,7 +129,9 @@ class SearchController extends ControllerUtils {
             futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
         }
       case _ =>
-        futureResult(BadRequest(errAsJson(400, "missing_query", "No query specified.")))
+        futureResult(
+          BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
+        )
     }
     res
   }
@@ -124,11 +145,15 @@ class SearchController extends ControllerUtils {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, responseContainer = "JsValue", message = "Success -> Record found for given id and date.")
+    new ApiResponse(code = 200, response = classOf[EnterpriseKey], responseContainer = "JsValue", message = "Ok -> Retrieved Enterprise for given id."),
+    new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
+    new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
+    new ApiResponse(code = 500, responseContainer = "JsValue",
+      message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveEnterprise(
-    @ApiParam(value = "Identifier creation date", example = "2017/11", required = true) date: Option[String],
-    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
+    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: Option[String],
+    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
     val res = unpackParams(request) match {
       case (x: ReferencePeriod) =>
@@ -144,8 +169,10 @@ class SearchController extends ControllerUtils {
         resp
       case (e: InvalidReferencePeriod) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
         s"cannot parse date with exception ${e.exception}")))
-      case (_: IdRequest) => futureResult(BadRequest(errAsJson(400, "missing_query", "No query specified.")))
-
+      case _ =>
+        futureResult(
+          BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
+        )
     }
     res
   }

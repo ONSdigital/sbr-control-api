@@ -33,26 +33,6 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected val requestEnterprise = new EnterpriseController()
   protected val minKeyLength = 4
 
-  protected def futureResult(r: Result) = Future.successful(r)
-
-  protected def futureErr(ex: Exception) = Future.failed(ex)
-
-  protected def futureTryRes[T](f: Try[T]) = Future.fromTry(f)
-
-  protected def getQueryString(request: Request[AnyContent], elem: String): String =
-    request.getQueryString(elem).getOrElse("")
-
-  protected def unpackParams(request: Request[AnyContent]): RequestEvaluation = {
-    val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    val rawDate = Try(getQueryString(request, "date"))
-    rawDate match {
-      case Success(s) =>
-        validateYearMonth(key, s)
-      case _ =>
-        if (key.length >= minKeyLength) { IdRequest(key) } else { InvalidKey(key) }
-    }
-  }
-
   //convert date to java format with err handle
   private def validateYearMonth(key: String, raw: String) = {
     val yearAndMonth = Try(YearMonth.parse(raw, DateTimeFormatter.ofPattern("yyyyMM")))
@@ -63,6 +43,34 @@ trait ControllerUtils extends Controller with StrictLogging {
         InvalidReferencePeriod(key, ex)
     }
     res
+  }
+
+  private[this] def tryAsResponse[T](f: T => JsValue, v: T): Result = Try(f(v)) match {
+    case Success(s) => Ok(s)
+    case Failure(ex) =>
+      logger.error("Failed to parse instance to expected json format", ex)
+      BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception ${ex}"))
+  }
+
+  protected def getQueryString(request: Request[AnyContent], elem: String): String =
+    request.getQueryString(elem).getOrElse("")
+
+  protected def futureResult(r: Result) = Future.successful(r)
+
+  protected def futureErr(ex: Exception) = Future.failed(ex)
+
+  protected def futureTryRes[T](f: Try[T]) = Future.fromTry(f)
+
+  protected def unpackParams(request: Request[AnyContent]): RequestEvaluation = {
+    val key: String = Try(getQueryString(request, "id")).getOrElse("")
+    val rawDate = Try(getQueryString(request, "date"))
+    rawDate match {
+      case Success(s) =>
+        validateYearMonth(key, s)
+      // not needed -> single param request
+      case _ =>
+        if (key.length >= minKeyLength) { IdRequest(key) } else { InvalidKey(key) }
+    }
   }
 
   protected def optionConverter(o: Optional[Enterprise]): Option[Enterprise] =
@@ -82,20 +90,12 @@ trait ControllerUtils extends Controller with StrictLogging {
    */
   protected def resultMatcher[Z](v: Optional[Z], f: Optional[Z] => AnyRef,
     msg: Option[String] = None): Future[Result] = {
-    Future {
-      f(v)
-    }.map {
+    Future { f(v) }.map {
       case Some(x: List[StatisticalUnit]) => tryAsResponse[List[StatisticalUnit]](Links.toJson, x)
       case Some(x: Enterprise) => tryAsResponse[Enterprise](EnterpriseKey.toJson, x)
-      case None => BadRequest(errAsJson(BAD_REQUEST, "bad_request", "Could not parse returned response"))
+      case None =>
+        BadRequest(errAsJson(BAD_REQUEST, "bad_request", msg.getOrElse("Could not parse returned response")))
     }
-  }
-
-  private[this] def tryAsResponse[T](f: T => JsValue, v: T): Result = Try(f(v)) match {
-    case Success(s) => Ok(s)
-    case Failure(ex) =>
-      logger.error("Failed to parse instance to expected json format", ex)
-      BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception ${ex}"))
   }
 
 }

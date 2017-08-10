@@ -1,17 +1,18 @@
 package models.units
 
 import com.google.inject.ImplementedBy
-import play.api.libs.json.{ Json, OFormat, JsValue }
+import io.swagger.annotations.ApiModelProperty
+import play.api.libs.json.{ JsValue, Json, OFormat }
 import uk.gov.ons.sbr.data.domain.Enterprise
 
 import scala.collection.JavaConversions._
 /**
  * Created by haqa on 08/08/2017.
  */
-//@ImplementedBy()
+
 case class EnterpriseKey(
-  id: String,
-  values: Map[String, String]
+  @ApiModelProperty(value = "Unit identifier", example = "", required = true, hidden = false) id: String,
+  @ApiModelProperty(value = "A key value pair of all variables associated", example = "", dataType = "Map[String,String]") values: Map[String, String]
 )
 
 object EnterpriseKey {

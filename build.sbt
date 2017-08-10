@@ -5,7 +5,7 @@ import sbtassembly.AssemblyPlugin.autoImport._
 licenses := Seq("MIT-License" -> url("https://github.com/ONSdigital/sbr-control-api/blob/master/LICENSE"))
 
 // key-bindings
-lazy val ITest = config("it") extend(Test)
+lazy val ITest = config("it") extend Test
 
 lazy val Versions = new {
   val scala = "2.11.11"
@@ -15,6 +15,7 @@ lazy val Versions = new {
 
 lazy val Constant = new {
   val appName = "ons-sbr-control-api"
+  val projectStage = "alpha"
   val detail = Versions.appVersion
   val organisation = "ons"
   val team = "sbr"
@@ -83,7 +84,7 @@ lazy val api = (project in file("."))
       sbtVersion,
       BuildInfoKey.action("gitVersion") {
         // todo git-tag@date
-      git.formattedShaVersion.?.value.getOrElse(Some("Unknown")).getOrElse("Unknown") +"@"+ git.formattedDateVersion.?.value.getOrElse("")
+      git.gitTagToVersionNumber.?.value.getOrElse(Some(Constant.projectStage))+"@"+ git.formattedDateVersion.?.value.getOrElse("")
     }),
     // di router -> swagger
     routesGenerator := InjectedRoutesGenerator,
@@ -96,7 +97,7 @@ lazy val api = (project in file("."))
       "org.webjars"                  %%    "webjars-play"        %    "2.5.0-3",
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",
       "io.swagger"                   %%    "swagger-play2"       %    "1.5.3",
-      "org.webjars"                  %     "swagger-ui"          %    "2.2.10-1",
+      "org.webjars"                  %     "swagger-ui"          %    "3.1.4",
       "com.typesafe"                 %     "config"              %    "1.3.1",
       // hbase
       "org.apache.hadoop"            %     "hadoop-common"       %    "2.6.0",
@@ -105,7 +106,7 @@ lazy val api = (project in file("."))
       excludeAll ExclusionRule("commons-logging", "commons-logging")
     ),
     // assembly
-    assemblyJarName in assembly := s"sbr-api-${Versions.appVersion}.jar",
+    assemblyJarName in assembly := s"sbr-control-api-${Versions.appVersion}.jar",
     assemblyMergeStrategy in assembly := {
       case PathList("io", "netty", xs@_*)                                => MergeStrategy.last
       case PathList("javax", "xml", xs@_*)                               => MergeStrategy.last
