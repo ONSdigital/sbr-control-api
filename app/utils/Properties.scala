@@ -1,16 +1,14 @@
 package utils
 
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 
 /**
  * Created by haqa on 28/07/2017.
  */
 object Properties {
-
-  private[this] val config: Config = ConfigFactory.load
-  //  def config: Config
+  def config: Config = SBRPropertiesConfiguration.envConfig(ConfigFactory.load())
 
   val requestTimeout: Int = config.getInt("request.timeout")
-  val minKeyLength: Int = config.getInt("search.minLengthKey")
+  val minKeyLength: Int = config.getInt("search.minKeyLength")
 
 }

@@ -34,9 +34,12 @@ class RouteSpec extends TestUtils {
     }
   }
 
-  "SearchController" in {
-
-  }
+  //  "SearchController" in {
+  //    "" in {
+  //
+  //    }
+  //
+  //  }
 
   "VersionController" should {
     "display list of versions" in {

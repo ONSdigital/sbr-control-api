@@ -1,4 +1,4 @@
-package models.units
+package uk.gov.ons.sbr.models.units
 
 import com.google.inject.ImplementedBy
 import io.swagger.annotations.ApiModelProperty

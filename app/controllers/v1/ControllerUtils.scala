@@ -1,24 +1,24 @@
 package controllers.v1
 
 import java.time.YearMonth
-import java.time.format.{ DateTimeFormatter, DateTimeParseException }
+import java.time.format.{DateTimeFormatter, DateTimeParseException}
 import java.util.Optional
 
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
-import play.api.mvc.{ AnyContent, Controller, Request, Result }
+import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
+import play.api.mvc.{AnyContent, Controller, Request, Result}
 import com.typesafe.scalalogging.StrictLogging
-import models.Links
-import models.units.EnterpriseKey
 import play.api.libs.json.JsValue
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 import scala.concurrent.Future
 import uk.gov.ons.sbr.data.controller._
-import uk.gov.ons.sbr.data.hbase.HBaseConnector
+import uk.gov.ons.sbr.data.hbase.{HBaseConnector, HBaseTest}
+import uk.gov.ons.sbr.models.Links
+import uk.gov.ons.sbr.models.units.EnterpriseKey
 import utils.Utilities.errAsJson
 import utils.Properties.minKeyLength
+import utils.{IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation}
 
-import utils.{ IdRequest, RequestEvaluation, ReferencePeriod, InvalidKey, InvalidReferencePeriod }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
 
@@ -28,10 +28,11 @@ import scala.collection.JavaConversions._
 trait ControllerUtils extends Controller with StrictLogging {
 
   //initialise
-  HBaseConnector.getInstance().connect()
+  HBaseTest.init
+//  HBaseConnector.getInstance().connect()
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
-  protected val minKeyLength = 4
+//  protected val minKeyLength = 4
 
   //convert date to java format with err handle
   private def validateYearMonth(key: String, raw: String) = {
@@ -49,7 +50,7 @@ trait ControllerUtils extends Controller with StrictLogging {
     case Success(s) => Ok(s)
     case Failure(ex) =>
       logger.error("Failed to parse instance to expected json format", ex)
-      BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception ${ex}"))
+      BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception $ex"))
   }
 
   protected def getQueryString(request: Request[AnyContent], elem: String): String =
@@ -97,5 +98,6 @@ trait ControllerUtils extends Controller with StrictLogging {
         BadRequest(errAsJson(BAD_REQUEST, "bad_request", msg.getOrElse("Could not parse returned response")))
     }
   }
+
 
 }

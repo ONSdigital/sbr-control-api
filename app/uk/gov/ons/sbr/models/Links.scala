@@ -1,4 +1,4 @@
-package models
+package uk.gov.ons.sbr.models
 
 import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{ JsValue, Json, OFormat }

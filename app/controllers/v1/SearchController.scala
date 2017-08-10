@@ -4,9 +4,9 @@ import play.api.mvc.{ Action, AnyContent }
 import java.util.Optional
 
 import io.swagger.annotations._
-import models.Links
-import models.units.EnterpriseKey
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import uk.gov.ons.sbr.models.Links
+import uk.gov.ons.sbr.models.units.EnterpriseKey
 import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod }
 
 import scala.util.{ Failure, Success, Try }
