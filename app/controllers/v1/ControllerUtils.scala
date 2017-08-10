@@ -53,8 +53,8 @@ trait ControllerUtils extends Controller with StrictLogging {
       BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception $ex"))
   }
 
-  protected def getQueryString(request: Request[AnyContent], elem: String): String =
-    request.getQueryString(elem).getOrElse("")
+  protected def getQueryString(request: Request[AnyContent], elem: String): Option[String] =
+    request.getQueryString(elem)
 
   protected def futureResult(r: Result) = Future.successful(r)
 
@@ -63,12 +63,11 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected def futureTryRes[T](f: Try[T]) = Future.fromTry(f)
 
   protected def unpackParams(request: Request[AnyContent]): RequestEvaluation = {
-    val key: String = Try(getQueryString(request, "id")).getOrElse("")
+    val key = Try(getQueryString(request, "id").getOrElse("")).getOrElse("")
     val rawDate = Try(getQueryString(request, "date"))
     rawDate match {
       case Success(s) =>
-        validateYearMonth(key, s)
-      // not needed -> single param request
+        validateYearMonth(key, s.getOrElse(""))
       case _ =>
         if (key.length >= minKeyLength) { IdRequest(key) } else { InvalidKey(key) }
     }

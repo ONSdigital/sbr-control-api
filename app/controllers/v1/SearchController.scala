@@ -37,18 +37,20 @@ class SearchController extends ControllerUtils {
   def retrieveLinksById(
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
-    val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    val res = key match {
-      case key if key.length >= minKeyLength =>
-        Try(requestLinks.findUnits(key)) match {
+    val res = unpackParams(request) match {
+      case (x: IdRequest) =>
+        val resp = Try(requestLinks.findUnits(x.id)) match {
           case Success(s) => if (s.isPresent) {
             resultMatcher[java.util.List[StatisticalUnit]](s, toScalaList)
           } else {
-            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id $key")))
+            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")))
           }
           case Failure(ex) =>
             futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
         }
+        resp
+      case (e: InvalidKey) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
+        s"invalid id ${e.id}")))
       case _ =>
         futureResult(
           BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
@@ -56,6 +58,7 @@ class SearchController extends ControllerUtils {
     }
     res
   }
+
 
   //public api
   @ApiOperation(
@@ -98,6 +101,7 @@ class SearchController extends ControllerUtils {
     res
   }
 
+
   //public api
   @ApiOperation(
     value = "Json response of matching id",
@@ -116,18 +120,20 @@ class SearchController extends ControllerUtils {
   def retrieveEnterpriseById(
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
-    val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    val res = key match {
-      case k if k.length >= minKeyLength =>
-        Try(requestEnterprise.getEnterprise(k)) match {
+    val res = unpackParams(request) match {
+      case (x: IdRequest) =>
+        val resp = Try(requestEnterprise.getEnterprise(x.id)) match {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
             resultMatcher[Enterprise](s, optionConverter)
           } else {
-            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id $key")))
+            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")))
           }
           case Failure(ex) =>
             futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
         }
+        resp
+      case (e: InvalidKey) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
+        s"invalid id ${e.id}")))
       case _ =>
         futureResult(
           BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
@@ -135,6 +141,7 @@ class SearchController extends ControllerUtils {
     }
     res
   }
+
 
   //public api
   @ApiOperation(
@@ -161,7 +168,7 @@ class SearchController extends ControllerUtils {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
             resultMatcher[Enterprise](s, optionConverter)
           } else {
-            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")))
+            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and period ${x.period}")))
           }
           case Failure(ex) =>
             futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
