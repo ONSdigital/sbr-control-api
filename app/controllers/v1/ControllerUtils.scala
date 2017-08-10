@@ -68,7 +68,7 @@ trait ControllerUtils extends Controller with StrictLogging {
     rawDate match {
       case Success(s) =>
         validateYearMonth(key, s.getOrElse(""))
-      case _ =>
+      case Failure(_) =>
         if (key.length >= minKeyLength) { IdRequest(key) } else { InvalidKey(key) }
     }
   }
@@ -80,7 +80,7 @@ trait ControllerUtils extends Controller with StrictLogging {
     if (l.isPresent) Some(l.get.toList) else None
 
   /**
-   * @note - simplify - get rid of AnyRef rep with t.param X
+   * @note - simplify - AnyRef rep with t.param X
    *
    * @param v - value param to convert
    * @param f - scala conversion function
