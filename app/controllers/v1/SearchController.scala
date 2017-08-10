@@ -37,7 +37,7 @@ class SearchController extends ControllerUtils {
   def retrieveLinksById(
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = unpackParams(request) match {
+    val res = unpackParams(id, request) match {
       case (x: IdRequest) =>
         val resp = Try(requestLinks.findUnits(x.id)) match {
           case Success(s) => if (s.isPresent) {
@@ -79,7 +79,7 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: Option[String],
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = unpackParams(request) match {
+    val res = unpackParams(id, request) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestLinks.findUnits(x.period, x.id)) match {
           case Success(s) => if (s.isPresent) {
@@ -120,7 +120,7 @@ class SearchController extends ControllerUtils {
   def retrieveEnterpriseById(
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = unpackParams(request) match {
+    val res = unpackParams(id, request) match {
       case (x: IdRequest) =>
         val resp = Try(requestEnterprise.getEnterprise(x.id)) match {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
@@ -162,7 +162,7 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: Option[String],
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = unpackParams(request) match {
+    val res = unpackParams(id, request) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestEnterprise.getEnterpriseForReferencePeriod(x.period, x.id)) match {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {

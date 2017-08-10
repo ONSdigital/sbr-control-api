@@ -38,7 +38,9 @@ trait ControllerUtils extends Controller with StrictLogging {
   private def validateYearMonth(key: String, raw: String) = {
     val yearAndMonth = Try(YearMonth.parse(raw, DateTimeFormatter.ofPattern("yyyyMM")))
     val res: RequestEvaluation = yearAndMonth match {
-      case Success(s) => ReferencePeriod(key, s)
+      case Success(s) =>
+        // valid date -> check key
+        if (key.length >= minKeyLength) { ReferencePeriod(key, s) } else { InvalidKey(key) }
       case Failure(ex: DateTimeParseException) =>
         logger.error("cannot parse date to YearMonth object", ex)
         InvalidReferencePeriod(key, ex)
@@ -53,18 +55,15 @@ trait ControllerUtils extends Controller with StrictLogging {
       BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception $ex"))
   }
 
-  protected def getQueryString(request: Request[AnyContent], elem: String): Option[String] =
-    request.getQueryString(elem)
-
   protected def futureResult(r: Result) = Future.successful(r)
 
   protected def futureErr(ex: Exception) = Future.failed(ex)
 
   protected def futureTryRes[T](f: Try[T]) = Future.fromTry(f)
 
-  protected def unpackParams(request: Request[AnyContent]): RequestEvaluation = {
-    val key = Try(getQueryString(request, "id").getOrElse("")).getOrElse("")
-    val rawDate = Try(getQueryString(request, "date"))
+  protected def unpackParams(id: Option[String], request: Request[AnyContent]): RequestEvaluation = {
+    val key = id.orElse(request.getQueryString("id")).getOrElse("")
+    val rawDate = Try(request.getQueryString("date"))
     rawDate match {
       case Success(s) =>
         validateYearMonth(key, s.getOrElse(""))

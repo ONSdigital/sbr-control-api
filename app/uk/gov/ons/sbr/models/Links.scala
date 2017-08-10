@@ -23,13 +23,11 @@ object Links {
 
   implicit val unitFormat: OFormat[Links] = Json.format[Links]
 
-  // rep with play write
-  // convert map.UnitType -> map.UnitType.toString
-  def toStringMap(m: Map[UnitType, String]): Map[String, String] = { m map { case (k, v) => k.toString -> v } }
+  // rep play write
+  def toStringMap(x: Map[UnitType, String]): Map[String, String] = { x map { case (k, v) => k.toString -> v } }
 
-  def toCC(x: List[StatisticalUnit]): List[Links] = x.map(u => Links(
-    u.getKey,
-    toStringMap(u.getLinks.getParents.toMap), u.getLinks.getChildJsonString, u.getType.toString
+  def toCC(s: List[StatisticalUnit]): List[Links] = s map(u => Links(
+    u.getKey, toStringMap(u.getLinks.getParents.toMap), u.getLinks.getChildJsonString, u.getType.toString
   ))
 
   def toJson(u: List[StatisticalUnit]): JsValue = Json.toJson(toCC(u))

@@ -12,7 +12,8 @@ import scala.collection.JavaConversions._
 
 case class EnterpriseKey(
   @ApiModelProperty(value = "Unit identifier", example = "", required = true, hidden = false) id: String,
-  @ApiModelProperty(value = "A key value pair of all variables associated", example = "", dataType = "Map[String,String]") values: Map[String, String]
+  @ApiModelProperty(value = "A key value pair of all variables associated", example = "",
+    dataType = "Map[String,String]") values: Map[String, String]
 )
 
 object EnterpriseKey {
