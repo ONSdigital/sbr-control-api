@@ -1,26 +1,29 @@
 package controllers.v1
 
 import java.time.YearMonth
-import java.time.format.{DateTimeFormatter, DateTimeParseException}
+import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
-import play.api.mvc.{AnyContent, Controller, Request, Result}
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import com.typesafe.scalalogging.StrictLogging
 import play.api.libs.json.JsValue
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 import scala.concurrent.Future
 import uk.gov.ons.sbr.data.controller._
-import uk.gov.ons.sbr.data.hbase.{HBaseConnector, HBaseTest}
+import uk.gov.ons.sbr.data.hbase.{ HBaseConnector, HBaseTest }
 import uk.gov.ons.sbr.models.Links
 import uk.gov.ons.sbr.models.units.EnterpriseKey
 import utils.Utilities.errAsJson
 import utils.Properties.minKeyLength
-import utils.{IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation}
+import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
+import utils.ScalaConversion._
+
+import scala.Option
 
 /**
  * Created by haqa on 10/07/2017.
@@ -28,48 +31,45 @@ import scala.collection.JavaConversions._
 trait ControllerUtils extends Controller with StrictLogging {
 
   //initialise
-  HBaseTest.init
-//  HBaseConnector.getInstance().connect()
+  //  HBaseTest.init
+  HBaseConnector.getInstance().connect()
+
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
-//  protected val minKeyLength = 4
+  protected val minKeyLength = 4
 
   //convert date to java format with err handle
-  private def validateYearMonth(key: String, raw: String) = {
+  protected def validateYearMonth(key: String, raw: String) = {
     val yearAndMonth = Try(YearMonth.parse(raw, DateTimeFormatter.ofPattern("yyyyMM")))
-    val res: RequestEvaluation = yearAndMonth match {
-      case Success(s) =>
-        // valid date -> check key
-        if (key.length >= minKeyLength) { ReferencePeriod(key, s) } else { InvalidKey(key) }
-      case Failure(ex: DateTimeParseException) =>
-        logger.error("cannot parse date to YearMonth object", ex)
-        InvalidReferencePeriod(key, ex)
-    }
+    // valid date -> check key
+    val res: RequestEvaluation = if (key.length >= minKeyLength) {
+      yearAndMonth match {
+        case Success(s) =>
+          ReferencePeriod(key, s)
+        case Failure(ex: DateTimeParseException) =>
+          logger.error("cannot parse date to YearMonth object", ex)
+          InvalidReferencePeriod(key, ex)
+      }
+    } else { InvalidKey(key) }
     res
   }
 
-  private[this] def tryAsResponse[T](f: T => JsValue, v: T): Result = Try(f(v)) match {
+  protected[this] def tryAsResponse[T](f: T => JsValue, v: T): Result = Try(f(v)) match {
     case Success(s) => Ok(s)
     case Failure(ex) =>
       logger.error("Failed to parse instance to expected json format", ex)
       BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception $ex"))
   }
 
-  protected def futureResult(r: Result) = Future.successful(r)
-
-  protected def futureErr(ex: Exception) = Future.failed(ex)
-
-  protected def futureTryRes[T](f: Try[T]) = Future.fromTry(f)
-
   protected def unpackParams(id: Option[String], request: Request[AnyContent]): RequestEvaluation = {
     val key = id.orElse(request.getQueryString("id")).getOrElse("")
     val rawDate = Try(request.getQueryString("date"))
     rawDate match {
-      case Success(s) =>
-        validateYearMonth(key, s.getOrElse(""))
-      case Failure(_) =>
-        if (key.length >= minKeyLength) { IdRequest(key) } else { InvalidKey(key) }
+      case Success(None) => if (key.length >= minKeyLength) { IdRequest(key) } else { InvalidKey(key) }
+      case Success(Some(s)) =>
+        validateYearMonth(key, s)
     }
+
   }
 
   protected def optionConverter(o: Optional[Enterprise]): Option[Enterprise] =
@@ -96,6 +96,5 @@ trait ControllerUtils extends Controller with StrictLogging {
         BadRequest(errAsJson(BAD_REQUEST, "bad_request", msg.getOrElse("Could not parse returned response")))
     }
   }
-
 
 }

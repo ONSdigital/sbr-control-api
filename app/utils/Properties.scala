@@ -1,6 +1,6 @@
 package utils
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 
 /**
  * Created by haqa on 28/07/2017.

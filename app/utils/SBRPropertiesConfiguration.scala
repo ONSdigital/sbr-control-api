@@ -1,11 +1,11 @@
 package utils
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 import org.slf4j.LoggerFactory
 
 /**
-  * Created by haqa on 28/07/2017.
-  */
+ * Created by haqa on 28/07/2017.
+ */
 object SBRPropertiesConfiguration {
 
   private[this] val logger = LoggerFactory.getLogger(SBRPropertiesConfiguration.getClass)

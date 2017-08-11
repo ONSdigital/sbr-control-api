@@ -26,7 +26,7 @@ object Links {
   // rep play write
   def toStringMap(x: Map[UnitType, String]): Map[String, String] = { x map { case (k, v) => k.toString -> v } }
 
-  def toCC(s: List[StatisticalUnit]): List[Links] = s map(u => Links(
+  def toCC(s: List[StatisticalUnit]): List[Links] = s map (u => Links(
     u.getKey, toStringMap(u.getLinks.getParents.toMap), u.getLinks.getChildJsonString, u.getType.toString
   ))
 

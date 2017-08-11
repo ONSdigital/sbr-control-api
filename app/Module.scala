@@ -1,8 +1,8 @@
 import com.google.inject.AbstractModule
 import java.time.Clock
 
-import com.typesafe.config.{Config, ConfigFactory}
-import play.api.{Configuration, Environment}
+import com.typesafe.config.{ Config, ConfigFactory }
+import play.api.{ Configuration, Environment }
 import utils.SBRPropertiesConfiguration
 
 /**
@@ -23,14 +23,11 @@ class Module(
   override def configure() = {
 
     val config = SBRPropertiesConfiguration.envConfig(ConfigFactory.load())
-//    val config: Config = ConfigFactory.load
+    //    val config: Config = ConfigFactory.load
     bind(classOf[Config]).toInstance(config)
 
     // Use the system clock as the default implementation of Clock
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
   }
-
-
-
 
 }

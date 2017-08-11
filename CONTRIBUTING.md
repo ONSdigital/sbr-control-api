@@ -22,3 +22,7 @@ For naming values, methods and objects in this project we follow the official na
 #### Versioning
 
 #### Releases
+
+
+####
+We use FlatSpec testing style

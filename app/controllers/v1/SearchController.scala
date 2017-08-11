@@ -7,11 +7,13 @@ import io.swagger.annotations._
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
 import uk.gov.ons.sbr.models.Links
 import uk.gov.ons.sbr.models.units.EnterpriseKey
-import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod }
+import utils._
 
 import scala.util.{ Failure, Success, Try }
 import utils.Utilities.errAsJson
 import utils.Properties.minKeyLength
+
+import utils.FutureResponse._
 
 /**
  * Created by haqa on 04/08/2017.
@@ -43,22 +45,18 @@ class SearchController extends ControllerUtils {
           case Success(s) => if (s.isPresent) {
             resultMatcher[java.util.List[StatisticalUnit]](s, toScalaList)
           } else {
-            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")))
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
           }
           case Failure(ex) =>
-            futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
+            InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (e: InvalidKey) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
-        s"invalid id ${e.id}")))
+      case (e: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"invalid id ${e.id}")).future
       case _ =>
-        futureResult(
-          BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
-        )
+        BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength].")).future
     }
     res
   }
-
 
   //public api
   @ApiOperation(
@@ -85,22 +83,19 @@ class SearchController extends ControllerUtils {
           case Success(s) => if (s.isPresent) {
             resultMatcher[java.util.List[StatisticalUnit]](s, toScalaList)
           } else {
-            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")))
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
           }
           case Failure(ex) =>
-            futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
+            InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (e: InvalidReferencePeriod) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
-        s"cannot parse date with exception ${e.exception}")))
+      case (e: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "bad_request",
+        s"cannot parse date with exception ${e.exception}")).future
       case _ =>
-        futureResult(
-          BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
-        )
+        BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength].")).future
     }
     res
   }
-
 
   //public api
   @ApiOperation(
@@ -126,22 +121,19 @@ class SearchController extends ControllerUtils {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
             resultMatcher[Enterprise](s, optionConverter)
           } else {
-            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")))
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
           }
           case Failure(ex) =>
-            futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
+            InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (e: InvalidKey) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
-        s"invalid id ${e.id}")))
+      case (e: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "bad_request",
+        s"invalid id ${e.id}")).future
       case _ =>
-        futureResult(
-          BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
-        )
+        BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength].")).future
     }
     res
   }
-
 
   //public api
   @ApiOperation(
@@ -168,18 +160,17 @@ class SearchController extends ControllerUtils {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
             resultMatcher[Enterprise](s, optionConverter)
           } else {
-            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and period ${x.period}")))
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
           }
           case Failure(ex) =>
-            futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
+            InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (e: InvalidReferencePeriod) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
-        s"cannot parse date with exception ${e.exception}")))
+      case (e: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "bad_request",
+        s"cannot parse date with exception ${e.exception}")).future
       case _ =>
-        futureResult(
-          BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
-        )
+        BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength].")).future
+
     }
     res
   }
