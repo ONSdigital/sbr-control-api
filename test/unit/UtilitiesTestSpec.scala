@@ -21,6 +21,7 @@ class UtilitiesTestSpec extends TestUtils {
     "return a Long for Option[Long]" in {
       val expected = 5784785784L
       val get = getElement(Some(expected))
+      get must not be a[Option[Long]]
       get mustEqual expected
     }
   }
