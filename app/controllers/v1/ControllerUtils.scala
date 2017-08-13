@@ -12,7 +12,7 @@ import play.api.libs.json.JsValue
 import scala.util.{ Failure, Success, Try }
 import scala.concurrent.Future
 import uk.gov.ons.sbr.data.controller._
-import uk.gov.ons.sbr.data.hbase.{ HBaseConnector, HBaseTest }
+//import uk.gov.ons.sbr.data.hbase.{ HBaseConnector, HBaseTest }
 import uk.gov.ons.sbr.models.Links
 import uk.gov.ons.sbr.models.units.EnterpriseKey
 import utils.Utilities.errAsJson
@@ -32,7 +32,7 @@ trait ControllerUtils extends Controller with StrictLogging {
 
   //initialise
   //  HBaseTest.init
-  HBaseConnector.getInstance().connect()
+  //  HBaseConnector.getInstance().connect()
 
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
@@ -77,6 +77,9 @@ trait ControllerUtils extends Controller with StrictLogging {
 
   protected def toScalaList(l: Optional[java.util.List[StatisticalUnit]]): Option[List[StatisticalUnit]] =
     if (l.isPresent) Some(l.get.toList) else None
+
+  protected def toJavaOptional[A](o: Option[A]): Optional[A] =
+    o match { case Some(a) => Optional.ofNullable(a); case _ => Optional.empty[A] }
 
   /**
    * @note - simplify - AnyRef rep with t.param X
