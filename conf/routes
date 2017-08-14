@@ -3,11 +3,16 @@
 # ~~~~
 
 # Searching Feature
-GET     /v1/linkById                controllers.v1.SearchController.retrieveLinksById(id: Option[String] ?= None)
+#GET     /v1/linkById                controllers.v1.SearchController.retrieveLinksById(id: Option[String] ?= None)
 GET     /v1/link                    controllers.v1.SearchController.retrieveLinks(date: Option[String] ?= None, id: Option[String] ?= None)
+#/{<[0-9]+>id}/{slug}
+#$id<[0-9]+>
 
-GET     /v1/enterpriseById          controllers.v1.SearchController.retrieveEnterpriseById(id: Option[String] ?= None)
-GET     /v1/enterprise              controllers.v1.SearchController.retrieveEnterprise(date: Option[String] ?= None, id: Option[String] ?= None)
+GET     /v1/key/:id               controllers.v1.SearchController.retrieveLinksById(id)
+#GET     /v1/date/:date/id/:id         controllers.v1.SearchController.retrieveLinks(date: Option[String] ?= None, id: Option[String] ?= None)
+
+GET     /v1/enterprise/id/:id           controllers.v1.SearchController.retrieveEnterpriseById(id: String)
+GET     /v1/enterprise/date/:date/id/:id              controllers.v1.SearchController.retrieveEnterprise(date, id)
 
 GET     /                           controllers.HomeController.status
 

@@ -60,6 +60,7 @@ trait ControllerUtils extends Controller with StrictLogging {
 
   protected def unpackParams(id: Option[String], request: Request[AnyContent]): RequestEvaluation = {
     val key = id.orElse(request.getQueryString("id")).getOrElse("")
+    println(request.body)
     val rawDate = Try(request.getQueryString("date"))
     rawDate match {
       case Success(None) => if (key.length >= minKeyLength) { IdRequest(key) } else { InvalidKey(key) }

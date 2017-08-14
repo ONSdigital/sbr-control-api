@@ -37,9 +37,10 @@ class SearchController extends ControllerUtils {
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveLinksById(
-    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
+    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = unpackParams(id, request) match {
+    println(id)
+    val res = unpackParams(Option(id), request) match {
       case (x: IdRequest) =>
         val resp = Try(requestLinks.findUnits(x.id)) match {
           case Success(s) => if (s.isPresent) {
@@ -114,9 +115,9 @@ class SearchController extends ControllerUtils {
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveEnterpriseById(
-    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: Option[String]
+    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = unpackParams(id, request) match {
+    val res = unpackParams(Option(id), request) match {
       case (x: IdRequest) =>
         val resp = Try(requestEnterprise.getEnterprise(x.id)) match {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
@@ -151,10 +152,13 @@ class SearchController extends ControllerUtils {
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveEnterprise(
-    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: Option[String],
-    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: Option[String]
+    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
+    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = unpackParams(id, request) match {
+    /**
+      * process params pass both date and id
+      */
+    val res = unpackParams(Option(id), request) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestEnterprise.getEnterpriseForReferencePeriod(x.period, x.id)) match {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
