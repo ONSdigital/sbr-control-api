@@ -12,7 +12,7 @@ import play.api.libs.json.JsValue
 import scala.util.{ Failure, Success, Try }
 import scala.concurrent.Future
 import uk.gov.ons.sbr.data.controller._
-//import uk.gov.ons.sbr.data.hbase.{ HBaseConnector, HBaseTest }
+import uk.gov.ons.sbr.data.hbase.{ HBaseConnector, HBaseTest }
 import uk.gov.ons.sbr.models.Links
 import uk.gov.ons.sbr.models.units.EnterpriseKey
 import utils.Utilities.errAsJson
@@ -21,9 +21,6 @@ import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod, R
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
-import utils.ScalaConversion._
-
-import scala.Option
 
 /**
  * Created by haqa on 10/07/2017.
@@ -32,7 +29,7 @@ trait ControllerUtils extends Controller with StrictLogging {
 
   //initialise
   //  HBaseTest.init
-  //  HBaseConnector.getInstance().connect()
+  HBaseConnector.getInstance().connect()
 
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()

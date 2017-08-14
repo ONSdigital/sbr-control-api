@@ -89,7 +89,7 @@ class SearchController extends ControllerUtils {
             InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "bad_request",
+      case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "invalid_date",
         s"cannot parse date with exception ${y.exception}")).future
       case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
@@ -166,7 +166,7 @@ class SearchController extends ControllerUtils {
             InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "bad_request",
+      case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "invalid_date",
         s"cannot parse date with exception ${y.exception}")).future
       case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
