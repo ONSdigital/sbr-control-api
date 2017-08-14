@@ -1,7 +1,6 @@
 # sbr-control-api
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
 [![Dependency Status](https://www.versioneye.com/user/projects/58e23bf2d6c98d00417476cc/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/58e23bf2d6c98d00417476cc)
-SBR Operational read/write API
 
 ### What is this repository?
 sbr-control-api is a Play Framework application written predominantly in Scala. This api, sbr-control-api, extends [sbr-api](https://github.com/ONSdigital/sbr-api) and acts as an intermediary that handles requests (from sbr-api) to query HBase. Its current privileges to the data are both read and write.
@@ -71,7 +70,7 @@ Swagger API is used to document and expose swagger definitions of the routes and
  `http://localhost:9000/docs`
  
 ### Troubleshooting
-See [FAQ](CONTRIBUTING.md) for possible and common solutions.
+See [FAQ](FAQ.md) for possible and common solutions.
 
 ### Contributing
 

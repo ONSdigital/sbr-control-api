@@ -82,7 +82,7 @@ lazy val api = (project in file("."))
       scalaVersion,
       sbtVersion,
       BuildInfoKey.action("gitVersion") {
-      git.gitTagToVersionNumber.?.value.getOrElse(Some(Constant.projectStage))+"@"+ git.formattedDateVersion.?.value.getOrElse("")
+        git.gitTagToVersionNumber.?.value.getOrElse(Some(Constant.projectStage))+"@"+ git.formattedDateVersion.?.value.getOrElse("")
     }),
     // di router -> swagger
     routesGenerator := InjectedRoutesGenerator,
