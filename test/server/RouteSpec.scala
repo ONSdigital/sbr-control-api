@@ -1,5 +1,6 @@
 package scala.server
 
+import play.api.libs.json.JsString
 import play.api.test.Helpers._
 import play.api.test._
 import resource.TestUtils
@@ -34,18 +35,33 @@ class RouteSpec extends TestUtils {
     }
   }
 
-  //  "SearchController" in {
-  //    "" in {
-  //
-  //    }
-  //
-  //  }
+  "SearchController" should {
+    "return 400 when no query specified" in {
+      val search = fakeRequest("/v1/enterpriseById?id=")
+      status(search) mustBe BAD_REQUEST
+      contentType(search) mustBe Some("application/json")
+      val json = contentAsJson(search)
+      (json \ "code").as[String] mustEqual "missing_param"
+    }
+    "return 400 due to Invalid Key" in {
+      val search = fakeRequest("/v1/enterpriseById?id=1")
+      status(search) mustBe BAD_REQUEST
+      contentType(search) mustBe Some("application/json")
+      val json = contentAsJson(search)
+      (json \ "code").as[String] mustNot equal("invalid_key")
+    }
+    "return 400 with invalid date is not parsable" in {
+      val dateSearch = fakeRequest("/v1/enterprise?id=12345&period=201707")
+      status(dateSearch) mustBe BAD_REQUEST
+      contentType(dateSearch) mustBe Some("application/json")
+      val json = contentAsJson(dateSearch)
+      (json \ "code").as[String] mustNot equal("invalid_date")
+    }
+  }
 
-  "VersionController" should {
-    "display list of versions" in {
-      val version = fakeRequest("/version")
-      status(version) mustEqual OK
-      contentType(version) mustBe Some("application/json")
+  "AdminController" should {
+    "return 400 when no query specified" ignore {
+
     }
   }
 

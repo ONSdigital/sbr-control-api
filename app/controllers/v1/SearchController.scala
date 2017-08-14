@@ -51,9 +51,9 @@ class SearchController extends ControllerUtils {
             InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (e: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"invalid id ${e.id}")).future
+      case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
-        BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength].")).future
+        BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
     }
     res
   }
@@ -89,10 +89,11 @@ class SearchController extends ControllerUtils {
             InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (e: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "bad_request",
-        s"cannot parse date with exception ${e.exception}")).future
+      case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "bad_request",
+        s"cannot parse date with exception ${y.exception}")).future
+      case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
-        BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength].")).future
+        BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
     }
     res
   }
@@ -127,10 +128,9 @@ class SearchController extends ControllerUtils {
             InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (e: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "bad_request",
-        s"invalid id ${e.id}")).future
+      case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
-        BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength].")).future
+        BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
     }
     res
   }
@@ -166,10 +166,11 @@ class SearchController extends ControllerUtils {
             InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (e: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "bad_request",
-        s"cannot parse date with exception ${e.exception}")).future
+      case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "bad_request",
+        s"cannot parse date with exception ${y.exception}")).future
+      case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
-        BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength].")).future
+        BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
 
     }
     res

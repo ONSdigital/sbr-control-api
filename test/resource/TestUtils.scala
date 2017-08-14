@@ -19,16 +19,16 @@ trait TestUtils extends PlaySpec with GuiceOneAppPerSuite {
   protected def requestObject(url: String, method: String = GET) =
     FakeRequest(GET, "/").withJsonBody(Json.parse("""{ "field": "value" }"""))
 
-  def getValue(json: Option[String]): String = json match {
+  protected def getValue(json: Option[String]): String = json match {
     case Some(x: String) => s"$x"
     case _ => sys.error("No Value failed. Forcing test failure")
   }
 
-  def getJsValue(elem: JsLookupResult) = elem match {
+  protected def getJsValue(elem: JsLookupResult) = elem match {
     case JsDefined(y) => s"$y"
     case _ => sys.error("No JsValue found. Forcing test failure")
   }
 
-  def instanceName(s: String, regex: String = "."): String = s.substring(s.lastIndexOf(regex) + 1)
+  protected def instanceName(s: String, regex: String = "."): String = s.substring(s.lastIndexOf(regex) + 1)
 
 }

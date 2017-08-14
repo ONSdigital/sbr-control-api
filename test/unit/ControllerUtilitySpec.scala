@@ -7,7 +7,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.JsNumber
 import play.api.mvc.Result
 import resource.TestUtils
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
 import utils._
 
 /**
@@ -28,7 +28,7 @@ class ControllerUtilitySpec extends TestUtils with ControllerUtils with GuiceOne
     }
     "parse valid string date to YearMonth" in {
       val validate = validateYearMonth(validKey, validDate)
-      validate must not be a[InvalidReferencePeriod];
+      validate must not be a[InvalidReferencePeriod]
       validate mustBe a[ReferencePeriod]
       getParsedRequestType[ReferencePeriod](validate).id mustEqual validKey
       getParsedRequestType[ReferencePeriod](validate).period.toString mustEqual "2017-11"
@@ -49,9 +49,9 @@ class ControllerUtilitySpec extends TestUtils with ControllerUtils with GuiceOne
     }
   }
 
-  "unpackParams" should {
+  "unpackParams" must {
     "return IdRequest instance when key length is right" in {
-      val id = "1234"
+      val id = validKey
       val search = requestObject(s"$searchByIdUrl$id")
       val unpackedTest = unpackParams(Some(id), search)
       unpackedTest mustBe a[IdRequest]
@@ -61,7 +61,7 @@ class ControllerUtilitySpec extends TestUtils with ControllerUtils with GuiceOne
     "return an InvalidKey instance when no valid key is found" in {
       val search = requestObject(s"${searchByIdUrl}1233")
       val unpackedTest = unpackParams(Some("12"), search)
-      unpackedTest must not be a[InvalidKey]
+      unpackedTest must not be a[IdRequest]
       unpackedTest mustBe a[InvalidKey]
     }
   }
