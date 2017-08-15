@@ -22,8 +22,8 @@ import utils.FutureResponse._
 class SearchController extends ControllerUtils {
 
   /**
-    * @todo - generalise and create generic search function x2 per param length
-    */
+   * @todo - generalise and create generic search function x2 per param length
+   */
   //public api
   @ApiOperation(
     value = "Json response of links that correspond to id",
@@ -40,9 +40,9 @@ class SearchController extends ControllerUtils {
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveLinksById(
-    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
+    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = matchByParams(id) match {
+    val res = matchByParams(id, request) match {
       case (x: IdRequest) =>
         val resp = Try(requestLinks.findUnits(x.id)) match {
           case Success(s) => if (s.isPresent) {
@@ -78,9 +78,10 @@ class SearchController extends ControllerUtils {
   ))
   def retrieveLinks(
     @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
-    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
+    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = matchByParams(id, Some(date)) match {
+    println(s"res ===> ${matchByParams(id, request, Some(date))}")
+    val res = matchByParams(id, request, Some(date)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestLinks.findUnits(x.period, x.id)) match {
           case Success(s) => if (s.isPresent) {
@@ -119,7 +120,7 @@ class SearchController extends ControllerUtils {
   def retrieveEnterpriseById(
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = matchByParams(id) match {
+    val res = matchByParams(Some(id), request) match {
       case (x: IdRequest) =>
         val resp = Try(requestEnterprise.getEnterprise(x.id)) match {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
@@ -159,9 +160,9 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     /**
-      * process params pass both date and id
-      */
-    val res = matchByParams(id, Some(date)) match {
+     * process params pass both date and id
+     */
+    val res = matchByParams(Some(id), request, Some(date)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestEnterprise.getEnterpriseForReferencePeriod(x.period, x.id)) match {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {

@@ -4,11 +4,11 @@
 
 # Searching Feature
 
-GET     /v1/links/key/:id                   controllers.v1.SearchController.retrieveLinksById(id)
-GET     /v1/links/date/:date/id/:id         controllers.v1.SearchController.retrieveLinks(date, id)
+GET     /v1/units                           controllers.v1.SearchController.retrieveLinksById(id: Option[String] ?= None)
+GET     /v1/periods/:date/units             controllers.v1.SearchController.retrieveLinks(date, id: Option[String] ?= None)
 
-GET     /v1/enterprise/id/:id               controllers.v1.SearchController.retrieveEnterpriseById(id)
-GET     /v1/enterprise/date/:date/id/:id    controllers.v1.SearchController.retrieveEnterprise(date, id)
+GET     /v1/enterprises/:id                 controllers.v1.SearchController.retrieveEnterpriseById(id)
+GET     /v1/periods/:date/enterprises/:id   controllers.v1.SearchController.retrieveEnterprise(date, id)
 
 GET     /                                   controllers.HomeController.status
 
