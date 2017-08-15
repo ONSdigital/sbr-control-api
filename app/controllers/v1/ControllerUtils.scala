@@ -58,14 +58,13 @@ trait ControllerUtils extends Controller with StrictLogging {
       BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception $ex"))
   }
 
-  protected def unpackParams(id: Option[String], request: Request[AnyContent]): RequestEvaluation = {
-    val key = id.orElse(request.getQueryString("id")).getOrElse("")
-    println(request.body)
-    val rawDate = Try(request.getQueryString("date"))
-    rawDate match {
-      case Success(None) => if (key.length >= minKeyLength) { IdRequest(key) } else { InvalidKey(key) }
-      case Success(Some(s)) =>
-        validateYearMonth(key, s)
+  protected def matchByParams(id: String, date: Option[String] = None): RequestEvaluation = {
+//    val key = id.orElse(request.getQueryString("id")).getOrElse("")
+//    val rawDate = Try(request.getQueryString("date"))
+    date match {
+      case None => if (id.length >= minKeyLength) { IdRequest(id) } else { InvalidKey(id) }
+      case Some(s) =>
+        validateYearMonth(id, s)
     }
 
   }

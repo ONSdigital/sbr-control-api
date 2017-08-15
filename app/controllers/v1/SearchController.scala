@@ -21,6 +21,9 @@ import utils.FutureResponse._
 @Api("Search")
 class SearchController extends ControllerUtils {
 
+  /**
+    * @todo - generalise and create generic search function x2 per param length
+    */
   //public api
   @ApiOperation(
     value = "Json response of links that correspond to id",
@@ -39,8 +42,7 @@ class SearchController extends ControllerUtils {
   def retrieveLinksById(
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    println(id)
-    val res = unpackParams(Option(id), request) match {
+    val res = matchByParams(id) match {
       case (x: IdRequest) =>
         val resp = Try(requestLinks.findUnits(x.id)) match {
           case Success(s) => if (s.isPresent) {
@@ -75,10 +77,10 @@ class SearchController extends ControllerUtils {
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveLinks(
-    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: Option[String],
-    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
+    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
+    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = unpackParams(id, request) match {
+    val res = matchByParams(id, Some(date)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestLinks.findUnits(x.period, x.id)) match {
           case Success(s) => if (s.isPresent) {
@@ -117,7 +119,7 @@ class SearchController extends ControllerUtils {
   def retrieveEnterpriseById(
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = unpackParams(Option(id), request) match {
+    val res = matchByParams(id) match {
       case (x: IdRequest) =>
         val resp = Try(requestEnterprise.getEnterprise(x.id)) match {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
@@ -129,7 +131,8 @@ class SearchController extends ControllerUtils {
             InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
+      case (i: InvalidKey) =>
+        BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
         BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
     }
@@ -158,7 +161,7 @@ class SearchController extends ControllerUtils {
     /**
       * process params pass both date and id
       */
-    val res = unpackParams(Option(id), request) match {
+    val res = matchByParams(id, Some(date)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestEnterprise.getEnterpriseForReferencePeriod(x.period, x.id)) match {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
@@ -172,7 +175,8 @@ class SearchController extends ControllerUtils {
         resp
       case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "invalid_date",
         s"cannot parse date with exception ${y.exception}")).future
-      case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
+      case (i: InvalidKey) =>
+        BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
         BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
 

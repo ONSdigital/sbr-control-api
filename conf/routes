@@ -3,32 +3,28 @@
 # ~~~~
 
 # Searching Feature
-#GET     /v1/linkById                controllers.v1.SearchController.retrieveLinksById(id: Option[String] ?= None)
-GET     /v1/link                    controllers.v1.SearchController.retrieveLinks(date: Option[String] ?= None, id: Option[String] ?= None)
-#/{<[0-9]+>id}/{slug}
-#$id<[0-9]+>
 
-GET     /v1/key/:id               controllers.v1.SearchController.retrieveLinksById(id)
-#GET     /v1/date/:date/id/:id         controllers.v1.SearchController.retrieveLinks(date: Option[String] ?= None, id: Option[String] ?= None)
+GET     /v1/links/key/:id                   controllers.v1.SearchController.retrieveLinksById(id)
+GET     /v1/links/date/:date/id/:id         controllers.v1.SearchController.retrieveLinks(date, id)
 
-GET     /v1/enterprise/id/:id           controllers.v1.SearchController.retrieveEnterpriseById(id: String)
-GET     /v1/enterprise/date/:date/id/:id              controllers.v1.SearchController.retrieveEnterprise(date, id)
+GET     /v1/enterprise/id/:id               controllers.v1.SearchController.retrieveEnterpriseById(id)
+GET     /v1/enterprise/date/:date/id/:id    controllers.v1.SearchController.retrieveEnterprise(date, id)
 
-GET     /                           controllers.HomeController.status
+GET     /                                   controllers.HomeController.status
 
 # Route for deployed version information (in JSON).
-GET     /version                    controllers.VersionController.version
+GET     /version                            controllers.VersionController.version
 
 # build dates
-# GET   /latest                     controllers.v1.LastUpdateController.latestListings
+# GET   /latest                             controllers.v1.LastUpdateController.latestListings
 
 # Route for health check information (in JSON).
-GET     /health                     controllers.HealthController.health
+GET     /health                             controllers.HealthController.health
 
 # api documentation
-GET     /swagger.json               controllers.ApiHelpController.getResources
-GET     /docs                       controllers.HomeController.swagger
+GET     /swagger.json                       controllers.ApiHelpController.getResources
+GET     /docs                               controllers.HomeController.swagger
 
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET     /assets/*file                       controllers.Assets.versioned(path="/public", file: Asset)
