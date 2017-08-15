@@ -6,24 +6,27 @@ import java.util.Optional
 import io.swagger.annotations._
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
 import uk.gov.ons.sbr.models.Links
-import uk.gov.ons.sbr.models.units.EnterpriseKey
-import utils._
+import uk.gov.ons.sbr.models.units.EnterpriseUnit
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.Try
 import utils.Utilities.errAsJson
-import utils.Properties.minKeyLength
-
 import utils.FutureResponse._
+import utils.{ IdRequest, InvalidKey, ReferencePeriod, InvalidReferencePeriod }
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by haqa on 04/08/2017.
  */
+
+/**
+ * @todo - generalise and create generic search function x2 per param length
+ *      - add timeout and no service unavailable or unauthorized
+ *      - check no-param found err-control
+ */
 @Api("Search")
 class SearchController extends ControllerUtils {
 
-  /**
-   * @todo - generalise and create generic search function x2 per param length
-   */
   //public api
   @ApiOperation(
     value = "Json response of links that correspond to id",
@@ -44,15 +47,11 @@ class SearchController extends ControllerUtils {
   ): Action[AnyContent] = Action.async { implicit request =>
     val res = matchByParams(id, request) match {
       case (x: IdRequest) =>
-        val resp = Try(requestLinks.findUnits(x.id)) match {
-          case Success(s) => if (s.isPresent) {
-            resultMatcher[java.util.List[StatisticalUnit]](s, toScalaList)
-          } else {
-            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
-          }
-          case Failure(ex) =>
-            InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
-        }
+        val resp = Try(requestLinks.findUnits(x.id)).futureTryRes.flatMap {
+          case (s) => if (s.isPresent) {
+            resultMatcher[java.util.List[StatisticalUnit]](s)
+          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
+        } recover responseException
         resp
       case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
@@ -82,15 +81,11 @@ class SearchController extends ControllerUtils {
   ): Action[AnyContent] = Action.async { implicit request =>
     val res = matchByParams(id, request, Some(date)) match {
       case (x: ReferencePeriod) =>
-        val resp = Try(requestLinks.findUnits(x.period, x.id)) match {
-          case Success(s) => if (s.isPresent) {
-            resultMatcher[java.util.List[StatisticalUnit]](s, toScalaList)
-          } else {
-            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
-          }
-          case Failure(ex) =>
-            InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
-        }
+        val resp = Try(requestLinks.findUnits(x.period, x.id)).futureTryRes.flatMap {
+          case (s) => if (s.isPresent) {
+            resultMatcher[java.util.List[StatisticalUnit]](s)
+          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find Unit with id ${x.id} and period ${x.period}")).future
+        } recover responseException
         resp
       case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "invalid_date",
         s"cannot parse date with exception ${y.exception}")).future
@@ -110,7 +105,7 @@ class SearchController extends ControllerUtils {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, response = classOf[EnterpriseKey], responseContainer = "JsValue", message = "Ok -> Retrieved Enterprise for given id."),
+    new ApiResponse(code = 200, response = classOf[EnterpriseUnit], responseContainer = "JsValue", message = "Ok -> Retrieved Enterprise for given id."),
     new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
     new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
     new ApiResponse(code = 500, responseContainer = "JsValue",
@@ -121,15 +116,11 @@ class SearchController extends ControllerUtils {
   ): Action[AnyContent] = Action.async { implicit request =>
     val res = matchByParams(Some(id), request) match {
       case (x: IdRequest) =>
-        val resp = Try(requestEnterprise.getEnterprise(x.id)) match {
-          case Success(s: Optional[Enterprise]) => if (s.isPresent) {
-            resultMatcher[Enterprise](s, optionConverter)
-          } else {
-            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
-          }
-          case Failure(ex) =>
-            InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
-        }
+        val resp = Try(requestEnterprise.getEnterprise(x.id)).futureTryRes.flatMap {
+          case (s: Optional[Enterprise]) => if (s.isPresent) {
+            resultMatcher[Enterprise](s)
+          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
+        } recover responseException
         resp
       case (i: InvalidKey) =>
         BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
@@ -148,7 +139,7 @@ class SearchController extends ControllerUtils {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, response = classOf[EnterpriseKey], responseContainer = "JsValue", message = "Ok -> Retrieved Enterprise for given id."),
+    new ApiResponse(code = 200, response = classOf[EnterpriseUnit], responseContainer = "JsValue", message = "Ok -> Retrieved Enterprise for given id."),
     new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
     new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
     new ApiResponse(code = 500, responseContainer = "JsValue",
@@ -163,15 +154,11 @@ class SearchController extends ControllerUtils {
      */
     val res = matchByParams(Some(id), request, Some(date)) match {
       case (x: ReferencePeriod) =>
-        val resp = Try(requestEnterprise.getEnterpriseForReferencePeriod(x.period, x.id)) match {
-          case Success(s: Optional[Enterprise]) => if (s.isPresent) {
-            resultMatcher[Enterprise](s, optionConverter)
-          } else {
-            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
-          }
-          case Failure(ex) =>
-            InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
-        }
+        val resp = Try(requestEnterprise.getEnterpriseForReferencePeriod(x.period, x.id)).futureTryRes.flatMap {
+          case (s: Optional[Enterprise]) => if (s.isPresent) {
+            resultMatcher[Enterprise](s)
+          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
+        } recover responseException
         resp
       case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "invalid_date",
         s"cannot parse date with exception ${y.exception}")).future

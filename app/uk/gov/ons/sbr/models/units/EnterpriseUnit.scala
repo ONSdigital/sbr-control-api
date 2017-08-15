@@ -9,7 +9,7 @@ import scala.collection.JavaConversions._
  * Created by haqa on 08/08/2017.
  */
 
-case class EnterpriseKey(
+case class EnterpriseUnit(
   @ApiModelProperty(value = "Unit identifier", example = "", required = true, hidden = false) id: Long,
   period: String,
   @ApiModelProperty(value = "A key value pair of all variables associated", example = "",
@@ -17,15 +17,13 @@ case class EnterpriseKey(
   unitType: String
 )
 
-object EnterpriseKey {
+object EnterpriseUnit {
 
-  implicit val unitFormat: OFormat[EnterpriseKey] = Json.format[EnterpriseKey]
+  implicit val unitFormat: OFormat[EnterpriseUnit] = Json.format[EnterpriseUnit]
 
-  def apply(o: Enterprise): EnterpriseKey = {
-    EnterpriseKey(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString)
-  }
+  def apply(o: Enterprise): EnterpriseUnit =
+    EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString)
 
   def toJson(o: Enterprise): JsValue = Json.toJson(apply(o))
-
 
 }
