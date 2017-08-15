@@ -12,7 +12,7 @@ class IntegrationSpec extends TestUtils {
 
     "get by anonymous Enterprise id" in {
       val id = 1244
-      val res = fakeRequest(s"/v1/enterpriseById?id=$id")
+      val res = fakeRequest(s"/v1/enterprises/$id")
       status(res) mustBe OK
       contentType(res) mustBe Some("application/json")
 

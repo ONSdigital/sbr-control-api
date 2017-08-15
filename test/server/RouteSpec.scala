@@ -36,26 +36,19 @@ class RouteSpec extends TestUtils {
   }
 
   "SearchController" should {
-//    "return 400 when no query specified" in {
-//      val search = fakeRequest("/v1/enterprise")
-//      status(search) mustBe BAD_REQUEST
-//      contentType(search) mustBe Some("application/json")
-//      val json = contentAsJson(search)
-//      (json \ "code").as[String] mustEqual "missing_param"
-//    }
     "return 400 due to Invalid Key" in {
       val search = fakeRequest("/v1/enterprises/1")
       status(search) mustBe BAD_REQUEST
       contentType(search) mustBe Some("application/json")
       val json = contentAsJson(search)
-      (json \ "code").as[String] mustNot equal("invalid_key")
+      (json \ "code").as[String] must equal("invalid_key")
     }
     "return 400 with invalid date is not parsable" in {
-      val dateSearch = fakeRequest("/v1/period/201777/enterprises/1244")
+      val dateSearch = fakeRequest("/v1/periods/201777/enterprises/1244")
       status(dateSearch) mustBe BAD_REQUEST
       contentType(dateSearch) mustBe Some("application/json")
       val json = contentAsJson(dateSearch)
-      (json \ "code").as[String] mustNot equal("invalid_date")
+      (json \ "code").as[String] must equal("invalid_date")
     }
   }
 

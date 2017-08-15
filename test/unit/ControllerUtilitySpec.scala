@@ -1,5 +1,6 @@
 package unit
 
+import java.time.YearMonth
 import java.util.Optional
 
 import controllers.v1.ControllerUtils
@@ -7,7 +8,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.JsNumber
 import play.api.mvc.Result
 import resource.TestUtils
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
 import utils._
 
 /**
@@ -53,42 +54,38 @@ class ControllerUtilitySpec extends TestUtils with ControllerUtils with GuiceOne
     "return IdRequest instance when key length is right" in {
       val id = validKey
       val search = requestObject(s"$searchByIdUrl$id")
-      val unpackedTest = unpackParams(Some(id), search)
+      val unpackedTest = matchByParams(Some(id), search)
       unpackedTest mustBe a[IdRequest]
       getParsedRequestType[IdRequest](unpackedTest).id mustEqual id
     }
 
     "return an InvalidKey instance when no valid key is found" in {
       val search = requestObject(s"${searchByIdUrl}1233")
-      val unpackedTest = unpackParams(Some("12"), search)
+      val unpackedTest = matchByParams(Some("12"), search)
       unpackedTest must not be a[IdRequest]
       unpackedTest mustBe a[InvalidKey]
     }
   }
 
-  "optionConverter" should {
+  "toOption" should {
     "convert java Optional to Scala Options" ignore {
       val parseDate = validateYearMonth(validKey, validDate)
       val convertedDate = getParsedRequestType[ReferencePeriod](parseDate).period
-      //    Enterprise(convertedDate, "1244")
-      val enterprise = ???
-      val conversion = optionConverter(enterprise)
-      conversion mustBe a[Option[Enterprise]]
+      val ent = EnterpriseTest(validKey, convertedDate)
+      val entAsOptional: Optional[EnterpriseTest] = toJavaOptional[EnterpriseTest](Some(ent))
+      entAsOptional mustBe a[Optional[EnterpriseTest]]
+      val entAsOption: Option[EnterpriseTest] = toOption[EnterpriseTest](entAsOptional)
+      entAsOption must not be a[Optional[EnterpriseTest]]
+      entAsOption mustBe a[Option[EnterpriseTest]]
     }
   }
 
-  "toScalaList" should {
-    "convert optional list to scala list" ignore {
-      val rawUnit: Optional[java.util.List[StatisticalUnit]] = ???
-      val unitConverted: Option[List[StatisticalUnit]] = toScalaList(rawUnit)
-      unitConverted mustBe a[Option[List[StatisticalUnit]]]
-      val listOfStatUnits = unitConverted.getOrElse(List())
-      listOfStatUnits mustBe a[scala.collection.immutable.List[StatisticalUnit]]
-    }
-  }
-
-  def getParsedRequestType[T](x: RequestEvaluation): T = x match { case (x: T) => x }
+  def getParsedRequestType[T](x: RequestEvaluation): T = x match {
+    case (x: T) => x
+    case _ => sys.error("Cannot construct to subtype of RequestEvaluation, force failing tests.")}
 
   def toJsonTest(s: String) = JsNumber(s.toInt)
+
+  case class EnterpriseTest (a: String, b: YearMonth)
 
 }
