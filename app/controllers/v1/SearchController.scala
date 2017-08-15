@@ -15,6 +15,8 @@ import utils.{ IdRequest, InvalidKey, ReferencePeriod, InvalidReferencePeriod }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
+import utils.FutureResponse._
+
 /**
  * Created by haqa on 04/08/2017.
  */
@@ -26,6 +28,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 @Api("Search")
 class SearchController extends ControllerUtils {
 
+  /**
+   * @todo - generalise and create generic search function x2 per param length
+   */
   //public api
   @ApiOperation(
     value = "Json response of links that correspond to id",

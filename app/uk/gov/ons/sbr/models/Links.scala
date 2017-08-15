@@ -31,6 +31,5 @@ object Links {
   ))
 
   def toJson(u: List[StatisticalUnit]): JsValue = Json.toJson(apply(u))
-
 }
 
