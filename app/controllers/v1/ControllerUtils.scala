@@ -69,9 +69,13 @@ trait ControllerUtils extends Controller with StrictLogging {
       case Some(s) =>
         validateYearMonth(key, s)
     }
+
   }
 
   protected def toOption[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
+
+  protected def toJavaOptional[A](o: Option[A]): Optional[A] =
+    o match { case Some(a) => Optional.ofNullable(a); case _ => Optional.empty[A] }
 
   protected def toJavaOptional[A](o: Option[A]): Optional[A] =
     o match { case Some(a) => Optional.ofNullable(a); case _ => Optional.empty[A] }
