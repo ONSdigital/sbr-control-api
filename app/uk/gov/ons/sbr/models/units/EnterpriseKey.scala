@@ -21,10 +21,11 @@ object EnterpriseKey {
 
   implicit val unitFormat: OFormat[EnterpriseKey] = Json.format[EnterpriseKey]
 
-  def toCC(o: Enterprise): EnterpriseKey = {
+  def apply(o: Enterprise): EnterpriseKey = {
     EnterpriseKey(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString)
   }
 
-  def toJson(o: Enterprise): JsValue = Json.toJson(toCC(o))
+  def toJson(o: Enterprise): JsValue = Json.toJson(apply(o))
+
 
 }

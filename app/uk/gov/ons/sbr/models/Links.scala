@@ -26,11 +26,11 @@ object Links {
   // rep play write
   def toStringMap(x: Map[UnitType, String]): Map[String, String] = { x map { case (k, v) => k.toString -> v } }
 
-  def toCC(s: List[StatisticalUnit]): List[Links] = s map (u => Links(
+  def apply(s: List[StatisticalUnit]): List[Links] = s map (u => Links(
     u.getKey, toStringMap(u.getLinks.getParents.toMap), u.getLinks.getChildJsonString, u.getType.toString
   ))
 
-  def toJson(u: List[StatisticalUnit]): JsValue = Json.toJson(toCC(u))
+  def toJson(u: List[StatisticalUnit]): JsValue = Json.toJson(apply(u))
 
 }
 
