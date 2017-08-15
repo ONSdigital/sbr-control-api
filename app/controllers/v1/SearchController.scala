@@ -4,14 +4,16 @@ import play.api.mvc.{ Action, AnyContent }
 import java.util.Optional
 
 import io.swagger.annotations._
-import models.Links
-import models.units.EnterpriseKey
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
-import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod }
+import uk.gov.ons.sbr.models.Links
+import uk.gov.ons.sbr.models.units.EnterpriseKey
+import utils._
 
 import scala.util.{ Failure, Success, Try }
 import utils.Utilities.errAsJson
 import utils.Properties.minKeyLength
+
+import utils.FutureResponse._
 
 /**
  * Created by haqa on 04/08/2017.
@@ -19,6 +21,9 @@ import utils.Properties.minKeyLength
 @Api("Search")
 class SearchController extends ControllerUtils {
 
+  /**
+   * @todo - generalise and create generic search function x2 per param length
+   */
   //public api
   @ApiOperation(
     value = "Json response of links that correspond to id",
@@ -37,22 +42,21 @@ class SearchController extends ControllerUtils {
   def retrieveLinksById(
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
-    val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    val res = key match {
-      case key if key.length >= minKeyLength =>
-        Try(requestLinks.findUnits(key)) match {
+    val res = matchByParams(id, request) match {
+      case (x: IdRequest) =>
+        val resp = Try(requestLinks.findUnits(x.id)) match {
           case Success(s) => if (s.isPresent) {
             resultMatcher[java.util.List[StatisticalUnit]](s, toScalaList)
           } else {
-            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id $key")))
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
           }
           case Failure(ex) =>
-            futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
+            InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
+        resp
+      case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
-        futureResult(
-          BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
-        )
+        BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
     }
     res
   }
@@ -73,27 +77,27 @@ class SearchController extends ControllerUtils {
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveLinks(
-    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: Option[String],
+    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = unpackParams(request) match {
+    println(s"res ===> ${matchByParams(id, request, Some(date))}")
+    val res = matchByParams(id, request, Some(date)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestLinks.findUnits(x.period, x.id)) match {
           case Success(s) => if (s.isPresent) {
             resultMatcher[java.util.List[StatisticalUnit]](s, toScalaList)
           } else {
-            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")))
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
           }
           case Failure(ex) =>
-            futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
+            InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (e: InvalidReferencePeriod) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
-        s"cannot parse date with exception ${e.exception}")))
+      case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "invalid_date",
+        s"cannot parse date with exception ${y.exception}")).future
+      case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
-        futureResult(
-          BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
-        )
+        BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
     }
     res
   }
@@ -114,24 +118,24 @@ class SearchController extends ControllerUtils {
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveEnterpriseById(
-    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: Option[String]
+    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val key: String = Try(getQueryString(request, "id")).getOrElse("")
-    val res = key match {
-      case k if k.length >= minKeyLength =>
-        Try(requestEnterprise.getEnterprise(k)) match {
+    val res = matchByParams(Some(id), request) match {
+      case (x: IdRequest) =>
+        val resp = Try(requestEnterprise.getEnterprise(x.id)) match {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
             resultMatcher[Enterprise](s, optionConverter)
           } else {
-            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id $key")))
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
           }
           case Failure(ex) =>
-            futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
+            InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
+        resp
+      case (i: InvalidKey) =>
+        BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
-        futureResult(
-          BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
-        )
+        BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
     }
     res
   }
@@ -152,27 +156,31 @@ class SearchController extends ControllerUtils {
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveEnterprise(
-    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: Option[String],
-    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: Option[String]
+    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
+    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = unpackParams(request) match {
+    /**
+     * process params pass both date and id
+     */
+    val res = matchByParams(Some(id), request, Some(date)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestEnterprise.getEnterpriseForReferencePeriod(x.period, x.id)) match {
           case Success(s: Optional[Enterprise]) => if (s.isPresent) {
             resultMatcher[Enterprise](s, optionConverter)
           } else {
-            futureResult(NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")))
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
           }
           case Failure(ex) =>
-            futureResult(InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")))
+            InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex")).future
         }
         resp
-      case (e: InvalidReferencePeriod) => futureResult(BadRequest(errAsJson(BAD_REQUEST, "bad_request",
-        s"cannot parse date with exception ${e.exception}")))
+      case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "invalid_date",
+        s"cannot parse date with exception ${y.exception}")).future
+      case (i: InvalidKey) =>
+        BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
-        futureResult(
-          BadRequest(errAsJson(BAD_REQUEST, "missing_query", s"No query specified or key size is too short [$minKeyLength]."))
-        )
+        BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
+
     }
     res
   }

@@ -11,19 +11,18 @@ lazy val Versions = new {
   val scala = "2.11.11"
   val appVersion = "0.1-SNAPSHOT"
   val scapegoatVersion = "1.1.0"
+  val hbase = "1.3.1"
 }
 
 lazy val Constant = new {
-  val appName = "ons-sbr-control-api"
+  val appName = "sbr-control-api"
   val projectStage = "alpha"
-  val detail = Versions.appVersion
   val organisation = "ons"
   val team = "sbr"
 }
 
 lazy val testSettings = Seq(
   sourceDirectory in ITest := baseDirectory.value / "/test/it",
-  javaSource in ITest := baseDirectory.value / "/test/it",
   resourceDirectory in ITest := baseDirectory.value / "/test/resources",
   scalaSource in ITest := baseDirectory.value / "test/it",
   // test setup
@@ -67,7 +66,7 @@ lazy val commonSettings = Seq (
 lazy val api = (project in file("."))
   .enablePlugins(BuildInfoPlugin, GitVersioning, GitBranchPrompt, PlayScala)
   .configs(ITest)
-  .settings( inConfig(ITest)(Defaults.testSettings) : _*)
+  .settings(inConfig(ITest)(Defaults.testSettings) : _*)
   .settings(commonSettings: _*)
   .settings(testSettings:_*)
   .settings(
@@ -83,8 +82,7 @@ lazy val api = (project in file("."))
       scalaVersion,
       sbtVersion,
       BuildInfoKey.action("gitVersion") {
-        // todo git-tag@date
-      git.gitTagToVersionNumber.?.value.getOrElse(Some(Constant.projectStage))+"@"+ git.formattedDateVersion.?.value.getOrElse("")
+        git.gitTagToVersionNumber.?.value.getOrElse(Some(Constant.projectStage))+"@"+ git.formattedDateVersion.?.value.getOrElse("")
     }),
     // di router -> swagger
     routesGenerator := InjectedRoutesGenerator,
@@ -96,17 +94,21 @@ lazy val api = (project in file("."))
       "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "2.0.0"           % Test,
       "org.webjars"                  %%    "webjars-play"        %    "2.5.0-3",
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",
+      "com.typesafe"                 %     "config"              %    "1.3.1",
+      //swagger
       "io.swagger"                   %%    "swagger-play2"       %    "1.5.3",
       "org.webjars"                  %     "swagger-ui"          %    "3.1.4",
-      "com.typesafe"                 %     "config"              %    "1.3.1",
       // hbase
       "org.apache.hadoop"            %     "hadoop-common"       %    "2.6.0",
-      "org.apache.hbase"             %     "hbase-common"        %    "1.3.1",
-      "org.apache.hbase"             %     "hbase-client"        %    "1.3.1"
+      "org.apache.hbase"             %     "hbase-common"        %    Versions.hbase,
+      "org.apache.hbase"             %     "hbase-client"        %    Versions.hbase,
+      //hbase test
+      "org.apache.hbase"             %     "hbase-server"        %    Versions.hbase    % Test,
+      "org.apache.hbase"             %     "hbase-testing-util"  %    Versions.hbase    % Test
       excludeAll ExclusionRule("commons-logging", "commons-logging")
     ),
     // assembly
-    assemblyJarName in assembly := s"sbr-control-api-${Versions.appVersion}.jar",
+    assemblyJarName in assembly := s"${Constant.appName}-${Versions.appVersion}.jar",
     assemblyMergeStrategy in assembly := {
       case PathList("io", "netty", xs@_*)                                => MergeStrategy.last
       case PathList("javax", "xml", xs@_*)                               => MergeStrategy.last

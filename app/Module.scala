@@ -3,6 +3,7 @@ import java.time.Clock
 
 import com.typesafe.config.{ Config, ConfigFactory }
 import play.api.{ Configuration, Environment }
+import utils.SBRPropertiesConfiguration
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -21,7 +22,8 @@ class Module(
 
   override def configure() = {
 
-    val config: Config = ConfigFactory.load
+    val config = SBRPropertiesConfiguration.envConfig(ConfigFactory.load())
+    //    val config: Config = ConfigFactory.load
     bind(classOf[Config]).toInstance(config)
 
     // Use the system clock as the default implementation of Clock

@@ -1,13 +1,13 @@
 package utils
 
-import java.time.{DateTimeException, YearMonth}
+import java.time.{ DateTimeException, YearMonth }
 
 import com.google.inject.ImplementedBy
 
 /**
  * Created by haqa on 09/08/2017.
  */
-@ImplementedBy(classOf[ReferencePeriod], classOf[InvalidReferencePeriod])
+@ImplementedBy(classOf[ReferencePeriod])
 sealed trait RequestEvaluation
 
 case class IdRequest(id: String) extends RequestEvaluation

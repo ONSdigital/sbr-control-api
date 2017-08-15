@@ -7,6 +7,7 @@ import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
 import play.api.mvc.{ Action, AnyContent, Result }
 import play.api.libs.json.Json
 import controllers.BuildInfo
+import utils.FutureResponse._
 
 import scala.concurrent.Future
 
@@ -34,7 +35,7 @@ class LastUpdateController @Inject() (implicit val config: Config) extends Contr
    */
   def generate: Future[Result] = {
     val res = Ok(Json.obj("status" -> "OK", "bi-api-deployed-date" -> s"${BuildInfo.builtAtMillis}"))
-    futureResult(res)
+    res.future
   }
 
 }
