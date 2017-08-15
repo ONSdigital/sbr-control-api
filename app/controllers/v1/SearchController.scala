@@ -80,7 +80,6 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
-    println(s"res ===> ${matchByParams(id, request, Some(date))}")
     val res = matchByParams(id, request, Some(date)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestLinks.findUnits(x.period, x.id)) match {
