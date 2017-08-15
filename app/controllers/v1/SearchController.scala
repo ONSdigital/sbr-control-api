@@ -21,8 +21,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * @todo - generalise and create generic search function x2 per param length
- *      - add timeout and no service unavailable or unauthorized
- *      - check no-param found err-control
+ *       - check no-param found err-control
  */
 @Api("Search")
 class SearchController extends ControllerUtils {

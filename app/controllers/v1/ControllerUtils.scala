@@ -71,14 +71,6 @@ trait ControllerUtils extends Controller with StrictLogging {
     }
   }
 
-  @deprecated("Migrated to toOption", "test/hbaseUtility [Tue 15 Aug 2017 - 13:43]")
-  protected def optionConverter(o: Optional[Enterprise]): Option[Enterprise] =
-    if (o.isPresent) Some(o.get) else None
-
-  @deprecated("Migrated to toOption", "test/hbaseUtility [Tue 15 Aug 2017 - 13:43]")
-  protected def toScalaList(l: Optional[java.util.List[StatisticalUnit]]): Option[List[StatisticalUnit]] =
-    if (l.isPresent) Some(l.get.toList) else None
-
   protected def toOption[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
 
   protected def toJavaOptional[A](o: Option[A]): Optional[A] =
