@@ -24,7 +24,6 @@ object Utilities {
   def getElement(value: Any) = {
     val res = value match {
       case None => ""
-      case JsDefined(v) => v
       case Some(i: Int) => i
       case Some(l: Long) => l
       case Some(z) => s""""${z}""""
