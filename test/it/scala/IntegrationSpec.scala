@@ -8,15 +8,15 @@ import resource.TestUtils
  */
 class IntegrationSpec extends TestUtils {
 
-  "Query Response" should {
-
-    "get by anonymous Enterprise id" in {
-      val id = 1244
-      val res = fakeRequest(s"/v1/enterprises/$id")
-      status(res) mustBe OK
-      contentType(res) mustBe Some("application/json")
-
-    }
+//  "Query Response" should {
+//
+//    "get by anonymous Enterprise id" in {
+//      val id = 1244
+//      val res = fakeRequest(s"/v1/enterprises/$id")
+//      status(res) mustBe OK
+//      contentType(res) mustBe Some("application/json")
+//
+//    }
 
   }
 
