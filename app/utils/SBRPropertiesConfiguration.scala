@@ -1,6 +1,6 @@
 package utils
 
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.Config
 import org.slf4j.LoggerFactory
 
 /**

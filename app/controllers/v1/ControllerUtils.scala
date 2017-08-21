@@ -12,9 +12,9 @@ import play.api.libs.json.JsValue
 
 import scala.util.{ Failure, Success, Try }
 import scala.concurrent.{ Future, TimeoutException }
-import uk.gov.ons.sbr.data.controller._
-import uk.gov.ons.sbr.data.hbase.{ HBaseConnector, HBaseTest }
-import uk.gov.ons.sbr.models.Links
+import uk.gov.ons.sbr.data.controller.{ UnitController, EnterpriseController }
+import uk.gov.ons.sbr.data.hbase.{ HBaseConnector }
+import uk.gov.ons.sbr.models.UnitLinks
 import uk.gov.ons.sbr.models.units.EnterpriseUnit
 import utils.Utilities.errAsJson
 import utils.Properties.minKeyLength
@@ -69,7 +69,6 @@ trait ControllerUtils extends Controller with StrictLogging {
       case Some(s) =>
         validateYearMonth(key, s)
     }
-
   }
 
   protected def toOption[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
@@ -87,7 +86,7 @@ trait ControllerUtils extends Controller with StrictLogging {
    */
   protected def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
     Future { toOption[Z](v) }.map {
-      case Some(x: java.util.List[StatisticalUnit]) => tryAsResponse[List[StatisticalUnit]](Links.toJson, x.toList)
+      case Some(x: java.util.List[StatisticalUnit]) => tryAsResponse[List[StatisticalUnit]](UnitLinks.toJson, x.toList)
       case Some(x: Enterprise) => tryAsResponse[Enterprise](EnterpriseUnit.toJson, x)
       case None =>
         BadRequest(errAsJson(BAD_REQUEST, "bad_request", msg.getOrElse("Could not parse returned response")))
@@ -97,12 +96,12 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected def responseException: PartialFunction[Throwable, Result] = {
     case ex: DateTimeParseException =>
       BadRequest(errAsJson(BAD_REQUEST, "invalid_date", s"cannot parse date exception found $ex"))
-    case ex: RuntimeException => InternalServerError(errAsJson(455, "runtime_exception", s"$ex"))
+    case ex: RuntimeException => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "runtime_exception", s"$ex"))
     case ex: ServiceUnavailableException =>
       ServiceUnavailable(errAsJson(SERVICE_UNAVAILABLE, "service_unavailable", s"$ex"))
     case ex: TimeoutException =>
       RequestTimeout(errAsJson(REQUEST_TIMEOUT, "request_timeout", s"This may be due to connection being blocked. $ex"))
-    case ex => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex"))
+    case ex => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex."))
   }
 
 }

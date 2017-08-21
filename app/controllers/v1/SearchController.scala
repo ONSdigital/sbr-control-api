@@ -1,36 +1,33 @@
 package controllers.v1
 
+import java.time.YearMonth
+
 import play.api.mvc.{ Action, AnyContent }
 import java.util.Optional
 
 import io.swagger.annotations._
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
-import uk.gov.ons.sbr.models.Links
+import uk.gov.ons.sbr.models.UnitLinks
 import uk.gov.ons.sbr.models.units.EnterpriseUnit
 
 import scala.util.Try
 import utils.Utilities.errAsJson
-import utils.FutureResponse._
-import utils.{ IdRequest, InvalidKey, ReferencePeriod, InvalidReferencePeriod }
 
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import utils.FutureResponse._
+import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod }
 
 /**
  * Created by haqa on 04/08/2017.
  */
 
 /**
- * @todo - generalise and create generic search function x2 per param length
+ * @todo - generalise and create generic search function x2 per param length -> HList
  *       - check no-param found err-control
  */
 @Api("Search")
 class SearchController extends ControllerUtils {
 
-  /**
-   * @todo - generalise and create generic search function x2 per param length
-   */
   //public api
   @ApiOperation(
     value = "Json response of links that correspond to id",
@@ -40,21 +37,25 @@ class SearchController extends ControllerUtils {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, response = classOf[Links], responseContainer = "JsValue", message = "Ok -> Retrieved Links for given id."),
+    new ApiResponse(code = 200, response = classOf[UnitLinks], responseContainer = "JsValue", message = "Ok -> Retrieved Links for given id."),
     new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
     new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
     new ApiResponse(code = 500, responseContainer = "JsValue",
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
-  def retrieveLinksById(
+  def retrieveUnitLinksById(
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
     val res = matchByParams(id, request) match {
       case (x: IdRequest) =>
         val resp = Try(requestLinks.findUnits(x.id)).futureTryRes.flatMap {
-          case (s) => if (s.isPresent) {
-            resultMatcher[java.util.List[StatisticalUnit]](s)
-          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
+          case (s: Optional[java.util.List[StatisticalUnit]]) =>
+            if (s.isPresent) {
+              resultMatcher[java.util.List[StatisticalUnit]](s)
+            } else {
+              logger.debug(s"Could not find entry with id $id")
+              NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
+            }
         } recover responseException
         resp
       case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
@@ -73,13 +74,13 @@ class SearchController extends ControllerUtils {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, response = classOf[Links], responseContainer = "JsValue", message = "Ok -> Retrieved Links for given id."),
+    new ApiResponse(code = 200, response = classOf[UnitLinks], responseContainer = "JsValue", message = "Ok -> Retrieved Links for given id."),
     new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
     new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
     new ApiResponse(code = 500, responseContainer = "JsValue",
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
-  def retrieveLinks(
+  def retrieveUnitLinks(
     @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
   ): Action[AnyContent] = Action.async { implicit request =>
@@ -156,6 +157,7 @@ class SearchController extends ControllerUtils {
     /**
      * process params pass both date and id
      */
+    //    search[Enterprise, (YearMonth, String)](???, requestEnterprise.getEnterpriseForReferencePeriod)
     val res = matchByParams(Some(id), request, Some(date)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestEnterprise.getEnterpriseForReferencePeriod(x.period, x.id)).futureTryRes.flatMap {
@@ -174,5 +176,24 @@ class SearchController extends ControllerUtils {
     }
     res
   }
+
+
+//    def search [Z, V][X, Y](r: RequestEvaluation, f: Y => Optional[X]) = {
+//      val res = r match {
+//        case (x: IdRequest) =>
+//  //        requestEnterprise.getEnterprise(x.id)
+//          val resp = Try(f(x.id)).futureTryRes.flatMap {
+//            case (s: Optional[X]) => if (s.isPresent) {
+//              resultMatcher[X](s)
+//            } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
+//          } recover responseException
+//          resp
+//        case (i: InvalidKey) =>
+//          BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
+//        case _ =>
+//          BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
+//      }
+//      res
+//    }
 
 }
