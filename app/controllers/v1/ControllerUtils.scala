@@ -8,7 +8,6 @@ import javax.naming.ServiceUnavailableException
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, UnitType }
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import com.typesafe.scalalogging.StrictLogging
-import org.apache.hadoop.hbase.DoNotRetryIOException
 import org.apache.hadoop.util.ToolRunner
 import play.api.Logger
 import play.api.libs.json.JsValue
