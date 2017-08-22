@@ -49,9 +49,9 @@ class SearchController extends ControllerUtils {
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveUnitLinksById(
-    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
+    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = matchByParams(id, request) match {
+    val res = matchByParams(Some(id), request) match {
       case (x: IdRequest) =>
         val resp = Try(requestLinks.findUnits(x.id)).futureTryRes.flatMap {
           case (s: Optional[java.util.List[StatisticalUnit]]) =>
@@ -87,9 +87,9 @@ class SearchController extends ControllerUtils {
   ))
   def retrieveUnitLinks(
     @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
-    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: Option[String]
+    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val res = matchByParams(id, request, Some(date)) match {
+    val res = matchByParams(Some(id), request, Some(date)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestLinks.findUnits(x.period, x.id)).futureTryRes.flatMap {
           case (s) => if (s.isPresent) {
