@@ -1,6 +1,7 @@
 import play.sbt.PlayScala
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
 import sbtassembly.AssemblyPlugin.autoImport._
+import com.typesafe.sbt.SbtNativePackager.Universal
 
 licenses := Seq("MIT-License" -> url("https://github.com/ONSdigital/sbr-control-api/blob/master/LICENSE"))
 
@@ -71,7 +72,7 @@ lazy val api = (project in file("."))
   .settings(testSettings:_*)
   .settings(
     name := Constant.appName,
-    moduleName := "control-api",
+    moduleName := "sbr-control-api",
     version := Versions.appVersion,
     buildInfoPackage := "controllers",
     // gives us last compile time and tagging info
