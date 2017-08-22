@@ -84,6 +84,16 @@ lazy val api = (project in file("."))
       BuildInfoKey.action("gitVersion") {
         git.gitTagToVersionNumber.?.value.getOrElse(Some(Constant.projectStage))+"@"+ git.formattedDateVersion.?.value.getOrElse("")
     }),
+    // After universal:packageBin has run, the csv files cannot be found, so need to move them to the right place.
+    mappings in Universal += file("conf/sample/sbr-2500-ent-data.csv") -> "bin/conf/sample/sbr-2500-ent-data.csv",
+    mappings in Universal += file("conf/sample/sbr-2500-ent-leu-links.csv") -> "bin/conf/sample/sbr-2500-ent-leu-links.csv",
+    mappings in Universal += file("conf/sample/sbr-2500-leu-ch-links.csv") -> "bin/conf/sample/sbr-2500-leu-ch-links.csv",
+    mappings in Universal += file("conf/sample/sbr-2500-leu-paye-links.csv") -> "bin/conf/sample/sbr-2500-leu-paye-links.csv",
+    mappings in Universal += file("conf/sample/sbr-2500-leu-vat-links.csv") -> "bin/conf/sample/sbr-2500-leu-vat-links.csv",
+    // Run with proper default env vars set for hbaseInMemory
+    javaOptions in Universal ++= Seq(
+      "-Dsbr.hbase.inmemory=true"
+    ),
     // di router -> swagger
     routesGenerator := InjectedRoutesGenerator,
     buildInfoOptions += BuildInfoOption.ToMap,

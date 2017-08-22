@@ -8,6 +8,7 @@ import javax.naming.ServiceUnavailableException
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, UnitType }
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import com.typesafe.scalalogging.StrictLogging
+import org.apache.hadoop.hbase.DoNotRetryIOException
 import org.apache.hadoop.util.ToolRunner
 import play.api.Logger
 import play.api.libs.json.JsValue
@@ -36,8 +37,20 @@ trait ControllerUtils extends Controller with StrictLogging {
 
   Logger.info("Loading local CSVs into In-Memory HBase...")
   val bulkLoader = new BulkLoader()
-  val args = List[String](UnitType.ENTERPRISE.toString, "201706", "conf/sample/enterprise.csv")
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, args.toArray)
+  val argsData = List[String](UnitType.ENTERPRISE.toString, "201706", "conf/sample/sbr-2500-ent-data.csv")
+  val argsLinksLeu = List[String](UnitType.ENTERPRISE.toString + "~" + UnitType.LEGAL_UNIT.toString, "201706", "conf/sample/sbr-2500-ent-leu-links.csv")
+  val argsLinksCh = List[String](UnitType.LEGAL_UNIT.toString + "~" + UnitType.COMPANY_REGISTRATION.toString, "201706", "conf/sample/sbr-2500-leu-ch-links.csv")
+  val argsLinksPaye = List[String](UnitType.LEGAL_UNIT.toString + "~" + UnitType.PAYE.toString, "201706", "conf/sample/sbr-2500-leu-paye-links.csv")
+  val argsLinksVat = List[String](UnitType.LEGAL_UNIT.toString + "~" + UnitType.VAT.toString, "201706", "conf/sample/sbr-2500-leu-vat-links.csv")
+
+  // Data
+  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsData.toArray)
+
+  // Links
+  //  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksLeu.toArray)
+  //  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksCh.toArray)
+  //  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksPaye.toArray)
+  //  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksVat.toArray)
 
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
