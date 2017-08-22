@@ -5,15 +5,18 @@ import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, UnitType }
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import com.typesafe.scalalogging.StrictLogging
+import org.apache.hadoop.util.ToolRunner
+import play.api.Logger
 import play.api.libs.json.JsValue
 
 import scala.util.{ Failure, Success, Try }
 import scala.concurrent.{ Future, TimeoutException }
-import uk.gov.ons.sbr.data.controller.{ UnitController, EnterpriseController }
-import uk.gov.ons.sbr.data.hbase.{ HBaseConnector }
+import uk.gov.ons.sbr.data.controller.{ AdminDataController, EnterpriseController, UnitController }
+import uk.gov.ons.sbr.data.hbase.HBaseConnector
+import uk.gov.ons.sbr.data.hbase.load.BulkLoader
 import uk.gov.ons.sbr.models.UnitLinks
 import uk.gov.ons.sbr.models.units.EnterpriseUnit
 import utils.Utilities.errAsJson
@@ -30,9 +33,11 @@ import scala.collection.JavaConversions._
  * @todo - change Future in resultMatcher
  */
 trait ControllerUtils extends Controller with StrictLogging {
-  //initialise
-  //  HBaseTest.init
-  HBaseConnector.getInstance().connect()
+
+  Logger.info("Loading local CSVs into In-Memory HBase...")
+  val bulkLoader = new BulkLoader()
+  val args = List[String](UnitType.ENTERPRISE.toString, "201706", "conf/sample/enterprise.csv")
+  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, args.toArray)
 
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()

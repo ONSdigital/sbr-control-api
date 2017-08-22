@@ -6,7 +6,12 @@ import play.api.mvc.{ Action, AnyContent }
 import java.util.Optional
 
 import io.swagger.annotations._
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import org.apache.hadoop.util.ToolRunner
+import play.api.Logger
+import uk.gov.ons.sbr.data.controller.AdminDataController
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, UnitType }
+import uk.gov.ons.sbr.data.hbase.HBaseConnector
+import uk.gov.ons.sbr.data.hbase.load.BulkLoader
 import uk.gov.ons.sbr.models.UnitLinks
 import uk.gov.ons.sbr.models.units.EnterpriseUnit
 
@@ -157,7 +162,7 @@ class SearchController extends ControllerUtils {
     /**
      * process params pass both date and id
      */
-    //    search[Enterprise, (YearMonth, String)](???, requestEnterprise.getEnterpriseForReferencePeriod)
+    //search[Enterprise, (YearMonth, String)](???, requestEnterprise.getEnterpriseForReferencePeriod)
     val res = matchByParams(Some(id), request, Some(date)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestEnterprise.getEnterpriseForReferencePeriod(x.period, x.id)).futureTryRes.flatMap {
@@ -177,23 +182,22 @@ class SearchController extends ControllerUtils {
     res
   }
 
-
-//    def search [Z, V][X, Y](r: RequestEvaluation, f: Y => Optional[X]) = {
-//      val res = r match {
-//        case (x: IdRequest) =>
-//  //        requestEnterprise.getEnterprise(x.id)
-//          val resp = Try(f(x.id)).futureTryRes.flatMap {
-//            case (s: Optional[X]) => if (s.isPresent) {
-//              resultMatcher[X](s)
-//            } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
-//          } recover responseException
-//          resp
-//        case (i: InvalidKey) =>
-//          BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
-//        case _ =>
-//          BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
-//      }
-//      res
-//    }
+  //    def search [Z, V][X, Y](r: RequestEvaluation, f: Y => Optional[X]) = {
+  //      val res = r match {
+  //        case (x: IdRequest) =>
+  //  //        requestEnterprise.getEnterprise(x.id)
+  //          val resp = Try(f(x.id)).futureTryRes.flatMap {
+  //            case (s: Optional[X]) => if (s.isPresent) {
+  //              resultMatcher[X](s)
+  //            } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
+  //          } recover responseException
+  //          resp
+  //        case (i: InvalidKey) =>
+  //          BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
+  //        case _ =>
+  //          BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
+  //      }n
+  //      res
+  //    }
 
 }
