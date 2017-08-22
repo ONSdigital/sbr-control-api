@@ -37,6 +37,7 @@ trait ControllerUtils extends Controller with StrictLogging {
 
   Logger.info("Loading local CSVs into In-Memory HBase...")
   val bulkLoader = new BulkLoader()
+  val args = List[String](UnitType.ENTERPRISE.toString, "201706", "conf/sample/enterprise.csv")
   val argsData = List[String](UnitType.ENTERPRISE.toString, "201706", "conf/sample/sbr-2500-ent-data.csv")
   val argsLinksLeu = List[String](UnitType.ENTERPRISE.toString + "~" + UnitType.LEGAL_UNIT.toString, "201706", "conf/sample/sbr-2500-ent-leu-links.csv")
   val argsLinksCh = List[String](UnitType.LEGAL_UNIT.toString + "~" + UnitType.COMPANY_REGISTRATION.toString, "201706", "conf/sample/sbr-2500-leu-ch-links.csv")
@@ -44,6 +45,7 @@ trait ControllerUtils extends Controller with StrictLogging {
   val argsLinksVat = List[String](UnitType.LEGAL_UNIT.toString + "~" + UnitType.VAT.toString, "201706", "conf/sample/sbr-2500-leu-vat-links.csv")
 
   // Data
+  //ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, args.toArray)
   ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsData.toArray)
 
   // Links
