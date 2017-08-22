@@ -47,10 +47,10 @@ trait ControllerUtils extends Controller with StrictLogging {
   ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsData.toArray)
 
   // Links
-  //  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksLeu.toArray)
-  //  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksCh.toArray)
-  //  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksPaye.toArray)
-  //  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksVat.toArray)
+  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksLeu.toArray)
+  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksCh.toArray)
+  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksPaye.toArray)
+  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksVat.toArray)
 
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
