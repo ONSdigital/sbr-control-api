@@ -15,9 +15,9 @@ import uk.gov.ons.sbr.data.hbase.load.BulkLoader
 import uk.gov.ons.sbr.models.UnitLinks
 import uk.gov.ons.sbr.models.units.EnterpriseUnit
 
-import scala.util.Try
 import utils.Utilities.errAsJson
 
+import scala.util.{ Failure, Success, Try }
 import scala.concurrent.ExecutionContext.Implicits.global
 import utils.FutureResponse._
 import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod }
