@@ -13,7 +13,7 @@ case class EnterpriseUnit(
   @ApiModelProperty(value = "Unit identifier", example = "", required = true, hidden = false) id: Long,
   period: String,
   @ApiModelProperty(value = "A key value pair of all variables associated", example = "",
-    dataType = "Map[String,String]") values: Map[String, String],
+    dataType = "Map[String,String]") vars: Map[String, String],
   unitType: String
 )
 
