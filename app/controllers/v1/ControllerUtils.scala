@@ -36,9 +36,17 @@ trait ControllerUtils extends Controller with StrictLogging {
 
   Logger.info("Loading local CSVs into In-Memory HBase...")
   val bulkLoader = new BulkLoader()
-  val args = List[String](UnitType.ENTERPRISE.toString, "201706", "conf/sample/enterprise.csv")
+  //val args = List[String](UnitType.ENTERPRISE.toString, "201706", "conf/sample/enterprise.csv")
+
+  // Enterprise Data
   val argsData = List[String](UnitType.ENTERPRISE.toString, "201706", "conf/sample/sbr-2500-ent-data.csv")
-  val argsLinksLeu = List[String](UnitType.ENTERPRISE.toString + "~" + UnitType.LEGAL_UNIT.toString, "201706", "conf/sample/sbr-2500-ent-leu-links.csv")
+
+  // Ent ~ VAT/PAYE/CH/LEU Links
+  val argsLinksEntLeu = List[String](UnitType.ENTERPRISE.toString + "~" + UnitType.LEGAL_UNIT.toString, "201706", "conf/sample/sbr-2500-ent-leu-links.csv")
+  val argsLinksEntVat = List[String](UnitType.ENTERPRISE.toString + "~" + UnitType.VAT.toString, "201706", "conf/sample/sbr-2500-ent-vat-links.csv")
+  val argsLinksEntPaye = List[String](UnitType.ENTERPRISE.toString + "~" + UnitType.PAYE.toString, "201706", "conf/sample/sbr-2500-ent-paye-links.csv")
+  val argsLinksEntCh = List[String](UnitType.ENTERPRISE.toString + "~" + UnitType.COMPANY_REGISTRATION.toString, "201706", "conf/sample/sbr-2500-ent-ch-links.csv")
+
   val argsLinksCh = List[String](UnitType.LEGAL_UNIT.toString + "~" + UnitType.COMPANY_REGISTRATION.toString, "201706", "conf/sample/sbr-2500-leu-ch-links.csv")
   val argsLinksPaye = List[String](UnitType.LEGAL_UNIT.toString + "~" + UnitType.PAYE.toString, "201706", "conf/sample/sbr-2500-leu-paye-links.csv")
   val argsLinksVat = List[String](UnitType.LEGAL_UNIT.toString + "~" + UnitType.VAT.toString, "201706", "conf/sample/sbr-2500-leu-vat-links.csv")
@@ -48,7 +56,11 @@ trait ControllerUtils extends Controller with StrictLogging {
   ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsData.toArray)
 
   // Links
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksLeu.toArray)
+  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksEntLeu.toArray)
+  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksEntVat.toArray)
+  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksEntPaye.toArray)
+  ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksEntCh.toArray)
+
   ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksCh.toArray)
   ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksPaye.toArray)
   ToolRunner.run(HBaseConnector.getInstance().getConfiguration(), bulkLoader, argsLinksVat.toArray)
