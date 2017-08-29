@@ -87,6 +87,9 @@ lazy val api = (project in file("."))
     }),
     // After universal:packageBin has run, the csv files cannot be found, so need to move them to the right place.
     mappings in Universal += file("conf/sample/sbr-2500-ent-data.csv") -> "bin/conf/sample/sbr-2500-ent-data.csv",
+    mappings in Universal += file("conf/sample/sbr-2500-ent-ch-links.csv") -> "bin/conf/sample/sbr-2500-ent-ch-links.csv",
+    mappings in Universal += file("conf/sample/sbr-2500-ent-paye-links.csv") -> "bin/conf/sample/sbr-2500-ent-paye-links.csv",
+    mappings in Universal += file("conf/sample/sbr-2500-ent-vat-links.csv") -> "bin/conf/sample/sbr-2500-ent-vat-links.csv",
     mappings in Universal += file("conf/sample/sbr-2500-ent-leu-links.csv") -> "bin/conf/sample/sbr-2500-ent-leu-links.csv",
     mappings in Universal += file("conf/sample/sbr-2500-leu-ch-links.csv") -> "bin/conf/sample/sbr-2500-leu-ch-links.csv",
     mappings in Universal += file("conf/sample/sbr-2500-leu-paye-links.csv") -> "bin/conf/sample/sbr-2500-leu-paye-links.csv",
