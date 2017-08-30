@@ -8,19 +8,21 @@ import java.util.Optional
 import io.swagger.annotations._
 import org.apache.hadoop.util.ToolRunner
 import play.api.Logger
-import uk.gov.ons.sbr.data.controller.AdminDataController
+import uk.gov.ons.sbr.data.controller.{ AdminDataController, EnterpriseController }
+import uk.gov.ons.sbr.data.dao.StatisticalUnitLinksDAO
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, UnitType }
 import uk.gov.ons.sbr.data.hbase.HBaseConnector
 import uk.gov.ons.sbr.data.hbase.load.BulkLoader
 import uk.gov.ons.sbr.models.UnitLinks
 import uk.gov.ons.sbr.models.units.EnterpriseUnit
-
 import utils.Utilities.errAsJson
 
 import scala.util.{ Failure, Success, Try }
 import scala.concurrent.ExecutionContext.Implicits.global
 import utils.FutureResponse._
 import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod }
+
+import scala.collection.JavaConversions._
 
 /**
  * Created by haqa on 04/08/2017.

@@ -1,6 +1,7 @@
 package uk.gov.ons.sbr.models
 
 import io.swagger.annotations.ApiModelProperty
+import play.api.Logger
 import play.api.libs.json.{ JsValue, Json, OFormat }
 import uk.gov.ons.sbr.data.domain.StatisticalUnit
 import uk.gov.ons.sbr.data.domain.UnitType
@@ -15,7 +16,7 @@ case class UnitLinks(
   @ApiModelProperty(value = "Unit identifier", example = "", required = true, hidden = false) id: String,
   @ApiModelProperty(value = "A map of parents of returned id [Type, Value]", example = "",
     dataType = "Map[String,String]") parents: Map[String, String],
-  @ApiModelProperty(value = "A string of all related children", example = "") children: String,
+  @ApiModelProperty(value = "A string of all related children", example = "") children: Map[String, String],
   @ApiModelProperty(value = "Type of Unit returned", example = "") unitType: String
 )
 
@@ -26,9 +27,12 @@ object UnitLinks {
   // rep play write
   def toStringMap(x: Map[UnitType, String]): Map[String, String] = { x map { case (k, v) => k.toString -> v } }
 
-  def apply(s: List[StatisticalUnit]): List[UnitLinks] = s map (u => UnitLinks(
-    u.getKey, toStringMap(u.getLinks.getParents.toMap), u.getLinks.getChildJsonString, u.getType.toString
-  ))
+  def apply(s: List[StatisticalUnit]): List[UnitLinks] = s map (u => {
+    val childMap = u.getLinks.getChildren.map(
+      z => (z._1, z._2.toString)
+    ).toMap
+    UnitLinks(u.getKey, toStringMap(u.getLinks.getParents.toMap), childMap, u.getType.toString)
+  })
 
   def toJson(u: List[StatisticalUnit]): JsValue = Json.toJson(apply(u))
 }
