@@ -1,0 +1,30 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Searching Feature
+
+GET     /v1/units/:id                       controllers.v1.SearchController.retrieveUnitLinksById(id)
+GET     /v1/periods/:date/units/:id         controllers.v1.SearchController.retrieveUnitLinks(date, id)
+
+GET     /v1/enterprises/:id                 controllers.v1.SearchController.retrieveEnterpriseById(id)
+GET     /v1/periods/:date/enterprises/:id   controllers.v1.SearchController.retrieveEnterprise(date, id)
+
+GET     /                                   controllers.HomeController.status
+
+# Route for deployed version information (in JSON).
+GET     /version                            controllers.VersionController.version
+
+# build dates
+# GET   /latest                             controllers.v1.LastUpdateController.latestListings
+
+# Route for health check information (in JSON).
+GET     /health                             controllers.HealthController.health
+
+# api documentation
+GET     /swagger.json                       controllers.ApiHelpController.getResources
+GET     /docs                               controllers.HomeController.swagger
+
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file                       controllers.Assets.versioned(path="/public", file: Asset)
