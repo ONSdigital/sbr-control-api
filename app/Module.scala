@@ -2,8 +2,8 @@ import com.google.inject.AbstractModule
 import java.time.Clock
 
 import com.typesafe.config.{ Config, ConfigFactory }
+import config.SBRPropertiesConfiguration
 import play.api.{ Configuration, Environment }
-import utils.SBRPropertiesConfiguration
 
 /**
  * This class is a Guice module that tells Guice how to bind several
