@@ -1,19 +1,20 @@
 package controllers.v1
 
-import play.api.mvc.{ Action, AnyContent }
+import play.api.mvc.{Action, AnyContent}
 import java.util.Optional
 
-import io.swagger.annotations._
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import io.swagger.annotations.{Api, ApiOperation, ApiResponses, ApiResponse, ApiParam}
+import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
 import uk.gov.ons.sbr.models.UnitLinks
 import uk.gov.ons.sbr.models.units.EnterpriseUnit
 import utils.Utilities.errAsJson
 
 import scala.util.Try
 import scala.concurrent.ExecutionContext.Implicits.global
-import utils.FutureResponse._
-import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod }
+import utils.FutureResponse.{futureFromTry, futureSuccess}
+import utils.{IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod}
 import config.Properties.minKeyLength
+
 
 /**
  * Created by haqa on 04/08/2017.

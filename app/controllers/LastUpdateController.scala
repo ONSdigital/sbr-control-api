@@ -7,7 +7,7 @@ import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
 import play.api.mvc.{ Action, AnyContent, Result }
 import play.api.libs.json.Json
 import controllers.BuildInfo
-import utils.FutureResponse._
+import utils.FutureResponse.futureSuccess
 
 import scala.concurrent.Future
 
