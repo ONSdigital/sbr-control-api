@@ -9,9 +9,9 @@ pipeline {
         timeout(time: 30, unit: 'MINUTES')
     }
     stages {
-        stage('Checkout'){
+        stage('Checkout') {
             agent any
-            steps{
+            steps {
                 deleteDir()
                 checkout scm
                 stash name: 'app'
@@ -19,12 +19,10 @@ pipeline {
                 script {
                     version = '1.0.' + env.BUILD_NUMBER
                     currentBuild.displayName = version
-                    // currentBuild.result = "SUCCESS"
                     env.NODE_STAGE = "Checkout"
                 }
             }
         }
-
         stage('Build'){
             agent any
             steps {
@@ -32,33 +30,56 @@ pipeline {
                 script {
                     env.NODE_STAGE = "Build"
                 }
+                dir('gitlab') {
+                    git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'fix/csv-column-changes')
+                }
+                // Remove the fake data
+                sh 'rm -rf conf/sample/sbr-2500-ent-data.csv'
+                sh 'rm -rf conf/sample/sbr-2500-ent-ch-links.csv'
+                sh 'rm -rf conf/sample/sbr-2500-ent-vat-links.csv'
+                sh 'rm -rf conf/sample/sbr-2500-ent-paye-links.csv'
+                sh 'rm -rf conf/sample/sbr-2500-ent-leu-links.csv'
+                sh 'rm -rf conf/sample/sbr-2500-leu-ch-links.csv'
+                sh 'rm -rf conf/sample/sbr-2500-leu-paye-links.csv'
+                sh 'rm -rf conf/sample/sbr-2500-leu-vat-links.csv'
+
+                // Copy over the real data
+                sh 'cp gitlab/dev/data/sbr-2500-ent-data.csv conf/sample/sbr-2500-ent-data.csv'
+                sh 'cp gitlab/dev/data/sbr-2500-ent-ch-links.csv conf/sample/sbr-2500-ent-ch-links.csv'
+                sh 'cp gitlab/dev/data/sbr-2500-ent-paye-links.csv conf/sample/sbr-2500-ent-paye-links.csv'
+                sh 'cp gitlab/dev/data/sbr-2500-ent-vat-links.csv conf/sample/sbr-2500-ent-vat-links.csv'
+                sh 'cp gitlab/dev/data/sbr-2500-ent-leu-links.csv conf/sample/sbr-2500-ent-leu-links.csv'
+                sh 'cp gitlab/dev/data/sbr-2500-leu-ch-links.csv conf/sample/sbr-2500-leu-ch-links.csv'
+                sh 'cp gitlab/dev/data/sbr-2500-leu-paye-links.csv conf/sample/sbr-2500-leu-paye-links.csv'
+                sh 'cp gitlab/dev/data/sbr-2500-leu-vat-links.csv conf/sample/sbr-2500-leu-vat-links.csv'
+
                 sh '''
-                $SBT clean compile "project api" universal:packageBin coverage test coverageReport
-                cp target/universal/ons-sbr-api-*.zip dev-ons-sbr-api.zip
-                cp target/universal/ons-sbr-api-*.zip test-ons-sbr-api.zip
+                $SBT clean compile "project api" universal:packageBin
+                cp target/universal/sbr-control-api-*.zip dev-ons-sbr-control-api.zip
+                cp target/universal/sbr-control-api-*.zip test-ons-sbr-control-api.zip
+                cp target/universal/sbr-control-api-*.zip prod-ons-sbr-control-api.zip
                 '''
             }
         }
-
         stage('Static Analysis') {
             agent any
             steps {
                 parallel (
-                        "Unit" :  {
-                            colourText("info","Running unit tests")
-                            // sh "$SBT test"
-                        },
-                        "Style" : {
-                            colourText("info","Running style tests")
-                            sh '''
-                            $SBT scalastyleGenerateConfig
-                            $SBT scalastyle
-                            '''
-                        },
-                        "Additional" : {
-                            colourText("info","Running additional tests")
-                            sh "$SBT scapegoat"
-                        }
+                    "Unit" :  {
+                        colourText("info","Running unit tests")
+                        // sh "$SBT test"
+                    },
+                    "Style" : {
+                       colourText("info","Running style tests")
+                        //sh '''
+                        //$SBT scalastyleGenerateConfig
+                        //$SBT scalastyle
+                        //'''
+                    },
+                    "Additional" : {
+                        colourText("info","Running additional tests")
+                        //sh "$SBT scapegoat"
+                    }
                 )
             }
             post {
@@ -71,17 +92,14 @@ pipeline {
                     colourText("info","Generating reports for tests")
                     //   junit '**/target/test-reports/*.xml'
 
-                    step([$class: 'CoberturaPublisher', coberturaReportFile: '**/target/scala-2.11/coverage-report/*.xml'])
-                    step([$class: 'CheckStylePublisher', pattern: 'target/scalastyle-result.xml, target/scala-2.11/scapegoat-report/scapegoat-scalastyle.xml'])
+                    //step([$class: 'CoberturaPublisher', coberturaReportFile: '**/target/scala-2.11/coverage-report/*.xml'])
+                    //step([$class: 'CheckStylePublisher', pattern: 'target/scalastyle-result.xml, target/scala-2.11/scapegoat-report/scapegoat-scalastyle.xml'])
                 }
                 failure {
                     colourText("warn","Failed to retrieve reports.")
                 }
             }
         }
-
-
-        // bundle all libs and dependencies
         stage ('Bundle') {
             agent any
              when {
@@ -96,36 +114,11 @@ pipeline {
                     env.NODE_STAGE = "Bundle"
                 }
                 colourText("info", "Bundling....")
-                dir('conf') {
-                    git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'feature/env-key')
-                }
-                // packageApp('dev')
-                // packageApp('test')
-                // stash name: "zip"
+                //packageApp('dev')
+                //packageApp('test')
+                stash name: "zip"
             }
         }
-
-
-        stage ('Approve') {
-            agent { label 'adrianharristesting' }
-             when {
-                 anyOf {
-                     branch "develop"
-                     branch "release"
-                     branch "master"
-                 }
-             }
-            steps {
-                script {
-                    env.NODE_STAGE = "Approve"
-                }
-                timeout(time: 2, unit: 'MINUTES') {
-                    input message: 'Do you wish to deploy the build to ${env.BRANCH_NAME} (Note: Live deployment will create an artifact)?'
-                }
-            }
-        }
-
-
         stage ('Release') {
             agent any
             when {
@@ -135,7 +128,6 @@ pipeline {
                 colourText("success", 'Release.')
             }
         }
-
         stage ('Package and Push Artifact') {
             agent any
             when {
@@ -146,7 +138,6 @@ pipeline {
             }
 
         }
-
         stage('Deploy'){
             agent any
              when {
@@ -200,7 +191,6 @@ pipeline {
                 colourText("info", 'Post steps initiated')
                 deleteDir()
             }
-
         }
         success {
             colourText("success", "All stages complete. Build was successful.")
@@ -217,22 +207,9 @@ pipeline {
     }
 }
 
-
-
-// def packageApp(String env) {
-//   withEnv(["ENV=${env}"]) {
-//     sh '''
-//       zip -g $ENV-ons-bi-api.zip conf/$ENV/krb5.conf
-//       zip -g $ENV-ons-bi-api.zip conf/$ENV/bi-$ENV-ci.keytab
-//     '''
-//   }
-// }
-
 def deploy () {
     echo "Deploying Api app to ${env.DEPLOY_NAME}"
     withCredentials([string(credentialsId: "sbr-api-dev-secret-key", variable: 'APPLICATION_SECRET')]) {
-        deployToCloudFoundry("cloud-foundry-sbr-${env.DEPLOY_NAME}-user", 'sbr', "${env.DEPLOY_NAME}", "${env.DEPLOY_NAME}-sbr-api", "${env.DEPLOY_NAME}-ons-sbr-api.zip", "conf/${env.DEPLOY_NAME}/manifest.yml")
+        deployToCloudFoundry("cloud-foundry-sbr-${env.DEPLOY_NAME}-user", 'sbr', "${env.DEPLOY_NAME}", "${env.DEPLOY_NAME}-sbr-control-api", "${env.DEPLOY_NAME}-ons-sbr-control-api.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml")
     }
 }
-
-​
