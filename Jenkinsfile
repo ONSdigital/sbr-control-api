@@ -31,9 +31,9 @@ pipeline {
                     env.NODE_STAGE = "Build"
                 }
                 dir('gitlab') {
-                    git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'fix/csv-column-changes')
+                    git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'fix/bad-formatted-links')
                 }
-                // Remove the fake data
+                // Remove the synthetics data
                 sh 'rm -rf conf/sample/sbr-2500-ent-data.csv'
                 sh 'rm -rf conf/sample/sbr-2500-ent-ch-links.csv'
                 sh 'rm -rf conf/sample/sbr-2500-ent-vat-links.csv'
@@ -71,14 +71,14 @@ pipeline {
                     },
                     "Style" : {
                        colourText("info","Running style tests")
-                        //sh '''
-                        //$SBT scalastyleGenerateConfig
-                        //$SBT scalastyle
-                        //'''
+                        sh '''
+                            $SBT scalastyleGenerateConfig
+                            $SBT scalastyle
+                        '''
                     },
                     "Additional" : {
                         colourText("info","Running additional tests")
-                        //sh "$SBT scapegoat"
+                        sh "$SBT scapegoat"
                     }
                 )
             }
@@ -92,8 +92,8 @@ pipeline {
                     colourText("info","Generating reports for tests")
                     //   junit '**/target/test-reports/*.xml'
 
-                    //step([$class: 'CoberturaPublisher', coberturaReportFile: '**/target/scala-2.11/coverage-report/*.xml'])
-                    //step([$class: 'CheckStylePublisher', pattern: 'target/scalastyle-result.xml, target/scala-2.11/scapegoat-report/scapegoat-scalastyle.xml'])
+                    step([$class: 'CoberturaPublisher', coberturaReportFile: '**/target/scala-2.11/coverage-report/*.xml'])
+                    step([$class: 'CheckStylePublisher', pattern: 'target/scalastyle-result.xml, target/scala-2.11/scapegoat-report/scapegoat-scalastyle.xml'])
                 }
                 failure {
                     colourText("warn","Failed to retrieve reports.")
