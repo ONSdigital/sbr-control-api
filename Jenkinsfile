@@ -27,11 +27,8 @@ pipeline {
             agent any
             steps {
                 colourText("info", "Building ${env.BUILD_ID} on ${env.JENKINS_URL} from branch ${env.BRANCH_NAME}")
-                script {
-                    env.NODE_STAGE = "Build"
-                }
                 dir('gitlab') {
-                    git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'fix/bad-formatted-links')
+                    git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'develop')
                 }
                 // Remove the synthetics data
                 sh 'rm -rf conf/sample/sbr-2500-ent-data.csv'
@@ -59,27 +56,42 @@ pipeline {
                 cp target/universal/sbr-control-api-*.zip test-ons-sbr-control-api.zip
                 cp target/universal/sbr-control-api-*.zip prod-ons-sbr-control-api.zip
                 '''
+                script {
+                    env.NODE_STAGE = "Build"
+                    if (BRANCH_NAME == "develop") {
+                        env.DEPLOY_NAME = "dev"
+                        sh 'cp target/universal/sbr-admin-data-api-*.zip dev-ons-sbr-admin-data-api.zip'
+                    }
+                    else if  (BRANCH_NAME == "release") {
+                        env.DEPLOY_NAME = "test"
+                        sh 'cp target/universal/sbr-admin-data-api-*.zip test-ons-sbr-admin-data-api.zip'
+                    }
+                    else if (BRANCH_NAME == "master") {
+                        env.DEPLOY_NAME = "prod"
+                        sh 'cp target/universal/sbr-admin-data-api-*.zip prod-ons-sbr-admin-data-api.zip'
+                    }
+                }
             }
         }
         stage('Static Analysis') {
             agent any
             steps {
                 parallel (
-                    "Unit" :  {
-                        colourText("info","Running unit tests")
-                        // sh "$SBT test"
-                    },
-                    "Style" : {
-                       colourText("info","Running style tests")
-                        sh '''
-                            $SBT scalastyleGenerateConfig
-                            $SBT scalastyle
-                        '''
-                    },
-                    "Additional" : {
-                        colourText("info","Running additional tests")
-                        sh "$SBT scapegoat"
-                    }
+                        "Unit" :  {
+                            colourText("info","Running unit tests")
+                            // sh "$SBT test"
+                        },
+                        "Style" : {
+                            colourText("info","Running style tests")
+                            sh '''
+                                $SBT scalastyleGenerateConfig
+                                $SBT scalastyle
+                            '''
+                        },
+                        "Additional" : {
+                            colourText("info","Running additional tests")
+                            sh "$SBT scapegoat"
+                        }
                 )
             }
             post {
@@ -102,13 +114,13 @@ pipeline {
         }
         stage ('Bundle') {
             agent any
-             when {
-                 anyOf {
-                     branch "develop"
-                     branch "release"
-                     branch "master"
-                 }
-             }
+            when {
+                anyOf {
+                    branch "develop"
+                    branch "release"
+                    branch "master"
+                }
+            }
             steps {
                 script {
                     env.NODE_STAGE = "Bundle"
@@ -134,32 +146,27 @@ pipeline {
                 branch "master"
             }
             steps {
+                sh '''
+                    $SBT clean compile package
+                    $SBT clean compile assembly
+                '''
                 colourText("success", 'Package.')
             }
 
         }
         stage('Deploy'){
             agent any
-             when {
-                 anyOf {
-                     branch "develop"
-                     branch "release"
-                     branch "master"
-                 }
-             }
+            when {
+                anyOf {
+                    branch "develop"
+                    branch "release"
+                    branch "master"
+                }
+            }
             steps {
                 colourText("success", 'Deploy.')
                 script {
                     env.NODE_STAGE = "Deploy"
-                    if (BRANCH_NAME == "develop") {
-                        env.DEPLOY_NAME = "dev"
-                    }
-                    else if  (BRANCH_NAME == "release") {
-                        env.DEPLOY_NAME = "test"
-                    }
-                    else if (BRANCH_NAME == "master") {
-                        env.DEPLOY_NAME = "prod"
-                    }
                 }
                 milestone(1)
                 lock('Deployment Initiated') {
@@ -179,6 +186,7 @@ pipeline {
                 }
             }
             steps {
+                sh "$SBT it:test"
                 colourText("success", 'Integration Tests - For Release or Dev environment.')
             }
         }
