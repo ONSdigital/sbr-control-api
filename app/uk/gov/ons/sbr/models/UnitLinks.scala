@@ -24,14 +24,17 @@ object UnitLinks {
 
   implicit val unitFormat: OFormat[UnitLinks] = Json.format[UnitLinks]
 
-  // rep play write
+  @deprecated("Migrated inside apply", "fix/replace-data-lib - 5 Sep 2017")
   def toStringMap(x: Map[UnitType, String]): Map[String, String] = { x map { case (k, v) => k.toString -> v } }
 
   def apply(s: List[StatisticalUnit]): List[UnitLinks] = s map (u => {
     val childMap = u.getLinks.getChildren.map(
       z => (z._1, z._2.toString)
     ).toMap
-    UnitLinks(u.getKey, toStringMap(u.getLinks.getParents.toMap), childMap, u.getType.toString)
+    val parentMap: Map[String, String] = u.getLinks.getParents.map {
+      case (k, v) => k.toString -> v
+    }.toMap
+    UnitLinks(u.getKey, parentMap, childMap, u.getType.toString)
   })
 
   def toJson(u: List[StatisticalUnit]): JsValue = Json.toJson(apply(u))
