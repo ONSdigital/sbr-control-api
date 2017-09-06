@@ -50,9 +50,8 @@ pipeline {
                 sh 'cp gitlab/dev/data/sbr-2500-leu-paye-links.csv conf/sample/sbr-2500-leu-paye-links.csv'
                 sh 'cp gitlab/dev/data/sbr-2500-leu-vat-links.csv conf/sample/sbr-2500-leu-vat-links.csv'
 
-                sh '''
-                $SBT clean compile "project api" universal:packageBin coverage test coverageReport
-                '''
+                sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
+                
                 script {
                     env.NODE_STAGE = "Build"
                     if (BRANCH_NAME == "develop") {
@@ -87,7 +86,7 @@ pipeline {
                         },
                         "Additional" : {
                             colourText("info","Running additional tests")
-                            sh "$SBT scapegoat"
+                            sh '$SBT scapegoat'
                         }
                 )
             }
