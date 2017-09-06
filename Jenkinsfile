@@ -51,7 +51,7 @@ pipeline {
                 sh 'cp gitlab/dev/data/sbr-2500-leu-vat-links.csv conf/sample/sbr-2500-leu-vat-links.csv'
 
                 sh '''
-                $SBT clean compile "project api" universal:packageBin
+                $SBT clean compile "project api" universal:packageBin coverage test coverageReport
                 cp target/universal/sbr-control-api-*.zip dev-ons-sbr-control-api.zip
                 cp target/universal/sbr-control-api-*.zip test-ons-sbr-control-api.zip
                 cp target/universal/sbr-control-api-*.zip prod-ons-sbr-control-api.zip
