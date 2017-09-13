@@ -1,24 +1,23 @@
 package controllers.v1
 
 import java.time.YearMonth
-import java.time.format.{DateTimeFormatter, DateTimeParseException}
+import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
-import play.api.mvc.{AnyContent, Controller, Request, Result}
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import com.typesafe.scalalogging.StrictLogging
 import play.api.libs.json.JsValue
 
-import scala.util.{Failure, Success, Try}
-import scala.concurrent.{Future, TimeoutException}
-import uk.gov.ons.sbr.data.controller.{AdminDataController, EnterpriseController, UnitController}
+import scala.util.{ Failure, Success, Try }
+import scala.concurrent.{ Future, TimeoutException }
+import uk.gov.ons.sbr.data.controller.{ AdminDataController, EnterpriseController, UnitController }
 import uk.gov.ons.sbr.models.UnitLinks
 import uk.gov.ons.sbr.models.units.EnterpriseUnit
 import utils.Utilities.errAsJson
 import config.Properties.minKeyLength
-import utils.{IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation, InMemoryInit}
-
+import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation, InMemoryInit }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
@@ -58,8 +57,7 @@ trait ControllerUtils extends Controller with StrictLogging {
       BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception $ex"))
   }
 
-  protected def matchByParams(id: Option[String], request: Request[AnyContent], date: Option[String] = None
-                             ): RequestEvaluation = {
+  protected def matchByParams(id: Option[String], request: Request[AnyContent], date: Option[String] = None): RequestEvaluation = {
     val key = id.orElse(request.getQueryString("id")).getOrElse("")
     date match {
       case None => if (key.length >= minKeyLength) { IdRequest(key) } else { InvalidKey(key) }
