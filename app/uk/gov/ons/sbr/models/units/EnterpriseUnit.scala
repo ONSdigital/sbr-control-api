@@ -14,6 +14,9 @@ case class EnterpriseUnit(
   period: String,
   @ApiModelProperty(value = "A key value pair of all variables associated", example = "",
     dataType = "Map[String,String]") vars: Map[String, String],
+  @ApiModelProperty(value = "A map of parents of returned id [Type, Value]", example = "",
+    dataType = "Map[String,String]") parents: Map[String, String],
+  @ApiModelProperty(value = "A string of all related children", example = "") children: Map[String, String],
   unitType: String
 )
 
@@ -21,8 +24,13 @@ object EnterpriseUnit {
 
   implicit val unitFormat: OFormat[EnterpriseUnit] = Json.format[EnterpriseUnit]
 
-  def apply(o: Enterprise): EnterpriseUnit =
-    EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString)
+  def apply(o: Enterprise): EnterpriseUnit = {
+    //o.getChildren
+    val childMap = o.getLinks.getChildren.map(
+      z => (z._1, z._2.toString)
+    ).toMap
+    EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, Map(), childMap, o.getType.toString)
+  }
 
   def toJson(o: Enterprise): JsValue = Json.toJson(apply(o))
 
