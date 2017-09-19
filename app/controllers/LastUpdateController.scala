@@ -1,11 +1,13 @@
 package controllers.v1
 
 import javax.inject.{ Inject, Singleton }
+import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
 
 import com.typesafe.config.Config
-import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
+
 import play.api.mvc.{ Action, AnyContent, Result }
 import play.api.libs.json.Json
+
 import controllers.BuildInfo
 import utils.FutureResponse.futureSuccess
 

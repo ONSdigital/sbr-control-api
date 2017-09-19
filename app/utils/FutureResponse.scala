@@ -1,9 +1,10 @@
 package utils
 
-import play.api.mvc.Result
-
 import scala.concurrent.Future
 import scala.util.Try
+
+import play.api.mvc.Result
+
 /**
  * Created by haqa on 11/08/2017.
  */

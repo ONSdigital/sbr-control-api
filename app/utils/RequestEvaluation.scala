@@ -1,7 +1,6 @@
 package utils
 
 import java.time.{ DateTimeException, YearMonth }
-
 import com.google.inject.ImplementedBy
 
 /**
