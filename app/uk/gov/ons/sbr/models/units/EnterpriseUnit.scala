@@ -19,7 +19,8 @@ case class EnterpriseUnit(
     dataType = "Map[String,String]") vars: Map[String, String],
   unitType: String,
   parents: Option[Map[String, String]],
-  children: Option[Map[String, String]]
+  children: Option[Map[String, String]],
+  childrenJson: List[JsValue]
 ) extends DataUnit[Long]
 
 object EnterpriseUnit {
@@ -27,7 +28,10 @@ object EnterpriseUnit {
   implicit val unitFormat: OFormat[EnterpriseUnit] = Json.format[EnterpriseUnit]
 
   def apply(o: Enterprise): EnterpriseUnit = {
-    EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, getChildrenMap(o), getParentMap(o))
+    val childJson = o.getChildren.map {
+      a => Json.parse(a.toUnitHierarchyAsJson)
+    }.toList
+    EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, getChildrenMap(o), getParentMap(o), childJson)
   }
 
   def toJson(o: Enterprise): JsValue = Json.toJson(apply(o))
