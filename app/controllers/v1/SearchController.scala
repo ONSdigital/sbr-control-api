@@ -2,20 +2,18 @@ package controllers.v1
 
 import java.time.YearMonth
 import java.util.Optional
+
 import io.swagger.annotations.{ Api, ApiOperation, ApiParam, ApiResponse, ApiResponses }
 
 import scala.util.Try
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import play.api.mvc.{ Action, AnyContent, Result }
-
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
-import uk.gov.ons.sbr.models.UnitLinks
-import uk.gov.ons.sbr.models.units.EnterpriseUnit
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
 import utils.FutureResponse.{ futureFromTry, futureSuccess }
 import utils.Utilities.errAsJson
-import utils.{ IdRequest, InvalidKey, ReferencePeriod, InvalidReferencePeriod, RequestEvaluation }
+import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation }
 import config.Properties.minKeyLength
 
 /**
