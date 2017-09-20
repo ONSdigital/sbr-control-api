@@ -23,7 +23,7 @@ object UnitLinks {
   implicit val unitFormat: OFormat[UnitLinks] = Json.format[UnitLinks]
 
   def apply(u: StatisticalUnit): UnitLinks = {
-    UnitLinks(u.getKey, getChildrenMap(u), getParentMap(u), u.getType.toString)
+    UnitLinks(u.getKey, getParentMap(u), getChildrenMap(u), u.getType.toString)
   }
 
   def toJson(u: List[StatisticalUnit]): JsValue = Json.toJson(u.map(UnitLinks(_)))
