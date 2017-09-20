@@ -27,7 +27,7 @@ object EnterpriseUnit {
   implicit val unitFormat: OFormat[EnterpriseUnit] = Json.format[EnterpriseUnit]
 
   def apply(o: Enterprise): EnterpriseUnit = {
-    EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, getChildrenMap(o), getParentMap(o))
+    EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, getParentMap(o), getChildrenMap(o))
   }
 
   def toJson(o: Enterprise): JsValue = Json.toJson(apply(o))
