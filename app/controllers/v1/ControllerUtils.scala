@@ -50,10 +50,12 @@ trait ControllerUtils extends Controller with StrictLogging {
     case Success(s) => Ok(s)
     case Failure(ex) =>
       logger.error("Failed to parse instance to expected json format", ex)
-      BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"${errMsg.getOrElse("Could not perform action")} with exception $ex"))
+      BadRequest(errAsJson(BAD_REQUEST, "bad_request",
+        s"${errMsg.getOrElse("Could not perform action")} with exception $ex"))
   }
 
-  protected def matchByParams(id: Option[String], request: Request[AnyContent], date: Option[String] = None): RequestEvaluation = {
+  protected def matchByParams(id: Option[String], date: Option[String] = None)
+                             (implicit request: Request[AnyContent]): RequestEvaluation = {
     val key = id.orElse(request.getQueryString("id")).getOrElse("")
     if (key.length >= minKeyLength) {
       date match {
@@ -71,8 +73,6 @@ trait ControllerUtils extends Controller with StrictLogging {
     o match { case Some(a) => Optional.ofNullable(a); case _ => Optional.empty[A] }
 
   /**
-   * @note - simplify - AnyRef rep with t.param X
-   *
    * @param v - value param to convert
    * @param msg - overriding msg option
    * @tparam Z - java data type for value param
@@ -94,7 +94,7 @@ trait ControllerUtils extends Controller with StrictLogging {
 
   protected def responseException: PartialFunction[Throwable, Result] = {
     case ex: DateTimeParseException =>
-      logger.error("cannot parse date to to specificed date format", ex)
+      logger.error("cannot parse date to to specified date format", ex)
       BadRequest(errAsJson(BAD_REQUEST, "invalid_date", s"cannot parse date exception found $ex"))
     case ex: RuntimeException =>
       logger.error(s"RuntimeException ${ex.getMessage}", ex.getCause)
@@ -106,7 +106,7 @@ trait ControllerUtils extends Controller with StrictLogging {
       logger.error(s"TimeoutException ${ex.getMessage}", ex.getCause)
       RequestTimeout(errAsJson(REQUEST_TIMEOUT, "request_timeout", s"This may be due to connection being blocked. $ex"))
     case ex =>
-      logger.error(s"Unknown error has occured with exception $ex", ex.getCause)
+      logger.error(s"Unknown error has occurred with exception $ex", ex.getCause)
       InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex."))
   }
 
