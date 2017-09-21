@@ -1,23 +1,23 @@
 package controllers.v1
 
 import java.time.YearMonth
-import java.time.format.{DateTimeFormatter, DateTimeParseException}
+import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
-import scala.util.{Failure, Success, Try}
-import scala.concurrent.{Future, TimeoutException}
+import scala.util.{ Failure, Success, Try }
+import scala.concurrent.{ Future, TimeoutException }
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
-import play.api.mvc.{AnyContent, Controller, Request, Result}
+import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import play.api.libs.json.JsValue
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
-import uk.gov.ons.sbr.data.controller.{AdminDataController, EnterpriseController, UnitController}
-import uk.gov.ons.sbr.models.units.{EnterpriseUnit, UnitLinks}
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import uk.gov.ons.sbr.data.controller.{ AdminDataController, EnterpriseController, UnitController }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
 import utils.Utilities.errAsJson
-import utils.{IdRequest, InMemoryInit, InvalidKey, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation}
+import utils.{ IdRequest, InMemoryInit, InvalidKey, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation }
 import config.Properties.minKeyLength
 
 /**

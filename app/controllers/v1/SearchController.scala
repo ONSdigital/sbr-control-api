@@ -8,10 +8,10 @@ import io.swagger.annotations._
 import scala.util.Try
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import play.api.mvc.{Action, AnyContent, Result}
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit, StatisticalUnitLinks, UnitType}
-import uk.gov.ons.sbr.models.units.{EnterpriseUnit, UnitLinks}
-import utils.FutureResponse.{futureFromTry, futureSuccess}
+import play.api.mvc.{ Action, AnyContent, Result }
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks, UnitType }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
+import utils.FutureResponse.{ futureFromTry, futureSuccess }
 import utils.Utilities.errAsJson
 import utils._
 import config.Properties.minKeyLength
@@ -49,7 +49,6 @@ class SearchController extends ControllerUtils {
     search[java.util.List[StatisticalUnit]](evalResp, requestLinks.findUnits)
   }
 
-
   //public api
   @ApiOperation(
     value = "Json response of links that correspond to id and date",
@@ -70,9 +69,8 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     val evalResp = matchByParams(Some(id), request, Some(date))
-    searchByTwoParams[java.util.List[StatisticalUnit], YearMonth](evalResp, requestLinks.findUnits)
+    searchByTwoParams[java.util.List[StatisticalUnit], YearMonth, String](evalResp, requestLinks.findUnits)
   }
-
 
   //public api
   @ApiOperation(
@@ -96,7 +94,6 @@ class SearchController extends ControllerUtils {
     search[Enterprise](evalResp, requestEnterprise.getEnterprise)
   }
 
-
   //public api
   @ApiOperation(
     value = "Json response of matching id and date",
@@ -117,9 +114,8 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     val evalResp = matchByParams(Some(id), request, Some(date))
-    searchByTwoParams[Enterprise, YearMonth](evalResp, requestEnterprise.getEnterpriseForReferencePeriod)
+    searchByTwoParams[Enterprise, YearMonth, String](evalResp, requestEnterprise.getEnterpriseForReferencePeriod)
   }
-
 
   //public api
   @ApiOperation(
@@ -137,17 +133,16 @@ class SearchController extends ControllerUtils {
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveStatUnitLinks(
-      @ApiParam(value = "Short word to describe type of id requested", example = "ENT", required = true) category: String,
-      @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
-    ): Action[AnyContent] = Action.async { implicit request =>
+    @ApiParam(value = "Short word to describe type of id requested", example = "ENT", required = true) category: String,
+    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
+  ): Action[AnyContent] = Action.async { implicit request =>
     val idValidation = matchByParams(Some(id), request, None)
     val evalResp = idValidation match {
-      case (x: IdRequest) => CategoryRequest(category, x.id)
+      case (x: IdRequest) => CategoryRequest(x.id, UnitType.fromString(category))
       case z => z
     }
-    searchByTwoParams[StatisticalUnitLinks, String](evalResp, requestLinks.getUnitLinks)
+    searchByTwoParams[StatisticalUnitLinks, String, UnitType](evalResp, requestLinks.getUnitLinks)
   }
-
 
   //public api
   @ApiOperation(
@@ -165,24 +160,23 @@ class SearchController extends ControllerUtils {
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveStatUnitLinksWithPeriod(
-      @ApiParam(value = "Keyword describing type of id requested", example = "ENT", required = true) category: String,
-      @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
-      @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
-    ): Action[AnyContent] = Action.async { implicit request =>
+    @ApiParam(value = "Keyword describing type of id requested", example = "ENT", required = true) category: String,
+    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
+    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
+  ): Action[AnyContent] = Action.async { implicit request =>
     // validate id and date to get valid reference period -> add category in
     matchByParams(Some(id), request, Some(date)) match {
       case (x: ReferencePeriod) =>
-        val resp = Try(requestLinks.getUnitLinks(x.period, x.id, category)).futureTryRes.flatMap {
+        val resp = Try(requestLinks.getUnitLinks(x.period, x.id, UnitType.fromString(category))).futureTryRes.flatMap {
           case (s: Optional[StatisticalUnitLinks]) => if (s.isPresent) {
             resultMatcher[StatisticalUnitLinks](s)
           } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find unit link with " +
-              s"id ${x.id}, period ${x.period} and grouping $category")).future
+            s"id ${x.id}, period ${x.period} and grouping $category")).future
         } recover responseException
         resp
       case x => invalidSearchResponses(x)
     }
   }
-
 
   private def search[X](eval: RequestEvaluation, funcWithId: String => Optional[X]): Future[Result] = {
     val res = eval match {
@@ -198,9 +192,8 @@ class SearchController extends ControllerUtils {
     res
   }
 
-
-//  @todo - combine ReferencePeriod and UnitGrouping
-  private def searchByTwoParams[X, Z](eval: RequestEvaluation, funcWithIdAndParam: (Z, String) => Optional[X]): Future[Result] = {
+  //  @todo - combine ReferencePeriod and UnitGrouping
+  private def searchByTwoParams[X, Z, Y](eval: RequestEvaluation, funcWithIdAndParam: (Z, Y) => Optional[X]): Future[Result] = {
     val res = eval match {
       case (x: ReferencePeriod) =>
         val resp = Try(funcWithIdAndParam(x.period, x.id)).futureTryRes.flatMap {
@@ -221,8 +214,7 @@ class SearchController extends ControllerUtils {
     res
   }
 
-
-  private def invalidSearchResponses (invalidRequest: RequestEvaluation) = {
+  private def invalidSearchResponses(invalidRequest: RequestEvaluation) = {
     invalidRequest match {
       case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "invalid_date",
         s"cannot parse date with exception ${y.exception}")).future
