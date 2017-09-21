@@ -3,8 +3,6 @@ package uk.gov.ons.sbr.models.units
 import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{ JsValue, Json, OFormat }
 import uk.gov.ons.sbr.data.domain.{ AbstractPeriodEntity, StatisticalUnit, StatisticalUnitLinks }
-import uk.gov.ons.sbr.models.DataUnit
-import uk.gov.ons.sbr.models.FamilyParser._
 import scala.collection.JavaConversions._
 
 /**
@@ -17,7 +15,7 @@ case class UnitLinks(
     dataType = "Map[String,String]") parents: Option[Map[String, String]],
   @ApiModelProperty(value = "A string of all related children", example = "") children: Option[Map[String, String]],
   @ApiModelProperty(value = "Type of Unit returned", example = "") unitType: String
-) extends DataUnit[String]
+)
 
 object UnitLinks {
 
