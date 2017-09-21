@@ -9,7 +9,7 @@ import scala.util.Try
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.mvc.{Action, AnyContent, Result}
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
+import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit, StatisticalUnitLinks, UnitType}
 import uk.gov.ons.sbr.models.units.{EnterpriseUnit, UnitLinks}
 import utils.FutureResponse.{futureFromTry, futureSuccess}
 import utils.Utilities.errAsJson
@@ -145,7 +145,7 @@ class SearchController extends ControllerUtils {
       case (x: IdRequest) => CategoryRequest(category, x.id)
       case z => z
     }
-    searchByTwoParams[StatisticalUnitLink, String](evalResp, requestLinks.???)
+    searchByTwoParams[StatisticalUnitLinks, String](evalResp, requestLinks.getUnitLinks)
   }
 
 
@@ -172,11 +172,11 @@ class SearchController extends ControllerUtils {
     // validate id and date to get valid reference period -> add category in
     matchByParams(Some(id), request, Some(date)) match {
       case (x: ReferencePeriod) =>
-        val resp = Try(requestLinks.???(x.period, category, x.id)).futureTryRes.flatMap {
-          case (s: Optional[StatisticalUnitLink]) => if (s.isPresent) {
-            resultMatcher[StatisticalUnitLink](s)
+        val resp = Try(requestLinks.getUnitLinks(x.period, x.id, category)).futureTryRes.flatMap {
+          case (s: Optional[StatisticalUnitLinks]) => if (s.isPresent) {
+            resultMatcher[StatisticalUnitLinks](s)
           } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find unit link with " +
-              s"id ${x.id}, period ${x.period} and grouping ${category}")).future
+              s"id ${x.id}, period ${x.period} and grouping $category")).future
         } recover responseException
         resp
       case x => invalidSearchResponses(x)
