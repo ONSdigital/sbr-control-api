@@ -3,7 +3,9 @@ package uk.gov.ons.sbr.models.units
 import io.swagger.annotations.ApiModelProperty
 
 import scala.collection.JavaConversions._
+
 import play.api.libs.json.{ JsValue, Json, OFormat }
+
 import uk.gov.ons.sbr.data.domain.Enterprise
 
 /**
