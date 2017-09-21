@@ -30,25 +30,45 @@ pipeline {
                 dir('gitlab') {
                     git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'develop')
                 }
-                // Remove the synthetics data
-                sh 'rm -rf conf/sample/sbr-2500-ent-data.csv'
-                sh 'rm -rf conf/sample/sbr-2500-ent-ch-links.csv'
-                sh 'rm -rf conf/sample/sbr-2500-ent-vat-links.csv'
-                sh 'rm -rf conf/sample/sbr-2500-ent-paye-links.csv'
-                sh 'rm -rf conf/sample/sbr-2500-ent-leu-links.csv'
-                sh 'rm -rf conf/sample/sbr-2500-leu-ch-links.csv'
-                sh 'rm -rf conf/sample/sbr-2500-leu-paye-links.csv'
-                sh 'rm -rf conf/sample/sbr-2500-leu-vat-links.csv'
+                // Remove the synthetics data for june data
+                sh 'rm -rf conf/sample/201706/sbr-2500-ent-data.csv'
+                sh 'rm -rf conf/sample/201706/sbr-2500-ent-ch-links.csv'
+                sh 'rm -rf conf/sample/201706/sbr-2500-ent-vat-links.csv'
+                sh 'rm -rf conf/sample/201706/sbr-2500-ent-paye-links.csv'
+                sh 'rm -rf conf/sample/201706/sbr-2500-ent-leu-links.csv'
+                sh 'rm -rf conf/sample/201706/sbr-2500-leu-ch-links.csv'
+                sh 'rm -rf conf/sample/201706/sbr-2500-leu-paye-links.csv'
+                sh 'rm -rf conf/sample/201706/sbr-2500-leu-vat-links.csv'
+
+                // Remove fake data for August data
+                sh 'rm -rf conf/sample/201708/sbr-2500-ent-data.csv'
+                sh 'rm -rf conf/sample/201708/sbr-2500-ent-ch-links.csv'
+                sh 'rm -rf conf/sample/201708/sbr-2500-ent-vat-links.csv'
+                sh 'rm -rf conf/sample/201708/sbr-2500-ent-paye-links.csv'
+                sh 'rm -rf conf/sample/201708/sbr-2500-ent-leu-links.csv'
+                sh 'rm -rf conf/sample/201708/sbr-2500-leu-ch-links.csv'
+                sh 'rm -rf conf/sample/201708/sbr-2500-leu-paye-links.csv'
+                sh 'rm -rf conf/sample/201708/sbr-2500-leu-vat-links.csv'
+
+                // Copy over the real data for June
+                sh 'cp gitlab/dev/data/201706/sbr-2500-ent-data.csv conf/sample/201706/sbr-2500-ent-data.csv'
+                sh 'cp gitlab/dev/data/201706/sbr-2500-ent-ch-links.csv conf/sample/201706/sbr-2500-ent-ch-links.csv'
+                sh 'cp gitlab/dev/data/201706/sbr-2500-ent-paye-links.csv conf/sample/201706/sbr-2500-ent-paye-links.csv'
+                sh 'cp gitlab/dev/data/201706/sbr-2500-ent-vat-links.csv conf/sample/201706/sbr-2500-ent-vat-links.csv'
+                sh 'cp gitlab/dev/data/201706/sbr-2500-ent-leu-links.csv conf/sample/201706/sbr-2500-ent-leu-links.csv'
+                sh 'cp gitlab/dev/data/201706/sbr-2500-leu-ch-links.csv conf/sample/201706/sbr-2500-leu-ch-links.csv'
+                sh 'cp gitlab/dev/data/201706/sbr-2500-leu-paye-links.csv conf/sample/201706/sbr-2500-leu-paye-links.csv'
+                sh 'cp gitlab/dev/data/201706/sbr-2500-leu-vat-links.csv conf/sample/201706/sbr-2500-leu-vat-links.csv'
 
                 // Copy over the real data
-                sh 'cp gitlab/dev/data/sbr-2500-ent-data.csv conf/sample/sbr-2500-ent-data.csv'
-                sh 'cp gitlab/dev/data/sbr-2500-ent-ch-links.csv conf/sample/sbr-2500-ent-ch-links.csv'
-                sh 'cp gitlab/dev/data/sbr-2500-ent-paye-links.csv conf/sample/sbr-2500-ent-paye-links.csv'
-                sh 'cp gitlab/dev/data/sbr-2500-ent-vat-links.csv conf/sample/sbr-2500-ent-vat-links.csv'
-                sh 'cp gitlab/dev/data/sbr-2500-ent-leu-links.csv conf/sample/sbr-2500-ent-leu-links.csv'
-                sh 'cp gitlab/dev/data/sbr-2500-leu-ch-links.csv conf/sample/sbr-2500-leu-ch-links.csv'
-                sh 'cp gitlab/dev/data/sbr-2500-leu-paye-links.csv conf/sample/sbr-2500-leu-paye-links.csv'
-                sh 'cp gitlab/dev/data/sbr-2500-leu-vat-links.csv conf/sample/sbr-2500-leu-vat-links.csv'
+                sh 'cp gitlab/dev/data/201708/sbr-2500-ent-data.csv conf/sample/201708/sbr-2500-ent-data.csv'
+                sh 'cp gitlab/dev/data/201708/sbr-2500-ent-ch-links.csv conf/sample/201708/sbr-2500-ent-ch-links.csv'
+                sh 'cp gitlab/dev/data/201708/sbr-2500-ent-paye-links.csv conf/sample/201708/sbr-2500-ent-paye-links.csv'
+                sh 'cp gitlab/dev/data/201708/sbr-2500-ent-vat-links.csv conf/sample/201708/sbr-2500-ent-vat-links.csv'
+                sh 'cp gitlab/dev/data/201708/sbr-2500-ent-leu-links.csv conf/sample/201708/sbr-2500-ent-leu-links.csv'
+                sh 'cp gitlab/dev/data/201708/sbr-2500-leu-ch-links.csv conf/sample/201708/sbr-2500-leu-ch-links.csv'
+                sh 'cp gitlab/dev/data/201708/sbr-2500-leu-paye-links.csv conf/sample/201708/sbr-2500-leu-paye-links.csv'
+                sh 'cp gitlab/dev/data/201708/sbr-2500-leu-vat-links.csv conf/sample/201708/sbr-2500-leu-vat-links.csv'
 
                 sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
                 

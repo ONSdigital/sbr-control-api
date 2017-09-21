@@ -1,0 +1,3 @@
+entref,ent_name,ent_tradingstyle,ent_address1,ent_address2,ent_address3,ent_address4,ent_address5,ent_postcode,legalstatus,PAYE_jobs,employees,standard_vat_turnover,Num_Unique_PayeRefs,Num_Unique_VatRefs,contained_rep_vat_turnover
+1123123123,TESCO,,513 High Street,Little Worsley,Bury,Manchester,Gtr Manchester,OK16 5XQ,2,payejobs,1000,1,1,1
+9905899133,COOP,,513 High Street,Little Worsley,Bury,Manchester,Gtr Manchester,OK16 5XQ,2,payesjobs,2000,2,2,2
