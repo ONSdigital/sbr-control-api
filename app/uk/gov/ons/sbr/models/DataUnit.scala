@@ -10,6 +10,5 @@ trait DataUnit[X] {
   @ApiModelProperty(value = "A map of parents of returned id [Type, Value]", example = "",
     dataType = "Map[String,String]") val parents: Option[Map[String, String]]
   @ApiModelProperty(value = "A string of all related children", example = "") val children: Option[Map[String, String]]
-  @ApiModelProperty(value = "Type of Unit returned", example = "") val unitType: String
 }
 

@@ -34,6 +34,6 @@ object EnterpriseUnit {
     EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, getChildrenMap(o), getParentMap(o), childJson)
   }
 
-  def toJson(o: Enterprise): JsValue = Json.toJson(apply(o))
+  //  def toJson(o: Enterprise): JsValue = Json.toJson(apply(o))
 
 }
