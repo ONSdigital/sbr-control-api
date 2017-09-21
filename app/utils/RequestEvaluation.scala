@@ -1,6 +1,8 @@
 package utils
 
 import java.time.{ DateTimeException, YearMonth }
+
+import com.fasterxml.jackson.core.JsonParseException
 import com.google.inject.ImplementedBy
 
 /**
@@ -10,6 +12,9 @@ import com.google.inject.ImplementedBy
 sealed trait RequestEvaluation
 
 case class IdRequest(id: String) extends RequestEvaluation
+case class EditRequest(id: String, updatedBy: String, edits: Map[String, String]) extends RequestEvaluation
 case class ReferencePeriod(id: String, period: YearMonth) extends RequestEvaluation
+case class EditRequestByPeriod(id: String, updatedBy: String, period: YearMonth, edits: Map[String, String]) extends RequestEvaluation
 case class InvalidReferencePeriod(id: String, exception: DateTimeException) extends RequestEvaluation
 case class InvalidKey(id: String) extends RequestEvaluation
+case class InvalidEditJson(id: String, exception: JsonParseException) extends RequestEvaluation
