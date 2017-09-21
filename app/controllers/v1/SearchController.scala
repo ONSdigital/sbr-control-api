@@ -22,8 +22,7 @@ import config.Properties.minKeyLength
  */
 
 /**
- * @todo
- *       - check no-param found err-control
+ * @todo - check no-param found err-control
  */
 @Api("Search")
 class SearchController extends ControllerUtils {

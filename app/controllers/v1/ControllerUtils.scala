@@ -24,6 +24,7 @@ import config.Properties.minKeyLength
 /**
  * Created by haqa on 10/07/2017.
  */
+
 /**
  * @todo - change Future in resultMatcher
  */
@@ -44,11 +45,12 @@ trait ControllerUtils extends Controller with StrictLogging {
     }
   }
 
-  protected[this] def tryAsResponse(parseToJson: Try[JsValue]): Result = parseToJson match {
+  protected[this] def tryAsResponse(parseToJson: Try[JsValue], errMsg: Option[String] = Some("Could not parse to json")
+   ): Result = parseToJson match {
     case Success(s) => Ok(s)
     case Failure(ex) =>
       logger.error("Failed to parse instance to expected json format", ex)
-      BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action with exception $ex"))
+      BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"${errMsg.getOrElse("Could not perform action")} with exception $ex"))
   }
 
   protected def matchByParams(id: Option[String], request: Request[AnyContent], date: Option[String] = None): RequestEvaluation = {
@@ -58,7 +60,9 @@ trait ControllerUtils extends Controller with StrictLogging {
         case None => IdRequest(key)
         case Some(s) => validateYearMonth(key, s)
       }
-    } else { InvalidKey(key) }
+    } else {
+      logger.debug(s"Given key [$key] as argument is invalid")
+      InvalidKey(key) }
   }
 
   protected def toOption[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
@@ -82,20 +86,28 @@ trait ControllerUtils extends Controller with StrictLogging {
         tryAsResponse(Try(Json.toJson(EnterpriseUnit(x))))
       case Some(x: StatisticalUnitLinks) =>
         tryAsResponse(Try(Json.toJson(KnownUnitLinks(x))))
-      case _ =>
-        BadRequest(errAsJson(BAD_REQUEST, "bad_request", msg.getOrElse("Could not parse returned response")))
+      case ex =>
+        logger.debug("Invalid response from data source", s"$ex")
+        BadRequest(errAsJson(BAD_REQUEST, "bad_request", msg.getOrElse(s"Could not parse returned response [ex: $ex]")))
     }
   }
 
   protected def responseException: PartialFunction[Throwable, Result] = {
     case ex: DateTimeParseException =>
+      logger.error("cannot parse date to to specificed date format", ex)
       BadRequest(errAsJson(BAD_REQUEST, "invalid_date", s"cannot parse date exception found $ex"))
-    case ex: RuntimeException => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "runtime_exception", s"$ex"))
+    case ex: RuntimeException =>
+      logger.error(s"RuntimeException ${ex.getMessage}", ex.getCause)
+      InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "runtime_exception", s"$ex"))
     case ex: ServiceUnavailableException =>
+      logger.error(s"ServiceUnavailableException ${ex.getMessage}", ex.getCause)
       ServiceUnavailable(errAsJson(SERVICE_UNAVAILABLE, "service_unavailable", s"$ex"))
     case ex: TimeoutException =>
+      logger.error(s"TimeoutException ${ex.getMessage}", ex.getCause)
       RequestTimeout(errAsJson(REQUEST_TIMEOUT, "request_timeout", s"This may be due to connection being blocked. $ex"))
-    case ex => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex."))
+    case ex =>
+      logger.error(s"Unknown error has occured with exception $ex", ex.getCause)
+      InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "internal_server_error", s"$ex."))
   }
 
 }
