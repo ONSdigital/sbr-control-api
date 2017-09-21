@@ -1,7 +1,9 @@
 package utils
 
 import org.apache.hadoop.util.ToolRunner
+
 import play.api.Logger
+
 import uk.gov.ons.sbr.data.domain.UnitType
 import uk.gov.ons.sbr.data.hbase.HBaseConnector
 import uk.gov.ons.sbr.data.hbase.load.BulkLoader

@@ -1,6 +1,7 @@
 package uk.gov.ons.sbr.models.attributes
 
 import io.swagger.annotations.ApiModelProperty
+
 import play.api.libs.json.{ Json, OFormat }
 
 /**
@@ -17,14 +18,6 @@ case class Address(
 )
 
 object Address {
-  //  def toMap(a: Address): Map[String, String] = Map(
-  //    "line1" -> a.line1,
-  //    "line2" -> a.line2,
-  //    "line3" -> a.line3,
-  //    "line4" -> a.line4,
-  //    "line5" -> a.line5,
-  //    "postcode" -> a.postcode
-  //  )
 
   implicit val address: OFormat[Address] = Json.format[Address]
 

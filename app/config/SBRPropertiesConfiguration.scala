@@ -1,7 +1,8 @@
 package config
 
-import com.typesafe.config.Config
 import org.slf4j.LoggerFactory
+
+import com.typesafe.config.Config
 
 /**
  * Created by haqa on 28/07/2017.

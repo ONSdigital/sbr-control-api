@@ -2,9 +2,9 @@ package utils
 
 import java.util.Optional
 
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
-
 import scala.collection.JavaConversions._
+
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
 
 /**
  * Created by haqa on 11/08/2017.

@@ -5,22 +5,21 @@ import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
-import play.api.mvc.{ AnyContent, Controller, Request, Result }
-import com.typesafe.scalalogging.StrictLogging
-import play.api.libs.json.JsValue
-
 import scala.util.{ Failure, Success, Try }
 import scala.concurrent.{ Future, TimeoutException }
-import uk.gov.ons.sbr.data.controller.{ AdminDataController, EnterpriseController, UnitController }
-import uk.gov.ons.sbr.models.UnitLinks
-import uk.gov.ons.sbr.models.units.EnterpriseUnit
-import utils.Utilities.errAsJson
-import config.Properties.minKeyLength
-import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation, InMemoryInit }
-
+import com.typesafe.scalalogging.StrictLogging
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
+
+import play.api.mvc.{ AnyContent, Controller, Request, Result }
+import play.api.libs.json.{ JsValue, Json }
+
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
+import uk.gov.ons.sbr.data.controller.{ AdminDataController, EnterpriseController, UnitController }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
+import utils.Utilities.errAsJson
+import utils.{ IdRequest, InMemoryInit, InvalidKey, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation }
+import config.Properties.minKeyLength
 
 /**
  * Created by haqa on 10/07/2017.
@@ -34,36 +33,32 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
 
-  //convert date to java format with err handle
   protected def validateYearMonth(key: String, raw: String) = {
     val yearAndMonth = Try(YearMonth.parse(raw, DateTimeFormatter.ofPattern("yyyyMM")))
-    // valid date -> check key
-    val res: RequestEvaluation = if (key.length >= minKeyLength) {
-      yearAndMonth match {
-        case Success(s) =>
-          ReferencePeriod(key, s)
-        case Failure(ex: DateTimeParseException) =>
-          logger.error("cannot parse date to YearMonth object", ex)
-          InvalidReferencePeriod(key, ex)
-      }
-    } else { InvalidKey(key) }
-    res
+    yearAndMonth match {
+      case Success(s) =>
+        ReferencePeriod(key, s)
+      case Failure(ex: DateTimeParseException) =>
+        logger.error("cannot parse date to YearMonth object", ex)
+        InvalidReferencePeriod(key, ex)
+    }
   }
 
-  protected[this] def tryAsResponse[T](f: T => JsValue, v: T): Result = Try(f(v)) match {
+  protected[this] def tryAsResponse(parseToJson: Try[JsValue]): Result = parseToJson match {
     case Success(s) => Ok(s)
     case Failure(ex) =>
       logger.error("Failed to parse instance to expected json format", ex)
-      BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception $ex"))
+      BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action with exception $ex"))
   }
 
   protected def matchByParams(id: Option[String], request: Request[AnyContent], date: Option[String] = None): RequestEvaluation = {
     val key = id.orElse(request.getQueryString("id")).getOrElse("")
-    date match {
-      case None => if (key.length >= minKeyLength) { IdRequest(key) } else { InvalidKey(key) }
-      case Some(s) =>
-        validateYearMonth(key, s)
-    }
+    if (key.length >= minKeyLength) {
+      date match {
+        case None => IdRequest(key)
+        case Some(s) => validateYearMonth(key, s)
+      }
+    } else { InvalidKey(key) }
   }
 
   protected def toOption[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
@@ -81,9 +76,13 @@ trait ControllerUtils extends Controller with StrictLogging {
    */
   protected def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
     Future { toOption[Z](v) }.map {
-      case Some(x: java.util.List[StatisticalUnit]) => tryAsResponse[List[StatisticalUnit]](UnitLinks.toJson, x.toList)
-      case Some(x: Enterprise) => tryAsResponse[Enterprise](EnterpriseUnit.toJson, x)
-      case None =>
+      case Some(x: java.util.List[StatisticalUnit]) =>
+        tryAsResponse(Try(Json.toJson(x.toList.map { v => UnitLinks(v) })))
+      case Some(x: Enterprise) =>
+        tryAsResponse(Try(Json.toJson(EnterpriseUnit(x))))
+      case Some(x: StatisticalUnitLinks) =>
+        tryAsResponse(Try(Json.toJson(KnownUnitLinks(x))))
+      case _ =>
         BadRequest(errAsJson(BAD_REQUEST, "bad_request", msg.getOrElse("Could not parse returned response")))
     }
   }

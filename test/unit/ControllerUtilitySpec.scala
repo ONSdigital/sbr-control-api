@@ -8,13 +8,14 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.JsNumber
 import play.api.mvc.Result
 import resource.TestUtils
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
 import utils._
+
+import scala.util.Try
 
 /**
  * Created by haqa on 11/08/2017.
  */
-class ControllerUtilitySpec extends TestUtils with ControllerUtils with GuiceOneAppPerSuite {
+class ControllerUtilitySpec extends TestUtils with ControllerUtils {
 
   private val validKey = "12446"
   private val validDate = "201711"
@@ -38,12 +39,12 @@ class ControllerUtilitySpec extends TestUtils with ControllerUtils with GuiceOne
 
   "tryAsResponse" should {
     "return a acceptable Result object" in {
-      val tryResponse = tryAsResponse[String](toJsonTest, "1234")
+      val tryResponse = tryAsResponse(Try(toJsonTest("1234")))
       tryResponse mustBe a[Result]
       tryResponse.header.status mustEqual OK
     }
     "execute a failure if the passed function fails in the try" in {
-      val failedTry = tryAsResponse[String](toJsonTest, "The is not parsable as an Int")
+      val failedTry = tryAsResponse(Try(toJsonTest("The is not parsable as an Int")))
       failedTry mustBe a[Result]
       noException should be thrownBy failedTry
       failedTry.header.status mustEqual BAD_REQUEST
@@ -82,10 +83,11 @@ class ControllerUtilitySpec extends TestUtils with ControllerUtils with GuiceOne
 
   def getParsedRequestType[T](x: RequestEvaluation): T = x match {
     case (x: T) => x
-    case _ => sys.error("Cannot construct to subtype of RequestEvaluation, force failing tests.")}
+    case _ => sys.error("Cannot construct to subtype of RequestEvaluation, force failing tests.")
+  }
 
   def toJsonTest(s: String) = JsNumber(s.toInt)
 
-  case class EnterpriseTest (a: String, b: YearMonth)
+  case class EnterpriseTest(a: String, b: YearMonth)
 
 }
