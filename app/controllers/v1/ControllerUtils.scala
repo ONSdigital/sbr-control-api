@@ -33,7 +33,7 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
 
-  private def validateYearMonth(key: String, raw: String) = {
+  protected def validateYearMonth(key: String, raw: String) = {
     val yearAndMonth = Try(YearMonth.parse(raw, DateTimeFormatter.ofPattern("yyyyMM")))
     yearAndMonth match {
       case Success(s) =>
