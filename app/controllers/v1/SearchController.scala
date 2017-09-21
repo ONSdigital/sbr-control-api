@@ -2,13 +2,14 @@ package controllers.v1
 
 import java.time.YearMonth
 import java.util.Optional
-
 import io.swagger.annotations._
 
 import scala.util.Try
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+
 import play.api.mvc.{ Action, AnyContent, Result }
+
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks, UnitType }
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
 import utils.FutureResponse.{ futureFromTry, futureSuccess }
@@ -69,7 +70,7 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     val evalResp = matchByParams(Some(id), request, Some(date))
-    searchByTwoParams[java.util.List[StatisticalUnit], YearMonth, String](evalResp, requestLinks.findUnits)
+    searchByPeriod[java.util.List[StatisticalUnit]](evalResp, requestLinks.findUnits)
   }
 
   //public api
@@ -114,7 +115,7 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     val evalResp = matchByParams(Some(id), request, Some(date))
-    searchByTwoParams[Enterprise, YearMonth, String](evalResp, requestEnterprise.getEnterpriseForReferencePeriod)
+    searchByPeriod[Enterprise](evalResp, requestEnterprise.getEnterpriseForReferencePeriod)
   }
 
   //public api
@@ -138,10 +139,21 @@ class SearchController extends ControllerUtils {
   ): Action[AnyContent] = Action.async { implicit request =>
     val idValidation = matchByParams(Some(id), request, None)
     val evalResp = idValidation match {
-      case (x: IdRequest) => CategoryRequest(x.id, UnitType.fromString(category))
+      case (x: IdRequest) =>
+        CategoryRequest(x.id, UnitType.fromString(category))
       case z => z
     }
-    searchByTwoParams[StatisticalUnitLinks, String, UnitType](evalResp, requestLinks.getUnitLinks)
+    val res = evalResp match {
+      case (x: CategoryRequest) =>
+        val resp = Try(requestLinks.getUnitLinks(x.id, x.category)).futureTryRes.flatMap {
+          case (s: Optional[StatisticalUnitLinks]) => if (s.isPresent) {
+            resultMatcher[StatisticalUnitLinks](s)
+          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and grouping ${x.category}")).future
+        } recover responseException
+        resp
+      case _ => invalidSearchResponses(evalResp)
+    }
+    res
   }
 
   //public api
@@ -160,11 +172,10 @@ class SearchController extends ControllerUtils {
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveStatUnitLinksWithPeriod(
-    @ApiParam(value = "Keyword describing type of id requested", example = "ENT", required = true) category: String,
     @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
+    @ApiParam(value = "Keyword describing type of id requested", example = "ENT", required = true) category: String,
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    // validate id and date to get valid reference period -> add category in
     matchByParams(Some(id), request, Some(date)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestLinks.getUnitLinks(x.period, x.id, UnitType.fromString(category))).futureTryRes.flatMap {
@@ -193,20 +204,13 @@ class SearchController extends ControllerUtils {
   }
 
   //  @todo - combine ReferencePeriod and UnitGrouping
-  private def searchByTwoParams[X, Z, Y](eval: RequestEvaluation, funcWithIdAndParam: (Z, Y) => Optional[X]): Future[Result] = {
+  private def searchByPeriod[X](eval: RequestEvaluation, funcWithIdAndParam: (YearMonth, String) => Optional[X]): Future[Result] = {
     val res = eval match {
       case (x: ReferencePeriod) =>
         val resp = Try(funcWithIdAndParam(x.period, x.id)).futureTryRes.flatMap {
           case (s: Optional[X]) => if (s.isPresent) {
             resultMatcher[X](s)
           } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
-        } recover responseException
-        resp
-      case (x: CategoryRequest) =>
-        val resp = Try(funcWithIdAndParam(x.category, x.id)).futureTryRes.flatMap {
-          case (s: Optional[X]) => if (s.isPresent) {
-            resultMatcher[X](s)
-          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and grouping ${x.category}")).future
         } recover responseException
         resp
       case _ => invalidSearchResponses(eval)
