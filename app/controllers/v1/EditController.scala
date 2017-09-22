@@ -3,36 +3,42 @@ package controllers.v1
 import config.Properties.minKeyLength
 import io.swagger.annotations._
 import play.api.Logger
-import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc._
-import uk.gov.ons.sbr.data.domain.StatisticalUnit
-import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
-import utils.FutureResponse.{ futureFromTry, futureSuccess }
+import uk.gov.ons.sbr.models.units.{ UnitLinks }
+import utils.FutureResponse.{ futureSuccess }
 import utils.Utilities.errAsJson
 import utils._
 
-import scala.concurrent.Future
 import scala.util.{ Failure, Success, Try }
 import scala.collection.JavaConversions._
 
 /**
  * Created by coolit on 20/09/2017.
  */
-
-/**
- * @todo
- *       - check no-param found err-control
- */
-@Api("Search")
+@Api("Edit")
 class EditController extends ControllerUtils {
 
-  def editEnterprise(id: String): Action[AnyContent] = Action.async { implicit request =>
+  @ApiOperation(
+    value = "Ok if edit is made",
+    notes = "Invokes a method in sbr-hbase-connector to edit an Enterprise",
+    responseContainer = "JSONObject",
+    code = 200,
+    httpMethod = "POST"
+  )
+  @ApiResponses(Array(
+    new ApiResponse(code = 200, response = classOf[UnitLinks], responseContainer = "JsValue", message = "Edit has been made successfully to Enterprise with id: [id]"),
+    new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> id or edit json is invalid"),
+    new ApiResponse(code = 500, responseContainer = "JsValue", message = "InternalServerError -> Unable to make edit")
+  ))
+  def editEnterprise(
+    @ApiParam(value = "An Enterprise ID", example = "1234567890", required = true) id: String
+  ): Action[AnyContent] = Action.async { implicit request =>
     Logger.info(s"Editing by default period for id: ${id}")
     val evalResp = matchByEditParams(Some(id), request)
     val res = evalResp match {
       case (x: EditRequest) => {
         val resp = Try(requestEnterprise.updateEnterpriseVariableValues(x.id, x.updatedBy, x.edits)) match {
-          case Success(s) => Ok("").future
+          case Success(s) => Ok(errAsJson(OK, "edit_success", s"Edit has been made successfully to Enterprise with id: ${x.id}")).future
           case Failure(ex) => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "edit_error", s"unable to make edit with exception [${ex.printStackTrace()}]")).future
         }
         resp
@@ -44,13 +50,28 @@ class EditController extends ControllerUtils {
     res
   }
 
-  def editEnterpriseForPeriod(period: String, id: String): Action[AnyContent] = Action.async { implicit request =>
+  @ApiOperation(
+    value = "Ok if edit is made",
+    notes = "Invokes a method in sbr-hbase-connector to edit an Enterprise",
+    responseContainer = "JSONObject",
+    code = 200,
+    httpMethod = "POST"
+  )
+  @ApiResponses(Array(
+    new ApiResponse(code = 200, response = classOf[UnitLinks], responseContainer = "JsValue", message = "Edit has been made successfully to Enterprise with id: [id]"),
+    new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> id or edit json or period is invalid"),
+    new ApiResponse(code = 500, responseContainer = "JsValue", message = "InternalServerError -> Unable to make edit")
+  ))
+  def editEnterpriseForPeriod(
+    @ApiParam(value = "A period in yyyyMM format", example = "201706", required = true) period: String,
+    @ApiParam(value = "An Enterprise ID", example = "1234567890", required = true) id: String
+  ): Action[AnyContent] = Action.async { implicit request =>
     Logger.info(s"Editing by period [${period}] for id: ${id}")
     val evalResp = matchByEditParams(Some(id), request, Some(period))
     val res = evalResp match {
       case (x: EditRequestByPeriod) => {
         val resp = Try(requestEnterprise.updateEnterpriseVariableValues(x.period, x.id, x.updatedBy, x.edits)) match {
-          case Success(s) => Ok("").future
+          case Success(s) => Ok(errAsJson(OK, "edit_success", s"Edit has been made successfully to Enterprise with id: ${x.id}, for period: ${x.period.toString}")).future
           case Failure(ex) => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "edit_error", s"unable to make edit with exception [${ex.printStackTrace()}]")).future
         }
         resp

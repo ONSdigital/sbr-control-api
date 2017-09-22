@@ -15,13 +15,16 @@ import com.typesafe.scalalogging.StrictLogging
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
-import play.api.libs.json.{ JsDefined, JsUndefined, JsValue }
+import play.api.libs.json._
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
 import uk.gov.ons.sbr.data.controller.{ AdminDataController, EnterpriseController, UnitController }
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
 import utils.Utilities.errAsJson
 import utils._
 import config.Properties.minKeyLength
+import uk.gov.ons.sbr.models.EditEnterprise
+import play.api.libs.functional.syntax._
+import play.api.libs.json
 
 /**
  * Created by haqa on 10/07/2017.
@@ -64,30 +67,29 @@ trait ControllerUtils extends Controller with StrictLogging {
   }
 
   protected def matchByEditParams(id: Option[String], request: Request[AnyContent], period: Option[String] = None): RequestEvaluation = {
-    val key = id.orElse(request.getQueryString("id")).getOrElse("")
+    val key = id.getOrElse("")
     if (key.length >= minKeyLength) {
       (period, request.body.asJson) match {
-        case (None, Some(body)) => Try(parseBodyJson(body)) match {
-          case Success(s) => EditRequest(key, s._1, s._2)
-          case Failure(ex: JsonParseException) => InvalidEditJson(key, ex)
-        }
-        case (Some(period), Some(body)) => (Try(parseYearMonth(period)), Try(parseBodyJson(body))) match {
-          case (Success(period), Success(body)) => EditRequestByPeriod(key, body._1, period, body._2)
-          case (Failure(ex: DateTimeParseException), _) => InvalidReferencePeriod(key, ex)
-          case (_, Failure(ex: JsonParseException)) => InvalidEditJson(key, ex)
+        case (None, Some(body)) => validateEditEntJson(key, body)
+        case (Some(period), Some(body)) => {
+          validateYearMonth(key, period) match {
+            case v: ReferencePeriod => validateEditEntJson(key, body, Some(v.period))
+            case i: InvalidReferencePeriod => i
+          }
         }
       }
     } else { InvalidKey(key) }
   }
 
-  protected def parseBodyJson(body: JsValue): (String, Map[String, String]) = {
-    val updateVars = (body \ "vars").as[Map[String, String]]
-    val updatedBy = (body \ "updatedBy").as[String]
-    (updatedBy, updateVars)
-  }
-
-  private def parseYearMonth(raw: String): YearMonth = {
-    YearMonth.parse(raw, DateTimeFormatter.ofPattern("yyyyMM"))
+  protected def validateEditEntJson(key: String, body: JsValue, period: Option[YearMonth] = None): RequestEvaluation = {
+    val placeResult: JsResult[EditEnterprise] = body.validate[EditEnterprise]
+    placeResult match {
+      case s: JsSuccess[EditEnterprise] => period match {
+        case Some(period) => EditRequestByPeriod(key, s.get.updatedBy, period, s.get.updateVars)
+        case None => EditRequest(key, s.get.updatedBy, s.get.updateVars)
+      }
+      case u: JsError => InvalidEditJson(key, u)
+    }
   }
 
   protected def toOption[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
