@@ -45,6 +45,7 @@ class SearchController extends ControllerUtils {
   def retrieveUnitLinksById(
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"Received request to get a List of StatisticalUnits with id [$id] parameters.")
     val evalResp = matchByParams(Some(id))
     search[java.util.List[StatisticalUnit]](evalResp, requestLinks.findUnits)
   }
@@ -68,6 +69,7 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"Received request to get a List of StatisticalUnits with period [$date] and id [$id] parameters.")
     val evalResp = matchByParams(Some(id), Some(date))
     searchByPeriod[java.util.List[StatisticalUnit]](evalResp, requestLinks.findUnits)
   }
@@ -90,6 +92,7 @@ class SearchController extends ControllerUtils {
   def retrieveEnterpriseById(
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"Received request to get Enterprise with id [$id] parameters.")
     val evalResp = matchByParams(Some(id))
     search[Enterprise](evalResp, requestEnterprise.getEnterprise)
   }
@@ -113,6 +116,7 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"Received request to get Enterprise with period [$date] and id [$id] parameters.")
     val evalResp = matchByParams(Some(id), Some(date))
     searchByPeriod[Enterprise](evalResp, requestEnterprise.getEnterpriseForReferencePeriod)
   }
@@ -136,6 +140,7 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "Short word to describe type of id requested", example = "ENT", required = true) category: String,
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"Received request to get StatisticalUnitLinks with id [$id] and category [$category] parameters.")
     val idValidation = matchByParams(Some(id), None)
     val evalResp = idValidation match {
       case (x: IdRequest) =>
@@ -147,7 +152,8 @@ class SearchController extends ControllerUtils {
         val resp = Try(requestLinks.getUnitLinks(x.id, x.category)).futureTryRes.flatMap {
           case (s: Optional[StatisticalUnitLinks]) => if (s.isPresent) {
             resultMatcher[StatisticalUnitLinks](s)
-          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and grouping ${x.category}")).future
+          } else NotFound(errAsJson(NOT_FOUND, "not_found",
+            s"Could not find enterprise with id ${x.id} and grouping ${x.category}")).future
         } recover responseException
         resp
       case _ => invalidSearchResponses(evalResp)
@@ -175,6 +181,7 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "Keyword describing type of id requested", example = "ENT", required = true) category: String,
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"Received request to get StatisticalUnitLinks with period [$date], id [$id] and category [$category] parameters.")
     matchByParams(Some(id), Some(date)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(requestLinks.getUnitLinks(x.period, x.id, UnitType.fromString(category))).futureTryRes.flatMap {
@@ -203,8 +210,7 @@ class SearchController extends ControllerUtils {
   }
 
   //  @todo - combine ReferencePeriod and UnitGrouping
-  private def searchByPeriod[X](eval: RequestEvaluation, funcWithIdAndParam: (YearMonth, String) => Optional[X]
-                               ): Future[Result] = {
+  private def searchByPeriod[X](eval: RequestEvaluation, funcWithIdAndParam: (YearMonth, String) => Optional[X]): Future[Result] = {
     val res = eval match {
       case (x: ReferencePeriod) =>
         val resp = Try(funcWithIdAndParam(x.period, x.id)).futureTryRes.flatMap {

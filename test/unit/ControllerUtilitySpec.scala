@@ -4,7 +4,6 @@ import java.time.YearMonth
 import java.util.Optional
 
 import controllers.v1.ControllerUtils
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.JsNumber
 import play.api.mvc.Result
 import resource.TestUtils
@@ -53,16 +52,15 @@ class ControllerUtilitySpec extends TestUtils with ControllerUtils {
 
   "unpackParams" must {
     "return IdRequest instance when key length is right" in {
-      val id = validKey
-      val search = requestObject(s"$searchByIdUrl$id")
-      val unpackedTest = matchByParams(Some(id), search)
-      unpackedTest mustBe a[IdRequest]
-      getParsedRequestType[IdRequest](unpackedTest).id mustEqual id
+      implicit val search = requestObject(s"$searchByIdUrl$validKey")
+      val unpackedTest = matchByParams(Some(validKey), Some(validDate))
+      unpackedTest mustBe a[ReferencePeriod]
+      getParsedRequestType[ReferencePeriod](unpackedTest).id mustEqual validKey
     }
 
     "return an InvalidKey instance when no valid key is found" in {
-      val search = requestObject(s"${searchByIdUrl}1233")
-      val unpackedTest = matchByParams(Some("12"), search)
+      implicit val search = requestObject(s"${searchByIdUrl}1233")
+      val unpackedTest = matchByParams(Some("12"))
       unpackedTest must not be a[IdRequest]
       unpackedTest mustBe a[InvalidKey]
     }

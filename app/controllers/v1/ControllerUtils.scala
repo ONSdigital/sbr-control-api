@@ -45,8 +45,7 @@ trait ControllerUtils extends Controller with StrictLogging {
     }
   }
 
-  protected[this] def tryAsResponse(parseToJson: Try[JsValue], errMsg: Option[String] = Some("Could not parse to json")
-   ): Result = parseToJson match {
+  protected[this] def tryAsResponse(parseToJson: Try[JsValue], errMsg: Option[String] = Some("Could not parse to json")): Result = parseToJson match {
     case Success(s) => Ok(s)
     case Failure(ex) =>
       logger.error("Failed to parse instance to expected json format", ex)
@@ -54,8 +53,7 @@ trait ControllerUtils extends Controller with StrictLogging {
         s"${errMsg.getOrElse("Could not perform action")} with exception $ex"))
   }
 
-  protected def matchByParams(id: Option[String], date: Option[String] = None)
-                             (implicit request: Request[AnyContent]): RequestEvaluation = {
+  protected def matchByParams(id: Option[String], date: Option[String] = None)(implicit request: Request[AnyContent]): RequestEvaluation = {
     val key = id.orElse(request.getQueryString("id")).getOrElse("")
     if (key.length >= minKeyLength) {
       date match {
@@ -64,7 +62,8 @@ trait ControllerUtils extends Controller with StrictLogging {
       }
     } else {
       logger.debug(s"Given key [$key] as argument is invalid")
-      InvalidKey(key) }
+      InvalidKey(key)
+    }
   }
 
   protected def toOption[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
