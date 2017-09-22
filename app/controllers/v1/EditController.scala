@@ -26,7 +26,7 @@ class EditController extends ControllerUtils {
     httpMethod = "POST"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, response = classOf[UnitLinks], responseContainer = "JsValue", message = "Edit has been made successfully to Enterprise with id: [id]"),
+    new ApiResponse(code = 200, responseContainer = "JsValue", message = "Edit has been made successfully to Enterprise with id: [id]"),
     new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> id or edit json is invalid"),
     new ApiResponse(code = 500, responseContainer = "JsValue", message = "InternalServerError -> Unable to make edit")
   ))
@@ -58,7 +58,7 @@ class EditController extends ControllerUtils {
     httpMethod = "POST"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, response = classOf[UnitLinks], responseContainer = "JsValue", message = "Edit has been made successfully to Enterprise with id: [id]"),
+    new ApiResponse(code = 200, responseContainer = "JsValue", message = "Edit has been made successfully to Enterprise with id: [id]"),
     new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> id or edit json or period is invalid"),
     new ApiResponse(code = 500, responseContainer = "JsValue", message = "InternalServerError -> Unable to make edit")
   ))
