@@ -11,4 +11,7 @@ object Properties {
   lazy val requestTimeout: Int = config.getInt("request.timeout")
   lazy val minKeyLength: Int = config.getInt("search.minKeyLength")
 
+  // db
+  lazy val defaultDBInit: String = config.getString("db.default.init.name")
+
 }
