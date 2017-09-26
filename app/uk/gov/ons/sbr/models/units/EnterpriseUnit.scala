@@ -1,12 +1,12 @@
 package uk.gov.ons.sbr.models.units
 
-import io.swagger.annotations.ApiModelProperty
-
 import scala.collection.JavaConversions._
 
-import play.api.libs.json.{ JsValue, Json, OFormat }
+import io.swagger.annotations.ApiModelProperty
+import play.api.libs.json.{JsValue, Json, OFormat}
 
 import uk.gov.ons.sbr.data.domain.Enterprise
+import uk.gov.ons.sbr.data.model.StatUnit
 
 /**
  * Created by haqa on 08/08/2017.
@@ -30,6 +30,15 @@ object EnterpriseUnit {
       a => Json.parse(a.toUnitHierarchyAsJson)
     }.toList
     EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, childJson)
+  }
+
+
+  // todo - fix childrenJson
+  def apply(e: StatUnit): EnterpriseUnit = {
+    val childJson: List[JsValue] = e.children.map {
+      v => Json.toJson(EnterpriseUnit(v))
+    }.toList
+    EnterpriseUnit(e.key.toLong, e.refPeriod.toString, e.variables, e.unitType, childJson)
   }
 
 }

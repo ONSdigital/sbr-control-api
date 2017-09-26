@@ -1,9 +1,12 @@
 package uk.gov.ons.sbr.models.units
 
-import io.swagger.annotations.ApiModelProperty
-import play.api.libs.json.{ JsValue, Json, OFormat }
-import uk.gov.ons.sbr.data.domain.{ AbstractPeriodEntity, StatisticalUnit, StatisticalUnitLinks }
 import scala.collection.JavaConversions._
+
+import io.swagger.annotations.ApiModelProperty
+import play.api.libs.json.{Json, OFormat}
+
+import uk.gov.ons.sbr.data.domain.StatisticalUnit
+import uk.gov.ons.sbr.data.model.StatUnitLinks
 
 /**
  * Created by haqa on 08/08/2017.
@@ -33,6 +36,10 @@ object UnitLinks {
       case _ => None
     }
     UnitLinks(u.getKey, parentMap, childrenMap, u.getType.toString)
+  }
+
+  def apply(u: StatUnitLinks): UnitLinks = {
+    UnitLinks(u.key, Option(u.parents), Option(u.children), u.unitType)
   }
 
 }

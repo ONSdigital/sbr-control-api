@@ -1,26 +1,27 @@
 package controllers.v1
 
 import java.time.YearMonth
-import java.time.format.{ DateTimeFormatter, DateTimeParseException }
+import java.time.format.{DateTimeFormatter, DateTimeParseException}
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
-import Services.HBaseInMemoryConfig
-
-import scala.util.{ Failure, Success, Try }
-import scala.concurrent.{ Future, TimeoutException }
-import com.typesafe.scalalogging.StrictLogging
-
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
-import play.api.mvc.{ AnyContent, Controller, Request, Result }
-import play.api.libs.json.{ JsValue, Json }
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
-import uk.gov.ons.sbr.data.controller.{ AdminDataController, EnterpriseController, UnitController }
-import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
-import utils.Utilities.errAsJson
-import utils.{ IdRequest, InvalidKey, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation }
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{Future, TimeoutException}
+import scala.util.{Failure, Success, Try}
+
+import com.typesafe.scalalogging.StrictLogging
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.{AnyContent, Controller, Request, Result}
+
+import uk.gov.ons.sbr.data.controller.{EnterpriseController, UnitController}
+import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit, StatisticalUnitLinks}
+import uk.gov.ons.sbr.models.units.{EnterpriseUnit, KnownUnitLinks, UnitLinks}
+
 import config.Properties.minKeyLength
+import utils.Utilities.errAsJson
+import utils._
+import Services.HBaseInMemoryConfig
 
 /**
  * Created by haqa on 10/07/2017.
@@ -35,6 +36,7 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
 
+  @throws(classOf[DateTimeParseException])
   protected def validateYearMonth(key: String, raw: String) = {
     val yearAndMonth = Try(YearMonth.parse(raw, DateTimeFormatter.ofPattern("yyyyMM")))
     yearAndMonth match {
