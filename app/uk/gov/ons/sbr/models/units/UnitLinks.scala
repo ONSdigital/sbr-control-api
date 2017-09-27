@@ -28,18 +28,18 @@ object UnitLinks {
   }
 
   def toJson(u: List[StatisticalUnit]): JsValue = Json.toJson(u.map(UnitLinks(_)))
-    val parentMap = u.getLinks.getParents match {
-      case y if !y.isEmpty =>
-        Some(y.map { case (group, id) => group.toString -> id }.toMap)
-      case _ => None
-    }
-    val childrenMap = u.getLinks.getChildren match {
-      case x if !x.isEmpty =>
-        Some(x.map { case (id, group) => id -> group.toString }.toMap)
-      case _ => None
-    }
-    UnitLinks(u.getKey, parentMap, childrenMap, u.getType.toString)
-  }
+  //    val parentMap = u.getLinks.getParents match {
+  //      case y if !y.isEmpty =>
+  //        Some(y.map { case (group, id) => group.toString -> id }.toMap)
+  //      case _ => None
+  //    }
+  //    val childrenMap = u.getLinks.getChildren match {
+  //      case x if !x.isEmpty =>
+  //        Some(x.map { case (id, group) => id -> group.toString }.toMap)
+  //      case _ => None
+  //    }
+  //    UnitLinks(u.getKey, parentMap, childrenMap, u.getType.toString)
+  //  }
 
 }
 
