@@ -59,6 +59,7 @@ class SQLConnect extends DBConnector {
   def getEnterpriseFromDB(id: String)(implicit request: Request[AnyContent]) = {
     matchByParams(Some(id)) match {
       case (x: IdRequest) =>
+        //        println(initSQL.getEnterpriseAsStatUnit(x.id.toLong))
         val resp = Try(initSQL.getEnterpriseAsStatUnit(x.id.toLong)).futureTryRes.flatMap {
           case Some(v) =>
             tryAsResponse(Try(Json.toJson(EnterpriseUnit(v)))).future
