@@ -46,8 +46,7 @@ class HBaseConnect extends DBConnector {
   }
 
   def getStatUnitLinkFromDB(id: String, category: String)(implicit request: Request[AnyContent]) = {
-    val idValidation = matchByParams(Some(id), None)
-    val evalResp = idValidation match {
+    val evalResp = matchByParams(Some(id), None) match {
       case (x: IdRequest) =>
         CategoryRequest(x.id, category)
       case z => z

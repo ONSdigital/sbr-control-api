@@ -103,7 +103,7 @@ trait DBConnector extends Controller with StrictLogging {
       BadRequest(errAsJson(BAD_REQUEST, "invalid_date", s"cannot parse date exception found $ex"))
     case ex: RuntimeException =>
       logger.error(s"RuntimeException ${ex.getMessage}", ex.getCause)
-      InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "runtime_exception", s"$ex"))
+      InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "runtime_exception", ex.getMessage))
     case ex: ServiceUnavailableException =>
       logger.error(s"ServiceUnavailableException ${ex.getMessage}", ex.getCause)
       ServiceUnavailable(errAsJson(SERVICE_UNAVAILABLE, "service_unavailable", s"$ex"))

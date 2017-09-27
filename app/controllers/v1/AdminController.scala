@@ -1,17 +1,13 @@
 package controllers.v1
 
-import java.time.YearMonth
-
 import io.swagger.annotations.Api
-//import java.util
-
-import uk.gov.ons.sbr.data.domain.UnitType
+import play.api.mvc.Controller
 
 /**
  * Created by haqa on 04/08/2017.
  */
 @Api("Modify")
-class AdminController extends ControllerUtils {
+class AdminController extends Controller {
 
   def updateLinks(date: String, id: String, units: String, parents: String, children: String) = ???
   //  {

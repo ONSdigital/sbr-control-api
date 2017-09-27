@@ -8,13 +8,14 @@ import scala.util.Try
 import play.api.libs.json.Json
 import play.api.mvc.{ AnyContent, Request }
 
-import uk.gov.ons.sbr.data.DevDummyApp.dbService
 import uk.gov.ons.sbr.data.model.StatUnitLinks
+import uk.gov.ons.sbr.data.service.SbrDbService
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 
+import config.Properties.dbConfig
 import utils.FutureResponse.{ futureFromTry, futureSuccess }
 import utils.Utilities.errAsJson
-import utils._
+import utils.{ CategoryRequest, IdRequest, ReferencePeriodRequest }
 
 /**
  * Created by haqa on 22/09/2017.
@@ -22,7 +23,8 @@ import utils._
 @Singleton
 class SQLConnect extends DBConnector {
 
-  private val initSQL = dbService
+  // Start DbService with this config
+  private val initSQL = new SbrDbService(Some(dbConfig))
 
   def getUnitLinksFromDB(id: String)(implicit request: Request[AnyContent]) = {
     matchByParams(Some(id)) match {
@@ -44,7 +46,8 @@ class SQLConnect extends DBConnector {
           case (s: Seq[StatUnitLinks]) => if (s.nonEmpty) {
             tryAsResponse(Try(Json.toJson(s.map { v => UnitLinks(v) }))).future
           } else
-            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and" +
+              s" period ${x.period}")).future
         } recover responseException
         resp
       case r => invalidSearchResponses(r)
@@ -54,7 +57,7 @@ class SQLConnect extends DBConnector {
   def getEnterpriseFromDB(id: String)(implicit request: Request[AnyContent]) = {
     matchByParams(Some(id)) match {
       case (x: IdRequest) =>
-        val resp = Try(initSQL.getEnterpriseAsStatUnit(id.toLong)).futureTryRes.flatMap {
+        val resp = Try(initSQL.getEnterpriseAsStatUnit(x.id.toLong)).futureTryRes.flatMap {
           case Some(v) =>
             tryAsResponse(Try(Json.toJson(EnterpriseUnit(v)))).future
           case _ =>
@@ -72,7 +75,8 @@ class SQLConnect extends DBConnector {
           case Some(v) =>
             tryAsResponse(Try(Json.toJson(EnterpriseUnit(v)))).future
           case _ =>
-            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} " +
+              s"and period ${x.period}")).future
         } recover responseException
         resp
       case r => invalidSearchResponses(r)
@@ -80,8 +84,7 @@ class SQLConnect extends DBConnector {
   }
 
   def getStatUnitLinkFromDB(id: String, category: String)(implicit request: Request[AnyContent]) = {
-    val idValidation = matchByParams(Some(id), None)
-    val evalResp = idValidation match {
+    val evalResp = matchByParams(Some(id), None) match {
       case (x: IdRequest) =>
         CategoryRequest(x.id, category)
       case z => z
@@ -92,7 +95,8 @@ class SQLConnect extends DBConnector {
           case Some(v) =>
             tryAsResponse(Try(Json.toJson(KnownUnitLinks(v)))).future
           case _ =>
-            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and category ${x.category}")).future
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and " +
+              s"category ${x.category}")).future
         } recover responseException
         resp
       case r => invalidSearchResponses(r)

@@ -1,5 +1,6 @@
 package controllers.v1
 
+import com.typesafe.scalalogging.StrictLogging
 import io.swagger.annotations._
 import play.api.mvc.{ Action, AnyContent }
 
@@ -15,7 +16,7 @@ import Services.{ DBConnectionInitUtility, DBConnector }
  * @todo - check no-param found err-control
  */
 @Api("Search")
-class SearchController extends ControllerUtils {
+class SearchController extends StrictLogging {
 
   private val dbInstance: DBConnector = DBConnectionInitUtility.init()
 
@@ -39,8 +40,6 @@ class SearchController extends ControllerUtils {
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get a List of Unit Links with id [$id] parameters.")
     dbInstance.getUnitLinksFromDB(id)
-    //    val evalResp = matchByParams(Some(id))
-    //    search[java.util.List[StatisticalUnit]](evalResp, requestLinks.findUnits)
   }
 
   //public api
@@ -97,7 +96,8 @@ class SearchController extends ControllerUtils {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, response = classOf[EnterpriseUnit], responseContainer = "JsValue", message = "Ok -> Retrieved Enterprise for given id."),
+    new ApiResponse(code = 200, response = classOf[EnterpriseUnit], responseContainer = "JsValue",
+      message = "Ok -> Retrieved Enterprise for given id."),
     new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
     new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
     new ApiResponse(code = 500, responseContainer = "JsValue",
