@@ -12,7 +12,6 @@ sealed trait RequestEvaluation
 
 case class IdRequest(id: String) extends RequestEvaluation
 case class ReferencePeriod(id: String, period: YearMonth) extends RequestEvaluation
-case class ReferencePeriodRequest(id: String, period: Long) extends RequestEvaluation
 case class CategoryRequest(id: String, category: String) extends RequestEvaluation
 case class InvalidReferencePeriod(id: String, exception: DateTimeException) extends RequestEvaluation
 case class InvalidKey(id: String) extends RequestEvaluation

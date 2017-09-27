@@ -9,7 +9,7 @@ import uk.gov.ons.sbr.data.model.StatUnit
  * Created by haqa on 27/09/2017.
  */
 case class ChildUnit(
-  @ApiModelProperty(example = "", dataType = "java.lang.Long") id: String,
+  @ApiModelProperty(example = "") id: String,
   unitType: String,
   children: Option[Seq[Map[String, String]]]
 )

@@ -127,5 +127,7 @@ trait DBConnector extends Controller with StrictLogging {
     }
   }
 
+  protected def parseYearMonth(ym: YearMonth) = ym.toString.replace("-", "").toLong
+
 }
 
