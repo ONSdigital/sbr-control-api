@@ -1,6 +1,5 @@
 package Services
 
-import java.time.YearMonth
 import javax.inject.Singleton
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -30,10 +29,8 @@ class SQLConnect extends DBConnector {
   def getUnitLinksFromDB(id: String)(implicit request: Request[AnyContent]) = {
     matchByParams(Some(id)) match {
       case (x: IdRequest) =>
-        println("get: " + initSQL.getStatUnitLinks(x.id))
         val resp = Try(initSQL.getStatUnitLinks(x.id)).futureTryRes.flatMap {
           case (s: Seq[StatUnitLinks]) => if (s.nonEmpty) {
-            println("dounle check: " + s)
             tryAsResponse(Try(Json.toJson(s.map { v => UnitLinks(v) }))).future
           } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find Unit Links with id ${x.id}")).future
         } recover responseException
@@ -60,7 +57,6 @@ class SQLConnect extends DBConnector {
   def getEnterpriseFromDB(id: String)(implicit request: Request[AnyContent]) = {
     matchByParams(Some(id)) match {
       case (x: IdRequest) =>
-        //        println(initSQL.getEnterpriseAsStatUnit(x.id.toLong))
         val resp = Try(initSQL.getEnterpriseAsStatUnit(x.id.toLong)).futureTryRes.flatMap {
           case Some(v) =>
             tryAsResponse(Try(Json.toJson(EnterpriseUnit(v)))).future

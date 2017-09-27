@@ -39,7 +39,6 @@ object UnitLinks {
   }
 
   def apply(u: StatUnitLinks): UnitLinks = {
-    println(s"children: ${u.children}")
     UnitLinks(u.key, Option(u.parents), Option(u.children), u.unitType)
   }
 
