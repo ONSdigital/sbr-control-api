@@ -3,7 +3,7 @@ package uk.gov.ons.sbr.models.units
 import scala.collection.JavaConversions._
 
 import io.swagger.annotations.ApiModelProperty
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{ Json, OFormat }
 
 import uk.gov.ons.sbr.data.domain.StatisticalUnitLinks
 import uk.gov.ons.sbr.data.model.StatUnitLinks

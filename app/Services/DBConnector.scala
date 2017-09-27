@@ -1,21 +1,21 @@
 package Services
 
 import java.time.YearMonth
-import java.time.format.{DateTimeFormatter, DateTimeParseException}
+import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Future, TimeoutException}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ Future, TimeoutException }
+import scala.util.{ Failure, Success, Try }
 
 import com.typesafe.scalalogging.StrictLogging
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{AnyContent, Controller, Request, Result}
+import play.api.libs.json.{ JsValue, Json }
+import play.api.mvc.{ AnyContent, Controller, Request, Result }
 
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit, StatisticalUnitLinks}
-import uk.gov.ons.sbr.models.units.{EnterpriseUnit, KnownUnitLinks, UnitLinks}
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 
 import config.Properties.minKeyLength
 import utils.Utilities.errAsJson
@@ -27,18 +27,17 @@ import utils.FutureResponse.futureSuccess
  */
 trait DBConnector extends Controller with StrictLogging {
 
-  def getUnitLinksFromDB(id: String): Future[Result]
+  def getUnitLinksFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result]
 
-  def getUnitLinksFromDB(id: String, period: String): Future[Result]
+  def getUnitLinksFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result]
 
-  def getEnterpriseFromDB(id: String): Future[Result]
+  def getEnterpriseFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result]
 
-  def getEnterpriseFromDB(id: String, period: String): Future[Result]
+  def getEnterpriseFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result]
 
-  def getStatUnitLinkFromDB(id: String, category: String): Future[Result]
+  def getStatUnitLinkFromDB(id: String, category: String)(implicit request: Request[AnyContent]): Future[Result]
 
-  def getStatUnitLinkFromDB(id: String, period: String, category: String): Future[Result]
-
+  def getStatUnitLinkFromDB(id: String, period: String, category: String)(implicit request: Request[AnyContent]): Future[Result]
 
   @throws(classOf[DateTimeParseException])
   def validateYearMonth(key: String, raw: String) = {
@@ -60,7 +59,7 @@ trait DBConnector extends Controller with StrictLogging {
         s"${errMsg.getOrElse("Could not perform action")} with exception $ex"))
   }
 
-   def matchByParams(id: Option[String], date: Option[String] = None)(implicit request: Request[AnyContent]): RequestEvaluation = {
+  def matchByParams(id: Option[String], date: Option[String] = None)(implicit request: Request[AnyContent]): RequestEvaluation = {
     val key = id.orElse(request.getQueryString("id")).getOrElse("")
     if (key.length >= minKeyLength) {
       date match {
@@ -73,18 +72,18 @@ trait DBConnector extends Controller with StrictLogging {
     }
   }
 
-   def toOption[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
+  def toOption[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
 
-   def toJavaOptional[A](o: Option[A]): Optional[A] =
+  def toJavaOptional[A](o: Option[A]): Optional[A] =
     o match { case Some(a) => Optional.ofNullable(a); case _ => Optional.empty[A] }
 
   /**
-    * @param v - value param to convert
-    * @param msg - overriding msg option
-    * @tparam Z - java data type for value param
-    * @return Future[Result]
-    */
-   def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
+   * @param v - value param to convert
+   * @param msg - overriding msg option
+   * @tparam Z - java data type for value param
+   * @return Future[Result]
+   */
+  def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
     Future { toOption[Z](v) }.map {
       case Some(x: java.util.List[StatisticalUnit]) =>
         tryAsResponse(Try(Json.toJson(x.toList.map { v => UnitLinks(v) })))
@@ -98,7 +97,7 @@ trait DBConnector extends Controller with StrictLogging {
     }
   }
 
-   def responseException: PartialFunction[Throwable, Result] = {
+  def responseException: PartialFunction[Throwable, Result] = {
     case ex: DateTimeParseException =>
       logger.error("cannot parse date to to specified date format", ex)
       BadRequest(errAsJson(BAD_REQUEST, "invalid_date", s"cannot parse date exception found $ex"))

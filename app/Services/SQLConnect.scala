@@ -1,20 +1,20 @@
 package Services
 
-
 import javax.inject.Singleton
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
 import play.api.libs.json.Json
+import play.api.mvc.{ AnyContent, Request }
 
 import uk.gov.ons.sbr.data.DevDummyApp.dbService
 import uk.gov.ons.sbr.data.model.StatUnitLinks
-import uk.gov.ons.sbr.models.units.{EnterpriseUnit, KnownUnitLinks, UnitLinks}
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 
-import utils.FutureResponse.{futureFromTry, futureSuccess}
+import utils.FutureResponse.{ futureFromTry, futureSuccess }
 import utils.Utilities.errAsJson
 import utils._
-
 
 /**
  * Created by haqa on 22/09/2017.
@@ -24,12 +24,12 @@ class SQLConnect extends DBConnector {
 
   private val initSQL = dbService
 
-  def getUnitLinksFromDB(id: String) = {
+  def getUnitLinksFromDB(id: String)(implicit request: Request[AnyContent]) = {
     matchByParams(Some(id)) match {
       case (x: IdRequest) =>
         val resp = Try(initSQL.getStatUnitLinks(x.id)).futureTryRes.flatMap {
           case (s: Seq[StatUnitLinks]) => if (s.nonEmpty) {
-            tryAsResponse(Try(Json.toJson(s.map{v => UnitLinks(v)}))).future
+            tryAsResponse(Try(Json.toJson(s.map { v => UnitLinks(v) }))).future
           } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find Unit Links with id ${x.id}")).future
         } recover responseException
         resp
@@ -37,12 +37,12 @@ class SQLConnect extends DBConnector {
     }
   }
 
-  def getUnitLinksFromDB(id: String, period: String) =  {
+  def getUnitLinksFromDB(id: String, period: String)(implicit request: Request[AnyContent]) = {
     matchByParams(Some(id)) match {
       case (x: ReferencePeriodRequest) =>
         val resp = Try(initSQL.getStatUnitLinks(x.period, x.id)).futureTryRes.flatMap {
           case (s: Seq[StatUnitLinks]) => if (s.nonEmpty) {
-            tryAsResponse(Try(Json.toJson(s.map{v => UnitLinks(v)}))).future
+            tryAsResponse(Try(Json.toJson(s.map { v => UnitLinks(v) }))).future
           } else
             NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
         } recover responseException
@@ -51,7 +51,7 @@ class SQLConnect extends DBConnector {
     }
   }
 
-  def getEnterpriseFromDB(id: String) = {
+  def getEnterpriseFromDB(id: String)(implicit request: Request[AnyContent]) = {
     matchByParams(Some(id)) match {
       case (x: IdRequest) =>
         val resp = Try(initSQL.getEnterpriseAsStatUnit(id.toLong)).futureTryRes.flatMap {
@@ -65,8 +65,7 @@ class SQLConnect extends DBConnector {
     }
   }
 
-
-  def getEnterpriseFromDB(id: String, period: String) = {
+  def getEnterpriseFromDB(id: String, period: String)(implicit request: Request[AnyContent]) = {
     matchByParams(Some(id)) match {
       case (x: ReferencePeriodRequest) =>
         val resp = Try(initSQL.getEnterpriseAsStatUnit(x.period, x.id.toLong)).futureTryRes.flatMap {
@@ -80,8 +79,7 @@ class SQLConnect extends DBConnector {
     }
   }
 
-
-  def getStatUnitLinkFromDB(id: String, category: String) = {
+  def getStatUnitLinkFromDB(id: String, category: String)(implicit request: Request[AnyContent]) = {
     val idValidation = matchByParams(Some(id), None)
     val evalResp = idValidation match {
       case (x: IdRequest) =>
@@ -101,7 +99,7 @@ class SQLConnect extends DBConnector {
     }
   }
 
-  def getStatUnitLinkFromDB(id: String, period: String, category: String) = {
+  def getStatUnitLinkFromDB(id: String, period: String, category: String)(implicit request: Request[AnyContent]) = {
     matchByParams(Some(id), Some(period)) match {
       case (x: ReferencePeriodRequest) =>
         val resp = Try(initSQL.getStatUnitLinksByKey(x.period, x.id, category)).futureTryRes.flatMap {
@@ -114,7 +112,5 @@ class SQLConnect extends DBConnector {
       case x => invalidSearchResponses(x)
     }
   }
-
-
 
 }

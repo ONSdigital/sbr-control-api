@@ -3,7 +3,7 @@ package uk.gov.ons.sbr.models.units
 import scala.collection.JavaConversions._
 
 import io.swagger.annotations.ApiModelProperty
-import play.api.libs.json.{JsValue, Json, OFormat}
+import play.api.libs.json.{ JsValue, Json, OFormat }
 
 import uk.gov.ons.sbr.data.domain.Enterprise
 import uk.gov.ons.sbr.data.model.StatUnit
@@ -31,7 +31,6 @@ object EnterpriseUnit {
     }.toList
     EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, childJson)
   }
-
 
   // todo - fix childrenJson
   def apply(e: StatUnit): EnterpriseUnit = {

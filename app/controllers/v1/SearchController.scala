@@ -1,12 +1,11 @@
 package controllers.v1
 
 import io.swagger.annotations._
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{ Action, AnyContent }
 
-import uk.gov.ons.sbr.models.units.{EnterpriseUnit, UnitLinks}
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
 
-import Services.{DBConnectionInitUtility, DBConnector}
-
+import Services.{ DBConnectionInitUtility, DBConnector }
 
 /**
  * Created by haqa on 04/08/2017.
@@ -40,8 +39,8 @@ class SearchController extends ControllerUtils {
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get a List of Unit Links with id [$id] parameters.")
     dbInstance.getUnitLinksFromDB(id)
-//    val evalResp = matchByParams(Some(id))
-//    search[java.util.List[StatisticalUnit]](evalResp, requestLinks.findUnits)
+    //    val evalResp = matchByParams(Some(id))
+    //    search[java.util.List[StatisticalUnit]](evalResp, requestLinks.findUnits)
   }
 
   //public api
@@ -158,6 +157,5 @@ class SearchController extends ControllerUtils {
     logger.info(s"Received request to get StatisticalUnitLinks with period [$date], id [$id] and category [$category] parameters.")
     dbInstance.getStatUnitLinkFromDB(id, date, category)
   }
-
 
 }

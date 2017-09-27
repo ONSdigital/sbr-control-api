@@ -1,22 +1,22 @@
 package controllers.v1
 
 import java.time.YearMonth
-import java.time.format.{DateTimeFormatter, DateTimeParseException}
+import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
 import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Future, TimeoutException}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ Future, TimeoutException }
+import scala.util.{ Failure, Success, Try }
 
 import com.typesafe.scalalogging.StrictLogging
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{AnyContent, Controller, Request, Result}
+import play.api.libs.json.{ JsValue, Json }
+import play.api.mvc.{ AnyContent, Controller, Request, Result }
 
-import uk.gov.ons.sbr.data.controller.{EnterpriseController, UnitController}
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit, StatisticalUnitLinks}
-import uk.gov.ons.sbr.models.units.{EnterpriseUnit, KnownUnitLinks, UnitLinks}
+import uk.gov.ons.sbr.data.controller.{ EnterpriseController, UnitController }
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 
 import config.Properties.minKeyLength
 import utils.Utilities.errAsJson

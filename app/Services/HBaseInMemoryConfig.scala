@@ -9,7 +9,7 @@ import uk.gov.ons.sbr.data.hbase.load.BulkLoader
 /**
  * Created by haqa on 31/08/2017.
  */
-object HBaseInMemoryConfig extends DBConnector {
+object HBaseInMemoryConfig {
 
   Logger.info("Loading local CSVs into In-Memory HBase...")
   private val bulkLoader = new BulkLoader()

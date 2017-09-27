@@ -26,5 +26,4 @@ object DBConnectionInitUtility {
       sys.error(s"$defaultDBInit is not a valid DB option.")
   }
 
-
 }
