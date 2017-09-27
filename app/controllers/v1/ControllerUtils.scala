@@ -4,27 +4,24 @@ import java.time.YearMonth
 import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
-
 import com.fasterxml.jackson.core.JsonParseException
 import com.google.inject.Singleton
 
 import scala.util.{ Failure, Success, Try }
 import scala.concurrent.{ Future, TimeoutException }
 import com.typesafe.scalalogging.StrictLogging
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
+
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
-import play.api.libs.json._
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
+import play.api.libs.json.{ JsValue, Json }
+
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
 import uk.gov.ons.sbr.data.controller.{ AdminDataController, EnterpriseController, UnitController }
-import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 import utils.Utilities.errAsJson
-import utils._
+import utils.{ IdRequest, InMemoryInit, InvalidKey, InvalidReferencePeriod, ReferencePeriod, RequestEvaluation }
 import config.Properties.minKeyLength
-import uk.gov.ons.sbr.models.EditEnterprise
-import play.api.libs.functional.syntax._
-import play.api.libs.json
 
 /**
  * Created by haqa on 10/07/2017.
@@ -38,7 +35,7 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
 
-  private def validateYearMonth(key: String, raw: String) = {
+  protected def validateYearMonth(key: String, raw: String) = {
     val yearAndMonth = Try(YearMonth.parse(raw, DateTimeFormatter.ofPattern("yyyyMM")))
     yearAndMonth match {
       case Success(s) =>
@@ -49,11 +46,11 @@ trait ControllerUtils extends Controller with StrictLogging {
     }
   }
 
-  protected[this] def tryAsResponse[T](f: T => JsValue, v: T): Result = Try(f(v)) match {
+  protected[this] def tryAsResponse(parseToJson: Try[JsValue]): Result = parseToJson match {
     case Success(s) => Ok(s)
     case Failure(ex) =>
       logger.error("Failed to parse instance to expected json format", ex)
-      BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action ${f.toString} with exception $ex"))
+      BadRequest(errAsJson(BAD_REQUEST, "bad_request", s"Could not perform action with exception $ex"))
   }
 
   protected def matchByParams(id: Option[String], request: Request[AnyContent], date: Option[String] = None): RequestEvaluation = {
@@ -107,9 +104,13 @@ trait ControllerUtils extends Controller with StrictLogging {
    */
   protected def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
     Future { toOption[Z](v) }.map {
-      case Some(x: java.util.List[StatisticalUnit]) => tryAsResponse[List[StatisticalUnit]](UnitLinks.toJson, x.toList)
-      case Some(x: Enterprise) => tryAsResponse[Enterprise](EnterpriseUnit.toJson, x)
-      case None =>
+      case Some(x: java.util.List[StatisticalUnit]) =>
+        tryAsResponse(Try(Json.toJson(x.toList.map { v => UnitLinks(v) })))
+      case Some(x: Enterprise) =>
+        tryAsResponse(Try(Json.toJson(EnterpriseUnit(x))))
+      case Some(x: StatisticalUnitLinks) =>
+        tryAsResponse(Try(Json.toJson(KnownUnitLinks(x))))
+      case _ =>
         BadRequest(errAsJson(BAD_REQUEST, "bad_request", msg.getOrElse("Could not parse returned response")))
     }
   }
