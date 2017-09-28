@@ -1,6 +1,5 @@
 package scala.server
 
-import play.api.libs.json.JsString
 import play.api.test.Helpers._
 import play.api.test._
 import resource.TestUtils

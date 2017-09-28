@@ -47,7 +47,7 @@ class SQLConnect extends DBConnector {
           case (s: Seq[StatUnitLinks]) => if (s.nonEmpty) {
             tryAsResponse(Try(Json.toJson(s.map { v => UnitLinks(v) }))).future
           } else
-            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and" +
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find Unit Links with id ${x.id} and" +
               s" period ${x.period}")).future
         } recover responseException
         resp
@@ -62,7 +62,7 @@ class SQLConnect extends DBConnector {
           case Some(v) =>
             tryAsResponse(Try(Json.toJson(EnterpriseUnit(v)))).future
           case _ =>
-            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find Unit Links with id ${x.id}")).future
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find Enterprise with id ${x.id}")).future
         } recover responseException
         resp
       case r => invalidSearchResponses(r)
@@ -76,7 +76,7 @@ class SQLConnect extends DBConnector {
           case Some(v) =>
             tryAsResponse(Try(Json.toJson(EnterpriseUnit(v)))).future
           case _ =>
-            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} " +
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find Enterprise with id ${x.id} " +
               s"and period ${x.period}")).future
         } recover responseException
         resp
@@ -96,7 +96,7 @@ class SQLConnect extends DBConnector {
           case Some(v) =>
             tryAsResponse(Try(Json.toJson(KnownUnitLinks(v)))).future
           case _ =>
-            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and " +
+            NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find unit with id ${x.id} and " +
               s"category ${x.category}")).future
         } recover responseException
         resp
