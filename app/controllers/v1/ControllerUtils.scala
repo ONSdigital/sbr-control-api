@@ -1,28 +1,28 @@
 package controllers.v1
 
 import java.time.YearMonth
-import java.time.format.{DateTimeFormatter, DateTimeParseException}
+import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
-import scala.util.{Failure, Success, Try}
-import scala.concurrent.{Future, TimeoutException}
+import com.fasterxml.jackson.core.JsonParseException
+import com.google.inject.Singleton
 
+import scala.util.{ Failure, Success, Try }
+import scala.concurrent.{ Future, TimeoutException }
 import com.typesafe.scalalogging.StrictLogging
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
-
-import play.api.mvc.{AnyContent, Controller, Request, Result}
+import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import play.api.libs.json._
-
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit, StatisticalUnitLinks}
-import uk.gov.ons.sbr.data.controller.{EnterpriseController, UnitController}
-import uk.gov.ons.sbr.models.units.{EnterpriseUnit, KnownUnitLinks, UnitLinks}
-
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
+import uk.gov.ons.sbr.data.controller.{ AdminDataController, EnterpriseController, UnitController }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 import utils.Utilities.errAsJson
 import utils._
 import config.Properties.minKeyLength
-import Services.HBaseInMemoryConfig
+import uk.gov.ons.sbr.models.EditEnterprise
 
 /**
   * Created by haqa on 10/07/2017.
@@ -64,6 +64,31 @@ trait ControllerUtils extends Controller with StrictLogging {
     } else { InvalidKey(key) }
   }
 
+  protected def matchByEditParams(id: Option[String], request: Request[AnyContent], period: Option[String] = None): RequestEvaluation = {
+    val key = id.getOrElse("")
+    if (key.length >= minKeyLength) {
+      (period, request.body.asJson) match {
+        case (None, Some(body)) => validateEditEntJson(key, body)
+        case (Some(period), Some(body)) => {
+          validateYearMonth(key, period) match {
+            case v: ReferencePeriod => validateEditEntJson(key, body, Some(v.period))
+            case i: InvalidReferencePeriod => i
+          }
+        }
+      }
+    } else { InvalidKey(key) }
+  }
+
+  protected def validateEditEntJson(key: String, body: JsValue, period: Option[YearMonth] = None): RequestEvaluation = {
+    val placeResult: JsResult[EditEnterprise] = body.validate[EditEnterprise]
+    placeResult match {
+      case s: JsSuccess[EditEnterprise] => period match {
+        case Some(period) => EditRequestByPeriod(key, s.get.updatedBy, period, s.get.updateVars)
+        case None => EditRequest(key, s.get.updatedBy, s.get.updateVars)
+      }
+      case u: JsError => InvalidEditJson(key, u)
+    }
+  }
 
   protected def toOption[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
 
