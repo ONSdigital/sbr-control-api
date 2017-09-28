@@ -6,16 +6,16 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
 import play.api.libs.json.Json
-import play.api.mvc.{AnyContent, Request}
+import play.api.mvc.{ AnyContent, Request }
 
 import uk.gov.ons.sbr.data.model.StatUnitLinks
 import uk.gov.ons.sbr.data.service.SbrDbService
-import uk.gov.ons.sbr.models.units.{EnterpriseUnit, KnownUnitLinks, UnitLinks}
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 
 import config.Properties.dbConfig
-import utils.FutureResponse.{futureFromTry, futureSuccess}
+import utils.FutureResponse.{ futureFromTry, futureSuccess }
 import utils.Utilities.errAsJson
-import utils.{CategoryRequest, IdRequest, ReferencePeriod}
+import utils.{ CategoryRequest, IdRequest, ReferencePeriod }
 
 /**
  * Created by haqa on 22/09/2017.
@@ -29,6 +29,7 @@ class SQLConnect extends DBConnector {
   def getUnitLinksFromDB(id: String)(implicit request: Request[AnyContent]) = {
     matchByParams(Some(id)) match {
       case (x: IdRequest) =>
+        println(initSQL.getStatUnitLinks(x.id))
         val resp = Try(initSQL.getStatUnitLinks(x.id)).futureTryRes.flatMap {
           case (s: Seq[StatUnitLinks]) => if (s.nonEmpty) {
             tryAsResponse(Try(Json.toJson(s.map { v => UnitLinks(v) }))).future
