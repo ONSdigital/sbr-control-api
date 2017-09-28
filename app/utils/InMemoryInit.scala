@@ -1,7 +1,10 @@
 package utils
 
+import java.io.File
+
 import org.apache.hadoop.util.ToolRunner
 import play.api.Logger
+
 import uk.gov.ons.sbr.data.domain.UnitType
 import uk.gov.ons.sbr.data.hbase.HBaseConnector
 import uk.gov.ons.sbr.data.hbase.load.BulkLoader
@@ -16,47 +19,49 @@ object InMemoryInit {
 
   // Setting data for first period (201706)
   // Enterprise Data
-  protected val entData201706: List[String] = List[String](UnitType.ENTERPRISE.toString, "201706", "conf/sample/201706/sbr-2500-ent-data.csv")
+  val firstPeriod = "201706"
+  val secondPeriod = "201708"
+  protected val entData201706: List[String] = List[String](UnitType.ENTERPRISE.toString, firstPeriod, new File("conf/sample/201706/sbr-2500-ent-data.csv").toURI.toURL.toExternalForm)
 
   // ENT ~ VAT/PAYE/CH/LEU Links
   protected val entLeu201706: List[String] = List[String](UnitType.ENTERPRISE.toString + "~"
-    + UnitType.LEGAL_UNIT.toString, "201706", "conf/sample/201706/sbr-2500-ent-leu-links.csv")
+    + UnitType.LEGAL_UNIT.toString, firstPeriod, new File("conf/sample/201706/sbr-2500-ent-leu-links.csv").toURI.toURL.toExternalForm)
   protected val entVat201706: List[String] = List[String](UnitType.ENTERPRISE.toString + "~"
-    + UnitType.VAT.toString, "201706", "conf/sample/201706/sbr-2500-ent-vat-links.csv")
+    + UnitType.VAT.toString, firstPeriod, new File("conf/sample/201706/sbr-2500-ent-vat-links.csv").toURI.toURL.toExternalForm)
   protected val entPaye201706: List[String] = List[String](UnitType.ENTERPRISE.toString + "~"
-    + UnitType.PAYE.toString, "201706", "conf/sample/201706/sbr-2500-ent-paye-links.csv")
+    + UnitType.PAYE.toString, firstPeriod, new File("conf/sample/201706/sbr-2500-ent-paye-links.csv").toURI.toURL.toExternalForm)
   protected val entCh201706: List[String] = List[String](UnitType.ENTERPRISE.toString + "~"
-    + UnitType.COMPANY_REGISTRATION.toString, "201706", "conf/sample/201706/sbr-2500-ent-ch-links.csv")
+    + UnitType.COMPANY_REGISTRATION.toString, firstPeriod, new File("conf/sample/201706/sbr-2500-ent-ch-links.csv").toURI.toURL.toExternalForm)
 
   // LEU ~ VAT/PAYE/CH Links
   protected val leuCh201706: List[String] = List[String](UnitType.LEGAL_UNIT.toString + "~"
-    + UnitType.COMPANY_REGISTRATION.toString, "201706", "conf/sample/201706/sbr-2500-leu-ch-links.csv")
+    + UnitType.COMPANY_REGISTRATION.toString, firstPeriod, new File("conf/sample/201706/sbr-2500-leu-ch-links.csv").toURI.toURL.toExternalForm)
   protected val leuPaye201706: List[String] = List[String](UnitType.LEGAL_UNIT.toString + "~"
-    + UnitType.PAYE.toString, "201706", "conf/sample/201706/sbr-2500-leu-paye-links.csv")
+    + UnitType.PAYE.toString, firstPeriod, new File("conf/sample/201706/sbr-2500-leu-paye-links.csv").toURI.toURL.toExternalForm)
   protected val leuVat201706: List[String] = List[String](UnitType.LEGAL_UNIT.toString + "~"
-    + UnitType.VAT.toString, "201706", "conf/sample/201706/sbr-2500-leu-vat-links.csv")
+    + UnitType.VAT.toString, firstPeriod, new File("conf/sample/201706/sbr-2500-leu-vat-links.csv").toURI.toURL.toExternalForm)
 
   // Setting data for second period (201708)
   // Enterprise Data
-  protected val entData201708: List[String] = List[String](UnitType.ENTERPRISE.toString, "201708", "conf/sample/201708/sbr-2500-ent-data.csv")
+  protected val entData201708: List[String] = List[String](UnitType.ENTERPRISE.toString, secondPeriod, new File("conf/sample/201708/sbr-2500-ent-data.csv").toURI.toURL.toExternalForm)
 
   // ENT ~ VAT/PAYE/CH/LEU Links
   protected val entLeu201708: List[String] = List[String](UnitType.ENTERPRISE.toString + "~"
-    + UnitType.LEGAL_UNIT.toString, "201708", "conf/sample/201708/sbr-2500-ent-leu-links.csv")
+    + UnitType.LEGAL_UNIT.toString, secondPeriod, new File("conf/sample/201708/sbr-2500-ent-leu-links.csv").toURI.toURL.toExternalForm)
   protected val entVat201708: List[String] = List[String](UnitType.ENTERPRISE.toString + "~"
-    + UnitType.VAT.toString, "201708", "conf/sample/201708/sbr-2500-ent-vat-links.csv")
+    + UnitType.VAT.toString, secondPeriod, new File("conf/sample/201708/sbr-2500-ent-vat-links.csv").toURI.toURL.toExternalForm)
   protected val entPaye201708: List[String] = List[String](UnitType.ENTERPRISE.toString + "~"
-    + UnitType.PAYE.toString, "201708", "conf/sample/201708/sbr-2500-ent-paye-links.csv")
+    + UnitType.PAYE.toString, secondPeriod, new File("conf/sample/201708/sbr-2500-ent-paye-links.csv").toURI.toURL.toExternalForm)
   protected val entCh201708: List[String] = List[String](UnitType.ENTERPRISE.toString + "~"
-    + UnitType.COMPANY_REGISTRATION.toString, "201706", "conf/sample/201708/sbr-2500-ent-ch-links.csv")
+    + UnitType.COMPANY_REGISTRATION.toString, secondPeriod, new File("conf/sample/201708/sbr-2500-ent-ch-links.csv").toURI.toURL.toExternalForm)
 
   // LEU ~ VAT/PAYE/CH Links
   protected val leuCh201708: List[String] = List[String](UnitType.LEGAL_UNIT.toString + "~"
-    + UnitType.COMPANY_REGISTRATION.toString, "201708", "conf/sample/201708/sbr-2500-leu-ch-links.csv")
+    + UnitType.COMPANY_REGISTRATION.toString, secondPeriod, new File("conf/sample/201708/sbr-2500-leu-ch-links.csv").toURI.toURL.toExternalForm)
   protected val leuPaye201708: List[String] = List[String](UnitType.LEGAL_UNIT.toString + "~"
-    + UnitType.PAYE.toString, "201708", "conf/sample/201708/sbr-2500-leu-paye-links.csv")
+    + UnitType.PAYE.toString, secondPeriod, new File("conf/sample/201708/sbr-2500-leu-paye-links.csv").toURI.toURL.toExternalForm)
   protected val leuVat201708: List[String] = List[String](UnitType.LEGAL_UNIT.toString + "~"
-    + UnitType.VAT.toString, "201708", "conf/sample/201708/sbr-2500-leu-vat-links.csv")
+    + UnitType.VAT.toString, secondPeriod, new File("conf/sample/201708/sbr-2500-leu-vat-links.csv").toURI.toURL.toExternalForm)
 
   // Load in data for first period (201706)
   ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entData201706.toArray)
