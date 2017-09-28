@@ -73,7 +73,6 @@ class HBaseConnectTests extends TestUtils with GuiceOneAppPerSuite {
       status(search) mustBe OK
       contentType(search) mustBe Some("application/json")
       val json = contentAsJson(search)
-      println(json)
       (json \ "id").as[Long] must equal(enterpriseId.toLong)
       (json \ "period").as[String] must equal(period)
     }

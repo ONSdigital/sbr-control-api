@@ -43,14 +43,12 @@ class ControllerUtilitySpec extends TestUtils {
     "return a acceptable Result object" in {
       val tryResponse = dbTestInstance.tryAsResponse(Try(toJsonTest("1234")))
       tryResponse mustBe a[Result]
-      println(tryResponse.header.status)
       tryResponse.header.status mustEqual OK
     }
     "execute a failure if the passed function fails in the try" in {
       val failedTry = dbTestInstance.tryAsResponse(Try(toJsonTest("The is not parsable as an Int")))
       failedTry mustBe a[Result]
       noException should be thrownBy failedTry
-      println(failedTry.header.status)
       failedTry.header.status mustEqual BAD_REQUEST
     }
   }

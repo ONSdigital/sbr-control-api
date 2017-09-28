@@ -38,7 +38,6 @@ class SQLConnectTests extends TestUtils with GuiceOneAppPerSuite {
   "Unit Search on SQLConnect should" should {
     "returns a unit for a given id" ignore {
       val search = fakeRequest(s"/v1/units/$enterpriseId")
-      println(contentAsString(search))
       status(search) mustBe OK
       contentType(search) mustBe Some("application/json")
       val json = contentAsJson(search)
@@ -90,7 +89,6 @@ class SQLConnectTests extends TestUtils with GuiceOneAppPerSuite {
       status(search) mustBe OK
       contentType(search) mustBe Some("application/json")
       val json = contentAsJson(search)
-      println(json)
       (json \ "id").as[Long] must equal(enterpriseId.toLong)
       (json \ "period").as[String] must equal(period)
     }
