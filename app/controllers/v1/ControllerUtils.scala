@@ -25,14 +25,14 @@ import config.Properties.minKeyLength
 import uk.gov.ons.sbr.models.EditEnterprise
 
 /**
- * Created by haqa on 10/07/2017.
- */
+  * Created by haqa on 10/07/2017.
+  */
 /**
- * @todo - change Future in resultMatcher
- */
+  * @todo - change Future in resultMatcher
+  */
 trait ControllerUtils extends Controller with StrictLogging {
 
-  InMemoryInit
+  HBaseInMemoryConfig
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
 
@@ -96,13 +96,13 @@ trait ControllerUtils extends Controller with StrictLogging {
     o match { case Some(a) => Optional.ofNullable(a); case _ => Optional.empty[A] }
 
   /**
-   * @note - simplify - AnyRef rep with t.param X
-   *
-   * @param v - value param to convert
-   * @param msg - overriding msg option
-   * @tparam Z - java data type for value param
-   * @return Future[Result]
-   */
+    * @note - simplify - AnyRef rep with t.param X
+    *
+    * @param v - value param to convert
+    * @param msg - overriding msg option
+    * @tparam Z - java data type for value param
+    * @return Future[Result]
+    */
   protected def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
     Future { toOption[Z](v) }.map {
       case Some(x: java.util.List[StatisticalUnit]) =>

@@ -94,6 +94,15 @@ lazy val api = (project in file("."))
     mappings in Universal += file("conf/sample/sbr-2500-leu-ch-links.csv") -> "bin/conf/sample/sbr-2500-leu-ch-links.csv",
     mappings in Universal += file("conf/sample/sbr-2500-leu-paye-links.csv") -> "bin/conf/sample/sbr-2500-leu-paye-links.csv",
     mappings in Universal += file("conf/sample/sbr-2500-leu-vat-links.csv") -> "bin/conf/sample/sbr-2500-leu-vat-links.csv",
+    // replace sample sql with actual sql date files for SQLConnect
+    mappings in Universal += file("conf/sample/ch_2500_data.sql") -> "bin/conf/sample/ch_2500_data.sql",
+    mappings in Universal += file("conf/sample/ent_2500_data.sql") -> "bin/conf/sample/ent_2500_data.sql",
+    mappings in Universal += file("conf/sample/leu_2500_data.sql") -> "bin/conf/sample/leu_2500_data.sql",
+    mappings in Universal += file("conf/sample/paye_2500_data.sql") -> "bin/conf/sample/paye_2500_data.sql",
+    mappings in Universal += file("conf/sample/unit_links_2500_data.sql") -> "bin/conf/sample/unit_links_2500_data.sql",
+    mappings in Universal += file("conf/sample/vat_2500_data.sql") -> "bin/conf/sample/vat_2500_data.sql",
+
+
     // Run with proper default env vars set for hbaseInMemory
     javaOptions in Universal ++= Seq(
       "-Dsbr.hbase.inmemory=true"
@@ -106,6 +115,7 @@ lazy val api = (project in file("."))
     libraryDependencies ++= Seq (
       filters,
       "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "2.0.0"           % Test,
+      "org.scalatest"                %%    "scalatest"           %    "3.0.0"           % Test,
       "org.webjars"                  %%    "webjars-play"        %    "2.5.0-3",
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",
       "com.typesafe"                 %     "config"              %    "1.3.1",

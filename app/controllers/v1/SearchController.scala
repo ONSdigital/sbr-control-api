@@ -1,32 +1,24 @@
 package controllers.v1
 
-import java.time.YearMonth
-import java.util.Optional
+import com.typesafe.scalalogging.StrictLogging
 import io.swagger.annotations._
+import play.api.mvc.{ Action, AnyContent }
 
-import scala.util.Try
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-
-import play.api.mvc.{ Action, AnyContent, Result }
-
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks, UnitType }
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
-import utils.FutureResponse.{ futureFromTry, futureSuccess }
-import utils.Utilities.errAsJson
-import utils._
-import config.Properties.minKeyLength
+
+import Services.{ DBConnectionInitUtility, DBConnector }
 
 /**
  * Created by haqa on 04/08/2017.
  */
 
 /**
- * @todo
- *       - check no-param found err-control
+ * @todo - check no-param found err-control
  */
 @Api("Search")
-class SearchController extends ControllerUtils {
+class SearchController extends StrictLogging {
+
+  private val dbInstance: DBConnector = DBConnectionInitUtility.init()
 
   //public api
   @ApiOperation(
@@ -46,8 +38,8 @@ class SearchController extends ControllerUtils {
   def retrieveUnitLinksById(
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val evalResp = matchByParams(Some(id), request)
-    search[java.util.List[StatisticalUnit]](evalResp, requestLinks.findUnits)
+    logger.info(s"Received request to get a List of Unit Links with id [$id] parameters.")
+    dbInstance.getUnitLinksFromDB(id)
   }
 
   //public api
@@ -69,8 +61,8 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val evalResp = matchByParams(Some(id), request, Some(date))
-    searchByPeriod[java.util.List[StatisticalUnit]](evalResp, requestLinks.findUnits)
+    logger.info(s"Received request to get a List of StatisticalUnits with period [$date] and id [$id] parameters.")
+    dbInstance.getUnitLinksFromDB(id, date)
   }
 
   //public api
@@ -91,8 +83,8 @@ class SearchController extends ControllerUtils {
   def retrieveEnterpriseById(
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val evalResp = matchByParams(Some(id), request)
-    search[Enterprise](evalResp, requestEnterprise.getEnterprise)
+    logger.info(s"Received request to get Enterprise with id [$id] parameters.")
+    dbInstance.getEnterpriseFromDB(id)
   }
 
   //public api
@@ -104,7 +96,8 @@ class SearchController extends ControllerUtils {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, response = classOf[EnterpriseUnit], responseContainer = "JsValue", message = "Ok -> Retrieved Enterprise for given id."),
+    new ApiResponse(code = 200, response = classOf[EnterpriseUnit], responseContainer = "JsValue",
+      message = "Ok -> Retrieved Enterprise for given id."),
     new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
     new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
     new ApiResponse(code = 500, responseContainer = "JsValue",
@@ -114,8 +107,8 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val evalResp = matchByParams(Some(id), request, Some(date))
-    searchByPeriod[Enterprise](evalResp, requestEnterprise.getEnterpriseForReferencePeriod)
+    logger.info(s"Received request to get Enterprise with period [$date] and id [$id] parameters.")
+    dbInstance.getEnterpriseFromDB(id, date)
   }
 
   //public api
@@ -137,23 +130,8 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "Short word to describe type of id requested", example = "ENT", required = true) category: String,
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    val idValidation = matchByParams(Some(id), request, None)
-    val evalResp = idValidation match {
-      case (x: IdRequest) =>
-        CategoryRequest(x.id, UnitType.fromString(category))
-      case z => z
-    }
-    val res = evalResp match {
-      case (x: CategoryRequest) =>
-        val resp = Try(requestLinks.getUnitLinks(x.id, x.category)).futureTryRes.flatMap {
-          case (s: Optional[StatisticalUnitLinks]) => if (s.isPresent) {
-            resultMatcher[StatisticalUnitLinks](s)
-          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and grouping ${x.category}")).future
-        } recover responseException
-        resp
-      case _ => invalidSearchResponses(evalResp)
-    }
-    res
+    logger.info(s"Received request to get StatisticalUnitLinks with id [$id] and category [$category] parameters.")
+    dbInstance.getStatUnitLinkFromDB(id, category)
   }
 
   //public api
@@ -176,57 +154,8 @@ class SearchController extends ControllerUtils {
     @ApiParam(value = "Keyword describing type of id requested", example = "ENT", required = true) category: String,
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    matchByParams(Some(id), request, Some(date)) match {
-      case (x: ReferencePeriod) =>
-        val resp = Try(requestLinks.getUnitLinks(x.period, x.id, UnitType.fromString(category))).futureTryRes.flatMap {
-          case (s: Optional[StatisticalUnitLinks]) => if (s.isPresent) {
-            resultMatcher[StatisticalUnitLinks](s)
-          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find unit link with " +
-            s"id ${x.id}, period ${x.period} and grouping $category")).future
-        } recover responseException
-        resp
-      case x => invalidSearchResponses(x)
-    }
-  }
-
-  private def search[X](eval: RequestEvaluation, funcWithId: String => Optional[X]): Future[Result] = {
-    val res = eval match {
-      case (x: IdRequest) =>
-        val resp = Try(funcWithId(x.id)).futureTryRes.flatMap {
-          case (s: Optional[X]) => if (s.isPresent) {
-            resultMatcher[X](s)
-          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
-        } recover responseException
-        resp
-      case _ => invalidSearchResponses(eval)
-    }
-    res
-  }
-
-  //  @todo - combine ReferencePeriod and UnitGrouping
-  private def searchByPeriod[X](eval: RequestEvaluation, funcWithIdAndParam: (YearMonth, String) => Optional[X]): Future[Result] = {
-    val res = eval match {
-      case (x: ReferencePeriod) =>
-        val resp = Try(funcWithIdAndParam(x.period, x.id)).futureTryRes.flatMap {
-          case (s: Optional[X]) => if (s.isPresent) {
-            resultMatcher[X](s)
-          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
-        } recover responseException
-        resp
-      case _ => invalidSearchResponses(eval)
-    }
-    res
-  }
-
-  private def invalidSearchResponses(invalidRequest: RequestEvaluation) = {
-    invalidRequest match {
-      case (y: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "invalid_date",
-        s"cannot parse date with exception ${y.exception}")).future
-      case (i: InvalidKey) =>
-        BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
-      case _ =>
-        BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
-    }
+    logger.info(s"Received request to get StatisticalUnitLinks with period [$date], id [$id] and category [$category] parameters.")
+    dbInstance.getStatUnitLinkFromDB(id, date, category)
   }
 
 }

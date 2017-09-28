@@ -9,12 +9,13 @@ import play.api.libs.json._
  */
 object Utilities {
 
-  def currentDirectory = new File(".").getCanonicalPath
+  private def currentDirectory = new File(".").getCanonicalPath
 
-  def errAsJson(status: Int, code: String, msg: String): JsObject = {
+  def errAsJson(status: Int, code: String, msg: String, cause: String = "Not traced"): JsObject = {
     Json.obj(
       "status" -> status,
       "code" -> code,
+      "route_with_cause" -> cause,
       "message_en" -> msg
     )
   }
