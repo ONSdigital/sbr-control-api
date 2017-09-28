@@ -8,7 +8,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.JsNumber
 import play.api.mvc.Result
 import resource.TestUtils
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit}
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit }
 import utils._
 
 /**
@@ -82,10 +82,11 @@ class ControllerUtilitySpec extends TestUtils with ControllerUtils with GuiceOne
 
   def getParsedRequestType[T](x: RequestEvaluation): T = x match {
     case (x: T) => x
-    case _ => sys.error("Cannot construct to subtype of RequestEvaluation, force failing tests.")}
+    case _ => sys.error("Cannot construct to subtype of RequestEvaluation, force failing tests.")
+  }
 
   def toJsonTest(s: String) = JsNumber(s.toInt)
 
-  case class EnterpriseTest (a: String, b: YearMonth)
+  case class EnterpriseTest(a: String, b: YearMonth)
 
 }
