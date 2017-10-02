@@ -1,4 +1,4 @@
-package Services
+package services
 
 import org.apache.hadoop.util.ToolRunner
 import play.api.Logger

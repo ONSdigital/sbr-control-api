@@ -10,7 +10,7 @@ import play.api.mvc.Result
 import play.api.test.Helpers._
 
 import utils._
-import Services.HBaseConnect
+import services.HBaseConnect
 import resource.TestUtils
 
 /**

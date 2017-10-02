@@ -36,7 +36,7 @@ class SQLConnectTests extends TestUtils with GuiceOneAppPerSuite {
   }
 
   "Unit Search on SQLConnect should" should {
-    "returns a unit for a given id" ignore {
+    "return a unit for a given id" in {
       val search = fakeRequest(s"/v1/units/$enterpriseId")
       status(search) mustBe OK
       contentType(search) mustBe Some("application/json")
@@ -65,7 +65,7 @@ class SQLConnectTests extends TestUtils with GuiceOneAppPerSuite {
   }
 
   "Search by unit type param on SQLConnect" should {
-    "return a unit with corresponding id and unit type" ignore {
+    "return a unit with corresponding id and unit type" in {
       val search = fakeRequest(s"/v1/types/$entType/units/$enterpriseId")
       status(search) mustBe OK
       contentType(search) mustBe Some("application/json")
@@ -75,7 +75,7 @@ class SQLConnectTests extends TestUtils with GuiceOneAppPerSuite {
       (json \ "children" \ expectedChild).as[String] must equal("LEU")
     }
 
-    "returns an invalid type warning for unrecognised type param" ignore {
+    "returns an invalid type warning for unrecognised type param" in {
       val search = fakeRequest(s"/v1/types/$invalidType/units/$enterpriseId")
       status(search) mustBe NOT_FOUND
       contentType(search) mustBe Some("application/json")
@@ -84,7 +84,7 @@ class SQLConnectTests extends TestUtils with GuiceOneAppPerSuite {
   }
 
   "Search for enterprises on SQLConnect" should {
-    "return enterprise with matching id and period" ignore {
+    "return enterprise with matching id and period" in {
       val search = fakeRequest(s"/v1/periods/$period/enterprises/$enterpriseId")
       status(search) mustBe OK
       contentType(search) mustBe Some("application/json")
@@ -93,7 +93,7 @@ class SQLConnectTests extends TestUtils with GuiceOneAppPerSuite {
       (json \ "period").as[String] must equal(period)
     }
 
-    "return BadRequest with invalid enterprise id" ignore {
+    "return BadRequest with invalid enterprise id" in {
       val search = fakeRequest(s"/v1/periods/$wrongPeriod/enterprises/$enterpriseId")
       status(search) mustBe NOT_FOUND
       contentType(search) mustBe Some("application/json")

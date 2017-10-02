@@ -1,4 +1,4 @@
-package Services
+package services
 
 import java.time.YearMonth
 import java.time.format.{ DateTimeFormatter, DateTimeParseException }

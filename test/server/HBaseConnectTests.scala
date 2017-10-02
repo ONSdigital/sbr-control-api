@@ -19,7 +19,7 @@ class HBaseConnectTests extends TestUtils with GuiceOneAppPerSuite {
   private val wrongPeriod = "200006"
   private val expectedChild = "100002323948"
 
-  "Unit Search on SQLConnect should" should {
+  "Unit Search on HBaseConnect should" should {
     "returns a unit for a given id" ignore {
       val search = fakeRequest(s"/v1/units/$enterpriseId")
       status(search) mustBe OK
@@ -48,7 +48,7 @@ class HBaseConnectTests extends TestUtils with GuiceOneAppPerSuite {
     }
   }
 
-  "Search by unit type param on SQLConnect" should {
+  "Search by unit type param on HBaseConnect" should {
     "return a unit with corresponding id and unit type" ignore {
       val search = fakeRequest(s"/v1/types/$entType/units/$enterpriseId")
       status(search) mustBe OK
@@ -67,7 +67,7 @@ class HBaseConnectTests extends TestUtils with GuiceOneAppPerSuite {
     }
   }
 
-  "Search for enterprises on SQLConnect" should {
+  "Search for enterprises on HBaseConnect" should {
     "return enterprise with matching id and period" ignore {
       val search = fakeRequest(s"/v1/periods/$period/enterprises/$enterpriseId")
       status(search) mustBe OK

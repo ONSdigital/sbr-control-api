@@ -1,35 +1,34 @@
 package controllers.v1
 
 import java.time.YearMonth
-import java.time.format.{DateTimeFormatter, DateTimeParseException}
+import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
-import scala.util.{Failure, Success, Try}
-import scala.concurrent.{Future, TimeoutException}
+import scala.collection.JavaConversions._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ Future, TimeoutException }
+import scala.util.{ Failure, Success, Try }
 
 import com.typesafe.scalalogging.StrictLogging
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.collection.JavaConversions._
-
-import play.api.mvc.{AnyContent, Controller, Request, Result}
 import play.api.libs.json._
+import play.api.mvc.{ AnyContent, Controller, Request, Result }
 
-import uk.gov.ons.sbr.data.domain.{Enterprise, StatisticalUnit, StatisticalUnitLinks}
-import uk.gov.ons.sbr.data.controller.{EnterpriseController, UnitController}
-import uk.gov.ons.sbr.models.units.{EnterpriseUnit, KnownUnitLinks, UnitLinks}
+import uk.gov.ons.sbr.data.controller.{ EnterpriseController, UnitController }
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 
+import config.Properties.minKeyLength
 import utils.Utilities.errAsJson
 import utils._
-import config.Properties.minKeyLength
-import Services.HBaseInMemoryConfig
+import services.HBaseInMemoryConfig
 
 /**
-  * Created by haqa on 10/07/2017.
-  */
+ * Created by haqa on 10/07/2017.
+ */
 /**
-  * @todo - change Future in resultMatcher
-  */
+ * @todo - change Future in resultMatcher
+ */
 trait ControllerUtils extends Controller with StrictLogging {
 
   HBaseInMemoryConfig
@@ -64,20 +63,19 @@ trait ControllerUtils extends Controller with StrictLogging {
     } else { InvalidKey(key) }
   }
 
-
   protected def toOption[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
 
   protected def toJavaOptional[A](o: Option[A]): Optional[A] =
     o match { case Some(a) => Optional.ofNullable(a); case _ => Optional.empty[A] }
 
   /**
-    * @note - simplify - AnyRef rep with t.param X
-    *
-    * @param v - value param to convert
-    * @param msg - overriding msg option
-    * @tparam Z - java data type for value param
-    * @return Future[Result]
-    */
+   * @note - simplify - AnyRef rep with t.param X
+   *
+   * @param v - value param to convert
+   * @param msg - overriding msg option
+   * @tparam Z - java data type for value param
+   * @return Future[Result]
+   */
   protected def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
     Future { toOption[Z](v) }.map {
       case Some(x: java.util.List[StatisticalUnit]) =>
