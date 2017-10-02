@@ -7,6 +7,7 @@ import play.api.libs.json.{ JsValue, Json, OFormat }
 
 import uk.gov.ons.sbr.data.domain.Enterprise
 import uk.gov.ons.sbr.data.model.StatUnit
+import uk.gov.ons.sbr.models.DataUnit
 
 /**
  * Created by haqa on 08/08/2017.
@@ -19,7 +20,7 @@ case class EnterpriseUnit(
     dataType = "Map[String,String]") vars: Map[String, String],
   unitType: String,
   childrenJson: List[JsValue]
-)
+) extends DataUnit[Long]
 
 object EnterpriseUnit {
 
@@ -29,6 +30,7 @@ object EnterpriseUnit {
     val childJson = o.getChildren.map {
       a => Json.parse(a.toUnitHierarchyAsJson)
     }.toList
+    // EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, childJson)
     EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, childJson)
   }
 
