@@ -79,7 +79,7 @@ pipeline {
                 sh 'cp gitlab/dev/data/leu_2500_data.sql conf/sample/leu_2500_data.sql'
                 sh 'cp gitlab/dev/data/paye_2500_data.sql conf/sample/paye_2500_data.sql'
                 sh 'cp gitlab/dev/data/unit_links_2500_data.sql conf/sample/unit_links_2500_data.sql'
-                sh 'cp gitlab/dev/data/vat_2500_data.sql conf/sample/svat_2500_data.sql'
+                sh 'cp gitlab/dev/data/vat_2500_data.sql conf/sample/vat_2500_data.sql'
 
                 sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
                 
