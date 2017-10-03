@@ -56,14 +56,6 @@ pipeline {
                 sh 'rm -rf conf/sample/sbr-2500-leu-paye-links.csv'
                 sh 'rm -rf conf/sample/sbr-2500-leu-vat-links.csv'
 
-                sh 'rm -rf conf/sample/ch_2500_data.sql'
-                sh 'rm -rf conf/sample/ent_2500_data.sql'
-                sh 'rm -rf conf/sample/leu_2500_data.sql'
-                sh 'rm -rf conf/sample/paye_2500_data.sql'
-                sh 'rm -rf conf/sample/unit_links_2500_data.sql'
-                sh 'rm -rf conf/sample/vat_2500_data.sql'
-
-
                 // Copy over the real data
                 sh 'cp gitlab/dev/data/sbr-2500-ent-data.csv conf/sample/sbr-2500-ent-data.csv'
                 sh 'cp gitlab/dev/data/sbr-2500-ent-ch-links.csv conf/sample/sbr-2500-ent-ch-links.csv'
@@ -74,6 +66,16 @@ pipeline {
                 sh 'cp gitlab/dev/data/sbr-2500-leu-paye-links.csv conf/sample/sbr-2500-leu-paye-links.csv'
                 sh 'cp gitlab/dev/data/sbr-2500-leu-vat-links.csv conf/sample/sbr-2500-leu-vat-links.csv'
 
+
+		sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
+		
+		sh 'rm -rf conf/sample/ch_2500_data.sql'
+                sh 'rm -rf conf/sample/ent_2500_data.sql'
+                sh 'rm -rf conf/sample/leu_2500_data.sql'
+                sh 'rm -rf conf/sample/paye_2500_data.sql'
+                sh 'rm -rf conf/sample/unit_links_2500_data.sql'
+                sh 'rm -rf conf/sample/vat_2500_data.sql'
+
                 sh 'cp gitlab/dev/data/sbr_inserts/ch_2500_data.sql conf/sample/ch_2500_data.sql'
                 sh 'cp gitlab/dev/data/sbr_inserts/ent_2500_data.sql conf/sample/ent_2500_data.sql'
                 sh 'cp gitlab/dev/data/sbr_inserts/leu_2500_data.sql conf/sample/leu_2500_data.sql'
@@ -81,7 +83,6 @@ pipeline {
                 sh 'cp gitlab/dev/data/sbr_inserts/unit_links_2500_data.sql conf/sample/unit_links_2500_data.sql'
                 sh 'cp gitlab/dev/data/sbr_inserts/vat_2500_data.sql conf/sample/vat_2500_data.sql'
 
-                sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
                 
                 script {
                     env.NODE_STAGE = "Build"
