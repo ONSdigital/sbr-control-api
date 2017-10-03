@@ -5,24 +5,24 @@ import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.google.inject.Singleton
-
-import scala.util.{ Failure, Success, Try }
-import scala.concurrent.{ Future, TimeoutException }
-import com.typesafe.scalalogging.StrictLogging
-
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
-import play.api.mvc.{ AnyContent, Controller, Request, Result }
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ Future, TimeoutException }
+import scala.util.{ Failure, Success, Try }
+
+import com.typesafe.scalalogging.StrictLogging
 import play.api.libs.json._
+import play.api.mvc.{ AnyContent, Controller, Request, Result }
+
+import uk.gov.ons.sbr.data.controller.{ EnterpriseController, UnitController }
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
-import uk.gov.ons.sbr.data.controller.{ AdminDataController, EnterpriseController, UnitController }
+import uk.gov.ons.sbr.models.EditEnterprise
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
+
+import config.Properties.minKeyLength
 import utils.Utilities.errAsJson
 import utils._
-import config.Properties.minKeyLength
-import uk.gov.ons.sbr.models.EditEnterprise
+import services.HBaseInMemoryConfig
 
 /**
  * Created by haqa on 10/07/2017.
@@ -32,7 +32,7 @@ import uk.gov.ons.sbr.models.EditEnterprise
  */
 trait ControllerUtils extends Controller with StrictLogging {
 
-  InMemoryInit
+  HBaseInMemoryConfig
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
 
@@ -83,7 +83,7 @@ trait ControllerUtils extends Controller with StrictLogging {
     val placeResult: JsResult[EditEnterprise] = body.validate[EditEnterprise]
     placeResult match {
       case s: JsSuccess[EditEnterprise] => period match {
-        case Some(period) => EditRequestByPeriod(key, s.get.updatedBy, period, s.get.updateVars)
+        case Some(p) => EditRequestByPeriod(key, s.get.updatedBy, p, s.get.updateVars)
         case None => EditRequest(key, s.get.updatedBy, s.get.updateVars)
       }
       case u: JsError => InvalidEditJson(key, u)

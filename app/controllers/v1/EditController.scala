@@ -1,16 +1,16 @@
 package controllers.v1
 
-import config.Properties.minKeyLength
+import scala.collection.JavaConversions._
+import scala.util.{ Failure, Success, Try }
+
 import io.swagger.annotations._
 import play.api.Logger
-import play.api.mvc._
-import uk.gov.ons.sbr.models.units.{ UnitLinks }
-import utils.FutureResponse.{ futureSuccess }
+import play.api.mvc.{ Action, AnyContent }
+
+import config.Properties.minKeyLength
+import utils.FutureResponse.futureSuccess
 import utils.Utilities.errAsJson
 import utils._
-
-import scala.util.{ Failure, Success, Try }
-import scala.collection.JavaConversions._
 
 /**
  * Created by coolit on 20/09/2017.

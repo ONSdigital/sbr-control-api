@@ -3,33 +3,35 @@ package unit
 import java.time.YearMonth
 import java.util.Optional
 
-import controllers.v1.ControllerUtils
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import scala.util.Try
+
 import play.api.libs.json.JsNumber
 import play.api.mvc.Result
-import resource.TestUtils
-import utils._
+import play.api.test.Helpers._
 
-import scala.util.Try
+import utils._
+import services.HBaseConnect
+import resource.TestUtils
 
 /**
  * Created by haqa on 11/08/2017.
  */
-class ControllerUtilitySpec extends TestUtils with ControllerUtils {
+class ControllerUtilitySpec extends TestUtils {
 
   private val validKey = "12446"
   private val validDate = "201711"
   private val searchByIdUrl = "/v1/enterpriseById?id="
+  private val dbTestInstance = new HBaseConnect
 
   "validateYearMonth function" should {
     "return invalid date exception" in {
       val badDate = "209099"
-      val validate = validateYearMonth(validKey, badDate)
+      val validate = dbTestInstance.validateYearMonth(validKey, badDate)
       noException should be thrownBy validate
       validate mustBe a[InvalidReferencePeriod]
     }
     "parse valid string date to YearMonth" in {
-      val validate = validateYearMonth(validKey, validDate)
+      val validate = dbTestInstance.validateYearMonth(validKey, validDate)
       validate must not be a[InvalidReferencePeriod]
       validate mustBe a[ReferencePeriod]
       getParsedRequestType[ReferencePeriod](validate).id mustEqual validKey
@@ -39,12 +41,12 @@ class ControllerUtilitySpec extends TestUtils with ControllerUtils {
 
   "tryAsResponse" should {
     "return a acceptable Result object" in {
-      val tryResponse = tryAsResponse(Try(toJsonTest("1234")))
+      val tryResponse = dbTestInstance.tryAsResponse(Try(toJsonTest("1234")))
       tryResponse mustBe a[Result]
       tryResponse.header.status mustEqual OK
     }
     "execute a failure if the passed function fails in the try" in {
-      val failedTry = tryAsResponse(Try(toJsonTest("The is not parsable as an Int")))
+      val failedTry = dbTestInstance.tryAsResponse(Try(toJsonTest("The is not parsable as an Int")))
       failedTry mustBe a[Result]
       noException should be thrownBy failedTry
       failedTry.header.status mustEqual BAD_REQUEST
@@ -53,16 +55,15 @@ class ControllerUtilitySpec extends TestUtils with ControllerUtils {
 
   "unpackParams" must {
     "return IdRequest instance when key length is right" in {
-      val id = validKey
-      val search = requestObject(s"$searchByIdUrl$id")
-      val unpackedTest = matchByParams(Some(id), search)
-      unpackedTest mustBe a[IdRequest]
-      getParsedRequestType[IdRequest](unpackedTest).id mustEqual id
+      implicit val search = requestObject(s"$searchByIdUrl$validKey")
+      val unpackedTest = dbTestInstance.matchByParams(Some(validKey), Some(validDate))
+      unpackedTest mustBe a[ReferencePeriod]
+      getParsedRequestType[ReferencePeriod](unpackedTest).id mustEqual validKey
     }
 
     "return an InvalidKey instance when no valid key is found" in {
-      val search = requestObject(s"${searchByIdUrl}1233")
-      val unpackedTest = matchByParams(Some("12"), search)
+      implicit val search = requestObject(s"${searchByIdUrl}1233")
+      val unpackedTest = dbTestInstance.matchByParams(Some("12"))
       unpackedTest must not be a[IdRequest]
       unpackedTest mustBe a[InvalidKey]
     }
@@ -70,12 +71,12 @@ class ControllerUtilitySpec extends TestUtils with ControllerUtils {
 
   "toOption" should {
     "convert java Optional to Scala Options" ignore {
-      val parseDate = validateYearMonth(validKey, validDate)
+      val parseDate = dbTestInstance.validateYearMonth(validKey, validDate)
       val convertedDate = getParsedRequestType[ReferencePeriod](parseDate).period
       val ent = EnterpriseTest(validKey, convertedDate)
-      val entAsOptional: Optional[EnterpriseTest] = toJavaOptional[EnterpriseTest](Some(ent))
+      val entAsOptional: Optional[EnterpriseTest] = dbTestInstance.toJavaOptional[EnterpriseTest](Some(ent))
       entAsOptional mustBe a[Optional[EnterpriseTest]]
-      val entAsOption: Option[EnterpriseTest] = toOption[EnterpriseTest](entAsOptional)
+      val entAsOption: Option[EnterpriseTest] = dbTestInstance.toOption[EnterpriseTest](entAsOptional)
       entAsOption must not be a[Optional[EnterpriseTest]]
       entAsOption mustBe a[Option[EnterpriseTest]]
     }

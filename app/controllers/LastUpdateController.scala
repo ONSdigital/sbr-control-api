@@ -1,24 +1,21 @@
 package controllers.v1
 
 import javax.inject.{ Inject, Singleton }
-import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
 
 import com.typesafe.config.Config
-
-import play.api.mvc.{ Action, AnyContent, Result }
+import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
 import play.api.libs.json.Json
+import play.api.mvc.{ Action, AnyContent, Controller }
 
-import controllers.BuildInfo
 import utils.FutureResponse.futureSuccess
-
-import scala.concurrent.Future
+import controllers.BuildInfo
 
 /**
  * Created by haqa on 30/06/2017.
  */
 @Api("Utils")
 @Singleton
-class LastUpdateController @Inject() (implicit val config: Config) extends ControllerUtils {
+class LastUpdateController @Inject() (implicit val config: Config) extends Controller {
 
   @ApiOperation(
     value = "A Json list of dates representing dates of last changes made",
@@ -29,15 +26,7 @@ class LastUpdateController @Inject() (implicit val config: Config) extends Contr
     new ApiResponse(code = 200, message = "Success - Displays json list of dates for official development.")
   ))
   def latestListings: Action[AnyContent] = Action.async {
-    generate
-  }
-
-  /**
-   * move future resp
-   */
-  def generate: Future[Result] = {
-    val res = Ok(Json.obj("status" -> "OK", "bi-api-deployed-date" -> s"${BuildInfo.builtAtMillis}"))
-    res.future
+    Ok(Json.obj("status" -> "OK", "bi-api-deployed-date" -> s"${BuildInfo.builtAtMillis}")).future
   }
 
 }
