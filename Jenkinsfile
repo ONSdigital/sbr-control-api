@@ -172,7 +172,7 @@ pipeline {
                     colourText("info", "Found latest tag: ${currentTag}")
                     newTag =  IncrementTag( currentTag, RELEASE_TYPE )
                     colourText("info", "Generated new tag: ${newTag}")
-                    push(newTag, currentTag)
+                    //push(newTag, currentTag)
 
                 }
             }
