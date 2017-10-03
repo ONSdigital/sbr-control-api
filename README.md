@@ -28,12 +28,20 @@ brew install hbase
 ### Running the App
 
 To compile, build and run the application use the following command:
-​
 ```shell
 sbt api/run
 ```
 The default application port is 9000. To specify an alternative port use `-Dhttp.port=8080`.
 
+#### Database Configuration
+sbr-control-api provides the capability to easily switch between two database options: [HBase](https://github.com/ONSdigital/sbr-hbase-connector) and [SQL](https://github.com/ONSdigital/sbr-sql-connector). Although both share the same data source and thereby reveal the same result given the same parameters, the internal process of retrieval varies. Its usages at this point is merely experimental. By default the application uses HBase.
+
+To override the `db.default.name` configuration we can add the following to our run command:
+```shell
+-Denv.default.db.default.name=sql
+```
+
+##### HBase
 HBase can be started locally by:
 ```shell
 start-hbase.sh
@@ -59,7 +67,7 @@ sbt test
 
 Testing an individual test suite can be specified by using the `testOnly`.
 
-SBR Api uses its own test configuration settings for integration tests, the details of which can be found on the[ONS Confluence](https://collaborate2.ons.gov.uk/confluence/display/SBR/Scala+Testing​).
+SBR Api uses its own test configuration settings for integration tests, the details of which can be found on the[ONS Confluence](https://collaborate2.ons.gov.uk/confluence/display/SBR/Scala+Testing).
 
 To run integration test run:
 ```shell
@@ -86,12 +94,6 @@ See [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ### License
 
-Copyright ©‎ 2017, Office for National Statistics (https://www.ons.gov.uk)
+Copyright © 2017, Office for National Statistics (https://www.ons.gov.uk)
 
 Released under MIT license, see [LICENSE](LICENSE.md) for details.
-
-
-
-
-
-
