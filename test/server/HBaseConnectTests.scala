@@ -17,16 +17,19 @@ class HBaseConnectTests extends TestUtils with GuiceOneAppPerSuite {
   private val badDate = "2006"
   private val period = "201706"
   private val wrongPeriod = "200006"
-  private val expectedChild = "100002323948"
+  private val expectedChild = "859786367631"
+  private val expectedType = "VAT"
+  private val delimiter = "-"
 
   "Unit Search on HBaseConnect should" should {
-    "returns a unit for a given id" ignore {
+    "return a unit for a given id" in {
       val search = fakeRequest(s"/v1/units/$enterpriseId")
+      println("search content" + contentAsString(search))
       status(search) mustBe OK
       contentType(search) mustBe Some("application/json")
       val json = contentAsJson(search)
       (json.head \ "id").as[String] must equal(enterpriseId)
-      (json.head \ "children" \ expectedChild).as[String] must equal("LEU")
+      (json.head \ "children" \ expectedChild).as[String] must equal(expectedType)
     }
 
     "returns BadRequest with short id" in {
@@ -49,17 +52,17 @@ class HBaseConnectTests extends TestUtils with GuiceOneAppPerSuite {
   }
 
   "Search by unit type param on HBaseConnect" should {
-    "return a unit with corresponding id and unit type" ignore {
+    "return a unit with corresponding id and unit type" in {
       val search = fakeRequest(s"/v1/types/$entType/units/$enterpriseId")
       status(search) mustBe OK
       contentType(search) mustBe Some("application/json")
       val json = contentAsJson(search)
       (json \ "id").as[String] must equal(enterpriseId)
       // ent will have leu children
-      (json \ "children" \ expectedChild).as[String] must equal("LEU")
+      (json \ "children" \ expectedChild).as[String] must equal(expectedType)
     }
 
-    "returns an invalid type warning for unrecognised type param" ignore {
+    "return an invalid type warning for unrecognised type param" in {
       val search = fakeRequest(s"/v1/types/$invalidType/units/$enterpriseId")
       status(search) mustBe NOT_FOUND
       contentType(search) mustBe Some("application/json")
@@ -68,23 +71,22 @@ class HBaseConnectTests extends TestUtils with GuiceOneAppPerSuite {
   }
 
   "Search for enterprises on HBaseConnect" should {
-    "return enterprise with matching id and period" ignore {
+    "return enterprise with matching id and period" in {
       val search = fakeRequest(s"/v1/periods/$period/enterprises/$enterpriseId")
       status(search) mustBe OK
       contentType(search) mustBe Some("application/json")
       val json = contentAsJson(search)
       (json \ "id").as[Long] must equal(enterpriseId.toLong)
-      (json \ "period").as[String] must equal(period)
+      (json \ "period").as[String] must equal(period.substring(0, 4) + delimiter + period.substring(4, period.length()))
     }
 
-    "return BadRequest with invalid enterprise id" ignore {
+    "return BadRequest with invalid enterprise id" in {
       val search = fakeRequest(s"/v1/periods/$wrongPeriod/enterprises/$enterpriseId")
       status(search) mustBe NOT_FOUND
       contentType(search) mustBe Some("application/json")
       val json = contentAsJson(search)
       (json \ "status").as[Int] must equal(NOT_FOUND)
       (json \ "message_en").as[String] must include("2000-06")
-
     }
   }
 
