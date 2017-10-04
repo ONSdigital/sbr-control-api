@@ -120,6 +120,7 @@ lazy val api = (project in file("."))
 
 
     // Run with proper default env vars set for hbaseInMemory
+    javaOptions in Test += "-Dsbr.hbase.inmemory=true",
     javaOptions in Universal ++= Seq(
       "-Dsbr.hbase.inmemory=true"
     ),

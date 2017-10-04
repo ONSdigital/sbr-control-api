@@ -28,7 +28,6 @@ class SQLConnectTests extends TestUtils with GuiceOneAppPerSuite {
   "The environment variable change" must {
     "provide a application using a SQLConnect instance" in {
       app.configuration.getString("db.default.name") mustBe Some("sql")
-
     }
     "start the Application" in {
       //      application.maybeApplication mustBe Some(app)

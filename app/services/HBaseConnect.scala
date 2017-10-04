@@ -57,7 +57,7 @@ class HBaseConnect extends DBConnector {
           case (s: Optional[StatisticalUnitLinks]) => if (s.isPresent) {
             resultMatcher[StatisticalUnitLinks](s)
           } else NotFound(errAsJson(NOT_FOUND, "not_found",
-            s"Could not find enterprise with id ${x.id} and grouping ${x.category}")).future
+            s"Could not find unit with id ${x.id} and category ${x.category}")).future
         } recover responseException
         resp
       case _ => invalidSearchResponses(evalResp)
@@ -71,7 +71,7 @@ class HBaseConnect extends DBConnector {
           case (s: Optional[StatisticalUnitLinks]) => if (s.isPresent) {
             resultMatcher[StatisticalUnitLinks](s)
           } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find unit link with " +
-            s"id ${x.id}, period ${x.period} and grouping $category")).future
+            s"id ${x.id}, period ${x.period} and category $category")).future
         } recover responseException
         resp
       case x => invalidSearchResponses(x)
