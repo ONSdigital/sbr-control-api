@@ -17,19 +17,15 @@ class HBaseConnectTests extends TestUtils with GuiceOneAppPerSuite {
   private val badDate = "2006"
   private val period = "201706"
   private val wrongPeriod = "200006"
-  private val expectedChild = "859786367631"
-  private val expectedType = "VAT"
   private val delimiter = "-"
 
   "Unit Search on HBaseConnect should" should {
     "return a unit for a given id" in {
       val search = fakeRequest(s"/v1/units/$enterpriseId")
-      println("search content" + contentAsString(search))
       status(search) mustBe OK
       contentType(search) mustBe Some("application/json")
       val json = contentAsJson(search)
       (json.head \ "id").as[String] must equal(enterpriseId)
-      (json.head \ "children" \ expectedChild).as[String] must equal(expectedType)
     }
 
     "returns BadRequest with short id" in {
@@ -58,8 +54,6 @@ class HBaseConnectTests extends TestUtils with GuiceOneAppPerSuite {
       contentType(search) mustBe Some("application/json")
       val json = contentAsJson(search)
       (json \ "id").as[String] must equal(enterpriseId)
-      // ent will have leu children
-      (json \ "children" \ expectedChild).as[String] must equal(expectedType)
     }
 
     "return an invalid type warning for unrecognised type param" in {
