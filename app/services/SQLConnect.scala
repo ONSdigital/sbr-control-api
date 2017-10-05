@@ -110,7 +110,7 @@ class SQLConnect extends DBConnector {
           case Some(v) =>
             tryAsResponse(Try(Json.toJson(KnownUnitLinks(v)))).future
           case _ => NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find unit link with " +
-            s"id ${x.id}, period ${x.period} and grouping $category")).future
+            s"id ${x.id}, period ${x.period} and category $category")).future
         } recover responseException
         resp
       case x => invalidSearchResponses(x)

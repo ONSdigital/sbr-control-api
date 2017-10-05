@@ -44,7 +44,7 @@ pipeline {
             steps {
                 colourText("info", "Building ${env.BUILD_ID} on ${env.JENKINS_URL} from branch ${env.BRANCH_NAME}")
                 dir('gitlab') {
-                    git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'feature/sbr-sql-inserts')
+                    git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'develop')
                 }
                 // Remove the synthetics data for june data
                 sh 'rm -rf conf/sample/201706/sbr-2500-ent-data.csv'
@@ -55,6 +55,7 @@ pipeline {
                 sh 'rm -rf conf/sample/201706/sbr-2500-leu-ch-links.csv'
                 sh 'rm -rf conf/sample/201706/sbr-2500-leu-paye-links.csv'
                 sh 'rm -rf conf/sample/201706/sbr-2500-leu-vat-links.csv'
+              
                 // Remove fake data for August data
                 sh 'rm -rf conf/sample/201708/sbr-2500-ent-data.csv'
                 sh 'rm -rf conf/sample/201708/sbr-2500-ent-ch-links.csv'
@@ -64,14 +65,6 @@ pipeline {
                 sh 'rm -rf conf/sample/201708/sbr-2500-leu-ch-links.csv'
                 sh 'rm -rf conf/sample/201708/sbr-2500-leu-paye-links.csv'
                 sh 'rm -rf conf/sample/201708/sbr-2500-leu-vat-links.csv'
-
-                // Remove fake sql data
-                sh 'rm -rf conf/sample/ch_2500_data.sql'
-                sh 'rm -rf conf/sample/ent_2500_data.sql'
-                sh 'rm -rf conf/sample/leu_2500_data.sql'
-                sh 'rm -rf conf/sample/paye_2500_data.sql'
-                sh 'rm -rf conf/sample/unit_links_2500_data.sql'
-                sh 'rm -rf conf/sample/vat_2500_data.sql'
 
                 // Copy over the real data for June
                 sh 'cp gitlab/dev/data/201706/sbr-2500-ent-data.csv conf/sample/201706/sbr-2500-ent-data.csv'
@@ -83,7 +76,7 @@ pipeline {
                 sh 'cp gitlab/dev/data/201706/sbr-2500-leu-paye-links.csv conf/sample/201706/sbr-2500-leu-paye-links.csv'
                 sh 'cp gitlab/dev/data/201706/sbr-2500-leu-vat-links.csv conf/sample/201706/sbr-2500-leu-vat-links.csv'
 
-                // Copy over the real data
+                // Copy over the real data for August
                 sh 'cp gitlab/dev/data/201708/sbr-2500-ent-data.csv conf/sample/201708/sbr-2500-ent-data.csv'
                 sh 'cp gitlab/dev/data/201708/sbr-2500-ent-ch-links.csv conf/sample/201708/sbr-2500-ent-ch-links.csv'
                 sh 'cp gitlab/dev/data/201708/sbr-2500-ent-paye-links.csv conf/sample/201708/sbr-2500-ent-paye-links.csv'
@@ -92,16 +85,25 @@ pipeline {
                 sh 'cp gitlab/dev/data/201708/sbr-2500-leu-ch-links.csv conf/sample/201708/sbr-2500-leu-ch-links.csv'
                 sh 'cp gitlab/dev/data/201708/sbr-2500-leu-paye-links.csv conf/sample/201708/sbr-2500-leu-paye-links.csv'
                 sh 'cp gitlab/dev/data/201708/sbr-2500-leu-vat-links.csv conf/sample/201708/sbr-2500-leu-vat-links.csv'
+         
+                // Remove Fake SQL data
+                sh 'rm -rf conf/sample/ch_2500_data.sql'
+                sh 'rm -rf conf/sample/ent_2500_data.sql'
+                sh 'rm -rf conf/sample/leu_2500_data.sql'
+                sh 'rm -rf conf/sample/paye_2500_data.sql'
+                sh 'rm -rf conf/sample/unit_links_2500_data.sql'
+                sh 'rm -rf conf/sample/vat_2500_data.sql'
 
+                // Copy over real SQL data
                 sh 'cp gitlab/dev/data/sbr_inserts/ch_2500_data.sql conf/sample/ch_2500_data.sql'
                 sh 'cp gitlab/dev/data/sbr_inserts/ent_2500_data.sql conf/sample/ent_2500_data.sql'
                 sh 'cp gitlab/dev/data/sbr_inserts/leu_2500_data.sql conf/sample/leu_2500_data.sql'
                 sh 'cp gitlab/dev/data/sbr_inserts/paye_2500_data.sql conf/sample/paye_2500_data.sql'
                 sh 'cp gitlab/dev/data/sbr_inserts/unit_links_2500_data.sql conf/sample/unit_links_2500_data.sql'
                 sh 'cp gitlab/dev/data/sbr_inserts/vat_2500_data.sql conf/sample/vat_2500_data.sql'
+              
+              sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
 
-                sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
-                
                 script {
                     env.NODE_STAGE = "Build"
                     if (BRANCH_NAME == BRANCH_DEV) {
@@ -191,7 +193,7 @@ pipeline {
                     colourText("info", "Found latest tag: ${currentTag}")
                     newTag =  IncrementTag( currentTag, RELEASE_TYPE )
                     colourText("info", "Generated new tag: ${newTag}")
-                    push(newTag, currentTag)
+                    // push(newTag, currentTag)
 
                 }
             }
@@ -202,6 +204,9 @@ pipeline {
                 branch "master"
             }
             steps {
+                script {
+                    env.NODE_STAGE = "Package and Push Artifact"
+                }
                 sh '''
                     $SBT clean compile package
                     $SBT clean compile assembly
@@ -242,6 +247,9 @@ pipeline {
                 }
             }
             steps {
+                script {
+                    env.NODE_STAGE = "Integration Tests"
+                }
                 sh "$SBT it:test"
                 colourText("success", 'Integration Tests - For Release or Dev environment.')
             }
