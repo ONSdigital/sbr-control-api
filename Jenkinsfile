@@ -39,6 +39,7 @@ pipeline {
                 }
             }
         }
+
         stage('Build'){
             agent any
             steps {
@@ -56,7 +57,6 @@ pipeline {
                 sh 'rm -rf conf/sample/sbr-2500-leu-paye-links.csv'
                 sh 'rm -rf conf/sample/sbr-2500-leu-vat-links.csv'
 
-
                 // Copy over the real data
                 sh 'cp gitlab/dev/data/sbr-2500-ent-data.csv conf/sample/sbr-2500-ent-data.csv'
                 sh 'cp gitlab/dev/data/sbr-2500-ent-ch-links.csv conf/sample/sbr-2500-ent-ch-links.csv'
@@ -68,6 +68,7 @@ pipeline {
                 sh 'cp gitlab/dev/data/sbr-2500-leu-vat-links.csv conf/sample/sbr-2500-leu-vat-links.csv'
                 
                 sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
+                stash name: 'compiled'
                 
                 sh 'rm -rf conf/sample/ch_2500_data.sql'
                 sh 'rm -rf conf/sample/ent_2500_data.sql'
@@ -100,25 +101,26 @@ pipeline {
                 }
             }
         }
+
         stage('Static Analysis') {
             agent any
             steps {
                 parallel (
-                        "Unit" :  {
-                            colourText("info","Running unit tests")
-                            // sh "$SBT test"
-                        },
-                        "Style" : {
-                            colourText("info","Running style tests")
-                            sh '''
-                                $SBT scalastyleGenerateConfig
-                                $SBT scalastyle
-                            '''
-                        },
-                        "Additional" : {
-                            colourText("info","Running additional tests")
-                            sh '$SBT scapegoat'
-                        }
+                    "Unit" :  {
+                        colourText("info","Running unit tests")
+                        // sh "$SBT test"
+                    },
+                    "Style" : {
+                        colourText("info","Running style tests")
+                        sh '''
+                            $SBT scalastyleGenerateConfig
+                            $SBT scalastyle
+                        '''
+                    },
+                    "Additional" : {
+                        colourText("info","Running additional tests")
+                        sh '$SBT scapegoat'
+                    }
                 )
             }
             post {
@@ -139,6 +141,7 @@ pipeline {
                 }
             }
         }
+
         stage ('Bundle') {
             agent any
             when {
@@ -156,6 +159,7 @@ pipeline {
                 stash name: "zip"
             }
         }
+
         stage("Releases"){
             agent any
             when {
@@ -173,10 +177,10 @@ pipeline {
                     newTag =  IncrementTag( currentTag, RELEASE_TYPE )
                     colourText("info", "Generated new tag: ${newTag}")
                     // push(newTag, currentTag)
-
                 }
             }
         }
+
         stage ('Package and Push Artifact') {
             agent any
             when {
@@ -194,6 +198,7 @@ pipeline {
             }
 
         }
+
         stage('Deploy'){
             agent any
             when {
@@ -229,12 +234,11 @@ pipeline {
                 script {
                     env.NODE_STAGE = "Integration Tests"
                 }
+                unstash 'compiled'
                 sh "$SBT it:test"
                 colourText("success", 'Integration Tests - For Release or Dev environment.')
             }
         }
-
-
     }
     post {
         always {
