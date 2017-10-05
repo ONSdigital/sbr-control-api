@@ -139,13 +139,6 @@ lazy val api = (project in file("."))
       //swagger
       "io.swagger"                   %%    "swagger-play2"       %    "1.5.3",
       "org.webjars"                  %     "swagger-ui"          %    "3.1.4"
-      // hbase
-      //"org.apache.hadoop"            %     "hadoop-common"       %    "2.6.0",
-      //"org.apache.hbase"             %     "hbase-common"        %    Versions.hbase,
-      //"org.apache.hbase"             %     "hbase-client"        %    Versions.hbase,
-      //hbase test
-      //"org.apache.hbase"             %     "hbase-server"        %    Versions.hbase    % Test,
-      //"org.apache.hbase"             %     "hbase-testing-util"  %    Versions.hbase    % Test
       excludeAll ExclusionRule("commons-logging", "commons-logging")
     ),
     // assembly
