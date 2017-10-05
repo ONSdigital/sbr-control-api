@@ -102,14 +102,6 @@ lazy val api = (project in file("."))
         git.gitTagToVersionNumber.?.value.getOrElse(Some(Constant.projectStage))+"@"+ git.formattedDateVersion.?.value.getOrElse("")
     }),
     // After universal:packageBin has run, the csv files cannot be found, so need to move them to the right place.
-    mappings in Universal += file("conf/sample/sbr-2500-ent-data.csv") -> "bin/conf/sample/sbr-2500-ent-data.csv",
-    mappings in Universal += file("conf/sample/sbr-2500-ent-ch-links.csv") -> "bin/conf/sample/sbr-2500-ent-ch-links.csv",
-    mappings in Universal += file("conf/sample/sbr-2500-ent-paye-links.csv") -> "bin/conf/sample/sbr-2500-ent-paye-links.csv",
-    mappings in Universal += file("conf/sample/sbr-2500-ent-vat-links.csv") -> "bin/conf/sample/sbr-2500-ent-vat-links.csv",
-    mappings in Universal += file("conf/sample/sbr-2500-ent-leu-links.csv") -> "bin/conf/sample/sbr-2500-ent-leu-links.csv",
-    mappings in Universal += file("conf/sample/sbr-2500-leu-ch-links.csv") -> "bin/conf/sample/sbr-2500-leu-ch-links.csv",
-    mappings in Universal += file("conf/sample/sbr-2500-leu-paye-links.csv") -> "bin/conf/sample/sbr-2500-leu-paye-links.csv",
-    mappings in Universal += file("conf/sample/sbr-2500-leu-vat-links.csv") -> "bin/conf/sample/sbr-2500-leu-vat-links.csv",
     // replace sample sql with actual sql date files for SQLConnect
     mappings in Universal += file("conf/sample/ch_2500_data.sql") -> "bin/conf/sample/ch_2500_data.sql",
     mappings in Universal += file("conf/sample/ent_2500_data.sql") -> "bin/conf/sample/ent_2500_data.sql",
