@@ -22,8 +22,8 @@ import utils._
 class HBaseConnect extends DBConnector {
 
   HBaseInMemoryConfig
-  protected val requestLinks = new UnitController()
-  protected val requestEnterprise = new EnterpriseController()
+  private val requestLinks = new UnitController()
+  private val requestEnterprise = new EnterpriseController()
 
   def getUnitLinksFromDB(id: String)(implicit request: Request[AnyContent]) = {
     val evalResp = matchByParams(Some(id))

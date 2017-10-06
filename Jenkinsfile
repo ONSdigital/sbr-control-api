@@ -231,7 +231,6 @@ pipeline {
                 }
             }
             steps {
-                colourText("success", 'Deploy.')
                 script {
                     env.NODE_STAGE = "Deploy"
                 }
@@ -239,7 +238,7 @@ pipeline {
                 lock('Deployment Initiated') {
                     colourText("info", 'deployment in progress')
                     deploy()
-                    // unstash zip
+                    colourText("success", 'Deploy.')
                 }
             }
         }

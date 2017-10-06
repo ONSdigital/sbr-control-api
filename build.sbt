@@ -16,7 +16,6 @@ lazy val Versions = new {
   val scala = "2.11.11"
   val appVersion = "0.1-SNAPSHOT"
   val scapegoatVersion = "1.1.0"
-  val hbase = "1.3.1"
 }
 
 lazy val Constant = new {
