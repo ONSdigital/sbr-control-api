@@ -20,7 +20,7 @@ pipeline {
     options {
         skipDefaultCheckout()
         buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30'))
-        timeout(time: 15, unit: 'MINUTES')
+        timeout(time: 30, unit: 'MINUTES')
         timestamps()
     }
     agent any
@@ -39,6 +39,7 @@ pipeline {
                 }
             }
         }
+
         stage('Build'){
             agent any
             steps {
@@ -85,8 +86,11 @@ pipeline {
                 sh 'cp gitlab/dev/data/201708/sbr-2500-leu-ch-links.csv conf/sample/201708/sbr-2500-leu-ch-links.csv'
                 sh 'cp gitlab/dev/data/201708/sbr-2500-leu-paye-links.csv conf/sample/201708/sbr-2500-leu-paye-links.csv'
                 sh 'cp gitlab/dev/data/201708/sbr-2500-leu-vat-links.csv conf/sample/201708/sbr-2500-leu-vat-links.csv'
-         
-                // Remove Fake SQL data
+                        
+                sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
+                stash name: 'compiled'
+                  
+                 // Remove Fake SQL data 
                 sh 'rm -rf conf/sample/ch_2500_data.sql'
                 sh 'rm -rf conf/sample/ent_2500_data.sql'
                 sh 'rm -rf conf/sample/leu_2500_data.sql'
@@ -102,8 +106,6 @@ pipeline {
                 sh 'cp gitlab/dev/data/sbr_inserts/unit_links_2500_data.sql conf/sample/unit_links_2500_data.sql'
                 sh 'cp gitlab/dev/data/sbr_inserts/vat_2500_data.sql conf/sample/vat_2500_data.sql'
               
-              sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
-
                 script {
                     env.NODE_STAGE = "Build"
                     if (BRANCH_NAME == BRANCH_DEV) {
@@ -121,25 +123,26 @@ pipeline {
                 }
             }
         }
+
         stage('Static Analysis') {
             agent any
             steps {
                 parallel (
-                        "Unit" :  {
-                            colourText("info","Running unit tests")
-                            // sh "$SBT test"
-                        },
-                        "Style" : {
-                            colourText("info","Running style tests")
-                            sh '''
-                                $SBT scalastyleGenerateConfig
-                                $SBT scalastyle
-                            '''
-                        },
-                        "Additional" : {
-                            colourText("info","Running additional tests")
-                            sh '$SBT scapegoat'
-                        }
+                    "Unit" :  {
+                        colourText("info","Running unit tests")
+                        // sh "$SBT test"
+                    },
+                    "Style" : {
+                        colourText("info","Running style tests")
+                        sh '''
+                            $SBT scalastyleGenerateConfig
+                            $SBT scalastyle
+                        '''
+                    },
+                    "Additional" : {
+                        colourText("info","Running additional tests")
+                        sh '$SBT scapegoat'
+                    }
                 )
             }
             post {
@@ -160,6 +163,7 @@ pipeline {
                 }
             }
         }
+
         stage ('Bundle') {
             agent any
             when {
@@ -177,6 +181,7 @@ pipeline {
                 stash name: "zip"
             }
         }
+
         stage("Releases"){
             agent any
             when {
@@ -194,10 +199,10 @@ pipeline {
                     newTag =  IncrementTag( currentTag, RELEASE_TYPE )
                     colourText("info", "Generated new tag: ${newTag}")
                     // push(newTag, currentTag)
-
                 }
             }
         }
+
         stage ('Package and Push Artifact') {
             agent any
             when {
@@ -215,6 +220,7 @@ pipeline {
             }
 
         }
+
         stage('Deploy'){
             agent any
             when {
@@ -250,12 +256,11 @@ pipeline {
                 script {
                     env.NODE_STAGE = "Integration Tests"
                 }
+                unstash 'compiled'
                 sh "$SBT it:test"
                 colourText("success", 'Integration Tests - For Release or Dev environment.')
             }
         }
-
-
     }
     post {
         always {
