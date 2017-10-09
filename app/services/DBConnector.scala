@@ -10,6 +10,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ Future, TimeoutException }
 import scala.util.{ Failure, Success, Try }
 
+import com.google.inject.ImplementedBy
 import com.typesafe.scalalogging.StrictLogging
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
@@ -25,6 +26,7 @@ import utils.FutureResponse.futureSuccess
 /**
  * Created by haqa on 21/09/2017.
  */
+@ImplementedBy(classOf[HBaseConnect])
 trait DBConnector extends Controller with StrictLogging {
 
   def getUnitLinksFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result]

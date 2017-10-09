@@ -7,6 +7,7 @@ import play.api.libs.json.{ Json, OFormat }
 
 import uk.gov.ons.sbr.data.domain.StatisticalUnit
 import uk.gov.ons.sbr.data.model.StatUnitLinks
+import uk.gov.ons.sbr.models.DataUnit
 
 /**
  * Created by haqa on 08/08/2017.
@@ -18,7 +19,7 @@ case class UnitLinks(
     dataType = "Map[String,String]") parents: Option[Map[String, String]],
   @ApiModelProperty(value = "A string of all related children", example = "") children: Option[Map[String, String]],
   @ApiModelProperty(value = "Type of Unit returned", example = "") unitType: String
-)
+) extends DataUnit[String]
 
 object UnitLinks {
 
