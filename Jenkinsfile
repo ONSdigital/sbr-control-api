@@ -16,6 +16,8 @@ pipeline {
 
         GIT_TYPE = "Github"
         GIT_CREDS = "github-sbr-user"
+          
+        CF_PROJECT = "SBR"
     }
     options {
         skipDefaultCheckout()
@@ -290,8 +292,9 @@ def push (String newTag, String currentTag) {
 }
 
 def deploy () {
+    cf_env = "${env.DEPLOY_NAME}".capitalize()
     echo "Deploying Api app to ${env.DEPLOY_NAME}"
     withCredentials([string(credentialsId: "sbr-api-dev-secret-key", variable: 'APPLICATION_SECRET')]) {
-        deployToCloudFoundry("sbr-${env.DEPLOY_NAME}-cf", 'sbr', "${env.DEPLOY_NAME}", "${env.DEPLOY_NAME}-sbr-control-api", "${env.DEPLOY_NAME}-ons-sbr-control-api.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml")
+         deployToCloudFoundry("sbr-${env.DEPLOY_NAME}-cf", '${CF_PROJECT}', "${cf_env}", "${env.DEPLOY_NAME}-sbr-control-api", "${env.DEPLOY_NAME}-ons-sbr-control-api.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml")
     }
 }
