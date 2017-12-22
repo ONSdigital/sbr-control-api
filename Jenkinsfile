@@ -1,5 +1,5 @@
 #!groovy
-@Library('jenkins-pipeline-shared@feature/version') _
+@Library('jenkins-pipeline-shared@feature/new-cf') _
 
 
 pipeline {
@@ -292,6 +292,6 @@ def push (String newTag, String currentTag) {
 def deploy () {
     echo "Deploying Api app to ${env.DEPLOY_NAME}"
     withCredentials([string(credentialsId: "sbr-api-dev-secret-key", variable: 'APPLICATION_SECRET')]) {
-        deployToCloudFoundry("cloud-foundry-sbr-${env.DEPLOY_NAME}-user", 'sbr', "${env.DEPLOY_NAME}", "${env.DEPLOY_NAME}-sbr-control-api", "${env.DEPLOY_NAME}-ons-sbr-control-api.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml")
+        deployToCloudFoundry("sbr-${env.DEPLOY_NAME}-cf", 'sbr', "${env.DEPLOY_NAME}", "${env.DEPLOY_NAME}-sbr-control-api", "${env.DEPLOY_NAME}-ons-sbr-control-api.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml")
     }
 }
