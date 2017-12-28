@@ -3,7 +3,7 @@
 
 
 pipeline {
-     environment {
+     environment {     
         RELEASE_TYPE = "PATCH"
 
         BRANCH_DEV = "develop"
@@ -12,12 +12,18 @@ pipeline {
 
         DEPLOY_DEV = "dev"
         DEPLOY_TEST = "test"
-        DEPLOY_PROD = "prod"
+        DEPLOY_PROD = "beta"
+
+        CF_CREDS = "sbr-api-dev-secret-key"
+        CF_PROJECT = "SBR"
 
         GIT_TYPE = "Github"
         GIT_CREDS = "github-sbr-user"
-          
-        CF_PROJECT = "SBR"
+        GITLAB_CREDS = "sbr-gitlab-id"
+
+        ORGANIZATION = "ons"
+        TEAM = "sbr"
+        MODULE_NAME = "sbr-control-api"  
     }
     options {
         skipDefaultCheckout()
@@ -112,15 +118,15 @@ pipeline {
                     env.NODE_STAGE = "Build"
                     if (BRANCH_NAME == BRANCH_DEV) {
                         env.DEPLOY_NAME = DEPLOY_DEV
-                        sh 'cp target/universal/sbr-control-api-*.zip dev-ons-sbr-control-api.zip'
+                        sh "cp target/universal/${ORGANIZATION}-${MODULE_NAME}-*.zip ${DEPLOY_DEV}-${ORGANIZATION}-${MODULE_NAME}.zip"
                     }
                     else if  (BRANCH_NAME == BRANCH_TEST) {
                         env.DEPLOY_NAME = DEPLOY_TEST
-                        sh 'cp target/universal/sbr-control-api-*.zip test-ons-sbr-control-api.zip'
+                        sh "cp target/universal/${ORGANIZATION}-${MODULE_NAME}-*.zip ${DEPLOY_TEST}-${ORGANIZATION}-${MODULE_NAME}.zip"
                     }
                     else if (BRANCH_NAME == BRANCH_PROD) {
                         env.DEPLOY_NAME = DEPLOY_PROD
-                        sh 'cp target/universal/sbr-control-api-*.zip prod-ons-sbr-control-api.zip'
+                        sh "cp target/universal/${ORGANIZATION}-${MODULE_NAME}-*.zip ${DEPLOY_PROD}-${ORGANIZATION}-${MODULE_NAME}.zip"
                     }
                 }
             }
@@ -295,6 +301,6 @@ def deploy () {
     cf_env = "${env.DEPLOY_NAME}".capitalize()
     echo "Deploying Api app to ${env.DEPLOY_NAME}"
     withCredentials([string(credentialsId: "sbr-api-dev-secret-key", variable: 'APPLICATION_SECRET')]) {
-         deployToCloudFoundry("sbr-${env.DEPLOY_NAME}-cf", '${CF_PROJECT}', "${cf_env}", "${env.DEPLOY_NAME}-sbr-control-api", "${env.DEPLOY_NAME}-ons-sbr-control-api.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml")
+         deployToCloudFoundry("${TEAM}-${env.DEPLOY_NAME}-cf", "${CF_PROJECT}", "${cf_env}", "${env.DEPLOY_NAME}-${MODULE_NAME}", "${env.DEPLOY_NAME}-${ORGANIZATION}-${MODULE_NAME}.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml")
     }
 }
