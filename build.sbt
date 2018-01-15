@@ -2,6 +2,7 @@ import play.sbt.PlayScala
 import sbtbuildinfo.BuildInfoPlugin.autoImport._
 import sbtassembly.AssemblyPlugin.autoImport._
 import com.typesafe.sbt.SbtNativePackager.Universal
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.dockerExposedPorts
 
 val publishRepo = settingKey[String]("publishRepo")
 
@@ -148,5 +149,7 @@ lazy val api = (project in file("."))
         oldStrategy(x)
     },
     mainClass in assembly := Some("play.core.server.ProdServerStart"),
-    fullClasspath in assembly += Attributed.blank(PlayKeys.playPackageAssets.value)
+    fullClasspath in assembly += Attributed.blank(PlayKeys.playPackageAssets.value),
+    dockerBaseImage := "openjdk:8-jre",
+    dockerExposedPorts := Seq(9000)
   )
