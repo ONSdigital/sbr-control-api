@@ -1,9 +1,10 @@
 import com.google.inject.AbstractModule
 import java.time.Clock
 
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import config.SBRPropertiesConfiguration
-import play.api.{ Configuration, Environment }
+import play.api.{Configuration, Environment}
+import services.{DataAccess, HBaseDataAccess}
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -23,6 +24,18 @@ class Module(
   override def configure() = {
 
     val config = SBRPropertiesConfiguration.envConfig(ConfigFactory.load())
+
+//    config.getString("database") match {
+//      case "csv" => bind(classOf[DataAccess]).to(classOf[CSVData])
+//      case "hbaseLocal" => bind(classOf[DataAccess]).toInstance(new HBaseData(false, config))
+//      case "hbaseInMemory" => bind(classOf[DataAccess]).toInstance(new HBaseData(true, config))
+//      case "hiveLocal" => bind(classOf[DataAccess]).to(classOf[HiveData])
+//    }
+
+    config.getString("database") match {
+      case "hbase-in-memory" => bind(classOf[DataAccess]).to(classOf[HBaseDataAccess])
+    }
+
     //    val config: Config = ConfigFactory.load
     bind(classOf[Config]).toInstance(config)
 

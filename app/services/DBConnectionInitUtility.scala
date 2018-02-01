@@ -19,9 +19,6 @@ class DBConnectionInitUtility(playConfig: Configuration) {
 
   //  def init(): DBConnector = (defaultDBInit: @switch) match {
   def init(): DBConnector = (playConfig.getString("db.default.name").getOrElse(defaultDBInit): @switch) match {
-    case s if s.equalsIgnoreCase("sql") =>
-      logger.info(s"Starting SQL db service. Environment variable set to $defaultDBInit")
-      new SQLConnect
     case s if s.equalsIgnoreCase("hbase") =>
       logger.info(s"Starting HBase db service. Environment variable set to $defaultDBInit")
       new HBaseConnect
