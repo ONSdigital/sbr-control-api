@@ -29,7 +29,7 @@ brew install hbase
 
 To compile, build and run the application use the following command:
 ```shell
-sbt api/run
+sbt "api/run -Dsbr.hbase.inmemory=true"
 ```
 The default application port is 9000. To specify an alternative port use `-Dhttp.port=8080`.
 
