@@ -25,22 +25,14 @@ class Module(
 
     val config = SBRPropertiesConfiguration.envConfig(ConfigFactory.load())
 
-//    config.getString("database") match {
-//      case "csv" => bind(classOf[DataAccess]).to(classOf[CSVData])
-//      case "hbaseLocal" => bind(classOf[DataAccess]).toInstance(new HBaseData(false, config))
-//      case "hbaseInMemory" => bind(classOf[DataAccess]).toInstance(new HBaseData(true, config))
-//      case "hiveLocal" => bind(classOf[DataAccess]).to(classOf[HiveData])
-//    }
-
+    // In addition to using -Ddatabase=hbase-in-memory, -Dsbr.hbase.inmemory=true needs to be set to true for
+    // HBase in memory to work (this is required by the HBase connector .jar)
     config.getString("database") match {
       case "hbase-in-memory" => bind(classOf[DataAccess]).to(classOf[HBaseDataAccess])
     }
 
-    //    val config: Config = ConfigFactory.load
     bind(classOf[Config]).toInstance(config)
-
     // Use the system clock as the default implementation of Clock
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
   }
-
 }
