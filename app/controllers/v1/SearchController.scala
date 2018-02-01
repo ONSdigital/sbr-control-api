@@ -5,9 +5,9 @@ import javax.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
 import io.swagger.annotations._
 import play.api.Configuration
-import play.api.mvc.{Action, AnyContent}
-import uk.gov.ons.sbr.models.units.{EnterpriseUnit, UnitLinks}
-import services.{DBConnectionInitUtility, DBConnector, DataAccess}
+import play.api.mvc.{ Action, AnyContent }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
+import services.DataAccess
 
 /**
  * Created by haqa on 04/08/2017.
@@ -17,9 +17,9 @@ import services.{DBConnectionInitUtility, DBConnector, DataAccess}
  * @todo - check no-param found err-control
  */
 @Api("Search")
-class SearchController @Inject() (data: DataAccess, playConfig: Configuration) extends StrictLogging with ControllerUtils {
+class SearchController @Inject() (db: DataAccess, playConfig: Configuration) extends StrictLogging with ControllerUtils {
 
-  private val dbInstance: DBConnector = new DBConnectionInitUtility(playConfig).init()
+  // private val dbInstance: DBConnector = new DBConnectionInitUtility(playConfig).init()
 
   //public api
   @ApiOperation(
@@ -40,8 +40,7 @@ class SearchController @Inject() (data: DataAccess, playConfig: Configuration) e
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get a List of Unit Links with id [$id] parameters.")
-    dbInstance.getUnitLinksFromDB(id)
-
+    db.getUnitLinksFromDB(id)
   }
 
   //public api
@@ -64,7 +63,7 @@ class SearchController @Inject() (data: DataAccess, playConfig: Configuration) e
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get a List of StatisticalUnits with period [$date] and id [$id] parameters.")
-    dbInstance.getUnitLinksFromDB(id, date)
+    db.getUnitLinksFromDB(id, date)
   }
 
   //public api
@@ -86,7 +85,7 @@ class SearchController @Inject() (data: DataAccess, playConfig: Configuration) e
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get Enterprise with id [$id] parameters.")
-    dbInstance.getEnterpriseFromDB(id)
+    db.getEnterpriseFromDB(id)
   }
 
   //public api
@@ -110,7 +109,7 @@ class SearchController @Inject() (data: DataAccess, playConfig: Configuration) e
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get Enterprise with period [$date] and id [$id] parameters.")
-    dbInstance.getEnterpriseFromDB(id, date)
+    db.getEnterpriseFromDB(id, date)
   }
 
   //public api
@@ -133,7 +132,7 @@ class SearchController @Inject() (data: DataAccess, playConfig: Configuration) e
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get StatisticalUnitLinks with id [$id] and category [$category] parameters.")
-    dbInstance.getStatUnitLinkFromDB(id, category)
+    db.getStatUnitLinkFromDB(id, category)
   }
 
   //public api
@@ -157,7 +156,6 @@ class SearchController @Inject() (data: DataAccess, playConfig: Configuration) e
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get StatisticalUnitLinks with period [$date], id [$id] and category [$category] parameters.")
-    dbInstance.getStatUnitLinkFromDB(id, date, category)
+    db.getStatUnitLinkFromDB(id, date, category)
   }
-
 }

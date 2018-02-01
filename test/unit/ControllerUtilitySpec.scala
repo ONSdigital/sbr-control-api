@@ -4,13 +4,11 @@ import java.time.YearMonth
 import java.util.Optional
 
 import scala.util.Try
-
 import play.api.libs.json.JsNumber
 import play.api.mvc.Result
 import play.api.test.Helpers._
-
 import utils._
-import services.HBaseConnect
+import services.HBaseDataAccess
 import resource.TestUtils
 
 /**
@@ -21,7 +19,7 @@ class ControllerUtilitySpec extends TestUtils {
   private val validKey = "12446"
   private val validDate = "201711"
   private val searchByIdUrl = "/v1/enterpriseById?id="
-  private val dbTestInstance = new HBaseConnect
+  private val dbTestInstance = new HBaseDataAccess
 
   "validateYearMonth function" should {
     "return invalid date exception" in {
