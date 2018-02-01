@@ -3,11 +3,10 @@ package controllers.v1
 import scala.collection.JavaConversions._
 import scala.util.{ Failure, Success, Try }
 
-import io.swagger.annotations._
-import play.api.Logger
 import play.api.mvc.{ Action, AnyContent }
+import play.api.{ Configuration, Logger }
+import io.swagger.annotations._
 
-import config.Properties.minKeyLength
 import utils.FutureResponse.futureSuccess
 import utils.Utilities.errAsJson
 import utils._
@@ -16,7 +15,7 @@ import utils._
  * Created by coolit on 20/09/2017.
  */
 @Api("Edit")
-class EditController extends ControllerUtils {
+class EditController()(val configuration: Configuration) extends ControllerUtils {
 
   @ApiOperation(
     value = "Ok if edit is made",
@@ -66,7 +65,7 @@ class EditController extends ControllerUtils {
     @ApiParam(value = "A period in yyyyMM format", example = "201706", required = true) period: String,
     @ApiParam(value = "An Enterprise ID", example = "1234567890", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    Logger.info(s"Editing by period [${period}] for id: ${id}")
+    Logger.info(s"Editing by period [$period] for id: $id")
     val evalResp = matchByEditParams(Some(id), request, Some(period))
     val res = evalResp match {
       case (x: EditRequestByPeriod) => {

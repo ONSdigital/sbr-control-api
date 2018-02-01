@@ -2,24 +2,20 @@ package controllers.v1
 
 import javax.inject.Inject
 
-import com.typesafe.scalalogging.StrictLogging
-import io.swagger.annotations._
 import play.api.Configuration
 import play.api.mvc.{ Action, AnyContent }
-import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
-import services.DataAccess
+import com.typesafe.scalalogging.StrictLogging
+import io.swagger.annotations._
 
-/**
- * Created by haqa on 04/08/2017.
- */
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
+
+import services.DataAccess
 
 /**
  * @todo - check no-param found err-control
  */
 @Api("Search")
-class SearchController @Inject() (db: DataAccess, playConfig: Configuration) extends StrictLogging with ControllerUtils {
-
-  // private val dbInstance: DBConnector = new DBConnectionInitUtility(playConfig).init()
+class SearchController @Inject() (db: DataAccess, val configuration: Configuration) extends StrictLogging with ControllerUtils {
 
   //public api
   @ApiOperation(

@@ -5,27 +5,26 @@ import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
-import com.typesafe.scalalogging.LazyLogging
-import config.Properties._
-import play.api.libs.json.{ JsValue, Json }
-import play.api.mvc.{ AnyContent, Controller, Request, Result }
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
-import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 import scala.collection.JavaConversions._
-
-import scala.util.{ Failure, Success, Try }
-
-import utils.Utilities.errAsJson
-import utils._
-import utils.FutureResponse.{ futureFromTry, futureSuccess }
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ Future, TimeoutException }
+import scala.util.{ Failure, Success, Try }
 
-/**
- * Created by coolit on 01/02/2018.
- */
-trait DataAccess extends Controller with LazyLogging {
+import play.api.libs.json.{ JsValue, Json }
+import play.api.mvc.{ AnyContent, Controller, Request, Result }
+import com.google.inject.ImplementedBy
+import com.typesafe.scalalogging.LazyLogging
+
+import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
+
+import config.Properties
+import utils.FutureResponse.futureSuccess
+import utils.Utilities.errAsJson
+import utils._
+
+@ImplementedBy(classOf[HBaseDataAccess])
+trait DataAccess extends Controller with LazyLogging with Properties {
   // Refactor so that method that doesn't take a period calls the one that does, with a None etc.
 
   def getUnitLinksFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result]
@@ -84,7 +83,7 @@ trait DataAccess extends Controller with LazyLogging {
    * @tparam Z - java data type for value param
    * @return Future[Result]
    */
-  def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
+  protected def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
     Future { toOption[Z](v) }.map {
       case Some(x: java.util.List[StatisticalUnit]) =>
         tryAsResponse(Try(Json.toJson(x.toList.map { v => UnitLinks(v) })))
@@ -98,7 +97,7 @@ trait DataAccess extends Controller with LazyLogging {
     }
   }
 
-  def responseException: PartialFunction[Throwable, Result] = {
+  protected def responseException: PartialFunction[Throwable, Result] = {
     case ex: DateTimeParseException =>
       logger.error("cannot parse date to to specified date format", ex)
       BadRequest(errAsJson(BAD_REQUEST, "invalid_date", s"cannot parse date exception found $ex"))

@@ -4,20 +4,21 @@ import java.time.YearMonth
 import java.util.Optional
 
 import play.api.mvc.{ AnyContent, Request, Result }
+
 import uk.gov.ons.sbr.data.controller.{ EnterpriseController, UnitController }
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks, UnitType }
+
 import utils.Utilities._
 import utils.{ CategoryRequest, IdRequest, ReferencePeriod, RequestEvaluation }
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import scala.concurrent.Future
 import scala.util.Try
+
+import play.api.Configuration
+
 import utils.FutureResponse.{ futureFromTry, futureSuccess }
 
-/**
- * Created by coolit on 01/02/2018.
- */
-class HBaseDataAccess extends DataAccess {
+class HBaseDataAccess()(val configuration: Configuration) extends DataAccess {
 
   HBaseInMemoryConfig
   private val requestLinks = new UnitController()
