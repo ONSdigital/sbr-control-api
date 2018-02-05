@@ -4,7 +4,7 @@ import java.time.Clock
 import com.typesafe.config.{ Config, ConfigFactory }
 import config.SBRPropertiesConfiguration
 import play.api.{ Configuration, Environment }
-import services.{ DataAccess, HBaseDataAccess }
+import services.{ DataAccess, HBaseDataAccess, HBaseRestDataAccess }
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -24,6 +24,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     // HBase in memory to work (this is required by the HBase connector .jar)
     config.getString("db.default.name") match {
       case "hbase" => bind(classOf[DataAccess]).to(classOf[HBaseDataAccess])
+      case "hbase-rest" => bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
     }
 
     bind(classOf[Config]).toInstance(config)

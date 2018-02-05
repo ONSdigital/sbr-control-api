@@ -63,6 +63,7 @@ object HBaseInMemoryConfig {
   private val leuVat201708: List[String] = List[String](UnitType.LEGAL_UNIT.toString + "~"
     + UnitType.VAT.toString, secondPeriod, new File("conf/sample/201708/sbr-2500-leu-vat-links.csv").toURI.toURL.toExternalForm)
 
+  HBaseConnector.getInstance().connect()
   // Load in data for first period (201706)
   ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entData201706.toArray)
 
