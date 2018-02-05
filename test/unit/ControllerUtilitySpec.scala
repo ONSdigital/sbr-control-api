@@ -25,12 +25,12 @@ class ControllerUtilitySpec extends TestUtils {
   private val validDate = "201711"
   private val searchByIdUrl = "/v1/enterpriseById?id="
 
-  override protected def fakeApplication(): Application =
+  override private def fakeApplication(): Application =
     new GuiceApplicationBuilder()
       .loadConfig(Configuration(ConfigFactory.load))
       .build()
 
-  implicit protected val configuration: Configuration = fakeApplication().configuration
+  implicit private val configuration: Configuration = fakeApplication().configuration
 
   private val dbTestInstance = new HBaseDataAccess
 
