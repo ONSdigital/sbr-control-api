@@ -17,10 +17,10 @@ trait Properties {
 
   lazy val dbConfig: Config = config.getConfig("db")
 
-  lazy val requestTimeout: Int = config.getInt("request.timeout")
+  lazy val requestTimeout: Int = config.getInt("play.ws.request.timeout")
   lazy val minKeyLength: Int = config.getInt("search.minKeyLength")
 
   // db
-  lazy val defaultDBInit: String = config.getString("db.default.name")
+  lazy val defaultDBInit: String = dbConfig.getString("default.name")
 
 }

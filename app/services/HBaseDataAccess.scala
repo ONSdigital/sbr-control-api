@@ -2,6 +2,7 @@ package services
 
 import java.time.YearMonth
 import java.util.Optional
+import javax.inject.Inject
 
 import play.api.mvc.{ AnyContent, Request, Result }
 
@@ -18,7 +19,7 @@ import play.api.Configuration
 
 import utils.FutureResponse.{ futureFromTry, futureSuccess }
 
-class HBaseDataAccess()(val configuration: Configuration) extends DataAccess {
+class HBaseDataAccess @Inject() (implicit val configuration: Configuration) extends DataAccess {
 
   HBaseInMemoryConfig
   private val requestLinks = new UnitController()

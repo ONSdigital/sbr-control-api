@@ -1,5 +1,7 @@
 package controllers.v1
 
+import javax.inject.Inject
+
 import scala.collection.JavaConversions._
 import scala.util.{ Failure, Success, Try }
 
@@ -15,7 +17,7 @@ import utils._
  * Created by coolit on 20/09/2017.
  */
 @Api("Edit")
-class EditController()(val configuration: Configuration) extends ControllerUtils {
+class EditController @Inject() (val configuration: Configuration) extends ControllerUtils {
 
   @ApiOperation(
     value = "Ok if edit is made",
@@ -32,7 +34,7 @@ class EditController()(val configuration: Configuration) extends ControllerUtils
   def editEnterprise(
     @ApiParam(value = "An Enterprise ID", example = "1234567890", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
-    Logger.info(s"Editing by default period for id: ${id}")
+    Logger.info(s"Editing by default period for id: $id")
     val evalResp = matchByEditParams(Some(id), request)
     val res = evalResp match {
       case (x: EditRequest) => {

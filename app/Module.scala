@@ -20,7 +20,7 @@ class Module(environment: Environment, val configuration: Configuration) extends
 
     // In addition to using -Ddatabase=hbase-in-memory, -Dsbr.hbase.inmemory=true needs to be set to true for
     // HBase in memory to work (this is required by the HBase connector .jar)
-    dbConfig.getString("db.default.name") match {
+    dbConfig.getString("default.name") match {
       case "hbase" => bind(classOf[DataAccess]).to(classOf[HBaseDataAccess])
     }
 

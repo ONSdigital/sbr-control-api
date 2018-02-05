@@ -1,11 +1,11 @@
 package resource
 
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.libs.json._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
 /**
  * Created by Ameen on 15/07/2017.
