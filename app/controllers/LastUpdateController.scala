@@ -2,10 +2,10 @@ package controllers.v1
 
 import javax.inject.{ Inject, Singleton }
 
-import com.typesafe.config.Config
-import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
+import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.mvc.{ Action, AnyContent, Controller }
+import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
 
 import utils.FutureResponse.futureSuccess
 import controllers.BuildInfo
@@ -15,7 +15,7 @@ import controllers.BuildInfo
  */
 @Api("Utils")
 @Singleton
-class LastUpdateController @Inject() (implicit val config: Config) extends Controller {
+class LastUpdateController @Inject() (implicit val configuration: Configuration) extends Controller {
 
   @ApiOperation(
     value = "A Json list of dates representing dates of last changes made",

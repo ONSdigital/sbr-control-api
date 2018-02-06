@@ -10,16 +10,16 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ Future, TimeoutException }
 import scala.util.{ Failure, Success, Try }
 
-import com.typesafe.scalalogging.StrictLogging
 import play.api.libs.json._
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
+import com.typesafe.scalalogging.StrictLogging
 
 import uk.gov.ons.sbr.data.controller.{ EnterpriseController, UnitController }
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
 import uk.gov.ons.sbr.models.EditEnterprise
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 
-import config.Properties.minKeyLength
+import config.Properties
 import utils.Utilities.errAsJson
 import utils._
 import services.HBaseInMemoryConfig
@@ -30,7 +30,7 @@ import services.HBaseInMemoryConfig
 /**
  * @todo - change Future in resultMatcher
  */
-trait ControllerUtils extends Controller with StrictLogging {
+trait ControllerUtils extends Controller with StrictLogging with Properties {
 
   HBaseInMemoryConfig
   protected val requestLinks = new UnitController()

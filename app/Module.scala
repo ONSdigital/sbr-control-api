@@ -1,9 +1,8 @@
-import com.google.inject.AbstractModule
-import java.time.Clock
-
-import com.typesafe.config.{ Config, ConfigFactory }
-import config.SBRPropertiesConfiguration
 import play.api.{ Configuration, Environment }
+import com.google.inject.AbstractModule
+
+import config.Properties
+import services.{ DataAccess, HBaseDataAccess }
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -15,19 +14,17 @@ import play.api.{ Configuration, Environment }
  * adding `play.modules.enabled` settings to the `application.conf`
  * configuration file.
  */
-class Module(
-    environment: Environment,
-    configuration: Configuration
-) extends AbstractModule {
-
+class Module(environment: Environment, val configuration: Configuration) extends AbstractModule with Properties {
   override def configure() = {
+    //    val config = SBRPropertiesConfiguration.envConfig(ConfigFactory.load())
 
-    val config = SBRPropertiesConfiguration.envConfig(ConfigFactory.load())
-    //    val config: Config = ConfigFactory.load
-    bind(classOf[Config]).toInstance(config)
+    // In addition to using -Ddatabase=hbase-in-memory, -Dsbr.hbase.inmemory=true needs to be set to true for
+    // HBase in memory to work (this is required by the HBase connector .jar)
+    dbConfig.getString("default.name") match {
+      case "hbase" => bind(classOf[DataAccess]).to(classOf[HBaseDataAccess])
+    }
 
-    // Use the system clock as the default implementation of Clock
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
+    //    bind(classOf[Config]).toInstance(config)
+    //    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
   }
-
 }

@@ -5,13 +5,16 @@ import java.util.Optional
 
 import scala.util.Try
 
+import play.api.{ Application, Configuration }
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.JsNumber
 import play.api.mvc.Result
 import play.api.test.Helpers._
+import com.typesafe.config.ConfigFactory
 
 import utils._
-import services.HBaseConnect
 import resource.TestUtils
+import services.HBaseDataAccess
 
 /**
  * Created by haqa on 11/08/2017.
@@ -21,7 +24,15 @@ class ControllerUtilitySpec extends TestUtils {
   private val validKey = "12446"
   private val validDate = "201711"
   private val searchByIdUrl = "/v1/enterpriseById?id="
-  private val dbTestInstance = new HBaseConnect
+
+  override protected def fakeApplication(): Application =
+    new GuiceApplicationBuilder()
+      .loadConfig(Configuration(ConfigFactory.load))
+      .build()
+
+  implicit private val configuration: Configuration = fakeApplication().configuration
+
+  private val dbTestInstance = new HBaseDataAccess
 
   "validateYearMonth function" should {
     "return invalid date exception" in {

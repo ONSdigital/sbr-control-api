@@ -10,24 +10,22 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ Future, TimeoutException }
 import scala.util.{ Failure, Success, Try }
 
-import com.google.inject.ImplementedBy
-import com.typesafe.scalalogging.StrictLogging
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
+import com.google.inject.ImplementedBy
+import com.typesafe.scalalogging.LazyLogging
 
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 
-import config.Properties.minKeyLength
+import config.Properties
+import utils.FutureResponse.futureSuccess
 import utils.Utilities.errAsJson
 import utils._
-import utils.FutureResponse.futureSuccess
 
-/**
- * Created by haqa on 21/09/2017.
- */
-@ImplementedBy(classOf[HBaseConnect])
-trait DBConnector extends Controller with StrictLogging {
+@ImplementedBy(classOf[HBaseDataAccess])
+trait DataAccess extends Controller with LazyLogging with Properties {
+  // Refactor so that method that doesn't take a period calls the one that does, with a None etc.
 
   def getUnitLinksFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result]
 
@@ -85,7 +83,7 @@ trait DBConnector extends Controller with StrictLogging {
    * @tparam Z - java data type for value param
    * @return Future[Result]
    */
-  def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
+  protected def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
     Future { toOption[Z](v) }.map {
       case Some(x: java.util.List[StatisticalUnit]) =>
         tryAsResponse(Try(Json.toJson(x.toList.map { v => UnitLinks(v) })))
@@ -99,7 +97,7 @@ trait DBConnector extends Controller with StrictLogging {
     }
   }
 
-  def responseException: PartialFunction[Throwable, Result] = {
+  protected def responseException: PartialFunction[Throwable, Result] = {
     case ex: DateTimeParseException =>
       logger.error("cannot parse date to to specified date format", ex)
       BadRequest(errAsJson(BAD_REQUEST, "invalid_date", s"cannot parse date exception found $ex"))
@@ -130,6 +128,5 @@ trait DBConnector extends Controller with StrictLogging {
   }
 
   protected def parseYearMonth(ym: YearMonth) = ym.toString.replace("-", "").toLong
-
 }
 

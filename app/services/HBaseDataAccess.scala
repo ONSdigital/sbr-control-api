@@ -2,24 +2,24 @@ package services
 
 import java.time.YearMonth
 import java.util.Optional
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.util.Try
+import javax.inject.Inject
 
 import play.api.mvc.{ AnyContent, Request, Result }
 
 import uk.gov.ons.sbr.data.controller.{ EnterpriseController, UnitController }
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks, UnitType }
 
-import utils.FutureResponse.{ futureFromTry, futureSuccess }
-import utils.Utilities.errAsJson
-import utils._
+import utils.Utilities._
+import utils.{ CategoryRequest, IdRequest, ReferencePeriod, RequestEvaluation }
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.util.Try
 
-/**
- * Created by haqa on 26/09/2017.
- */
-class HBaseConnect extends DBConnector {
+import play.api.Configuration
+
+import utils.FutureResponse.{ futureFromTry, futureSuccess }
+
+class HBaseDataAccess @Inject() (implicit val configuration: Configuration) extends DataAccess {
 
   HBaseInMemoryConfig
   private val requestLinks = new UnitController()
@@ -107,5 +107,4 @@ class HBaseConnect extends DBConnector {
     }
     res
   }
-
 }

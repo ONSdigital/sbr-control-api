@@ -19,8 +19,8 @@ object HBaseInMemoryConfig {
 
   // Setting data for first period (201706)
   // Enterprise Data
-  val firstPeriod = "201706"
-  val secondPeriod = "201708"
+  private val firstPeriod = "201706"
+  private val secondPeriod = "201708"
   private val entData201706: List[String] = List[String](UnitType.ENTERPRISE.toString, firstPeriod, new File("conf/sample/201706/sbr-2500-ent-data.csv").toURI.toURL.toExternalForm)
 
   // ENT ~ VAT/PAYE/CH/LEU Links

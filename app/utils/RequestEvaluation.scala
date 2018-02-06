@@ -2,12 +2,12 @@ package utils
 
 import java.time.{ DateTimeException, YearMonth }
 
-import com.google.inject.ImplementedBy
 import play.api.libs.json.JsError
-import uk.gov.ons.sbr.data.domain.UnitType
+import com.google.inject.ImplementedBy
 /**
  * Created by haqa on 09/08/2017.
  */
+@deprecated("Use Either to control flows", "fix/data-service-injection - 1 February 2018")
 @ImplementedBy(classOf[ReferencePeriod])
 sealed trait RequestEvaluation
 
