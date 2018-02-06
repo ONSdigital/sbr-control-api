@@ -10,19 +10,21 @@ import com.google.common.io.BaseEncoding
 import org.joda.time.YearMonth
 import org.joda.time.format.DateTimeFormat
 import play.api.Configuration
-import utils.FutureResponse.{ futureSuccess }
-
+import utils.FutureResponse.futureSuccess
 import play.api.libs.json.{ JsArray, JsValue }
 import play.api.libs.ws.WSResponse
 import play.api.libs.ws.ning.NingWSClient
 import play.api.mvc.{ AnyContent, Request, Result }
-import utils.HBaseConfig
-
+import utils.{ HBaseConfig, IdRequest, ReferencePeriod, RequestEvaluation }
 import com.netaporter.uri.dsl._
+import uk.gov.ons.sbr.data.domain.Enterprise
 import uk.gov.ons.sbr.models.units.EnterpriseUnit
 import utils.Utilities._
+import utils.FutureResponse.{ futureFromTry, futureSuccess }
+import scala.concurrent.duration._
 
-import scala.concurrent.{ ExecutionContext, ExecutionContextExecutor, Future }
+import scala.concurrent.{ Await, ExecutionContext, ExecutionContextExecutor, Future }
+import scala.util.Try
 
 /**
  * Created by coolit on 05/02/2018.
@@ -52,16 +54,26 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
 
   def getUnitLinksFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result] = ???
 
+  def toOpt[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
+
+  def optionToOptional[X](o: Option[X]) = Optional.ofNullable(o.getOrElse(null))
+
   def getEnterpriseFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result] = {
-    getEnterprise(id, None) flatMap { x =>
-      x match {
-        case Some(s) => resultMatcher[EnterpriseUnit](Optional.ofNullable(s))
-        case None => NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${id} and period xyz")).future
-      }
-    }
+    val evalResp = matchByParams(Some(id))
+    search[EnterpriseUnit](evalResp, getEnterprise)
   }
 
-  def getEnterpriseFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result] = ???
+  def getEnterpriseFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result] = {
+    //    getEnterprise(id, "") flatMap { x =>
+    //      x match {
+    //        case Some(s) => resultMatcher[EnterpriseUnit](Optional.ofNullable(s))
+    //        case None => NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${id} and period xyz")).future
+    //      }
+    //    }
+    //    val evalResp = matchByParams(Some(id))
+    //    searchWithPeriod[EnterpriseUnit](evalResp, getEnterprise)
+    ???
+  }
 
   def getStatUnitLinkFromDB(id: String, category: String)(implicit request: Request[AnyContent]): Future[Result] = ???
 
@@ -73,29 +85,22 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
       .withHeaders(headers: _*)
       .get
 
-  def getTest(): Unit = {
-    println("getting...")
-  }
-
-  def getEnterprise(id: String, period: Option[YearMonth]): Future[Option[EnterpriseUnit]] = {
+  def getEnterprise(id: String): Optional[EnterpriseUnit] = {
     val period = YearMonth.parse("201706", DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT))
     val rowKey = createRowKey(period, id)
     val uri = baseUrl / tableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
-    singleGETRequest(uri.toString, HEADERS) map {
+    val r = singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == OK => {
-        println(s"response is (OK): ${response}")
         val resp = (response.json \ "Row").as[JsValue]
-        println(s"resp is ... ${resp}")
-        //val key = (resp \ "key").as[Long]
         val vars = convertToEntMap(resp)
         val ent = EnterpriseUnit(id.toLong, period.toString, vars, "ENT", List())
-        Some(ent)
+        // Some(ent)
+        Optional.ofNullable(ent)
       }
-      case response if response.status == NOT_FOUND => {
-        println(s"response is (NOT FOUND): ${response}")
-        None
-      }
+      case response if response.status == NOT_FOUND => Optional.empty[EnterpriseUnit]() // None
     }
+    // The Await() is a temporary fix until the search method is updated to work with futures
+    Await.result(r, 5000 millisecond)
   }
 
   private def convertToEntMap(result: JsValue): Map[String, String] = {
@@ -130,4 +135,34 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
 
   def createRowKey(referencePeriod: YearMonth, id: String): String =
     String.join(DELIMITER, referencePeriod.toString("yyyyMM"), id)
+
+  private def search[X](eval: RequestEvaluation, funcWithId: String => Optional[X]): Future[Result] = {
+    val res = eval match {
+      case (x: IdRequest) =>
+        val resp = Try(funcWithId(x.id)).futureTryRes.flatMap {
+          case (s: Optional[X]) => if (s.isPresent) {
+            resultMatcher[X](s)
+          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
+        } recover responseException
+        resp
+      case _ => invalidSearchResponses(eval)
+    }
+    res
+  }
+
+  //  //  @todo - combine ReferencePeriod and UnitGrouping
+  //  private def searchByPeriod[X](eval: RequestEvaluation, funcWithIdAndParam: (YearMonth, String) => Optional[X]): Future[Result] = {
+  //    val res = eval match {
+  //      case (x: ReferencePeriod) =>
+  //        val resp = Try(funcWithIdAndParam(x.period, x.id)).futureTryRes.flatMap {
+  //          case (s: Optional[X]) => if (s.isPresent) {
+  //            resultMatcher[X](s)
+  //          } else NotFound(errAsJson(NOT_FOUND, "not_found",
+  //            s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
+  //        } recover responseException
+  //        resp
+  //      case _ => invalidSearchResponses(eval)
+  //    }
+  //    res
+  //  }
 }
