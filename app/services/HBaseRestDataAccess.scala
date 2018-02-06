@@ -45,8 +45,8 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
   //actorSystem.terminate()
 
   //HBaseInMemoryConfig
-
   val REFERENCE_PERIOD_FORMAT = "yyyyMM" //configuration.getString("db.period.format").getOrElse("yyyyMM")
+  val DEFAULT_PERIOD = YearMonth.parse("201706", DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT))
   private val AUTH = encodeBase64(Seq("username", "password"))
   private val HEADERS = Seq("Accept" -> "application/json", "Authorization" -> s"Basic $AUTH")
 
@@ -60,7 +60,7 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
 
   def getEnterpriseFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result] = {
     val evalResp = matchByParams(Some(id))
-    search[EnterpriseUnit](evalResp, getEnterprise)
+    search[EnterpriseUnit](evalResp, getEnterpriseById)
   }
 
   def getEnterpriseFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result] = {
@@ -72,7 +72,8 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
     //    }
     //    val evalResp = matchByParams(Some(id))
     //    searchWithPeriod[EnterpriseUnit](evalResp, getEnterprise)
-    ???
+    val evalResp = matchByParams(Some(id))
+    searchByPeriod[EnterpriseUnit](evalResp, getEnterpriseByIdPeriod)
   }
 
   def getStatUnitLinkFromDB(id: String, category: String)(implicit request: Request[AnyContent]): Future[Result] = ???
@@ -85,9 +86,12 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
       .withHeaders(headers: _*)
       .get
 
-  def getEnterprise(id: String): Optional[EnterpriseUnit] = {
-    val period = YearMonth.parse("201706", DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT))
-    val rowKey = createRowKey(period, id)
+  def getEnterpriseById(id: String) = getEnterprise(id, None)
+  def getEnterpriseByIdPeriod(period: YearMonth, id: String) = getEnterprise(id, Some(period))
+
+  def getEnterprise(id: String, period: Option[YearMonth]): Optional[EnterpriseUnit] = {
+    //val period = YearMonth.parse("201706", DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT))
+    val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id)
     val uri = baseUrl / tableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
     val r = singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == OK => {
@@ -150,19 +154,19 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
     res
   }
 
-  //  //  @todo - combine ReferencePeriod and UnitGrouping
-  //  private def searchByPeriod[X](eval: RequestEvaluation, funcWithIdAndParam: (YearMonth, String) => Optional[X]): Future[Result] = {
-  //    val res = eval match {
-  //      case (x: ReferencePeriod) =>
-  //        val resp = Try(funcWithIdAndParam(x.period, x.id)).futureTryRes.flatMap {
-  //          case (s: Optional[X]) => if (s.isPresent) {
-  //            resultMatcher[X](s)
-  //          } else NotFound(errAsJson(NOT_FOUND, "not_found",
-  //            s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
-  //        } recover responseException
-  //        resp
-  //      case _ => invalidSearchResponses(eval)
-  //    }
-  //    res
-  //  }
+  //  //  //  @todo - combine ReferencePeriod and UnitGrouping
+  private def searchByPeriod[X](eval: RequestEvaluation, funcWithIdAndParam: (YearMonth, String) => Optional[X]): Future[Result] = {
+    val res = eval match {
+      case (x: ReferencePeriod) =>
+        val resp = Try(funcWithIdAndParam(YearMonth.parse(x.period.toString, DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT)), x.id)).futureTryRes.flatMap {
+          case (s: Optional[X]) => if (s.isPresent) {
+            resultMatcher[X](s)
+          } else NotFound(errAsJson(NOT_FOUND, "not_found",
+            s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
+        } recover responseException
+        resp
+      case _ => invalidSearchResponses(eval)
+    }
+    res
+  }
 }
