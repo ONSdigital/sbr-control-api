@@ -65,27 +65,27 @@ object HBaseInMemoryConfig {
 
   HBaseConnector.getInstance().connect()
   // Load in data for first period (201706)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entData201706.toArray)
+  //ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entData201706.toArray)
 
   // Load in Links
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entLeu201706.toArray)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entVat201706.toArray)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entPaye201706.toArray)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entCh201706.toArray)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, leuCh201706.toArray)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, leuPaye201706.toArray)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, leuVat201706.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entLeu201706.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entVat201706.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entPaye201706.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entCh201706.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, leuCh201706.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, leuPaye201706.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, leuVat201706.toArray)
 
   // Load in data for second period (201708)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entData201708.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entData201708.toArray)
 
   // Load in Links
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entLeu201708.toArray)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entVat201708.toArray)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entPaye201708.toArray)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entCh201708.toArray)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, leuCh201708.toArray)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, leuPaye201708.toArray)
-  ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, leuVat201708.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entLeu201708.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entVat201708.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entPaye201708.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entCh201708.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, leuCh201708.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, leuPaye201708.toArray)
+  //    ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, leuVat201708.toArray)
 
 }
