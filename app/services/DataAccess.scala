@@ -90,6 +90,8 @@ trait DataAccess extends Controller with LazyLogging {
         tryAsResponse(Try(Json.toJson(x.toList.map { v => UnitLinks(v) })))
       case Some(x: Enterprise) =>
         tryAsResponse(Try(Json.toJson(EnterpriseUnit(x))))
+      case Some(x: EnterpriseUnit) =>
+        tryAsResponse(Try(Json.toJson(x)))
       case Some(x: StatisticalUnitLinks) =>
         tryAsResponse(Try(Json.toJson(KnownUnitLinks(x))))
       case ex =>

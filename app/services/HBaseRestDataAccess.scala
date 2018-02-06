@@ -1,6 +1,7 @@
 package services
 
 import javax.inject.Inject
+import java.util.Optional
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -9,22 +10,19 @@ import com.google.common.io.BaseEncoding
 import org.joda.time.YearMonth
 import org.joda.time.format.DateTimeFormat
 import play.api.Configuration
-import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future, Promise, Await }
-import play.api.http.Status
-import play.api.libs.json.JsValue
+import utils.FutureResponse.{ futureSuccess }
+
+import play.api.libs.json.{ JsArray, JsValue }
 import play.api.libs.ws.WSResponse
 import play.api.libs.ws.ning.NingWSClient
 import play.api.mvc.{ AnyContent, Request, Result }
-import uk.gov.ons.sbr.data.hbase.util.RowKeyUtils
 import utils.HBaseConfig
 
-import scala.concurrent.duration.Duration
 import com.netaporter.uri.dsl._
-import play.api.libs.ws.ahc.AhcWSClient
+import uk.gov.ons.sbr.models.units.EnterpriseUnit
+import utils.Utilities._
 
 import scala.concurrent.{ ExecutionContext, ExecutionContextExecutor, Future }
-import scala.util.{ Failure, Success, Try }
 
 /**
  * Created by coolit on 05/02/2018.
@@ -36,6 +34,7 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
 
   implicit val actorSystem = ActorSystem()
   implicit val materializer = ActorMaterializer()
+  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
   val ws = NingWSClient()
   //wsClient.url("http://wwww.google.com").get()
 
@@ -54,14 +53,12 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
   def getUnitLinksFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result] = ???
 
   def getEnterpriseFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result] = {
-    println("getting from db...")
-    val rowKey = createRowKey(YearMonth.parse("201706", DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT)), id)
-    val uri = "http://localhost:8080" / tableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
-    val resp = singleGETRequest(uri.toString, HEADERS)
-    Await.result(resp, 5000 millisecond)
-    println(s"resp is: ${resp}")
-    println(s"uri is: ${uri}")
-    throw new IndexOutOfBoundsException
+    getEnterprise(id, None) flatMap { x =>
+      x match {
+        case Some(s) => resultMatcher[EnterpriseUnit](Optional.ofNullable(s))
+        case None => NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${id} and period xyz")).future
+      }
+    }
   }
 
   def getEnterpriseFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result] = ???
@@ -80,92 +77,57 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
     println("getting...")
   }
 
-  //  def get(period: YearMonth, id: String): Unit = {
-  //    val rowKey = createRowKey(period, id)
-  //    val uri = baseUrl / tableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
-  //    ws.singleGETRequest(uri.toString, HEADERS)
-  //  }
+  def getEnterprise(id: String, period: Option[YearMonth]): Future[Option[EnterpriseUnit]] = {
+    val period = YearMonth.parse("201706", DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT))
+    val rowKey = createRowKey(period, id)
+    val uri = baseUrl / tableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
+    singleGETRequest(uri.toString, HEADERS) map {
+      case response if response.status == OK => {
+        println(s"response is (OK): ${response}")
+        val resp = (response.json \ "Row").as[JsValue]
+        println(s"resp is ... ${resp}")
+        //val key = (resp \ "key").as[Long]
+        val vars = convertToEntMap(resp)
+        val ent = EnterpriseUnit(id.toLong, period.toString, vars, "ENT", List())
+        Some(ent)
+      }
+      case response if response.status == NOT_FOUND => {
+        println(s"response is (NOT FOUND): ${response}")
+        None
+      }
+    }
+  }
 
-  //  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
-  //  private val AUTH = EncodingUtil.encodeBase64(Seq(username, password))
-  //  private val HEADERS = Seq("Accept" -> "application/json", "Authorization" -> s"Basic $AUTH")
-  //
-  //  // TODO - add Circuit breaker
-  //  override def lookup(referencePeriod: Option[YearMonth], key: String, max: Option[Long]): Future[Option[Seq[AdminData]]] =
-  //    getAdminData(referencePeriod, key, max)
-  //
-  //  @throws(classOf[Throwable])
-  //  private def getAdminData(referencePeriod: Option[YearMonth], key: String, max: Option[Long]): Future[Option[Seq[AdminData]]] = {
-  //    val default: Int = 1
-  //    (referencePeriod match {
-  //      case Some(r: YearMonth) =>
-  //          val rowKey = RowKeyUtils.createRowKey(r, key)
-  //          val uri = baseUrl / tableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
-  //        LOGGER.debug(s"Making restful GET request to HBase with url path ${uri.toString} and headers ${HEADERS.head.toString}")
-  //        ws.singleGETRequest(uri.toString, HEADERS)
-  //      case None =>
-  //        //        val params = if (max.isDefined) {
-  //        //          Seq("reversed" -> "true", "limit" -> max.get.toString)
-  //        //        } else {
-  //        //          Seq("reversed" -> "true")
-  //        //        }
-  //        val uri = baseUrl / tableName.getNameWithNamespaceInclAsString / key + RowKeyUtils.DELIMITER + "*"
-  //        LOGGER.debug(s"Making restful SCAN request to HBase with url ${uri.toString}, headers ${HEADERS.head.toString} ")
-  //        ws.singleGETRequest(uri.toString, HEADERS)
-  //    }).map {
-  //      case response if response.status == OK => {
-  //        val resp = (response.json \ "Row").as[Seq[JsValue]]
-  //        Try(resp.map(v => convertToAdminData(v))) match {
-  //          case Success(adminData: Seq[AdminData]) =>
-  //            LOGGER.debug("Found data for prefix row key '{}'", key)
-  //            //            Some(adminData)
-  //            // @NOTE - all responses need to be in DESC and capped - GET is LIMIT 1 thus result to no effect
-  //            Some(adminData.reverse.take(max.getOrElse(default).toString.toInt))
-  //          case Failure(e: Throwable) =>
-  //            LOGGER.error(s"Error getting data for row key $key", e)
-  //            throw e
-  //        }
-  //      }
-  //      case response if response.status == NOT_FOUND =>
-  //        LOGGER.debug("No data found for prefix row key '{}'", key)
-  //        None
-  //    }
-  //  }
-  //
-  //  private def convertToAdminData(result: JsValue): AdminData = {
-  //    val columnFamilyAndValueSubstring = 2
-  //    val key = (result \ "key").as[String]
-  //    LOGGER.debug(s"Found record $key")
-  //    val adminData: AdminData = RowKeyUtils.createAdminDataFromRowKey(decodeBase64(key))
-  //    val varMap = (result \ "Cell").as[Seq[JsValue]].map { cell =>
-  //      val column = decodeBase64((cell \ "column").as[String]).split(":", columnFamilyAndValueSubstring).last
-  //      val value = decodeBase64((cell \ "$").as[String])
-  //      column -> value
-  //    }.toMap
-  //    val newPutAdminData = adminData.putVariable(varMap)
-  //    newPutAdminData
-  //  }
+  private def convertToEntMap(result: JsValue): Map[String, String] = {
+    val js = result.as[JsArray]
+    // result looks like the following:
+    //      [ {
+    //        "key" : "MjAxNzA2fjk5MDAxNTYxMTU=",
+    //        "Cell" : [ {
+    //        "column" : "ZDpOdW1fVW5pcXVlX1BheWVSZWZz",
+    //        "timestamp" : 1517844752615,
+    //        "$" : "MQ=="
+    //      }, {
+    //        "column" : "ZDpOdW1fVW5pcXVlX1ZhdFJlZnM=",
+    //        "timestamp" : 1517844752615,
+    //        "$" : "MQ=="
+    //      } ...
+    //     ]
+    val columnFamilyAndValueSubstring = 2
+    (js(0) \ "Cell").as[Seq[JsValue]].map { cell =>
+      val column = decodeBase64((cell \ "column").as[String]).split(":", columnFamilyAndValueSubstring).last
+      val value = decodeBase64((cell \ "$").as[String])
+      column -> value
+    }.toMap
+  }
 
-  //  def decodeArrayByte(bytes: Array[Byte]): String = bytes.map(_.toChar).mkString
-  //
-  //  def encodeToArrayByte(str: String): Array[Byte] = str.getBytes("UTF-8")
-  //
   def encodeBase64(str: Seq[String], deliminator: String = ":"): String =
     BaseEncoding.base64.encode(str.mkString(deliminator).getBytes(Charsets.UTF_8))
-  //
-  //  def decodeBase64(str: String): String =
-  //    new String(BaseEncoding.base64().decode(str), "UTF-8")
-  //
+
+  def decodeBase64(str: String): String = new String(BaseEncoding.base64().decode(str), "UTF-8")
+
   val DELIMITER = "~"
-  //
+
   def createRowKey(referencePeriod: YearMonth, id: String): String =
     String.join(DELIMITER, referencePeriod.toString("yyyyMM"), id)
-
-  //  def createAdminDataFromRowKey(rowKey: String): AdminData = {
-  //    val compositeRowKeyParts: Array[String] = rowKey.split(DELIMITER)
-  //    val referencePeriod: YearMonth =
-  //      YearMonth.parse(compositeRowKeyParts.last, DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT))
-  //    val id = compositeRowKeyParts.head
-  //    AdminData(referencePeriod, id)
-  //  }
 }
