@@ -72,7 +72,7 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
     //    }
     //    val evalResp = matchByParams(Some(id))
     //    searchWithPeriod[EnterpriseUnit](evalResp, getEnterprise)
-    val evalResp = matchByParams(Some(id))
+    val evalResp = matchByParams(Some(id), Some(period))
     searchByPeriod[EnterpriseUnit](evalResp, getEnterpriseByIdPeriod)
   }
 
@@ -97,7 +97,7 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
       case response if response.status == OK => {
         val resp = (response.json \ "Row").as[JsValue]
         val vars = convertToEntMap(resp)
-        val ent = EnterpriseUnit(id.toLong, period.toString, vars, "ENT", List())
+        val ent = EnterpriseUnit(id.toLong, period.getOrElse(DEFAULT_PERIOD).toString(REFERENCE_PERIOD_FORMAT), vars, "ENT", List())
         // Some(ent)
         Optional.ofNullable(ent)
       }
@@ -157,14 +157,12 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
   //  //  //  @todo - combine ReferencePeriod and UnitGrouping
   private def searchByPeriod[X](eval: RequestEvaluation, funcWithIdAndParam: (YearMonth, String) => Optional[X]): Future[Result] = {
     val res = eval match {
-      case (x: ReferencePeriod) =>
-        val resp = Try(funcWithIdAndParam(YearMonth.parse(x.period.toString, DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT)), x.id)).futureTryRes.flatMap {
-          case (s: Optional[X]) => if (s.isPresent) {
-            resultMatcher[X](s)
-          } else NotFound(errAsJson(NOT_FOUND, "not_found",
-            s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
-        } recover responseException
-        resp
+      case (x: ReferencePeriod) => Try(funcWithIdAndParam(YearMonth.parse(x.period.toString.filter(_ != '-'), DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT)), x.id)).futureTryRes.flatMap {
+        case (s: Optional[X]) => if (s.isPresent) {
+          resultMatcher[X](s)
+        } else NotFound(errAsJson(NOT_FOUND, "not_found",
+          s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
+      } recover responseException
       case _ => invalidSearchResponses(eval)
     }
     res
