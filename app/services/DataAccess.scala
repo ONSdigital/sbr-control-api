@@ -10,11 +10,10 @@ import config.Properties._
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
 import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
-import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
+import uk.gov.ons.sbr.models.units.{ ChildUnit, EnterpriseUnit, KnownUnitLinks, UnitLinks }
+
 import scala.collection.JavaConversions._
-
 import scala.util.{ Failure, Success, Try }
-
 import utils.Utilities.errAsJson
 import utils._
 import utils.FutureResponse.{ futureFromTry, futureSuccess }
@@ -86,6 +85,8 @@ trait DataAccess extends Controller with LazyLogging {
    */
   def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
     Future { toOption[Z](v) }.map {
+      case Some(x: java.util.List[ChildUnit]) =>
+        tryAsResponse(Try(Json.toJson(x.toList)))
       case Some(x: java.util.List[StatisticalUnit]) =>
         tryAsResponse(Try(Json.toJson(x.toList.map { v => UnitLinks(v) })))
       case Some(x: Enterprise) =>

@@ -24,6 +24,11 @@ trait HBaseConfig {
     "enterprise" // was table.name
   )
 
+  lazy val unitTableName: TableName = TableName.valueOf(
+    namespace,
+    "unit_links"
+  )
+
   lazy val username: String = "" // hBaseConfig.getString("username")
   lazy val password: String = "" // hBaseConfig.getString("password")
   lazy val baseUrl: String = "http://localhost:8080" // hBaseConfig.getString("rest.endpoint")
