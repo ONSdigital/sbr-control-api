@@ -122,31 +122,21 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
   def getStatLinksByIdTypePeriod(id: String, period: YearMonth, unitType: UnitType) = getUnitLinks(id, Some(period), Some(unitType))
 
   def getUnitLinks(id: String, period: Option[YearMonth], unitType: Option[UnitType]): Optional[java.util.List[ChildUnit]] = {
+    // Bug here in ChildUnit, it shouldn't be a Seq[links]
     // HBase key format: 201706~01752564~CH
     // period~id~type
     val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id, unitType)
     val uri = baseUrl / unitTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
-    println(s"going here: ${uri}")
     val r = singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == OK => {
-        println("OKAY:::::")
         val resp = (response.json \ "Row").as[JsValue]
-        println(s"resp: ${resp}")
-        val r123 = resp.as[JsArray]
-        val unit = decodeBase64((r123(0) \ "key").as[String]).split("~").last
+        val respArr = resp.as[JsArray]
+        val unit = decodeBase64((respArr(0) \ "key").as[String]).split("~").last
         val vars = convertToUnitMap(resp)
-        println(s"vars are ${vars}")
-        val uuu = ChildUnit(id, unit, Some(Seq(vars)))
-        //val ent = EnterpriseUnit(id.toLong, period.getOrElse(DEFAULT_PERIOD).toString(REFERENCE_PERIOD_FORMAT), vars, "ENT", List())
-        //throw new Exception
-
-        val a = List(uuu).asJava
-        Optional.ofNullable(a)
+        val unitLinks = ChildUnit(id, unit, Some(Seq(vars)))
+        Optional.ofNullable(List(unitLinks).asJava)
       }
-      case response if response.status == NOT_FOUND => {
-        println("Not ok")
-        Optional.empty[java.util.List[ChildUnit]]()
-      } // None
+      case response if response.status == NOT_FOUND => Optional.empty[java.util.List[ChildUnit]]()
     }
     // The Await() is a temporary fix until the search method is updated to work with futures
     Await.result(r, 5000 millisecond)
