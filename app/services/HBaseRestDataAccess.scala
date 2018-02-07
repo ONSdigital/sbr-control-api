@@ -54,24 +54,12 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
 
   def getUnitLinksFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result] = ???
 
-  def toOpt[X](o: Optional[X]) = if (o.isPresent) Some(o.get) else None
-
-  def optionToOptional[X](o: Option[X]) = Optional.ofNullable(o.getOrElse(null))
-
   def getEnterpriseFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result] = {
     val evalResp = matchByParams(Some(id))
     search[EnterpriseUnit](evalResp, getEnterpriseById)
   }
 
   def getEnterpriseFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result] = {
-    //    getEnterprise(id, "") flatMap { x =>
-    //      x match {
-    //        case Some(s) => resultMatcher[EnterpriseUnit](Optional.ofNullable(s))
-    //        case None => NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${id} and period xyz")).future
-    //      }
-    //    }
-    //    val evalResp = matchByParams(Some(id))
-    //    searchWithPeriod[EnterpriseUnit](evalResp, getEnterprise)
     val evalResp = matchByParams(Some(id), Some(period))
     searchByPeriod[EnterpriseUnit](evalResp, getEnterpriseByIdPeriod)
   }
@@ -90,7 +78,6 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
   def getEnterpriseByIdPeriod(period: YearMonth, id: String) = getEnterprise(id, Some(period))
 
   def getEnterprise(id: String, period: Option[YearMonth]): Optional[EnterpriseUnit] = {
-    //val period = YearMonth.parse("201706", DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT))
     val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id)
     val uri = baseUrl / tableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
     val r = singleGETRequest(uri.toString, HEADERS) map {
