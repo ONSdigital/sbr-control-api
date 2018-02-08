@@ -85,6 +85,8 @@ trait DataAccess extends Controller with LazyLogging {
    */
   def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
     Future { toOption[Z](v) }.map {
+      case Some(x: ChildUnit) =>
+        println("present "); tryAsResponse(Try(Json.toJson(x)))
       case Some(x: java.util.List[ChildUnit]) =>
         tryAsResponse(Try(Json.toJson(x.toList)))
       case Some(x: java.util.List[StatisticalUnit]) =>

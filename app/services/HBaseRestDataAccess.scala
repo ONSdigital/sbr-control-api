@@ -72,38 +72,36 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
   }
 
   def getStatUnitLinkFromDB(id: String, category: String)(implicit request: Request[AnyContent]): Future[Result] = {
-    //    val evalResp = matchByParams(Some(id), None) match {
-    //      case (x: IdRequest) =>
-    //        CategoryRequest(x.id, category)
-    //      case z => z
-    //    }
-    //    evalResp match {
-    //      case (x: CategoryRequest) =>
-    //        val resp = Try(requestLinks.getUnitLinks(x.id, UnitType.fromString(x.category))).futureTryRes.flatMap {
-    //          case (s: Optional[StatisticalUnitLinks]) => if (s.isPresent) {
-    //            resultMatcher[StatisticalUnitLinks](s)
-    //          } else NotFound(errAsJson(NOT_FOUND, "not_found",
-    //            s"Could not find unit with id ${x.id} and category ${x.category}")).future
-    //        } recover responseException
-    //        resp
-    //      case _ => invalidSearchResponses(evalResp)
-    //    }
-    ???
+    val evalResp = matchByParams(Some(id), None) match {
+      case (x: IdRequest) =>
+        CategoryRequest(x.id, category)
+      case z => z
+    }
+    evalResp match {
+      case (x: CategoryRequest) =>
+        val resp = Try(getStatLinksByIdType(x.id, UnitType.fromString(x.category))).futureTryRes.flatMap {
+          case (s: Optional[ChildUnit]) => if (s.isPresent) {
+            resultMatcher[ChildUnit](s)
+          } else NotFound(errAsJson(NOT_FOUND, "not_found",
+            s"Could not find unit with id ${x.id} and category ${x.category}")).future
+        } recover responseException
+        resp
+      case _ => invalidSearchResponses(evalResp)
+    }
   }
 
   def getStatUnitLinkFromDB(id: String, period: String, category: String)(implicit request: Request[AnyContent]): Future[Result] = {
-    //    matchByParams(Some(id), Some(period)) match {
-    //      case (x: ReferencePeriod) =>
-    //        val resp = Try(getStatLinksByIdTypePeriod(x.id, YearMonth.parse(x.period.toString.filter(_ != '-'), DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT)), UnitType.fromString(category))).futureTryRes.flatMap {
-    //          case (s: Optional[StatisticalUnitLinks]) => if (s.isPresent) {
-    //            resultMatcher[StatisticalUnitLinks](s)
-    //          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find unit link with " +
-    //            s"id ${x.id}, period ${x.period} and category $category")).future
-    //        } recover responseException
-    //        resp
-    //      case x => invalidSearchResponses(x)
-    //    }
-    ???
+    matchByParams(Some(id), Some(period)) match {
+      case (x: ReferencePeriod) =>
+        val resp = Try(getStatLinksByIdTypePeriod(x.id, YearMonth.parse(x.period.toString.filter(_ != '-'), DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT)), UnitType.fromString(category))).futureTryRes.flatMap {
+          case (s: Optional[ChildUnit]) => if (s.isPresent) {
+            resultMatcher[ChildUnit](s)
+          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find unit link with " +
+            s"id ${x.id}, period ${x.period} and category $category")).future
+        } recover responseException
+        resp
+      case x => invalidSearchResponses(x)
+    }
   }
 
   def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq(), params: Seq[(String, String)] = Seq()): Future[WSResponse] =
@@ -118,8 +116,29 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
   def getUnitLinksById(id: String) = getUnitLinks(id, None, None)
   def getUnitLinksByIdPeriod(period: YearMonth, id: String) = getUnitLinks(id, Some(period), None)
 
-  def getStatLinksByIdType(period: YearMonth, id: String) = getUnitLinks(id, Some(period), None)
-  def getStatLinksByIdTypePeriod(id: String, period: YearMonth, unitType: UnitType) = getUnitLinks(id, Some(period), Some(unitType))
+  def getStatLinksByIdType(id: String, unitType: UnitType) = getTest(id, unitType, None)
+  def getStatLinksByIdTypePeriod(id: String, period: YearMonth, unitType: UnitType) = getTest(id, unitType, Some(period))
+
+  def getTest(id: String, unitType: UnitType, period: Option[YearMonth]): Optional[ChildUnit] = {
+    // Bug here in ChildUnit, it shouldn't be a Seq[links]
+    // HBase key format: 201706~01752564~CH
+    // period~id~type
+    val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id, Some(unitType))
+    val uri = baseUrl / unitTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
+    val r = singleGETRequest(uri.toString, HEADERS) map {
+      case response if response.status == OK => {
+        val resp = (response.json \ "Row").as[JsValue]
+        val respArr = resp.as[JsArray]
+        val unit = decodeBase64((respArr(0) \ "key").as[String]).split("~").last
+        val vars = convertToUnitMap(resp)
+        val unitLinks = ChildUnit(id, unit, vars)
+        Optional.ofNullable(unitLinks)
+      }
+      case response if response.status == NOT_FOUND => Optional.empty[ChildUnit]()
+    }
+    // The Await() is a temporary fix until the search method is updated to work with futures
+    Await.result(r, 5000 millisecond)
+  }
 
   def getUnitLinks(id: String, period: Option[YearMonth], unitType: Option[UnitType]): Optional[java.util.List[ChildUnit]] = {
     // Bug here in ChildUnit, it shouldn't be a Seq[links]
@@ -133,7 +152,7 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
         val respArr = resp.as[JsArray]
         val unit = decodeBase64((respArr(0) \ "key").as[String]).split("~").last
         val vars = convertToUnitMap(resp)
-        val unitLinks = ChildUnit(id, unit, Some(Seq(vars)))
+        val unitLinks = ChildUnit(id, unit, vars)
         Optional.ofNullable(List(unitLinks).asJava)
       }
       case response if response.status == NOT_FOUND => Optional.empty[java.util.List[ChildUnit]]()

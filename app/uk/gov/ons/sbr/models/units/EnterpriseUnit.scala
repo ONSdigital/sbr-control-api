@@ -34,9 +34,8 @@ object EnterpriseUnit {
     EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, childJson)
   }
 
-  def apply(e: StatUnit): EnterpriseUnit = {
-    val childJson = e.children.map { x => Json.toJson(ChildUnit(x)) }.toList
-    EnterpriseUnit(e.key.toLong, e.refPeriod.toString, e.variables, e.unitType, childJson)
-  }
-
+  //  def apply(e: StatUnit): EnterpriseUnit = {
+  //    val childJson = e.children.map { x => Json.toJson(ChildUnit(x)) }.toList
+  //    EnterpriseUnit(e.key.toLong, e.refPeriod.toString, e.variables, e.unitType, childJson)
+  //  }
 }

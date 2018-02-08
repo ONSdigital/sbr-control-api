@@ -11,14 +11,10 @@ import uk.gov.ons.sbr.data.model.StatUnit
 case class ChildUnit(
   @ApiModelProperty(example = "") id: String,
   unitType: String,
-  children: Option[Seq[Map[String, String]]]
+  children: Map[String, String]
 )
 
 object ChildUnit {
 
   implicit val unitFormat: OFormat[ChildUnit] = Json.format[ChildUnit]
-
-  def apply(x: StatUnit): ChildUnit = {
-    ChildUnit(x.key, x.unitType, Option(x.children.map { v => Map("id" -> v.key, "unitType" -> v.unitType) }))
-  }
 }
