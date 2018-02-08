@@ -50,6 +50,29 @@ You will of course need to setup tables and other configurations on HBase for th
 ```sbtshell
 hbase shell
 ```
+
+#### HBase REST
+
+To start HBase, use the following command:
+
+```shell
+start-hbase.sh
+```
+
+We now need to start HBase REST.
+
+```shell
+hbase rest start
+```
+
+
+You can test that HBase REST is working by going to the following URL:
+```shell
+http://localhost:8080
+```
+
+It might take a little while to startup, after which you should see a list of HBase tables.
+
 #### Package
 
 To package the project in a runnable fat-jar:
