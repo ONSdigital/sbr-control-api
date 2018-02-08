@@ -123,11 +123,12 @@ lazy val api = (project in file("."))
     buildInfoOptions += BuildInfoOption.BuildTime,
     libraryDependencies ++= Seq (
       filters,
+      // Using ws from typesafe due to the following issue: https://github.com/playframework/playframework/issues/6628
+      "com.typesafe.play"            %%    "play-ws"             %    "2.5.8",
       "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "2.0.0"           % Test,
       "org.scalatest"                %%    "scalatest"           %    "3.0.0"           % Test,
       "org.webjars"                  %%    "webjars-play"        %    "2.5.0-3",
       "io.lemonlabs"            %%  "scala-uri"                     % "0.5.0",
-      "com.typesafe.play" %% "play-ws" % "2.5.4",
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",
       "com.typesafe"                 %     "config"              %    "1.3.1",
       //swagger
