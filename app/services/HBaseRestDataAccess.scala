@@ -3,49 +3,34 @@ package services
 import javax.inject.Inject
 import java.util.Optional
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import com.google.common.base.Charsets
 import com.google.common.io.BaseEncoding
 import org.joda.time.YearMonth
 import org.joda.time.format.DateTimeFormat
 import play.api.Configuration
-import utils.FutureResponse.futureSuccess
 import play.api.libs.json.{ JsArray, JsValue }
-import play.api.libs.ws.WSResponse
-import play.api.libs.ws.ning.NingWSClient
+import play.api.libs.ws.{ WSClient, WSResponse }
 import play.api.mvc.{ AnyContent, Request, Result }
 import utils._
 import com.netaporter.uri.dsl._
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks, UnitType }
+import uk.gov.ons.sbr.data.domain.UnitType
 import uk.gov.ons.sbr.models.units.{ ChildUnit, EnterpriseUnit }
 import utils.Utilities._
 import utils.FutureResponse.{ futureFromTry, futureSuccess }
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, ExecutionContext, ExecutionContextExecutor, Future }
+import scala.concurrent.{ Await, Future }
 import scala.util.Try
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by coolit on 05/02/2018.
  */
-class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends DataAccess with HBaseConfig {
+class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configuration) extends DataAccess with HBaseConfig {
 
-  // WSClient should be injected in, however due to a dependency issue this was not possible, this will be fixed
-  // before this branch is merged.
+  // HBaseInMemoryConfig
 
-  implicit val actorSystem = ActorSystem()
-  implicit val materializer = ActorMaterializer()
-  implicit val ec: ExecutionContextExecutor = ExecutionContext.global
-  val ws = NingWSClient()
-  //wsClient.url("http://wwww.google.com").get()
-
-  //at the very end, to shutdown stuff cleanly :
-  //wsClient.close()
-  //actorSystem.terminate()
-
-  //HBaseInMemoryConfig
   val REFERENCE_PERIOD_FORMAT = "yyyyMM" //configuration.getString("db.period.format").getOrElse("yyyyMM")
   val DEFAULT_PERIOD = YearMonth.parse("201706", DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT))
   private val AUTH = encodeBase64(Seq("username", "password"))
@@ -116,22 +101,19 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
   def getUnitLinksById(id: String) = getUnitLinks(id, None, None)
   def getUnitLinksByIdPeriod(period: YearMonth, id: String) = getUnitLinks(id, Some(period), None)
 
-  def getStatLinksByIdType(id: String, unitType: UnitType) = getTest(id, unitType, None)
-  def getStatLinksByIdTypePeriod(id: String, period: YearMonth, unitType: UnitType) = getTest(id, unitType, Some(period))
+  def getStatLinksByIdType(id: String, unitType: UnitType) = getUnitLinks(id, unitType, None)
+  def getStatLinksByIdTypePeriod(id: String, period: YearMonth, unitType: UnitType) = getUnitLinks(id, unitType, Some(period))
 
-  def getTest(id: String, unitType: UnitType, period: Option[YearMonth]): Optional[ChildUnit] = {
-    // Bug here in ChildUnit, it shouldn't be a Seq[links]
-    // HBase key format: 201706~01752564~CH
-    // period~id~type
+  def getUnitLinks(id: String, unitType: UnitType, period: Option[YearMonth]): Optional[ChildUnit] = {
+    // HBase key format: 201706~01752564~CH: period~id~type
     val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id, Some(unitType))
     val uri = baseUrl / unitTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
     val r = singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == OK => {
-        val resp = (response.json \ "Row").as[JsValue]
-        val respArr = resp.as[JsArray]
-        val unit = decodeBase64((respArr(0) \ "key").as[String]).split("~").last
-        val vars = convertToUnitMap(resp)
-        val unitLinks = ChildUnit(id, unit, vars)
+        val row = (response.json \ "Row").as[JsValue]
+        val rowArrr = row.as[JsArray]
+        val unit = decodeBase64((rowArrr(0) \ "key").as[String]).split("~").last
+        val unitLinks = ChildUnit(id, unit, convertToUnitMap(row))
         Optional.ofNullable(unitLinks)
       }
       case response if response.status == NOT_FOUND => Optional.empty[ChildUnit]()
@@ -141,7 +123,6 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
   }
 
   def getUnitLinks(id: String, period: Option[YearMonth], unitType: Option[UnitType]): Optional[java.util.List[ChildUnit]] = {
-    // Bug here in ChildUnit, it shouldn't be a Seq[links]
     // HBase key format: 201706~01752564~CH
     // period~id~type
     val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id, unitType)
@@ -193,19 +174,6 @@ class HBaseRestDataAccess @Inject() (val configuration: Configuration) extends D
 
   private def convertToEntMap(result: JsValue): Map[String, String] = {
     val js = result.as[JsArray]
-    // result looks like the following:
-    //      [ {
-    //        "key" : "MjAxNzA2fjk5MDAxNTYxMTU=",
-    //        "Cell" : [ {
-    //        "column" : "ZDpOdW1fVW5pcXVlX1BheWVSZWZz",
-    //        "timestamp" : 1517844752615,
-    //        "$" : "MQ=="
-    //      }, {
-    //        "column" : "ZDpOdW1fVW5pcXVlX1ZhdFJlZnM=",
-    //        "timestamp" : 1517844752615,
-    //        "$" : "MQ=="
-    //      } ...
-    //     ]
     val columnFamilyAndValueSubstring = 2
     (js(0) \ "Cell").as[Seq[JsValue]].map { cell =>
       val column = decodeBase64((cell \ "column").as[String]).split(":", columnFamilyAndValueSubstring).last

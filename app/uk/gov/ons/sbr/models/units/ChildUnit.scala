@@ -3,8 +3,6 @@ package uk.gov.ons.sbr.models.units
 import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{ Json, OFormat }
 
-import uk.gov.ons.sbr.data.model.StatUnit
-
 /**
  * Created by haqa on 27/09/2017.
  */
