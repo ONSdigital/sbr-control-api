@@ -32,7 +32,11 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   // HBaseInMemoryConfig
 
   val REFERENCE_PERIOD_FORMAT = "yyyyMM" //configuration.getString("db.period.format").getOrElse("yyyyMM")
+
+  // Default period will be deprecated in future, as every request from the UI will come with a period,
+  // however for now it will be left in for backwards compatibility
   val DEFAULT_PERIOD = YearMonth.parse("201706", DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT))
+
   private val AUTH = encodeBase64(Seq("username", "password"))
   private val HEADERS = Seq("Accept" -> "application/json", "Authorization" -> s"Basic $AUTH")
 
