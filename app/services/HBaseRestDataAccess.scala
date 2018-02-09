@@ -14,6 +14,7 @@ import utils._
 import com.netaporter.uri.dsl._
 import play.api.libs.ws.{ WSClient, WSResponse }
 import uk.gov.ons.sbr.data.domain.UnitType
+import uk.gov.ons.sbr.models.units.UnitLinks
 import uk.gov.ons.sbr.models.units.{ ChildUnit, EnterpriseUnit }
 import utils.Utilities._
 import utils.FutureResponse.{ futureFromTry, futureSuccess }
@@ -42,12 +43,12 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   def getUnitLinksFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result] = {
     val evalResp = matchByParams(Some(id))
-    search[java.util.List[ChildUnit]](evalResp, getUnitLinksById)
+    search[java.util.List[UnitLinks]](evalResp, getUnitLinksById)
   }
 
   def getUnitLinksFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result] = {
     val evalResp = matchByParams(Some(id), Some(period))
-    searchByPeriod[java.util.List[ChildUnit]](evalResp, getUnitLinksByIdPeriod)
+    searchByPeriod[java.util.List[UnitLinks]](evalResp, getUnitLinksByIdPeriod)
   }
 
   def getEnterpriseFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result] = {
@@ -102,11 +103,11 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def getEnterpriseById(id: String) = getEnterprise(id, None)
   def getEnterpriseByIdPeriod(period: YearMonth, id: String) = getEnterprise(id, Some(period))
 
-  def getUnitLinksById(id: String) = getUnitLinks(id, None, None)
-  def getUnitLinksByIdPeriod(period: YearMonth, id: String) = getUnitLinks(id, Some(period), None)
+  def getUnitLinksById(id: String) = getUnitLinks(id, None, None) // 2nd
+  def getUnitLinksByIdPeriod(period: YearMonth, id: String) = getUnitLinks(id, Some(period), None) // 2nd
 
-  def getStatLinksByIdType(id: String, unitType: UnitType) = getUnitLinks(id, unitType, None)
-  def getStatLinksByIdTypePeriod(id: String, period: YearMonth, unitType: UnitType) = getUnitLinks(id, unitType, Some(period))
+  def getStatLinksByIdType(id: String, unitType: UnitType) = getUnitLinks(id, unitType, None) // 1st
+  def getStatLinksByIdTypePeriod(id: String, period: YearMonth, unitType: UnitType) = getUnitLinks(id, unitType, Some(period)) // 1st
 
   def getUnitLinks(id: String, unitType: UnitType, period: Option[YearMonth]): Optional[ChildUnit] = {
     // HBase key format: 201706~01752564~CH: period~id~type
@@ -115,8 +116,8 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val r = singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == OK => {
         val row = (response.json \ "Row").as[JsValue]
-        val rowArrr = row.as[JsArray]
-        val unit = decodeBase64((rowArrr(0) \ "key").as[String]).split("~").last
+        val rowArr = row.as[JsArray]
+        val unit = decodeBase64((rowArr(0) \ "key").as[String]).split("~").last
         val unitLinks = ChildUnit(id, unit, convertToUnitMap(row))
         Optional.ofNullable(unitLinks)
       }
@@ -126,24 +127,38 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     Await.result(r, 5000 millisecond)
   }
 
-  def getUnitLinks(id: String, period: Option[YearMonth], unitType: Option[UnitType]): Optional[java.util.List[ChildUnit]] = {
-    // HBase key format: 201706~01752564~CH
-    // period~id~type
+  def getUnitLinks(id: String, period: Option[YearMonth], unitType: Option[UnitType]): Optional[java.util.List[UnitLinks]] = {
+    // HBase key format: 201706~01752564~CH, period~id~type
     val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id, unitType)
     val uri = baseUrl / unitTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
     val r = singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == OK => {
-        val resp = (response.json \ "Row").as[JsValue]
-        val respArr = resp.as[JsArray]
-        val unit = decodeBase64((respArr(0) \ "key").as[String]).split("~").last
-        val vars = convertToUnitMap(resp)
-        val unitLinks = ChildUnit(id, unit, vars)
-        Optional.ofNullable(List(unitLinks).asJava)
+        val row = (response.json \ "Row").as[JsValue]
+        val rowArrr = row.as[JsArray]
+        val unit = decodeBase64((rowArrr(0) \ "key").as[String]).split("~").last
+        val unitLinks = ChildUnit(id, unit, convertToUnitMap(row))
+        // So we have a Map[String, String] where LEUs and ENTs are the key, however the child refs
+        // (VAT/PAYE/CH) are the value and the id is the key
+
+        val a = UnitLinks(id, extractParents(unit, convertToUnitMap(row)), extractChildren(unit, convertToUnitMap(row)), unit)
+        Optional.ofNullable(List(a).asJava)
       }
-      case response if response.status == NOT_FOUND => Optional.empty[java.util.List[ChildUnit]]()
+      case response if response.status == NOT_FOUND => Optional.empty[java.util.List[UnitLinks]]
     }
     // The Await() is a temporary fix until the search method is updated to work with futures
     Await.result(r, 5000 millisecond)
+  }
+
+  def extractParents(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
+    case "ENT" => None
+    case "LEU" => Some(map.filterKeys(_ == "ENT"))
+    case _ => Some(map filterKeys Set("LEU", "ENT"))
+  }
+
+  def extractChildren(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
+    case "ENT" => Some(map)
+    case "LEU" => Some(map - "ENT")
+    case a => Some(map - a)
   }
 
   def getEnterprise(id: String, period: Option[YearMonth]): Optional[EnterpriseUnit] = {
