@@ -70,8 +70,8 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     evalResp match {
       case (x: CategoryRequest) =>
         val resp = Try(getStatLinksByIdType(x.id, UnitType.fromString(x.category))).futureTryRes.flatMap {
-          case (s: Optional[ChildUnit]) => if (s.isPresent) {
-            resultMatcher[ChildUnit](s)
+          case (s: Optional[UnitLinks]) => if (s.isPresent) {
+            resultMatcher[UnitLinks](s)
           } else NotFound(errAsJson(NOT_FOUND, "not_found",
             s"Could not find unit with id ${x.id} and category ${x.category}")).future
         } recover responseException
@@ -84,8 +84,8 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     matchByParams(Some(id), Some(period)) match {
       case (x: ReferencePeriod) =>
         val resp = Try(getStatLinksByIdTypePeriod(x.id, YearMonth.parse(x.period.toString.filter(_ != '-'), DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT)), UnitType.fromString(category))).futureTryRes.flatMap {
-          case (s: Optional[ChildUnit]) => if (s.isPresent) {
-            resultMatcher[ChildUnit](s)
+          case (s: Optional[UnitLinks]) => if (s.isPresent) {
+            resultMatcher[UnitLinks](s)
           } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find unit link with " +
             s"id ${x.id}, period ${x.period} and category $category")).future
         } recover responseException
@@ -103,13 +103,13 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def getEnterpriseById(id: String) = getEnterprise(id, None)
   def getEnterpriseByIdPeriod(period: YearMonth, id: String) = getEnterprise(id, Some(period))
 
-  def getUnitLinksById(id: String) = getUnitLinks(id, None, None) // 2nd
-  def getUnitLinksByIdPeriod(period: YearMonth, id: String) = getUnitLinks(id, Some(period), None) // 2nd
+  def getUnitLinksById(id: String) = getUnitLinks(id, None, None)
+  def getUnitLinksByIdPeriod(period: YearMonth, id: String) = getUnitLinks(id, Some(period), None)
 
-  def getStatLinksByIdType(id: String, unitType: UnitType) = getUnitLinks(id, unitType, None) // 1st
-  def getStatLinksByIdTypePeriod(id: String, period: YearMonth, unitType: UnitType) = getUnitLinks(id, unitType, Some(period)) // 1st
+  def getStatLinksByIdType(id: String, unitType: UnitType) = getUnitLinks(id, unitType, None)
+  def getStatLinksByIdTypePeriod(id: String, period: YearMonth, unitType: UnitType) = getUnitLinks(id, unitType, Some(period))
 
-  def getUnitLinks(id: String, unitType: UnitType, period: Option[YearMonth]): Optional[ChildUnit] = {
+  def getUnitLinks(id: String, unitType: UnitType, period: Option[YearMonth]): Optional[UnitLinks] = {
     // HBase key format: 201706~01752564~CH: period~id~type
     val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id, Some(unitType))
     val uri = baseUrl / unitTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
@@ -119,9 +119,10 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
         val rowArr = row.as[JsArray]
         val unit = decodeBase64((rowArr(0) \ "key").as[String]).split("~").last
         val unitLinks = ChildUnit(id, unit, convertToUnitMap(row))
-        Optional.ofNullable(unitLinks)
+        val a = UnitLinks(id, extractParents(unit, convertToUnitMap(row)), extractChildren(unit, convertToUnitMap(row)), unit)
+        Optional.ofNullable(a)
       }
-      case response if response.status == NOT_FOUND => Optional.empty[ChildUnit]()
+      case response if response.status == NOT_FOUND => Optional.empty[UnitLinks]()
     }
     // The Await() is a temporary fix until the search method is updated to work with futures
     Await.result(r, 5000 millisecond)
