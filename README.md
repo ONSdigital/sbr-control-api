@@ -65,13 +65,11 @@ We now need to start HBase REST.
 hbase rest start
 ```
 
-
-You can test that HBase REST is working by going to the following URL:
-```shell
-http://localhost:8080
-```
+You can test that HBase REST is working by going to the following URL, [localhost:8080](http://localhost:8080).
 
 It might take a little while to startup, after which you should see a list of HBase tables.
+
+For metadata relating to HBase REST, go to [localhost:8085](http://localhost:8085).
 
 #### Package
 
