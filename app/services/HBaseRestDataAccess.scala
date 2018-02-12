@@ -139,7 +139,6 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
         val unitLinks = ChildUnit(id, unit, convertToUnitMap(row))
         // So we have a Map[String, String] where LEUs and ENTs are the key, however the child refs
         // (VAT/PAYE/CH) are the value and the id is the key
-
         val a = UnitLinks(id, extractParents(unit, convertToUnitMap(row)), extractChildren(unit, convertToUnitMap(row)), unit)
         Optional.ofNullable(List(a).asJava)
       }
@@ -158,7 +157,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def extractChildren(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
     case "ENT" => Some(map)
     case "LEU" => Some(map - "ENT")
-    case a => Some(map - a)
+    case _ => None
   }
 
   def getEnterprise(id: String, period: Option[YearMonth]): Optional[EnterpriseUnit] = {
