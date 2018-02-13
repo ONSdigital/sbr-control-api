@@ -19,7 +19,7 @@ import utils.FutureResponse.{ futureFromTry, futureSuccess }
  */
 class HBaseDataAccess extends DataAccess {
 
-  HBaseInMemoryConfig
+  // HBaseInMemoryConfig
   private val requestLinks = new UnitController()
   private val requestEnterprise = new EnterpriseController()
 

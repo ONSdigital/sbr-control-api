@@ -22,7 +22,7 @@ import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 import config.Properties.minKeyLength
 import utils.Utilities.errAsJson
 import utils._
-import services.HBaseInMemoryConfig
+//import services.HBaseInMemoryConfig
 
 /**
  * Created by haqa on 10/07/2017.
@@ -32,7 +32,7 @@ import services.HBaseInMemoryConfig
  */
 trait ControllerUtils extends Controller with StrictLogging {
 
-  HBaseInMemoryConfig
+  //  HBaseInMemoryConfig
   protected val requestLinks = new UnitController()
   protected val requestEnterprise = new EnterpriseController()
 

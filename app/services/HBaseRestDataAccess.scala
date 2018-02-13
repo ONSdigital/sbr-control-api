@@ -30,7 +30,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
  */
 class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configuration) extends DataAccess with HBaseConfig {
 
-  // HBaseInMemoryConfig
+  //HBaseInMemoryConfig
+
+  private val columnFamilyAndValueSubstring = 2
 
   val REFERENCE_PERIOD_FORMAT = "yyyyMM" //configuration.getString("db.period.format").getOrElse("yyyyMM")
 
@@ -103,11 +105,11 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def getEnterpriseById(id: String) = getEnterprise(id, None)
   def getEnterpriseByIdPeriod(period: YearMonth, id: String) = getEnterprise(id, Some(period))
 
-  def getUnitLinksById(id: String) = getUnitLinks(id, None, None)
-  def getUnitLinksByIdPeriod(period: YearMonth, id: String) = getUnitLinks(id, Some(period), None)
+  def getUnitLinksById(id: String) = getUnitLinks(id, None, None) // 2nd
+  def getUnitLinksByIdPeriod(period: YearMonth, id: String) = getUnitLinks(id, Some(period), None) // 2nd
 
-  def getStatLinksByIdType(id: String, unitType: UnitType) = getUnitLinks(id, unitType, None)
-  def getStatLinksByIdTypePeriod(id: String, period: YearMonth, unitType: UnitType) = getUnitLinks(id, unitType, Some(period))
+  def getStatLinksByIdType(id: String, unitType: UnitType) = getUnitLinks(id, unitType, None) // 1st
+  def getStatLinksByIdTypePeriod(id: String, period: YearMonth, unitType: UnitType) = getUnitLinks(id, unitType, Some(period)) // 1st
 
   def getUnitLinks(id: String, unitType: UnitType, period: Option[YearMonth]): Optional[UnitLinks] = {
     // HBase key format: 201706~01752564~CH: period~id~type
@@ -118,7 +120,6 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
         val row = (response.json \ "Row").as[JsValue]
         val rowArr = row.as[JsArray]
         val unit = decodeBase64((rowArr(0) \ "key").as[String]).split("~").last
-        val unitLinks = ChildUnit(id, unit, convertToUnitMap(row))
         val a = UnitLinks(id, extractParents(unit, convertToUnitMap(row)), extractChildren(unit, convertToUnitMap(row)), unit)
         Optional.ofNullable(a)
       }
@@ -135,13 +136,12 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val r = singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == OK => {
         val row = (response.json \ "Row").as[JsValue]
-        val rowArrr = row.as[JsArray]
-        val unit = decodeBase64((rowArrr(0) \ "key").as[String]).split("~").last
-        val unitLinks = ChildUnit(id, unit, convertToUnitMap(row))
-        // So we have a Map[String, String] where LEUs and ENTs are the key, however the child refs
-        // (VAT/PAYE/CH) are the value and the id is the key
-        val a = UnitLinks(id, extractParents(unit, convertToUnitMap(row)), extractChildren(unit, convertToUnitMap(row)), unit)
-        Optional.ofNullable(List(a).asJava)
+        val seqJSON = row.as[Seq[JsValue]]
+        val unitLinks = seqJSON.map(x => {
+          val unit = decodeBase64((x \ "key").as[String]).split("~").last
+          UnitLinks(id, extractParents(unit, jsToUnitMap(x)), extractChildren(unit, jsToUnitMap(x)), unit)
+        })
+        Optional.ofNullable(unitLinks.toList.asJava)
       }
       case response if response.status == NOT_FOUND => Optional.empty[java.util.List[UnitLinks]]
     }
@@ -164,19 +164,38 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def getEnterprise(id: String, period: Option[YearMonth]): Optional[EnterpriseUnit] = {
     // Need to mention how getting an ENT by entid will always return one result
     val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id)
-    val uri = baseUrl / tableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
+    val uri = baseUrl / enterpriseTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
     val r = singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == OK => {
         val resp = (response.json \ "Row").as[JsValue]
-        val vars = convertToEntMap(resp)
+        val p = resp(0)
+        val vars = jsToEntMap(resp)
         val ent = EnterpriseUnit(id.toLong, period.getOrElse(DEFAULT_PERIOD).toString(REFERENCE_PERIOD_FORMAT), vars, "ENT", List())
-        // Some(ent)
         Optional.ofNullable(ent)
       }
       case response if response.status == NOT_FOUND => Optional.empty[EnterpriseUnit]() // None
     }
     // The Await() is a temporary fix until the search method is updated to work with futures
     Await.result(r, 5000 millisecond)
+  }
+
+  private def jsToUnitMap(js: JsValue): Map[String, String] = {
+    (js \ "Cell").as[Seq[JsValue]].map { cell =>
+      val column = decodeBase64((cell \ "column").as[String])
+        .split(":", columnFamilyAndValueSubstring).last
+        .split("_").last
+      val value = decodeBase64((cell \ "$").as[String])
+      column -> value
+    }.toMap
+  }
+
+  private def jsToEntMap(js: JsValue): Map[String, String] = {
+    // An enterprise id is unique so we can safely always get teh first JS value
+    (js(0) \ "Cell").as[Seq[JsValue]].map { cell =>
+      val column = decodeBase64((cell \ "column").as[String]).split(":", columnFamilyAndValueSubstring).last
+      val value = decodeBase64((cell \ "$").as[String])
+      column -> value
+    }.toMap
   }
 
   private def convertToUnitMap(result: JsValue): Map[String, String] = {
@@ -186,16 +205,6 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       val column = decodeBase64((cell \ "column").as[String])
         .split(":", columnFamilyAndValueSubstring).last
         .split("_").last
-      val value = decodeBase64((cell \ "$").as[String])
-      column -> value
-    }.toMap
-  }
-
-  private def convertToEntMap(result: JsValue): Map[String, String] = {
-    val js = result.as[JsArray]
-    val columnFamilyAndValueSubstring = 2
-    (js(0) \ "Cell").as[Seq[JsValue]].map { cell =>
-      val column = decodeBase64((cell \ "column").as[String]).split(":", columnFamilyAndValueSubstring).last
       val value = decodeBase64((cell \ "$").as[String])
       column -> value
     }.toMap
@@ -216,6 +225,20 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       case None => String.join(DELIMITER, referencePeriod.toString("yyyyMM"), id, "*")
     }
   }
+
+  //  private def search[X](eval: RequestEvaluation, funcWithId: String => Optional[X]): Future[Result] = {
+  //    val res = eval match {
+  //      case (x: IdRequest) =>
+  //        val resp = Try(funcWithId(x.id)).futureTryRes.flatMap {
+  //          case (s: Optional[X]) => if (s.isPresent) {
+  //            resultMatcher[X](s)
+  //          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
+  //        } recover responseException
+  //        resp
+  //      case _ => invalidSearchResponses(eval)
+  //    }
+  //    res
+  //  }
 
   private def search[X](eval: RequestEvaluation, funcWithId: String => Optional[X]): Future[Result] = {
     val res = eval match {

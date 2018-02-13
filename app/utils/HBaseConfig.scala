@@ -10,22 +10,22 @@ import play.api.Configuration
 trait HBaseConfig {
 
   implicit val configuration: Configuration
-  private val hBaseConfig: Config = configuration.underlying.getConfig("db")
-  println(s"new conf is: ${hBaseConfig}")
+  private val hBaseConfig: Config = configuration.underlying.getConfig("env.default.db")
+  private val hBaseRestConfig: Config = hBaseConfig.getConfig("hbase-rest")
 
-  //    private val nameSpace: String = if (hBaseConfig.getBoolean("initialize")) {
-  //      hBaseConfig.getString("in.memory.namespace")
-  //    } else { hBaseConfig.getString("namespace") }
+  //  private val nameSpace: String = if (hBaseConfig.getBoolean("init")) {
+  //    hBaseConfig.getString("in.memory.namespace")
+  //  } else { hBaseConfig.getString("namespace") }
 
-  private val namespace: String = "sbr_control_api" // hBaseConfig.getString("namespace")
+  private val hbaseRestNameSpace: String = hBaseRestConfig.getString("namespace")
 
-  lazy val tableName: TableName = TableName.valueOf(
-    namespace,
+  lazy val enterpriseTableName: TableName = TableName.valueOf(
+    hbaseRestNameSpace,
     "enterprise" // was table.name
   )
 
   lazy val unitTableName: TableName = TableName.valueOf(
-    namespace,
+    hbaseRestNameSpace,
     "unit_links"
   )
 
