@@ -1,6 +1,6 @@
 package uk.gov.ons.sbr.models.units
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{ Json, OFormat }
@@ -28,12 +28,12 @@ object UnitLinks {
   def apply(u: StatisticalUnit): UnitLinks = {
     val parentMap = u.getLinks.getParents match {
       case y if !y.isEmpty =>
-        Some(y.map { case (group, id) => group.toString -> id }.toMap)
+        Some(y.asScala.map { case (group, id) => group.toString -> id }.toMap)
       case _ => None
     }
     val childrenMap = u.getLinks.getChildren match {
       case x if !x.isEmpty =>
-        Some(x.map { case (id, group) => id -> group.toString }.toMap)
+        Some(x.asScala.map { case (id, group) => id -> group.toString }.toMap)
       case _ => None
     }
     UnitLinks(u.getKey, parentMap, childrenMap, u.getType.toString)

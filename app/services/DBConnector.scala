@@ -5,7 +5,7 @@ import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ Future, TimeoutException }
 import scala.util.{ Failure, Success, Try }
@@ -44,7 +44,7 @@ trait DBConnector extends Controller with StrictLogging {
   @throws(classOf[DateTimeParseException])
   def validateYearMonth(key: String, raw: String) = {
     val yearAndMonth = Try(YearMonth.parse(raw, DateTimeFormatter.ofPattern("yyyyMM")))
-    yearAndMonth match {
+    (yearAndMonth: @unchecked) match {
       case Success(s) =>
         ReferencePeriod(key, s)
       case Failure(ex: DateTimeParseException) =>
@@ -88,7 +88,7 @@ trait DBConnector extends Controller with StrictLogging {
   def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
     Future { toOption[Z](v) }.map {
       case Some(x: java.util.List[StatisticalUnit]) =>
-        tryAsResponse(Try(Json.toJson(x.toList.map { v => UnitLinks(v) })))
+        tryAsResponse(Try(Json.toJson(x.asScala.toList.map { v => UnitLinks(v) })))
       case Some(x: Enterprise) =>
         tryAsResponse(Try(Json.toJson(EnterpriseUnit(x))))
       case Some(x: StatisticalUnitLinks) =>
@@ -125,7 +125,7 @@ trait DBConnector extends Controller with StrictLogging {
         BadRequest(errAsJson(BAD_REQUEST, "invalid_key",
           s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
       case _ =>
-        BadRequest(errAsJson(BAD_REQUEST, "missing_param", s"No query specified.")).future
+        BadRequest(errAsJson(BAD_REQUEST, "missing_param", "No query specified.")).future
     }
   }
 

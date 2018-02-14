@@ -70,7 +70,7 @@ class HBaseConnect extends DBConnector {
         val resp = Try(requestLinks.getUnitLinks(x.period, x.id, UnitType.fromString(category))).futureTryRes.flatMap {
           case (s: Optional[StatisticalUnitLinks]) => if (s.isPresent) {
             resultMatcher[StatisticalUnitLinks](s)
-          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find unit link with " +
+          } else NotFound(errAsJson(NOT_FOUND, "not_found", "Could not find unit link with " +
             s"id ${x.id}, period ${x.period} and category $category")).future
         } recover responseException
         resp

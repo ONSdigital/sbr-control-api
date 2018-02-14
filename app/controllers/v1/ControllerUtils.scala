@@ -5,7 +5,7 @@ import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.util.Optional
 import javax.naming.ServiceUnavailableException
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ Future, TimeoutException }
 import scala.util.{ Failure, Success, Try }
@@ -38,7 +38,7 @@ trait ControllerUtils extends Controller with StrictLogging {
 
   protected def validateYearMonth(key: String, raw: String) = {
     val yearAndMonth = Try(YearMonth.parse(raw, DateTimeFormatter.ofPattern("yyyyMM")))
-    yearAndMonth match {
+    (yearAndMonth: @unchecked) match {
       case Success(s) =>
         ReferencePeriod(key, s)
       case Failure(ex: DateTimeParseException) =>
@@ -67,10 +67,10 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected def matchByEditParams(id: Option[String], request: Request[AnyContent], period: Option[String] = None): RequestEvaluation = {
     val key = id.getOrElse("")
     if (key.length >= minKeyLength) {
-      (period, request.body.asJson) match {
+      ((period, request.body.asJson): @unchecked) match {
         case (None, Some(body)) => validateEditEntJson(key, body)
         case (Some(period), Some(body)) => {
-          validateYearMonth(key, period) match {
+          (validateYearMonth(key, period): @unchecked) match {
             case v: ReferencePeriod => validateEditEntJson(key, body, Some(v.period))
             case i: InvalidReferencePeriod => i
           }
@@ -106,7 +106,7 @@ trait ControllerUtils extends Controller with StrictLogging {
   protected def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
     Future { toOption[Z](v) }.map {
       case Some(x: java.util.List[StatisticalUnit]) =>
-        tryAsResponse(Try(Json.toJson(x.toList.map { v => UnitLinks(v) })))
+        tryAsResponse(Try(Json.toJson(x.asScala.toList.map { v => UnitLinks(v) })))
       case Some(x: Enterprise) =>
         tryAsResponse(Try(Json.toJson(EnterpriseUnit(x))))
       case Some(x: StatisticalUnitLinks) =>
