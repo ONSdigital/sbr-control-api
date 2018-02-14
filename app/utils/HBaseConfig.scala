@@ -31,6 +31,8 @@ trait HBaseConfig {
 
   lazy val username: String = "" // hBaseConfig.getString("username")
   lazy val password: String = "" // hBaseConfig.getString("password")
-  lazy val baseUrl: String = "http://localhost:8080" // hBaseConfig.getString("rest.endpoint")
+  lazy val endpoint: String = hBaseRestConfig.getString("endpoint")
+  lazy val port: String = hBaseRestConfig.getString("port")
+  lazy val baseUrl: String = s"$endpoint:$port"
   lazy val columnFamily: String = "d" // hBaseConfig.getString("column.family")
 }

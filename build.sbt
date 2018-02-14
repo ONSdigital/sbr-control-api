@@ -113,6 +113,7 @@ lazy val api = (project in file("."))
 
     // Run with proper default env vars set for hbaseInMemory
     javaOptions in Test += "-DSBR_DB_DEFAULT_NAME=hbase-rest",
+    javaOptions in Test += "-DSBR_DB_REST_PORT=8081",
 //    javaOptions in Universal ++= Seq(
 //      "-Dsbr.hbase.inmemory=true"
 //    ),
