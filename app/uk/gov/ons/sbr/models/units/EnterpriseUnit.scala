@@ -1,6 +1,6 @@
 package uk.gov.ons.sbr.models.units
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{ JsValue, Json, OFormat }
@@ -27,11 +27,11 @@ object EnterpriseUnit {
   implicit val unitFormat: OFormat[EnterpriseUnit] = Json.format[EnterpriseUnit]
 
   def apply(o: Enterprise): EnterpriseUnit = {
-    val childJson = o.getChildren.map {
+    val childJson = o.getChildren.asScala.map {
       a => Json.parse(a.toUnitHierarchyAsJson)
     }.toList
     // EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, childJson)
-    EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, childJson)
+    EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.asScala.toMap, o.getType.toString, childJson)
   }
 
   def apply(e: StatUnit): EnterpriseUnit = {
