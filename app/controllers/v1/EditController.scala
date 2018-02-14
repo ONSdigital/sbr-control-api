@@ -1,6 +1,6 @@
 package controllers.v1
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.util.{ Failure, Success, Try }
 
 import io.swagger.annotations._
@@ -35,9 +35,9 @@ class EditController extends ControllerUtils {
   ): Action[AnyContent] = Action.async { implicit request =>
     Logger.info(s"Editing by default period for id: ${id}")
     val evalResp = matchByEditParams(Some(id), request)
-    val res = evalResp match {
+    val res = (evalResp: @unchecked) match {
       case (x: EditRequest) => {
-        val resp = Try(requestEnterprise.updateEnterpriseVariableValues(x.id, x.updatedBy, x.edits)) match {
+        val resp = Try(requestEnterprise.updateEnterpriseVariableValues(x.id, x.updatedBy, x.edits.asJava)) match {
           case Success(s) => Ok(errAsJson(OK, "edit_success", s"Edit has been made successfully to Enterprise with id: ${x.id}")).future
           case Failure(ex) => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "edit_error", s"unable to make edit with exception [${ex.printStackTrace()}]")).future
         }
@@ -68,9 +68,9 @@ class EditController extends ControllerUtils {
   ): Action[AnyContent] = Action.async { implicit request =>
     Logger.info(s"Editing by period [${period}] for id: ${id}")
     val evalResp = matchByEditParams(Some(id), request, Some(period))
-    val res = evalResp match {
+    val res = (evalResp: @unchecked) match {
       case (x: EditRequestByPeriod) => {
-        val resp = Try(requestEnterprise.updateEnterpriseVariableValues(x.period, x.id, x.updatedBy, x.edits)) match {
+        val resp = Try(requestEnterprise.updateEnterpriseVariableValues(x.period, x.id, x.updatedBy, x.edits.asJava)) match {
           case Success(s) => Ok(errAsJson(OK, "edit_success", s"Edit has been made successfully to Enterprise with id: ${x.id}, for period: ${x.period.toString}")).future
           case Failure(ex) => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "edit_error", s"unable to make edit with exception [${ex.printStackTrace()}]")).future
         }
