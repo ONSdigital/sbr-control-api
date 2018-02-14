@@ -112,10 +112,10 @@ lazy val api = (project in file("."))
 
 
     // Run with proper default env vars set for hbaseInMemory
-    javaOptions in Test += "-Dsbr.hbase.inmemory=true",
-    javaOptions in Universal ++= Seq(
-      "-Dsbr.hbase.inmemory=true"
-    ),
+    javaOptions in Test += "-DSBR_DB_DEFAULT_NAME=hbase-rest",
+//    javaOptions in Universal ++= Seq(
+//      "-Dsbr.hbase.inmemory=true"
+//    ),
     // di router -> swagger
     routesGenerator := InjectedRoutesGenerator,
     buildInfoOptions += BuildInfoOption.ToMap,
@@ -123,10 +123,12 @@ lazy val api = (project in file("."))
     buildInfoOptions += BuildInfoOption.BuildTime,
     libraryDependencies ++= Seq (
       filters,
+      ws,
       // Using ws from typesafe due to the following issue: https://github.com/playframework/playframework/issues/6628
-      "com.typesafe.play"            %%    "play-ws"             %    "2.5.8",
+      // "com.typesafe.play"            %%    "play-ws"             %    "2.5.8",
       "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "2.0.0"           % Test,
-      "org.scalatest"                %%    "scalatest"           %    "3.0.0"           % Test,
+      "org.scalatest"                %%    "scalatest"           %    "3.0.4"           % Test,
+      "com.github.tomakehurst"       %     "wiremock"            %    "1.33"            % Test,
       "org.webjars"                  %%    "webjars-play"        %    "2.5.0-3",
       "io.lemonlabs"            %%  "scala-uri"                     % "0.5.0",
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",

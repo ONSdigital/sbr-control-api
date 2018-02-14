@@ -28,7 +28,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     config.getString("db.default") match {
       case "hbase-in-memory" => bind(classOf[DataAccess]).to(classOf[HBaseDataAccess])
       case "hbase-rest" => bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
-      case _ => bind(classOf[DataAccess]).to(classOf[HBaseDataAccess])
+      case _ => bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
     }
 
     // Load the data into HBase (if the correct environment variables have been set)
