@@ -17,15 +17,6 @@ class UtilitiesTestSpec extends TestUtils {
     }
   }
 
-  "getElement" should {
-    "return a Long for Option[Long]" in {
-      val expected = 5784785784L
-      val get = getElement(Some(expected))
-      get must not be a[Option[Long]]
-      get mustEqual expected
-    }
-  }
-
   "unquote" should {
     "removes any unnecessary quotes" in {
       val quoted = """hello this is a\" test"""
