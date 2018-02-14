@@ -25,7 +25,7 @@ class ControllerUtilitySpec extends TestUtils {
   private val validDate = "201711"
   private val searchByIdUrl = "/v1/enterpriseById?id="
 
-  override protected def fakeApplication(): Application =
+  override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
       .loadConfig(Configuration(ConfigFactory.load))
       .build()
