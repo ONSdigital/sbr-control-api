@@ -42,13 +42,18 @@ To override the `db.default.name` configuration we can add the following to our 
 ```
 
 ##### HBase
+
 HBase can be started locally by:
 ```shell
 start-hbase.sh
 ```
-You will of course need to setup tables and other configurations on HBase for the interaction to work - this is detailed at [sbr-hbase-connector](https://github.com/ONSdigital/sbr-hbase-connector) repository. We can apply these steps using HBase shell;
+
+Now that HBase has started, we can open the shell and create the namespace and tables.
 ```sbtshell
 hbase shell
+create_namespace 'sbr_local_db'
+create 'sbr_local_db:enterprise', 'd'
+create 'sbr_local_db:unit_links', 'd'
 ```
 
 #### HBase REST
