@@ -109,7 +109,7 @@ class SQLConnect extends DBConnector {
         val resp = Try(initSQL.getStatUnitLinksByKey(parseYearMonth(x.period), x.id, category)).futureTryRes.flatMap {
           case Some(v) =>
             tryAsResponse(Try(Json.toJson(KnownUnitLinks(v)))).future
-          case _ => NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find unit link with " +
+          case _ => NotFound(errAsJson(NOT_FOUND, "not_found", "Could not find unit link with " +
             s"id ${x.id}, period ${x.period} and category $category")).future
         } recover responseException
         resp
