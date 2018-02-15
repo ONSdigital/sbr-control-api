@@ -30,9 +30,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
  */
 class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configuration) extends DataAccess with HBaseConfig {
 
-  //HBaseInMemoryConfig
-
-  private val columnFamilyAndValueSubstring = 2
+  private val columnFamilyAndValueSubstring: Int = 2
 
   val REFERENCE_PERIOD_FORMAT = "yyyyMM" //configuration.getString("db.period.format").getOrElse("yyyyMM")
 
@@ -43,57 +41,20 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   private val AUTH = encodeBase64(Seq(username, password))
   private val HEADERS = Seq("Accept" -> "application/json", "Authorization" -> s"Basic $AUTH")
 
-  def getUnitLinksFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result] = {
-    val evalResp = matchByParams(Some(id))
-    search[java.util.List[UnitLinks]](evalResp, getUnitLinksById)
-  }
-
-  def getUnitLinksFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result] = {
-    val evalResp = matchByParams(Some(id), Some(period))
-    searchByPeriod[java.util.List[UnitLinks]](evalResp, getUnitLinksByIdPeriod)
-  }
-
-  def getEnterpriseFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result] = {
-    val evalResp = matchByParams(Some(id))
-    search[EnterpriseUnit](evalResp, getEnterpriseById)
-  }
-
-  def getEnterpriseFromDB(id: String, period: String)(implicit request: Request[AnyContent]): Future[Result] = {
-    val evalResp = matchByParams(Some(id), Some(period))
-    searchByPeriod[EnterpriseUnit](evalResp, getEnterpriseByIdPeriod)
-  }
-
-  def getStatUnitLinkFromDB(id: String, category: String)(implicit request: Request[AnyContent]): Future[Result] = {
-    val evalResp = matchByParams(Some(id), None) match {
-      case (x: IdRequest) =>
-        CategoryRequest(x.id, category)
-      case z => z
+  def getUnitLinks(id: String, period: Option[YearMonth]): Option[List[UnitLinks]] = {
+    period match {
+      case Some(p) =>
+      case None =>
     }
-    evalResp match {
-      case (x: CategoryRequest) =>
-        val resp = Try(getStatLinksByIdType(x.id, UnitType.fromString(x.category))).futureTryRes.flatMap {
-          case (s: Optional[UnitLinks]) => if (s.isPresent) {
-            resultMatcher[UnitLinks](s)
-          } else NotFound(errAsJson(NOT_FOUND, "not_found",
-            s"Could not find unit with id ${x.id} and category ${x.category}")).future
-        } recover responseException
-        resp
-      case _ => invalidSearchResponses(evalResp)
-    }
+    None
   }
 
-  def getStatUnitLinkFromDB(id: String, period: String, category: String)(implicit request: Request[AnyContent]): Future[Result] = {
-    matchByParams(Some(id), Some(period)) match {
-      case (x: ReferencePeriod) =>
-        val resp = Try(getStatLinksByIdTypePeriod(x.id, YearMonth.parse(x.period.toString.filter(_ != '-'), DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT)), UnitType.fromString(category))).futureTryRes.flatMap {
-          case (s: Optional[UnitLinks]) => if (s.isPresent) {
-            resultMatcher[UnitLinks](s)
-          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find unit link with " +
-            s"id ${x.id}, period ${x.period} and category $category")).future
-        } recover responseException
-        resp
-      case x => invalidSearchResponses(x)
-    }
+  def getEnterprise(id: String, period: Option[YearMonth]): Option[EnterpriseUnit] = {
+    None
+  }
+
+  def getStatUnitLinks(id: String, category: String, period: Option[YearMonth]): Option[UnitLinks] = {
+    None
   }
 
   def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq(), params: Seq[(String, String)] = Seq()): Future[WSResponse] =
@@ -101,15 +62,6 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       .withQueryString(params: _*)
       .withHeaders(headers: _*)
       .get
-
-  def getEnterpriseById(id: String) = getEnterprise(id, None)
-  def getEnterpriseByIdPeriod(period: YearMonth, id: String) = getEnterprise(id, Some(period))
-
-  def getUnitLinksById(id: String) = getUnitLinks(id, None, None) // 2nd
-  def getUnitLinksByIdPeriod(period: YearMonth, id: String) = getUnitLinks(id, Some(period), None) // 2nd
-
-  def getStatLinksByIdType(id: String, unitType: UnitType) = getUnitLinks(id, unitType, None) // 1st
-  def getStatLinksByIdTypePeriod(id: String, period: YearMonth, unitType: UnitType) = getUnitLinks(id, unitType, Some(period)) // 1st
 
   def getUnitLinks(id: String, unitType: UnitType, period: Option[YearMonth]): Optional[UnitLinks] = {
     // HBase key format: 201706~01752564~CH: period~id~type
