@@ -6,7 +6,7 @@ import config.SBRPropertiesConfiguration
 import org.apache.hadoop.hbase.NamespaceDescriptor
 import org.apache.hadoop.util.ToolRunner
 import play.api.{ Configuration, Environment }
-import services.{ DataAccess, HBaseDataAccess, HBaseDataLoadConfig, HBaseRestDataAccess }
+import services.{ DataAccess, HBaseDataLoadConfig, HBaseRestDataAccess }
 import uk.gov.ons.sbr.data.hbase.HBaseConnector
 import uk.gov.ons.sbr.data.hbase.load.BulkLoader
 
@@ -27,8 +27,8 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     // In addition to using -Ddatabase=hbase-in-memory, -Dsbr.hbase.inmemory=true needs to be set to true for
     // HBase in memory to work (this is required by the HBase connector .jar)
     config.getString("db.default") match {
-      case "hbase-in-memory" => bind(classOf[DataAccess]).to(classOf[HBaseDataAccess])
-      case "hbase-rest" => bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
+      //case "hbase-in-memory" => bind(classOf[DataAccess]).to(classOf[HBaseDataAccess])
+      //case "hbase-rest" => bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
       case _ => bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
     }
 

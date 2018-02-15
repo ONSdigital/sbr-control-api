@@ -6,8 +6,8 @@ import com.typesafe.scalalogging.StrictLogging
 import io.swagger.annotations._
 import play.api.Configuration
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, Result}
-import uk.gov.ons.sbr.models.units.{EnterpriseUnit, UnitLinks}
+import play.api.mvc.{ Action, AnyContent, Result }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
 import services.DataAccess
 
 import scala.concurrent.Future
@@ -27,7 +27,7 @@ import utils.FutureResponse._
 trait ValidParams
 case class UnitLinksParams(id: String, period: String) extends ValidParams
 object UnitLinksParams {
-  def applyA(id: String, period: String): Either[UnitLinksParams, InvalidParams] ={
+  def applyA(id: String, period: String): Either[UnitLinksParams, InvalidParams] = {
     if (id == "") Left(UnitLinksParams(id, period))
     else Right(InvalidId(""))
   }
@@ -35,13 +35,13 @@ object UnitLinksParams {
 
 case class StatUnitLinksParams(id: String, category: String, period: String) extends ValidParams
 object StatUnitLinksParams {
-  def applyA(id: String, category: String, period: String): Either[StatUnitLinksParams, InvalidParams] = {
-    Left(StatUnitLinksParams(id, category, period))
+  def applyA(id: String, period: String): Either[StatUnitLinksParams, InvalidParams] = {
+    Left(StatUnitLinksParams(id, "", period))
   }
 }
 case class EnterpriseParams(id: String, period: String) extends ValidParams
 object EnterpriseParams {
-  def applyA(id: String, period: String): Either[EnterpriseParams, InvalidParams] ={
+  def applyA(id: String, period: String): Either[EnterpriseParams, InvalidParams] = {
     Left(EnterpriseParams(id, period))
   }
 }
@@ -69,7 +69,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration) ext
 
   // Need to wrap below in a Try
   def dbResultMatcher[T](result: Option[T]): Future[Result] = result match {
-    case Some(a) => Ok(Json.toJson(a)).future
+    case Some(a) => Ok("Okay").future
     case None => NotFound.future
   }
 

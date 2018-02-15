@@ -34,28 +34,14 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   val REFERENCE_PERIOD_FORMAT = "yyyyMM" //configuration.getString("db.period.format").getOrElse("yyyyMM")
 
-  // Default period will be deprecated in future, as every request from the UI will come with a period,
-  // however for now it will be left in for backwards compatibility
-  val DEFAULT_PERIOD = YearMonth.parse("201706", DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT))
-
   private val AUTH = encodeBase64(Seq(username, password))
   private val HEADERS = Seq("Accept" -> "application/json", "Authorization" -> s"Basic $AUTH")
 
-  def getUnitLinks(id: String, period: Option[YearMonth]): Option[List[UnitLinks]] = {
-    period match {
-      case Some(p) =>
-      case None =>
-    }
-    None
-  }
+  def getUnitLinks(id: String, period: String): Option[List[UnitLinks]] = None
 
-  def getEnterprise(id: String, period: Option[YearMonth]): Option[EnterpriseUnit] = {
-    None
-  }
+  def getEnterprise(id: String, period: String): Option[EnterpriseUnit] = None
 
-  def getStatUnitLinks(id: String, category: String, period: Option[YearMonth]): Option[UnitLinks] = {
-    None
-  }
+  def getStatUnitLinks(id: String, category: String, period: String): Option[UnitLinks] = None
 
   def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq(), params: Seq[(String, String)] = Seq()): Future[WSResponse] =
     ws.url(path.toString)
@@ -63,43 +49,43 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       .withHeaders(headers: _*)
       .get
 
-  def getUnitLinks(id: String, unitType: UnitType, period: Option[YearMonth]): Optional[UnitLinks] = {
-    // HBase key format: 201706~01752564~CH: period~id~type
-    val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id, Some(unitType))
-    val uri = baseUrl / unitTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
-    val r = singleGETRequest(uri.toString, HEADERS) map {
-      case response if response.status == OK => {
-        val row = (response.json \ "Row").as[JsValue]
-        val rowArr = row.as[JsArray]
-        val unit = decodeBase64((rowArr(0) \ "key").as[String]).split("~").last
-        val a = UnitLinks(id, extractParents(unit, convertToUnitMap(row)), extractChildren(unit, convertToUnitMap(row)), unit)
-        Optional.ofNullable(a)
-      }
-      case response if response.status == NOT_FOUND => Optional.empty[UnitLinks]()
-    }
-    // The Await() is a temporary fix until the search method is updated to work with futures
-    Await.result(r, 5000 millisecond)
-  }
+  //  def getUnitLinks(id: String, unitType: UnitType, period: Option[YearMonth]): Optional[UnitLinks] = {
+  //    // HBase key format: 201706~01752564~CH: period~id~type
+  //    val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id, Some(unitType))
+  //    val uri = baseUrl / unitTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
+  //    val r = singleGETRequest(uri.toString, HEADERS) map {
+  //      case response if response.status == OK => {
+  //        val row = (response.json \ "Row").as[JsValue]
+  //        val rowArr = row.as[JsArray]
+  //        val unit = decodeBase64((rowArr(0) \ "key").as[String]).split("~").last
+  //        val a = UnitLinks(id, extractParents(unit, convertToUnitMap(row)), extractChildren(unit, convertToUnitMap(row)), unit)
+  //        Optional.ofNullable(a)
+  //      }
+  //      case response if response.status == NOT_FOUND => Optional.empty[UnitLinks]()
+  //    }
+  //    // The Await() is a temporary fix until the search method is updated to work with futures
+  //    Await.result(r, 5000 millisecond)
+  //  }
 
-  def getUnitLinks(id: String, period: Option[YearMonth], unitType: Option[UnitType]): Optional[java.util.List[UnitLinks]] = {
-    // HBase key format: 201706~01752564~CH, period~id~type
-    val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id, unitType)
-    val uri = baseUrl / unitTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
-    val r = singleGETRequest(uri.toString, HEADERS) map {
-      case response if response.status == OK => {
-        val row = (response.json \ "Row").as[JsValue]
-        val seqJSON = row.as[Seq[JsValue]]
-        val unitLinks = seqJSON.map(x => {
-          val unit = decodeBase64((x \ "key").as[String]).split("~").last
-          UnitLinks(id, extractParents(unit, jsToUnitMap(x)), extractChildren(unit, jsToUnitMap(x)), unit)
-        })
-        Optional.ofNullable(unitLinks.toList.asJava)
-      }
-      case response if response.status == NOT_FOUND => Optional.empty[java.util.List[UnitLinks]]
-    }
-    // The Await() is a temporary fix until the search method is updated to work with futures
-    Await.result(r, 5000 millisecond)
-  }
+  //  def getUnitLinks(id: String, period: Option[YearMonth], unitType: Option[UnitType]): Optional[java.util.List[UnitLinks]] = {
+  //    // HBase key format: 201706~01752564~CH, period~id~type
+  //    val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id, unitType)
+  //    val uri = baseUrl / unitTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
+  //    val r = singleGETRequest(uri.toString, HEADERS) map {
+  //      case response if response.status == OK => {
+  //        val row = (response.json \ "Row").as[JsValue]
+  //        val seqJSON = row.as[Seq[JsValue]]
+  //        val unitLinks = seqJSON.map(x => {
+  //          val unit = decodeBase64((x \ "key").as[String]).split("~").last
+  //          UnitLinks(id, extractParents(unit, jsToUnitMap(x)), extractChildren(unit, jsToUnitMap(x)), unit)
+  //        })
+  //        Optional.ofNullable(unitLinks.toList.asJava)
+  //      }
+  //      case response if response.status == NOT_FOUND => Optional.empty[java.util.List[UnitLinks]]
+  //    }
+  //    // The Await() is a temporary fix until the search method is updated to work with futures
+  //    Await.result(r, 5000 millisecond)
+  //  }
 
   def extractParents(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
     case "ENT" => None
@@ -113,23 +99,23 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     case _ => None
   }
 
-  def getEnterprise(id: String, period: Option[YearMonth]): Optional[EnterpriseUnit] = {
-    // Need to mention how getting an ENT by entid will always return one result
-    val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id)
-    val uri = baseUrl / enterpriseTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
-    val r = singleGETRequest(uri.toString, HEADERS) map {
-      case response if response.status == OK => {
-        val resp = (response.json \ "Row").as[JsValue]
-        val p = resp(0)
-        val vars = jsToEntMap(resp)
-        val ent = EnterpriseUnit(id.toLong, period.getOrElse(DEFAULT_PERIOD).toString(REFERENCE_PERIOD_FORMAT), vars, "ENT", List())
-        Optional.ofNullable(ent)
-      }
-      case response if response.status == NOT_FOUND => Optional.empty[EnterpriseUnit]() // None
-    }
-    // The Await() is a temporary fix until the search method is updated to work with futures
-    Await.result(r, 5000 millisecond)
-  }
+  //  def getEnterprise(id: String, period: Option[YearMonth]): Optional[EnterpriseUnit] = {
+  //    // Need to mention how getting an ENT by entid will always return one result
+  //    val rowKey = createRowKey(period.getOrElse(DEFAULT_PERIOD), id)
+  //    val uri = baseUrl / enterpriseTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
+  //    val r = singleGETRequest(uri.toString, HEADERS) map {
+  //      case response if response.status == OK => {
+  //        val resp = (response.json \ "Row").as[JsValue]
+  //        val p = resp(0)
+  //        val vars = jsToEntMap(resp)
+  //        val ent = EnterpriseUnit(id.toLong, period.getOrElse(DEFAULT_PERIOD).toString(REFERENCE_PERIOD_FORMAT), vars, "ENT", List())
+  //        Optional.ofNullable(ent)
+  //      }
+  //      case response if response.status == NOT_FOUND => Optional.empty[EnterpriseUnit]() // None
+  //    }
+  //    // The Await() is a temporary fix until the search method is updated to work with futures
+  //    Await.result(r, 5000 millisecond)
+  //  }
 
   private def jsToUnitMap(js: JsValue): Map[String, String] = {
     (js \ "Cell").as[Seq[JsValue]].map { cell =>
@@ -192,31 +178,31 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   //    res
   //  }
 
-  private def search[X](eval: RequestEvaluation, funcWithId: String => Optional[X]): Future[Result] = {
-    val res = eval match {
-      case (x: IdRequest) =>
-        val resp = Try(funcWithId(x.id)).futureTryRes.flatMap {
-          case (s: Optional[X]) => if (s.isPresent) {
-            resultMatcher[X](s)
-          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
-        } recover responseException
-        resp
-      case _ => invalidSearchResponses(eval)
-    }
-    res
-  }
+  //  private def search[X](eval: RequestEvaluation, funcWithId: String => Optional[X]): Future[Result] = {
+  //    val res = eval match {
+  //      case (x: IdRequest) =>
+  //        val resp = Try(funcWithId(x.id)).futureTryRes.flatMap {
+  //          case (s: Optional[X]) => if (s.isPresent) {
+  //            resultMatcher[X](s)
+  //          } else NotFound(errAsJson(NOT_FOUND, "not_found", s"Could not find enterprise with id ${x.id}")).future
+  //        } recover responseException
+  //        resp
+  //      case _ => invalidSearchResponses(eval)
+  //    }
+  //    res
+  //  }
 
-  //  @todo - combine ReferencePeriod and UnitGrouping
-  private def searchByPeriod[X](eval: RequestEvaluation, funcWithIdAndParam: (YearMonth, String) => Optional[X]): Future[Result] = {
-    val res = eval match {
-      case (x: ReferencePeriod) => Try(funcWithIdAndParam(YearMonth.parse(x.period.toString.filter(_ != '-'), DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT)), x.id)).futureTryRes.flatMap {
-        case (s: Optional[X]) => if (s.isPresent) {
-          resultMatcher[X](s)
-        } else NotFound(errAsJson(NOT_FOUND, "not_found",
-          s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
-      } recover responseException
-      case _ => invalidSearchResponses(eval)
-    }
-    res
-  }
+  //  //  @todo - combine ReferencePeriod and UnitGrouping
+  //  private def searchByPeriod[X](eval: RequestEvaluation, funcWithIdAndParam: (YearMonth, String) => Optional[X]): Future[Result] = {
+  //    val res = eval match {
+  //      case (x: ReferencePeriod) => Try(funcWithIdAndParam(YearMonth.parse(x.period.toString.filter(_ != '-'), DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT)), x.id)).futureTryRes.flatMap {
+  //        case (s: Optional[X]) => if (s.isPresent) {
+  //          resultMatcher[X](s)
+  //        } else NotFound(errAsJson(NOT_FOUND, "not_found",
+  //          s"Could not find enterprise with id ${x.id} and period ${x.period}")).future
+  //      } recover responseException
+  //      case _ => invalidSearchResponses(eval)
+  //    }
+  //    res
+  //  }
 }
