@@ -3,6 +3,7 @@ import java.time.Clock
 
 import com.typesafe.config.{ Config, ConfigFactory }
 import config.SBRPropertiesConfiguration
+import org.apache.hadoop.hbase.NamespaceDescriptor
 import org.apache.hadoop.util.ToolRunner
 import play.api.{ Configuration, Environment }
 import services.{ DataAccess, HBaseDataAccess, HBaseDataLoadConfig, HBaseRestDataAccess }
@@ -35,6 +36,8 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     if (config.getBoolean("db.load")) {
       val bulkLoader = new BulkLoader()
       if (config.getString("db.default") == "hbase-rest") HBaseConnector.getInstance().connect()
+
+      // HBaseConnector.getInstance().getConnection.getAdmin.createNamespace(NamespaceDescriptor.create("").build)
 
       //   Load in data for first period (201706)
       ToolRunner.run(HBaseConnector.getInstance().getConfiguration, bulkLoader, entData201706.toArray)

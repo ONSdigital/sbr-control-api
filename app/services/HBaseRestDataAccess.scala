@@ -40,7 +40,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   // however for now it will be left in for backwards compatibility
   val DEFAULT_PERIOD = YearMonth.parse("201706", DateTimeFormat.forPattern(REFERENCE_PERIOD_FORMAT))
 
-  private val AUTH = encodeBase64(Seq("username", "password"))
+  private val AUTH = encodeBase64(Seq(username, password))
   private val HEADERS = Seq("Accept" -> "application/json", "Authorization" -> s"Basic $AUTH")
 
   def getUnitLinksFromDB(id: String)(implicit request: Request[AnyContent]): Future[Result] = {

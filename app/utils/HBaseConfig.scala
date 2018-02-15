@@ -13,24 +13,22 @@ trait HBaseConfig {
   private val hBaseConfig: Config = configuration.underlying.getConfig("env.default.db")
   private val hBaseRestConfig: Config = hBaseConfig.getConfig("hbase-rest")
 
-  //  private val nameSpace: String = if (hBaseConfig.getBoolean("init")) {
-  //    hBaseConfig.getString("in.memory.namespace")
-  //  } else { hBaseConfig.getString("namespace") }
-
   private val hbaseRestNameSpace: String = hBaseRestConfig.getString("namespace")
 
   lazy val enterpriseTableName: TableName = TableName.valueOf(
     hbaseRestNameSpace,
-    "enterprise" // was table.name
+    hBaseRestConfig.getString("enterprise.table.name")
   )
 
   lazy val unitTableName: TableName = TableName.valueOf(
     hbaseRestNameSpace,
-    "unit_links"
+    hBaseRestConfig.getString("unit.links.table.name")
   )
 
-  lazy val username: String = "" // hBaseConfig.getString("username")
-  lazy val password: String = "" // hBaseConfig.getString("password")
-  lazy val baseUrl: String = "http://localhost:8080" // hBaseConfig.getString("rest.endpoint")
-  lazy val columnFamily: String = "d" // hBaseConfig.getString("column.family")
+  lazy val username: String = hBaseRestConfig.getString("username")
+  lazy val password: String = hBaseRestConfig.getString("password")
+  lazy val host: String = hBaseRestConfig.getString("host")
+  lazy val port: String = hBaseRestConfig.getString("port")
+  lazy val baseUrl: String = s"$host:$port"
+  lazy val columnFamily: String = hBaseRestConfig.getString("column.family")
 }
