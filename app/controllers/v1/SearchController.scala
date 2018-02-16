@@ -30,21 +30,21 @@ trait ValidParams
 case class UnitLinksParams(id: String, period: String) extends ValidParams
 object UnitLinksParams {
   def applyA(id: String, period: String): Either[UnitLinksParams, InvalidParams] = {
-    if (id == "") Left(UnitLinksParams(id, period))
-    else Right(InvalidId(""))
+    Left(UnitLinksParams(id, period))
+  }
+}
+
+case class EnterpriseParams(id: String, period: String) extends ValidParams
+object EnterpriseParams {
+  def applyA(id: String, period: String): Either[EnterpriseParams, InvalidParams] = {
+    Left(EnterpriseParams(id, period))
   }
 }
 
 case class StatUnitLinksParams(id: String, category: String, period: String) extends ValidParams
 object StatUnitLinksParams {
-  def applyA(id: String, period: String): Either[StatUnitLinksParams, InvalidParams] = {
-    Left(StatUnitLinksParams(id, "", period))
-  }
-}
-case class EnterpriseParams(id: String, period: String) extends ValidParams
-object EnterpriseParams {
-  def applyA(id: String, period: String): Either[EnterpriseParams, InvalidParams] = {
-    Left(EnterpriseParams(id, period))
+  def applyA(id: String, period: String, category: String): Either[StatUnitLinksParams, InvalidParams] = {
+    Left(StatUnitLinksParams(id, category, period))
   }
 }
 
@@ -58,7 +58,10 @@ case class InvalidIdAndPeriod(msg: String) extends InvalidParams
 @Api("Search")
 class SearchController @Inject() (db: DataAccess, playConfig: Configuration) extends StrictLogging with ControllerUtils {
 
-  def validateParams[T](id: String, period: String, apply: (String, String) => Either[T, InvalidParams]): Either[T, InvalidParams] = apply(id, period)
+  // There is probably a more generic way of combining the logic in the two methods below
+  def validateIdPeriodCatParams[T](id: String, period: String, category: String, apply: (String, String, String) => Either[T, InvalidParams]): Either[T, InvalidParams] = apply(id, period, category)
+
+  def validateIdPeriodParams[T](id: String, period: String, apply: (String, String) => Either[T, InvalidParams]): Either[T, InvalidParams] = apply(id, period)
 
   def handleValidatedParams(params: Either[ValidParams, InvalidParams]): Future[Result] = params match {
     case Left(v: ValidParams) => v match {
@@ -96,7 +99,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration) ext
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get a List of StatisticalUnits with period [$date] and id [$id] parameters.")
-    handleValidatedParams(validateParams[UnitLinksParams](id, date, UnitLinksParams.applyA))
+    handleValidatedParams(validateIdPeriodParams[UnitLinksParams](id, date, UnitLinksParams.applyA))
   }
 
   @ApiOperation(
@@ -119,7 +122,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration) ext
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get Enterprise with period [$date] and id [$id] parameters.")
-    handleValidatedParams(validateParams[EnterpriseParams](id, date, EnterpriseParams.applyA))
+    handleValidatedParams(validateIdPeriodParams[EnterpriseParams](id, date, EnterpriseParams.applyA))
   }
 
   @ApiOperation(
@@ -142,6 +145,6 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration) ext
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get StatisticalUnitLinks with id [$id] and category [$category] parameters.")
-    handleValidatedParams(validateParams[StatUnitLinksParams](id, date, StatUnitLinksParams.applyA))
+    handleValidatedParams(validateIdPeriodCatParams[StatUnitLinksParams](id, date, category, StatUnitLinksParams.applyA))
   }
 }
