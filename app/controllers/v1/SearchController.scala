@@ -59,12 +59,12 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration) ext
   def validateParams[T](id: String, period: String, apply: (String, String) => Either[T, InvalidParams]): Either[T, InvalidParams] = apply(id, period)
 
   def handleValidatedParams(params: Either[ValidParams, InvalidParams]): Future[Result] = params match {
-    case v: ValidParams => v match {
+    case Left(v: ValidParams) => v match {
       case u: UnitLinksParams => dbResultMatcher(db.getUnitLinks(u.id, u.period))
       case s: StatUnitLinksParams => dbResultMatcher(db.getStatUnitLinks(s.id, s.category, s.period))
       case e: EnterpriseParams => dbResultMatcher(db.getEnterprise(e.id, e.period))
     }
-    case i: InvalidParams => BadRequest(i.msg).future
+    case Right(i: InvalidParams) => BadRequest(i.msg).future
   }
 
   // Need to wrap below in a Try
