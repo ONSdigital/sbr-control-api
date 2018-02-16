@@ -23,8 +23,9 @@ import scala.util.{ Failure, Success, Try }
 // - refactor common apply code into one method, no code duplication
 // - move invalid/valid params to /models
 
-// I should be able to override apply() but for some reason apply() shows up in IntelliJ
-// as having to return it's own type, not allowing me to use an Either[A,B]
+// I have to call the companion apply methods applyA not apply because they take the same
+// parameters as the normal case class apply method
+// http://www.scala-lang.org/old/node/2211
 
 trait ValidParams
 case class UnitLinksParams(id: String, period: String) extends ValidParams
