@@ -39,7 +39,10 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   def getUnitLinks(id: String, period: String): Option[List[UnitLinks]] = None
 
-  def getEnterprise(id: String, period: String): Option[EnterpriseUnit] = None
+  def getEnterprise(id: String, period: String): Option[EnterpriseUnit] = {
+    throw new NoSuchElementException
+    None
+  }
 
   def getStatUnitLinks(id: String, category: String, period: String): Option[UnitLinks] = None
 

@@ -13,6 +13,8 @@ import services.DataAccess
 import scala.concurrent.Future
 import utils.FutureResponse._
 
+import scala.util.{ Failure, Success, Try }
+
 /**
  * Created by haqa on 04/08/2017.
  */
@@ -60,17 +62,19 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration) ext
 
   def handleValidatedParams(params: Either[ValidParams, InvalidParams]): Future[Result] = params match {
     case Left(v: ValidParams) => v match {
-      case u: UnitLinksParams => dbResultMatcher(db.getUnitLinks(u.id, u.period))
-      case s: StatUnitLinksParams => dbResultMatcher(db.getStatUnitLinks(s.id, s.category, s.period))
-      case e: EnterpriseParams => dbResultMatcher(db.getEnterprise(e.id, e.period))
+      case u: UnitLinksParams => dbResultMatcher(Try(db.getUnitLinks(u.id, u.period)))
+      case s: StatUnitLinksParams => dbResultMatcher(Try(db.getStatUnitLinks(s.id, s.category, s.period)))
+      case e: EnterpriseParams => dbResultMatcher(Try(db.getEnterprise(e.id, e.period)))
     }
     case Right(i: InvalidParams) => BadRequest(i.msg).future
   }
 
-  // Need to wrap below in a Try
-  def dbResultMatcher[T](result: Option[T]): Future[Result] = result match {
-    case Some(a) => Ok("Okay").future
-    case None => NotFound.future
+  def dbResultMatcher[T](result: Try[Option[T]]): Future[Result] = result match {
+    case Success(s) => s match {
+      case Some(a) => Ok("Ok").future
+      case None => NotFound("Not Found").future
+    }
+    case Failure(ex) => InternalServerError("Internal Server Error").future
   }
 
   @ApiOperation(
