@@ -23,7 +23,9 @@ pipeline {
 
         ORGANIZATION = "ons"
         TEAM = "sbr"
-        MODULE_NAME = "sbr-control-api"  
+        MODULE_NAME = "sbr-control-api"
+
+        NAMESPACE = "sbr_dev_db"
     }
     options {
         skipDefaultCheckout()
@@ -246,6 +248,6 @@ def deploy () {
     cf_env = "${env.DEPLOY_NAME}".capitalize()
     echo "Deploying Api app to ${env.DEPLOY_NAME}"
     withCredentials([string(credentialsId: "sbr-api-dev-secret-key", variable: 'APPLICATION_SECRET')]) {
-         deployToCloudFoundryHBase("${TEAM}-${env.DEPLOY_NAME}-cf", "${CF_PROJECT}", "${cf_env}", "${env.DEPLOY_NAME}-${MODULE_NAME}", "${env.DEPLOY_NAME}-${ORGANIZATION}-${MODULE_NAME}.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml", "notUsed", "notUsed")
+         deployToCloudFoundryHBase("${TEAM}-${env.DEPLOY_NAME}-cf", "${CF_PROJECT}", "${cf_env}", "${env.DEPLOY_NAME}-${MODULE_NAME}", "${env.DEPLOY_NAME}-${ORGANIZATION}-${MODULE_NAME}.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml", "notUsed", NAMESPACE)
     }
 }
