@@ -4,6 +4,8 @@ import javax.inject.Inject
 
 import com.typesafe.scalalogging.StrictLogging
 import io.swagger.annotations._
+import org.joda.time.YearMonth
+import org.joda.time.format.DateTimeFormat
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.mvc.{ Action, AnyContent, Result }
@@ -12,8 +14,8 @@ import services.DataAccess
 
 import scala.concurrent.Future
 import utils.FutureResponse._
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{ Failure, Success, Try }
 
 /**
@@ -28,26 +30,50 @@ import scala.util.{ Failure, Success, Try }
 // parameters as the normal case class apply method
 // http://www.scala-lang.org/old/node/2211
 
-trait ValidParams
+trait ValidParams {
+
+  private val minKeyLength: Int = 4
+  private val maxKeyLength: Int = 13
+  private val periodFormat: String = "yyyyMM"
+
+  def validId(id: String): Boolean = id.length < maxKeyLength && id.length > minKeyLength
+
+  def validPeriod(period: String): Boolean = Try(YearMonth.parse(period), DateTimeFormat.forPattern(periodFormat)) match {
+    case Success(_) => true
+    case Failure(_) => false
+  }
+}
+
 case class UnitLinksParams(id: String, period: String) extends ValidParams
-object UnitLinksParams {
-  def applyA(id: String, period: String): Either[UnitLinksParams, InvalidParams] = {
-    Left(UnitLinksParams(id, period))
+object UnitLinksParams extends ValidParams {
+  def applyA(id: String, period: String): Either[UnitLinksParams, InvalidParams] = (id, period) match {
+    case (id, _) if (!validId(id)) => Right(InvalidId("Invalid ID"))
+    case (_, period) if (!validPeriod(period)) => Right(InvalidPeriod("Invalid period"))
+    case (id, period) => Left(UnitLinksParams(id, period))
   }
 }
 
 case class EnterpriseParams(id: String, period: String) extends ValidParams
-object EnterpriseParams {
-  def applyA(id: String, period: String): Either[EnterpriseParams, InvalidParams] = {
-    Left(EnterpriseParams(id, period))
+object EnterpriseParams extends ValidParams {
+  def applyA(id: String, period: String): Either[EnterpriseParams, InvalidParams] = (id, period) match {
+    case (id, _) if (!validId(id)) => Right(InvalidId("Invalid ID"))
+    case (_, period) if (!validPeriod(period)) => Right(InvalidPeriod("Invalid period"))
+    case (id, period) => Left(EnterpriseParams(id, period))
   }
 }
 
 case class StatUnitLinksParams(id: String, category: String, period: String) extends ValidParams
-object StatUnitLinksParams {
-  def applyA(id: String, period: String, category: String): Either[StatUnitLinksParams, InvalidParams] = {
-    Left(StatUnitLinksParams(id, category, period))
+object StatUnitLinksParams extends ValidParams {
+  private val validCategories: List[String] = List("ENT", "LEU", "VAT", "PAYE", "CH")
+
+  def applyA(id: String, period: String, category: String): Either[StatUnitLinksParams, InvalidParams] = (id, period, category) match {
+    case (id, _, _) if (!validId(id)) => Right(InvalidId("Invalid ID"))
+    case (_, period, _) if (!validPeriod(period)) => Right(InvalidPeriod("Invalid period"))
+    case (_, _, category) if (!validCategory(category)) => Right(InvalidCategory("Invalid category"))
+    case (id, period, category) => Left(StatUnitLinksParams(id, period, category))
   }
+
+  def validCategory(category: String): Boolean = validCategories.contains(category)
 }
 
 trait InvalidParams {
@@ -55,6 +81,7 @@ trait InvalidParams {
 }
 case class InvalidId(msg: String) extends InvalidParams
 case class InvalidPeriod(msg: String) extends InvalidParams
+case class InvalidCategory(msg: String) extends InvalidParams
 case class InvalidIdAndPeriod(msg: String) extends InvalidParams
 
 @Api("Search")
