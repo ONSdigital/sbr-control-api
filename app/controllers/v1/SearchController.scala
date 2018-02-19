@@ -12,6 +12,7 @@ import services.DataAccess
 
 import scala.concurrent.Future
 import utils.FutureResponse._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.util.{ Failure, Success, Try }
 
@@ -73,11 +74,13 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration) ext
     case Right(i: InvalidParams) => BadRequest(i.msg).future
   }
 
-  def dbResultMatcher[T](result: Try[Option[T]]): Future[Result] = result match {
-    case Success(s) => s match {
-      case Some(a) => Ok("Ok").future
-      case None => NotFound("Not Found").future
-    }
+  def dbResultMatcher[T](result: Try[Future[Option[T]]]): Future[Result] = result match {
+    case Success(s) => s.flatMap(x => {
+      x match {
+        case Some(a) => Ok("Ok").future
+        case None => NotFound("Not Found").future
+      }
+    })
     case Failure(ex) => InternalServerError("Internal Server Error").future
   }
 
