@@ -89,8 +89,8 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration) ext
   }
 
   @ApiOperation(
-    value = "Json response of links that correspond to id and date",
-    notes = "Invokes a HBase api function to retrieve a nested link of potential parent and children by using the date and id param",
+    value = "Json response of links that correspond to an id and period.",
+    notes = "Gets the links for a specific id, which could include conflicts so multiple results may be returned.",
     responseContainer = "JSONObject",
     code = 200,
     httpMethod = "GET"
@@ -134,8 +134,8 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration) ext
   }
 
   @ApiOperation(
-    value = "Retrieves Unit links using id and unit type",
-    notes = "This function assumes the user knowns the type of id and requires unlike the previous functions.",
+    value = "Retrieves Unit links using id, unit type and period.",
+    notes = "This endpoint assumes the user knows the type of id, in addition to the id and period.",
     responseContainer = "JSONObject",
     code = 200,
     httpMethod = "GET"
