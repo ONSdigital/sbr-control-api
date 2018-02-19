@@ -7,6 +7,7 @@ import io.swagger.annotations._
 import org.joda.time.YearMonth
 import org.joda.time.format.DateTimeFormat
 import play.api.Configuration
+import play.api.i18n.{ Lang, Langs, MessagesApi }
 import play.api.libs.json.Json
 import play.api.mvc.{ Action, AnyContent, Result }
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
@@ -47,8 +48,8 @@ trait ValidParams {
 case class UnitLinksParams(id: String, period: String) extends ValidParams
 object UnitLinksParams extends ValidParams {
   def applyA(id: String, period: String): Either[UnitLinksParams, InvalidParams] = (id, period) match {
-    case (id, _) if (!validId(id)) => Right(InvalidId("Invalid ID"))
-    case (_, period) if (!validPeriod(period)) => Right(InvalidPeriod("Invalid period"))
+    case (id, _) if (!validId(id)) => Right(InvalidId())
+    case (_, period) if (!validPeriod(period)) => Right(InvalidPeriod())
     case (id, period) => Left(UnitLinksParams(id, period))
   }
 }
@@ -56,8 +57,8 @@ object UnitLinksParams extends ValidParams {
 case class EnterpriseParams(id: String, period: String) extends ValidParams
 object EnterpriseParams extends ValidParams {
   def applyA(id: String, period: String): Either[EnterpriseParams, InvalidParams] = (id, period) match {
-    case (id, _) if (!validId(id)) => Right(InvalidId("Invalid ID"))
-    case (_, period) if (!validPeriod(period)) => Right(InvalidPeriod("Invalid period"))
+    case (id, _) if (!validId(id)) => Right(InvalidId())
+    case (_, period) if (!validPeriod(period)) => Right(InvalidPeriod())
     case (id, period) => Left(EnterpriseParams(id, period))
   }
 }
@@ -67,9 +68,9 @@ object StatUnitLinksParams extends ValidParams {
   private val validCategories: List[String] = List("ENT", "LEU", "VAT", "PAYE", "CH")
 
   def applyA(id: String, period: String, category: String): Either[StatUnitLinksParams, InvalidParams] = (id, period, category) match {
-    case (id, _, _) if (!validId(id)) => Right(InvalidId("Invalid ID"))
-    case (_, period, _) if (!validPeriod(period)) => Right(InvalidPeriod("Invalid period"))
-    case (_, _, category) if (!validCategory(category)) => Right(InvalidCategory("Invalid category"))
+    case (id, _, _) if (!validId(id)) => Right(InvalidId())
+    case (_, period, _) if (!validPeriod(period)) => Right(InvalidPeriod())
+    case (_, _, category) if (!validCategory(category)) => Right(InvalidCategory())
     case (id, period, category) => Left(StatUnitLinksParams(id, period, category))
   }
 
@@ -79,13 +80,15 @@ object StatUnitLinksParams extends ValidParams {
 trait InvalidParams {
   val msg: String
 }
-case class InvalidId(msg: String) extends InvalidParams
-case class InvalidPeriod(msg: String) extends InvalidParams
-case class InvalidCategory(msg: String) extends InvalidParams
-case class InvalidIdAndPeriod(msg: String) extends InvalidParams
+case class InvalidId(msg: String = "controller.invalid.id") extends InvalidParams
+case class InvalidPeriod(msg: String = "controller.invalid.period") extends InvalidParams
+case class InvalidCategory(msg: String = "controller.invalid.category") extends InvalidParams
 
 @Api("Search")
-class SearchController @Inject() (db: DataAccess, playConfig: Configuration) extends StrictLogging with ControllerUtils {
+class SearchController @Inject() (db: DataAccess, playConfig: Configuration, langs: Langs, messagesApi: MessagesApi) extends StrictLogging with ControllerUtils {
+
+  // Use langs implicitly so we don't have to curry (langs) with every use of the messagesApi
+  implicit val lang: Lang = langs.availables.head
 
   // There is probably a more generic way of combining the logic in the two methods below
   def validateIdPeriodCatParams[T](id: String, period: String, category: String, apply: (String, String, String) => Either[T, InvalidParams]): Either[T, InvalidParams] = apply(id, period, category)
@@ -98,7 +101,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration) ext
       case s: StatUnitLinksParams => dbResultMatcher(Try(db.getStatUnitLinks(s.id, s.category, s.period)))
       case e: EnterpriseParams => dbResultMatcher(Try(db.getEnterprise(e.id, e.period)))
     }
-    case Right(i: InvalidParams) => BadRequest(i.msg).future
+    case Right(i: InvalidParams) => BadRequest(messagesApi(i.msg)).future
   }
 
   def dbResultMatcher[T](result: Try[Future[Option[T]]]): Future[Result] = result match {
@@ -109,10 +112,10 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration) ext
           case u: UnitLinks => Ok(Json.toJson(u)).future
           case l: List[UnitLinks] => Ok(Json.toJson(l)).future
         }
-        case None => NotFound("Not Found").future
+        case None => NotFound(messagesApi("controller.not.found")).future
       }
     })
-    case Failure(ex) => InternalServerError("Internal Server Error").future
+    case Failure(ex) => InternalServerError(messagesApi("controller.internal.server.error")).future
   }
 
   @ApiOperation(
