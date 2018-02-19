@@ -2,11 +2,11 @@ import com.google.inject.AbstractModule
 import java.time.Clock
 
 import com.typesafe.config.{ Config, ConfigFactory }
-import config.SBRPropertiesConfiguration
+import config.{ HBaseDataLoadConfig, SBRPropertiesConfiguration }
 import org.apache.hadoop.hbase.NamespaceDescriptor
 import org.apache.hadoop.util.ToolRunner
 import play.api.{ Configuration, Environment }
-import services.{ DataAccess, HBaseDataLoadConfig, HBaseRestDataAccess }
+import services.{ DataAccess, HBaseRestDataAccess }
 import uk.gov.ons.sbr.data.hbase.HBaseConnector
 import uk.gov.ons.sbr.data.hbase.load.BulkLoader
 

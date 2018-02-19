@@ -4,14 +4,14 @@ import javax.inject.Inject
 
 import com.typesafe.scalalogging.StrictLogging
 import io.swagger.annotations._
-import org.joda.time.YearMonth
-import org.joda.time.format.DateTimeFormat
 import play.api.Configuration
 import play.api.i18n.{ Lang, Langs, MessagesApi }
 import play.api.libs.json.Json
 import play.api.mvc.{ Action, AnyContent, Result }
-import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
+
 import services.DataAccess
+import uk.gov.ons.sbr.models._
+import uk.gov.ons.sbr.models.units._
 
 import scala.concurrent.Future
 import utils.FutureResponse._
@@ -22,72 +22,10 @@ import scala.util.{ Failure, Success, Try }
 /**
  * Created by haqa on 04/08/2017.
  */
-
-// TODO:
-// - refactor common apply code into one method, no code duplication
-// - move invalid/valid params to /models
-
-// I have to call the companion apply methods applyA not apply because they take the same
-// parameters as the normal case class apply method
-// http://www.scala-lang.org/old/node/2211
-
-trait ValidParams {
-
-  private val minKeyLength: Int = 4
-  private val maxKeyLength: Int = 13
-  private val periodFormat: String = "yyyyMM"
-
-  def validId(id: String): Boolean = id.length < maxKeyLength && id.length > minKeyLength
-
-  def validPeriod(period: String): Boolean = Try(YearMonth.parse(period), DateTimeFormat.forPattern(periodFormat)) match {
-    case Success(_) => true
-    case Failure(_) => false
-  }
-}
-
-case class UnitLinksParams(id: String, period: String) extends ValidParams
-object UnitLinksParams extends ValidParams {
-  def applyA(id: String, period: String): Either[UnitLinksParams, InvalidParams] = (id, period) match {
-    case (id, _) if (!validId(id)) => Right(InvalidId())
-    case (_, period) if (!validPeriod(period)) => Right(InvalidPeriod())
-    case (id, period) => Left(UnitLinksParams(id, period))
-  }
-}
-
-case class EnterpriseParams(id: String, period: String) extends ValidParams
-object EnterpriseParams extends ValidParams {
-  def applyA(id: String, period: String): Either[EnterpriseParams, InvalidParams] = (id, period) match {
-    case (id, _) if (!validId(id)) => Right(InvalidId())
-    case (_, period) if (!validPeriod(period)) => Right(InvalidPeriod())
-    case (id, period) => Left(EnterpriseParams(id, period))
-  }
-}
-
-case class StatUnitLinksParams(id: String, category: String, period: String) extends ValidParams
-object StatUnitLinksParams extends ValidParams {
-  private val validCategories: List[String] = List("ENT", "LEU", "VAT", "PAYE", "CH")
-
-  def applyA(id: String, period: String, category: String): Either[StatUnitLinksParams, InvalidParams] = (id, period, category) match {
-    case (id, _, _) if (!validId(id)) => Right(InvalidId())
-    case (_, period, _) if (!validPeriod(period)) => Right(InvalidPeriod())
-    case (_, _, category) if (!validCategory(category)) => Right(InvalidCategory())
-    case (id, period, category) => Left(StatUnitLinksParams(id, period, category))
-  }
-
-  def validCategory(category: String): Boolean = validCategories.contains(category)
-}
-
-trait InvalidParams {
-  val msg: String
-}
-case class InvalidId(msg: String = "controller.invalid.id") extends InvalidParams
-case class InvalidPeriod(msg: String = "controller.invalid.period") extends InvalidParams
-case class InvalidCategory(msg: String = "controller.invalid.category") extends InvalidParams
-
 @Api("Search")
 class SearchController @Inject() (db: DataAccess, playConfig: Configuration, langs: Langs, messagesApi: MessagesApi) extends StrictLogging with ControllerUtils {
 
-  // Use langs implicitly so we don't have to curry (langs) with every use of the messagesApi
+  // Use langs implicitly so we don't have to curry messagesApi("message")(langs) with every use of the messagesApi
   implicit val lang: Lang = langs.availables.head
 
   // There is probably a more generic way of combining the logic in the two methods below
@@ -115,7 +53,10 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
         case None => NotFound(messagesApi("controller.not.found")).future
       }
     })
-    case Failure(ex) => InternalServerError(messagesApi("controller.internal.server.error")).future
+    case Failure(ex) => {
+      logger.error(s"Returned Internal Server Error response with exception: ${ex.printStackTrace}")
+      InternalServerError(messagesApi("controller.internal.server.error")).future
+    }
   }
 
   @ApiOperation(

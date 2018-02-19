@@ -6,10 +6,10 @@ import com.google.common.base.Charsets
 import com.google.common.io.BaseEncoding
 import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
-import play.api.libs.ws.{WSClient, WSResponse}
+import play.api.libs.ws.{ WSClient, WSResponse }
 import play.api.http.Status
 import play.api.Configuration
-import play.api.libs.json.{JsArray, JsValue}
+import play.api.libs.json.{ JsArray, JsValue }
 import uk.gov.ons.sbr.data.domain.UnitType
 import uk.gov.ons.sbr.models.units.UnitLinks
 import uk.gov.ons.sbr.models.units.EnterpriseUnit

@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{ Json, OFormat }
 
 import uk.gov.ons.sbr.data.domain.StatisticalUnitLinks
-import uk.gov.ons.sbr.data.model.StatUnitLinks
 import uk.gov.ons.sbr.models.DataUnit
 
 /**
@@ -36,10 +35,5 @@ object KnownUnitLinks {
     }
     KnownUnitLinks(u.getKey, parentMap, childrenMap)
   }
-
-  def apply(s: StatUnitLinks): KnownUnitLinks = {
-    KnownUnitLinks(s.key, Option(s.parents), Option(s.children))
-  }
-
 }
 

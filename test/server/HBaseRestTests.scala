@@ -10,8 +10,8 @@ import play.api.libs.ws.ahc.AhcWSClient
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import resource.TestUtils
-import services.{ HBaseDataLoadConfig, HBaseRestDataAccess }
-import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
+import services.HBaseRestDataAccess
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -19,11 +19,12 @@ import javax.inject.Inject
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import org.scalatest.{ BeforeAndAfterEach, FlatSpec, Matchers }
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
+import config.HBaseDataLoadConfig
 import org.apache.hadoop.util.ToolRunner
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.ws.WSClient
