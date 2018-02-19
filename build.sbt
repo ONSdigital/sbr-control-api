@@ -101,15 +101,6 @@ lazy val api = (project in file("."))
       BuildInfoKey.action("gitVersion") {
         git.gitTagToVersionNumber.?.value.getOrElse(Some(Constant.projectStage))+"@"+ git.formattedDateVersion.?.value.getOrElse("")
     }),
-    // After universal:packageBin has run, the csv files cannot be found, so need to move them to the right place.
-    // replace sample sql with actual sql date files for SQLConnect
-    mappings in Universal += file("conf/sample/ch_2500_data.sql") -> "bin/conf/sample/ch_2500_data.sql",
-    mappings in Universal += file("conf/sample/ent_2500_data.sql") -> "bin/conf/sample/ent_2500_data.sql",
-    mappings in Universal += file("conf/sample/leu_2500_data.sql") -> "bin/conf/sample/leu_2500_data.sql",
-    mappings in Universal += file("conf/sample/paye_2500_data.sql") -> "bin/conf/sample/paye_2500_data.sql",
-    mappings in Universal += file("conf/sample/unit_links_2500_data.sql") -> "bin/conf/sample/unit_links_2500_data.sql",
-    mappings in Universal += file("conf/sample/vat_2500_data.sql") -> "bin/conf/sample/vat_2500_data.sql",
-
 
     // Run with proper default env vars set for hbaseInMemory
     javaOptions in Test += "-DSBR_DB_DEFAULT_NAME=hbase-rest",
