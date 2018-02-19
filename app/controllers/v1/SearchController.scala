@@ -77,7 +77,11 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration) ext
   def dbResultMatcher[T](result: Try[Future[Option[T]]]): Future[Result] = result match {
     case Success(s) => s.flatMap(x => {
       x match {
-        case Some(a) => Ok("Ok").future
+        case Some(a) => a match {
+          case e: EnterpriseUnit => Ok(Json.toJson(e)).future
+          case u: UnitLinks => Ok(Json.toJson(u)).future
+          case l: List[UnitLinks] => Ok(Json.toJson(l)).future
+        }
         case None => NotFound("Not Found").future
       }
     })
