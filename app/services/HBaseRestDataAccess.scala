@@ -5,12 +5,11 @@ import javax.inject.Inject
 import com.google.common.base.Charsets
 import com.google.common.io.BaseEncoding
 import com.netaporter.uri.dsl._
-
-import play.api.libs.ws.{ WSClient, WSResponse }
+import com.typesafe.scalalogging.LazyLogging
+import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.http.Status
 import play.api.Configuration
-import play.api.libs.json.{ JsArray, JsValue }
-
+import play.api.libs.json.{JsArray, JsValue}
 import uk.gov.ons.sbr.data.domain.UnitType
 import uk.gov.ons.sbr.models.units.UnitLinks
 import uk.gov.ons.sbr.models.units.EnterpriseUnit
@@ -22,7 +21,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /**
  * Created by coolit on 05/02/2018.
  */
-class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configuration) extends DataAccess with HBaseConfig {
+class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configuration) extends DataAccess with HBaseConfig with LazyLogging {
 
   private val columnFamilyAndValueSubstring: Int = 2
   private val DELIMITER: String = "~"
@@ -36,7 +35,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     // HBase key format: 201706~9901566115, period~id
     val rowKey = createRowKey(period, id)
     val uri = baseUrl / enterpriseTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
-    singleGETRequest(uri.toString, HEADERS) map {
+    val r = singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == Status.OK => {
         val row = (response.json \ "Row").as[JsValue]
         Some(EnterpriseUnit(id.toLong, period, jsToEntMap(row), "ENT", List()))
@@ -44,6 +43,8 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       case response if response.status == Status.NOT_FOUND => None
       case _ => None
     }
+    logger.error(s"ent: ${r}")
+    r
   }
 
   def getStatUnitLinks(id: String, category: String, period: String): Future[Option[UnitLinks]] =
@@ -54,7 +55,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     // When there is no unitType, * is used to get rows of any unit type
     val rowKey = createRowKey(period, id, None)
     val uri = baseUrl / unitTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
-    singleGETRequest(uri.toString, HEADERS) map {
+    val r = singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == Status.OK => {
         val row = (response.json \ "Row").as[JsValue]
         val seqJSON = row.as[Seq[JsValue]]
@@ -69,6 +70,8 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       case response if response.status == Status.NOT_FOUND => None
       case _ => None
     }
+    logger.error(s"stat/unit: ${r}")
+    r
   }
 
   def transformStatSeqJson(id: String, seqJSON: Seq[JsValue], row: JsValue): UnitLinks = {
@@ -83,11 +86,15 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     }).toList
   }
 
-  def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq(), params: Seq[(String, String)] = Seq()): Future[WSResponse] =
+  def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq(), params: Seq[(String, String)] = Seq()): Future[WSResponse] = {
+    logger.error(s"path: ${path}")
+    logger.error(s"headers: ${headers}")
+    logger.error(s"params: ${params}")
     ws.url(path.toString)
       .withQueryString(params: _*)
       .withHeaders(headers: _*)
       .get
+  }
 
   def extractParents(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
     case "ENT" => None
