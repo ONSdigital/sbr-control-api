@@ -1,4 +1,4 @@
-package utils
+package config
 
 import com.typesafe.config.Config
 import org.apache.hadoop.hbase.TableName

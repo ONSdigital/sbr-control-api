@@ -4,7 +4,7 @@ import java.time.{ DateTimeException, YearMonth }
 
 import com.google.inject.ImplementedBy
 import play.api.libs.json.JsError
-import uk.gov.ons.sbr.data.domain.UnitType
+
 /**
  * Created by haqa on 09/08/2017.
  */

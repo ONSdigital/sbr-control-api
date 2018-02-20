@@ -6,11 +6,11 @@ import com.google.common.base.Charsets
 import com.google.common.io.BaseEncoding
 import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
+import config.HBaseConfig
 import play.api.libs.ws.{ WSClient, WSResponse }
 import play.api.http.Status
 import play.api.Configuration
 import play.api.libs.json.{ JsArray, JsValue }
-import uk.gov.ons.sbr.data.domain.UnitType
 import uk.gov.ons.sbr.models.units.UnitLinks
 import uk.gov.ons.sbr.models.units.EnterpriseUnit
 import utils._
@@ -34,7 +34,9 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def getEnterprise(id: String, period: String): Future[Option[EnterpriseUnit]] = {
     // HBase key format: 201706~9901566115, period~id
     val rowKey = createRowKey(period, id)
-    val uri = baseUrl / enterpriseTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
+    val b = enterpriseTableName.getNamespaceAsString
+    val tableAndNameSpace = createTableNameWithNameSpace(enterpriseTableName.getNamespaceAsString, enterpriseTableName.getQualifierAsString)
+    val uri = baseUrl / tableAndNameSpace / rowKey / columnFamily
     val r = singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == Status.OK => {
         val row = (response.json \ "Row").as[JsValue]
@@ -50,11 +52,14 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def getStatUnitLinks(id: String, category: String, period: String): Future[Option[UnitLinks]] =
     getStatAndUnitLinks[UnitLinks](id, period, Some(category), transformStatSeqJson)
 
+  def createTableNameWithNameSpace(nameSpace: String, tableName: String): String = s"$nameSpace:$tableName"
+
   def getStatAndUnitLinks[T](id: String, period: String, unitType: Option[String], f: (String, Seq[JsValue], JsValue) => T): Future[Option[T]] = {
     // HBase key format: 201706~01752564~CH, period~id~type
     // When there is no unitType, * is used to get rows of any unit type
     val rowKey = createRowKey(period, id, None)
-    val uri = baseUrl / unitTableName.getNameWithNamespaceInclAsString / rowKey / columnFamily
+    val tableAndNameSpace = createTableNameWithNameSpace(unitTableName.getNamespaceAsString, unitTableName.getQualifierAsString)
+    val uri = baseUrl / tableAndNameSpace / rowKey / columnFamily
     val r = singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == Status.OK => {
         val row = (response.json \ "Row").as[JsValue]
@@ -146,9 +151,9 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   def createRowKey(period: String, id: String): String = String.join(DELIMITER, period, id)
 
-  def createRowKey(period: String, id: String, unitType: Option[UnitType]): String = {
+  def createRowKey(period: String, id: String, unitType: Option[String]): String = {
     unitType match {
-      case Some(u) => String.join(DELIMITER, period, id, u.toString)
+      case Some(u) => String.join(DELIMITER, period, id, u)
       case None => String.join(DELIMITER, period, id, "*")
     }
   }

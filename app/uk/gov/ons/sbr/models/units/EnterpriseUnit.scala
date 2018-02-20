@@ -5,7 +5,6 @@ import scala.collection.JavaConversions._
 import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{ JsValue, Json, OFormat }
 
-import uk.gov.ons.sbr.data.domain.Enterprise
 import uk.gov.ons.sbr.models.DataUnit
 
 /**
@@ -24,11 +23,4 @@ case class EnterpriseUnit(
 object EnterpriseUnit {
 
   implicit val unitFormat: OFormat[EnterpriseUnit] = Json.format[EnterpriseUnit]
-
-  def apply(o: Enterprise): EnterpriseUnit = {
-    val childJson = o.getChildren.map {
-      a => Json.parse(a.toUnitHierarchyAsJson)
-    }.toList
-    EnterpriseUnit(o.getKey.toLong, o.getReferencePeriod.toString, o.getVariables.toMap, o.getType.toString, childJson)
-  }
 }

@@ -34,20 +34,21 @@ class EditController extends ControllerUtils {
     @ApiParam(value = "An Enterprise ID", example = "1234567890", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     Logger.info(s"Editing by default period for id: ${id}")
-    val evalResp = matchByEditParams(Some(id), request)
-    val res = evalResp match {
-      case (x: EditRequest) => {
-        val resp = Try(requestEnterprise.updateEnterpriseVariableValues(x.id, x.updatedBy, x.edits)) match {
-          case Success(s) => Ok(errAsJson(OK, "edit_success", s"Edit has been made successfully to Enterprise with id: ${x.id}")).future
-          case Failure(ex) => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "edit_error", s"unable to make edit with exception [${ex.printStackTrace()}]")).future
-        }
-        resp
-      }
-      case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
-      case (j: InvalidEditJson) => BadRequest(errAsJson(BAD_REQUEST, "invalid_edit_json",
-        s"cannot parse json with exception ${j.exception}")).future
-    }
-    res
+    //    val evalResp = matchByEditParams(Some(id), request)
+    //    val res = evalResp match {
+    //      case (x: EditRequest) => {
+    //        val resp = Try(requestEnterprise.updateEnterpriseVariableValues(x.id, x.updatedBy, x.edits)) match {
+    //          case Success(s) => Ok(errAsJson(OK, "edit_success", s"Edit has been made successfully to Enterprise with id: ${x.id}")).future
+    //          case Failure(ex) => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "edit_error", s"unable to make edit with exception [${ex.printStackTrace()}]")).future
+    //        }
+    //        resp
+    //      }
+    //      case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
+    //      case (j: InvalidEditJson) => BadRequest(errAsJson(BAD_REQUEST, "invalid_edit_json",
+    //        s"cannot parse json with exception ${j.exception}")).future
+    //    }
+    //    res
+    Ok.future
   }
 
   @ApiOperation(
@@ -67,19 +68,20 @@ class EditController extends ControllerUtils {
     @ApiParam(value = "An Enterprise ID", example = "1234567890", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     Logger.info(s"Editing by period [${period}] for id: ${id}")
-    val evalResp = matchByEditParams(Some(id), request, Some(period))
-    val res = evalResp match {
-      case (x: EditRequestByPeriod) => {
-        val resp = Try(requestEnterprise.updateEnterpriseVariableValues(x.period, x.id, x.updatedBy, x.edits)) match {
-          case Success(s) => Ok(errAsJson(OK, "edit_success", s"Edit has been made successfully to Enterprise with id: ${x.id}, for period: ${x.period.toString}")).future
-          case Failure(ex) => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "edit_error", s"unable to make edit with exception [${ex.printStackTrace()}]")).future
-        }
-        resp
-      }
-      case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
-      case (r: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "invalid_date", s"cannot parse date with exception ${r.exception}")).future
-      case (j: InvalidEditJson) => BadRequest(errAsJson(BAD_REQUEST, "invalid_edit_json", s"cannot parse json with exception ${j.exception}")).future
-    }
-    res
+    //    val evalResp = matchByEditParams(Some(id), request, Some(period))
+    //    val res = evalResp match {
+    //      case (x: EditRequestByPeriod) => {
+    //        val resp = Try(requestEnterprise.updateEnterpriseVariableValues(x.period, x.id, x.updatedBy, x.edits)) match {
+    //          case Success(s) => Ok(errAsJson(OK, "edit_success", s"Edit has been made successfully to Enterprise with id: ${x.id}, for period: ${x.period.toString}")).future
+    //          case Failure(ex) => InternalServerError(errAsJson(INTERNAL_SERVER_ERROR, "edit_error", s"unable to make edit with exception [${ex.printStackTrace()}]")).future
+    //        }
+    //        resp
+    //      }
+    //      case (i: InvalidKey) => BadRequest(errAsJson(BAD_REQUEST, "invalid_key", s"invalid id ${i.id}. Check key size[$minKeyLength].")).future
+    //      case (r: InvalidReferencePeriod) => BadRequest(errAsJson(BAD_REQUEST, "invalid_date", s"cannot parse date with exception ${r.exception}")).future
+    //      case (j: InvalidEditJson) => BadRequest(errAsJson(BAD_REQUEST, "invalid_edit_json", s"cannot parse json with exception ${j.exception}")).future
+    //    }
+    //    res
+    Ok.future
   }
 }

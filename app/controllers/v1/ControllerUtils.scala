@@ -14,15 +14,12 @@ import com.typesafe.scalalogging.StrictLogging
 import play.api.libs.json._
 import play.api.mvc.{ AnyContent, Controller, Request, Result }
 
-import uk.gov.ons.sbr.data.controller.{ EnterpriseController, UnitController }
-import uk.gov.ons.sbr.data.domain.{ Enterprise, StatisticalUnit, StatisticalUnitLinks }
 import uk.gov.ons.sbr.models.EditEnterprise
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, KnownUnitLinks, UnitLinks }
 
 import config.Properties.minKeyLength
 import utils.Utilities.errAsJson
 import utils._
-//import services.HBaseInMemoryConfig
 
 /**
  * Created by haqa on 10/07/2017.
@@ -31,10 +28,6 @@ import utils._
  * @todo - change Future in resultMatcher
  */
 trait ControllerUtils extends Controller with StrictLogging {
-
-  //  HBaseInMemoryConfig
-  protected val requestLinks = new UnitController()
-  protected val requestEnterprise = new EnterpriseController()
 
   protected def validateYearMonth(key: String, raw: String) = {
     val yearAndMonth = Try(YearMonth.parse(raw, DateTimeFormatter.ofPattern("yyyyMM")))
@@ -94,27 +87,6 @@ trait ControllerUtils extends Controller with StrictLogging {
 
   protected def toJavaOptional[A](o: Option[A]): Optional[A] =
     o match { case Some(a) => Optional.ofNullable(a); case _ => Optional.empty[A] }
-
-  /**
-   * @note - simplify - AnyRef rep with t.param X
-   *
-   * @param v - value param to convert
-   * @param msg - overriding msg option
-   * @tparam Z - java data type for value param
-   * @return Future[Result]
-   */
-  protected def resultMatcher[Z](v: Optional[Z], msg: Option[String] = None): Future[Result] = {
-    Future { toOption[Z](v) }.map {
-      case Some(x: java.util.List[StatisticalUnit]) =>
-        tryAsResponse(Try(Json.toJson(x.toList.map { v => UnitLinks(v) })))
-      case Some(x: Enterprise) =>
-        tryAsResponse(Try(Json.toJson(EnterpriseUnit(x))))
-      case Some(x: StatisticalUnitLinks) =>
-        tryAsResponse(Try(Json.toJson(KnownUnitLinks(x))))
-      case _ =>
-        BadRequest(errAsJson(BAD_REQUEST, "bad_request", msg.getOrElse("Could not parse returned response")))
-    }
-  }
 
   protected def responseException: PartialFunction[Throwable, Result] = {
     case ex: DateTimeParseException =>
