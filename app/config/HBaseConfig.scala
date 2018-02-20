@@ -10,7 +10,7 @@ import play.api.Configuration
 trait HBaseConfig {
 
   implicit val configuration: Configuration
-  private val hBaseConfig: Config = configuration.underlying.getConfig("env.default.db")
+  private val hBaseConfig: Config = configuration.underlying.getConfig("db")
   private val hBaseRestConfig: Config = hBaseConfig.getConfig("hbase-rest")
 
   private val hbaseRestNameSpace: String = hBaseRestConfig.getString("namespace")
