@@ -2,8 +2,6 @@ package services
 
 import javax.inject.Inject
 
-import com.google.common.base.Charsets
-import com.google.common.io.BaseEncoding
 import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
 import config.HBaseConfig
@@ -13,7 +11,7 @@ import play.api.Configuration
 import play.api.libs.json.{ JsArray, JsValue }
 import uk.gov.ons.sbr.models.units.UnitLinks
 import uk.gov.ons.sbr.models.units.EnterpriseUnit
-import utils._
+import utils.Utilities._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -24,7 +22,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configuration) extends DataAccess with HBaseConfig with LazyLogging {
 
   private val columnFamilyAndValueSubstring: Int = 2
-  private val DELIMITER: String = "~"
   private val AUTH = encodeBase64(Seq(username, password))
   private val HEADERS = Seq("Accept" -> "application/json", "Authorization" -> s"Basic $AUTH")
 
@@ -33,11 +30,11 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   def getEnterprise(id: String, period: String): Future[Option[EnterpriseUnit]] = {
     // HBase key format: 201706~9901566115, period~id
-    val rowKey = createRowKey(period, id)
-    val b = enterpriseTableName.getNamespaceAsString
+    val rowKey = createEntRowKey(period, id)
     val tableAndNameSpace = createTableNameWithNameSpace(enterpriseTableName.getNamespaceAsString, enterpriseTableName.getQualifierAsString)
     val uri = baseUrl / tableAndNameSpace / rowKey / columnFamily
-    val r = singleGETRequest(uri.toString, HEADERS) map {
+    logger.debug(s"Sending GET request to HBase REST for enterprise using rowKey [$rowKey]")
+    singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == Status.OK => {
         val row = (response.json \ "Row").as[JsValue]
         Some(EnterpriseUnit(id.toLong, period, jsToEntMap(row), "ENT", List()))
@@ -45,38 +42,30 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       case response if response.status == Status.NOT_FOUND => None
       case _ => None
     }
-    logger.error(s"ent: ${r}")
-    r
   }
 
   def getStatUnitLinks(id: String, category: String, period: String): Future[Option[UnitLinks]] =
     getStatAndUnitLinks[UnitLinks](id, period, Some(category), transformStatSeqJson)
 
-  def createTableNameWithNameSpace(nameSpace: String, tableName: String): String = s"$nameSpace:$tableName"
-
   def getStatAndUnitLinks[T](id: String, period: String, unitType: Option[String], f: (String, Seq[JsValue], JsValue) => T): Future[Option[T]] = {
     // HBase key format: 201706~01752564~CH, period~id~type
     // When there is no unitType, * is used to get rows of any unit type
-    val rowKey = createRowKey(period, id, None)
+    val rowKey = createUnitLinksRowKey(period, id, None)
     val tableAndNameSpace = createTableNameWithNameSpace(unitTableName.getNamespaceAsString, unitTableName.getQualifierAsString)
     val uri = baseUrl / tableAndNameSpace / rowKey / columnFamily
-    val r = singleGETRequest(uri.toString, HEADERS) map {
+    logger.debug(s"Sending GET request to HBase REST for unit links using rowKey [$rowKey]")
+    singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == Status.OK => {
         val row = (response.json \ "Row").as[JsValue]
         val seqJSON = row.as[Seq[JsValue]]
         // Depending on whether the unitType is present or not, we use a different function to transform the JSON
         // from HBase, either returning UnitLinks (when unitType is present) or List[UnitLinks] when there is
         // no unitType present
-        unitType match {
-          case Some(_) => Some(f(id, seqJSON, row))
-          case None => Some(f(id, seqJSON, row))
-        }
+        Some(f(id, seqJSON, row))
       }
       case response if response.status == Status.NOT_FOUND => None
       case _ => None
     }
-    logger.error(s"stat/unit: ${r}")
-    r
   }
 
   def transformStatSeqJson(id: String, seqJSON: Seq[JsValue], row: JsValue): UnitLinks = {
@@ -91,16 +80,6 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     }).toList
   }
 
-  def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq(), params: Seq[(String, String)] = Seq()): Future[WSResponse] = {
-    logger.error(s"path: ${path}")
-    logger.error(s"headers: ${headers}")
-    logger.error(s"params: ${params}")
-    ws.url(path.toString)
-      .withQueryString(params: _*)
-      .withHeaders(headers: _*)
-      .get
-  }
-
   def extractParents(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
     case "ENT" => None
     case "LEU" => Some(map.filterKeys(_ == "ENT"))
@@ -111,6 +90,13 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     case "ENT" => Some(map)
     case "LEU" => Some(map - "ENT")
     case _ => None
+  }
+
+  def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq(), params: Seq[(String, String)] = Seq()): Future[WSResponse] = {
+    ws.url(path.toString)
+      .withQueryString(params: _*)
+      .withHeaders(headers: _*)
+      .get
   }
 
   private def jsToUnitMap(js: JsValue): Map[String, String] = {
@@ -142,19 +128,5 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       val value = decodeBase64((cell \ "$").as[String])
       column -> value
     }.toMap
-  }
-
-  def encodeBase64(str: Seq[String], deliminator: String = ":"): String =
-    BaseEncoding.base64.encode(str.mkString(deliminator).getBytes(Charsets.UTF_8))
-
-  def decodeBase64(str: String): String = new String(BaseEncoding.base64().decode(str), "UTF-8")
-
-  def createRowKey(period: String, id: String): String = String.join(DELIMITER, period, id)
-
-  def createRowKey(period: String, id: String, unitType: Option[String]): String = {
-    unitType match {
-      case Some(u) => String.join(DELIMITER, period, id, u)
-      case None => String.join(DELIMITER, period, id, "*")
-    }
   }
 }
