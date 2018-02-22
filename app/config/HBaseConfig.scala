@@ -30,5 +30,6 @@ trait HBaseConfig {
   lazy val host: String = hBaseRestConfig.getString("host")
   lazy val port: String = hBaseRestConfig.getString("port")
   lazy val baseUrl: String = s"$host:$port"
-  lazy val columnFamily: String = hBaseRestConfig.getString("column.family")
+  lazy val enterpriseColumnFamily: String = hBaseRestConfig.getString("column.family.enterprise")
+  lazy val unitLinksColumnFamily: String = hBaseRestConfig.getString("column.family.unit.links")
 }
