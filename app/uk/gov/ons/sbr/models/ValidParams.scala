@@ -52,11 +52,11 @@ case class StatUnitLinksParams(id: String, category: String, period: String) ext
 object StatUnitLinksParams extends ValidParams {
   private val validCategories: List[String] = List("ENT", "LEU", "VAT", "PAYE", "CH")
 
-  def applyA(id: String, period: String, category: String): Either[StatUnitLinksParams, InvalidParams] = (id, period, category) match {
+  def applyA(id: String, category: String, period: String): Either[StatUnitLinksParams, InvalidParams] = (id, period, category) match {
     case (id, _, _) if (!validId(id)) => Right(InvalidId())
     case (_, period, _) if (!validPeriod(period)) => Right(InvalidPeriod())
     case (_, _, category) if (!validCategory(category)) => Right(InvalidCategory())
-    case (id, period, category) => Left(StatUnitLinksParams(id, period, category))
+    case (id, period, category) => Left(StatUnitLinksParams(id, category, period))
   }
 
   def validCategory(category: String): Boolean = validCategories.contains(category)

@@ -1,94 +1,121 @@
 package server
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
-import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.typesafe.config.ConfigFactory
-import play.api.Configuration
-import play.api.libs.ws.ahc.AhcWSClient
-import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import resource.TestUtils
-import services.HBaseRestDataAccess
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
-import java.util.concurrent.TimeUnit
-import javax.inject.Inject
-
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
-import org.scalatest.{BeforeAndAfterEach, FlatSpec, Matchers}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
-import config.HBaseDataLoadConfig
-import org.apache.hadoop.util.ToolRunner
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.libs.ws.WSClient
-import uk.gov.ons.sbr.data.hbase.HBaseConnector
-import uk.gov.ons.sbr.data.hbase.load.BulkLoader
+import play.api.libs.json.{ JsArray, JsSuccess }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
 
 /**
  * Created by coolit on 13/02/2018.
  */
-class HBaseRestTests extends TestUtils with HBaseDataLoadConfig with BeforeAndAfterEach with GuiceOneAppPerSuite { // FlatSpec with Matchers with BeforeAndAfterEach with HBaseDataLoadConfig {
+class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppPerSuite {
 
   // TODO:
   // - test each type of endpoint
-  // - test with auth details
-  // - better modularisation of data load
+  // - test with auth details (this requires small modifications to the configuration)
+  // - we could read in the test data and base64 encode it etc. rather than just returning the data string
 
-  val Port = 8080
-  val Host = "localhost"
-  val wireMockServer = new WireMockServer(wireMockConfig().port(Port))
+  private val version = "v1"
+  private val nameSpace = "sbr_local_db"
+  private val unitLinksTable = "unit_links"
+  private val enterpriseTable = "enterprise"
+  private val columnFamily = "d"
+  private val firstPeriod = "201706"
+  private val secondPeriod = "201708"
+
+  // We don't use the normal HBase REST port as it can make testing annoying, this is set as a Java Option
+  // in the build.sbt
+  val port = 8081
+  val host = "localhost"
+  val wireMockServer = new WireMockServer(wireMockConfig().port(port))
 
   override def beforeEach {
     wireMockServer.start()
-    WireMock.configureFor(Host, Port)
+    WireMock.configureFor(host, port)
   }
 
   override def afterEach {
     wireMockServer.stop()
   }
 
-  //  implicit val system = ActorSystem()
-  //  implicit val materializer = ActorMaterializer()
-  //  val configuration = Configuration(ConfigFactory.load("application.conf"))
-  //  val wsClient = AhcWSClient()
-  //val hbaseRest = new HBaseRestDataAccess(wsClient, configuration)
+  def mockEndpoint(tableName: String, period: String, id: String, unitType: Option[String], body: String): Unit = {
+    val path = unitType match {
+      case Some(s) => s"/$nameSpace:$tableName/$period~$id~$s/$columnFamily"
+      case None => s"/$nameSpace:$tableName/$period~$id/$columnFamily"
+    }
+    stubFor(get(urlEqualTo(path))
+      .willReturn(
+        aResponse()
+          .withStatus(200)
+          .withHeader("content-type", "application/json")
+          .withHeader("transfer-encoding", "chunked")
+          .withBody(body)
+      ))
+  }
 
-  //
-  //  "HBaseRestDataAccess" should "get units from HBaseRest" in {
-  //    val path = "/sbr_local_db:unit_links/201706~976351836291~*/d"
-  //    stubFor(get(urlEqualTo(path))
-  //      .willReturn(
-  //        aResponse()
-  //          .withStatus(200)
-  //      ))
-  //    val url = s"http://$Host:$Port$path"
-  //    val resp = ws.url(url).get()
-  //
-  //    val response = Await.result(resp, Duration(100, TimeUnit.MILLISECONDS))
-  //    response.status should be(200)
-  //    1 should equal(1)
-  //  }
-  //
-  //  "HBaseRestDataAccess" should "get units" in {
-  //    1 should equal(1)
-  //  }
-
-  "Unit Search on HBaseConnect should" should {
-    "return a unit for a given id" in {
-      1 must equal(1)
+  "/v1/periods/:period/units/:unit" should {
+    "return a unit for a valid id (company)" in {
+      val id = "9900156115"
+      val body = "{\"Row\":[{\"key\":\"MjAxNzA2fjAxNzUyNTY0fkNI\",\"Cell\":[{\"column\":\"ZDpwX0VOVA==\",\"timestamp\":1518617008390,\"$\":\"OTkwMDE1NjExNQ==\"},{\"column\":\"ZDpwX0xFVQ==\",\"timestamp\":1518617010555,\"$\":\"MTAyMDU0MTU=\"}]}]}"
+      mockEndpoint(unitLinksTable, firstPeriod, id, Some("*"), body)
+      val resp = fakeRequest(s"/$version/periods/$firstPeriod/units/$id")
+      val json = contentAsJson(resp).as[JsArray]
+      val unit = json(0).validate[UnitLinks]
+      status(resp) mustBe OK
+      contentType(resp) mustBe Some("application/json")
+      json.value.size mustBe 1
+      unit.isInstanceOf[JsSuccess[UnitLinks]] mustBe true
     }
 
-    "test" in {
-      val search = fakeRequest(s"/v1/units/12345")
-      status(search) mustBe NOT_FOUND
-      contentType(search) mustBe Some("application/json")
+    "return multiple units for a valid conflicting id (UBRN/VAT)" in {
+      // UBRN and VAT can have conflicting ID's so a request for a conflicting ID can
+      // return multiple results
+      val id = "976351836291"
+      val body = "{\"Row\":[{\"key\":\"MjAxNzA2fjk5MDAxNTYxMTV+RU5U\",\"Cell\":[{\"column\":\"ZDpjXzAxNzUyNTY0\",\"timestamp\":1517844803247,\"$\":\"Q0g=\"},{\"column\":\"ZDpjXzA0OTg4NTI3\",\"timestamp\":1517844803247,\"$\":\"Q0g=\"},{\"column\":\"ZDpjXzEwMjA1NDE1\",\"timestamp\":1517844764481,\"$\":\"TEVV\"},{\"column\":\"ZDpjXzI3Mzg3Njg=\",\"timestamp\":1517844790326,\"$\":\"UEFZRQ==\"},{\"column\":\"ZDpjXzQwMTM0NzI2MzI4OQ==\",\"timestamp\":1517844777427,\"$\":\"VkFU\"},{\"column\":\"ZDpjXzUzNzc3MzI=\",\"timestamp\":1517844790326,\"$\":\"UEFZRQ==\"},{\"column\":\"ZDpjXzg1OTc4NjM2NzYzMQ==\",\"timestamp\":1517844777427,\"$\":\"VkFU\"},{\"column\":\"ZDpjXzk1MzczODIx\",\"timestamp\":1517844764481,\"$\":\"TEVV\"}]}]}"
+      mockEndpoint(unitLinksTable, firstPeriod, id, Some("*"), body)
+      val resp = fakeRequest(s"/$version/periods/$firstPeriod/units/$id")
+      val json = contentAsJson(resp).as[JsArray]
+      val unit = json.value.map(x => x.validate[UnitLinks])
+      json.value.size mustBe 2
+      status(resp) mustBe OK
+      unit.isInstanceOf[Seq[JsSuccess[UnitLinks]]] mustBe true
+    }
+  }
+
+  "/v1/periods/:period/enterprises/:id" should {
+    "return an enterprise for a valid enterprise id" in {
+      val id = "9900156115"
+      val body = "{\"Row\":[{\"key\":\"MjAxNzA2fjk5MDAxNTYxMTV+RU5U\",\"Cell\":[{\"column\":\"ZDpjXzAxNzUyNTY0\",\"timestamp\":1517844803247,\"$\":\"Q0g=\"},{\"column\":\"ZDpjXzA0OTg4NTI3\",\"timestamp\":1517844803247,\"$\":\"Q0g=\"},{\"column\":\"ZDpjXzEwMjA1NDE1\",\"timestamp\":1517844764481,\"$\":\"TEVV\"},{\"column\":\"ZDpjXzI3Mzg3Njg=\",\"timestamp\":1517844790326,\"$\":\"UEFZRQ==\"},{\"column\":\"ZDpjXzQwMTM0NzI2MzI4OQ==\",\"timestamp\":1517844777427,\"$\":\"VkFU\"},{\"column\":\"ZDpjXzUzNzc3MzI=\",\"timestamp\":1517844790326,\"$\":\"UEFZRQ==\"},{\"column\":\"ZDpjXzg1OTc4NjM2NzYzMQ==\",\"timestamp\":1517844777427,\"$\":\"VkFU\"},{\"column\":\"ZDpjXzk1MzczODIx\",\"timestamp\":1517844764481,\"$\":\"TEVV\"}]}]}"
+      mockEndpoint(enterpriseTable, firstPeriod, id, None, body)
+      val resp = fakeRequest(s"/$version/periods/$firstPeriod/enterprises/$id")
+      val json = contentAsJson(resp)
+      val unit = json.validate[EnterpriseUnit]
+      status(resp) mustBe OK
+      contentType(resp) mustBe Some("application/json")
+      unit.isInstanceOf[JsSuccess[EnterpriseUnit]] mustBe true
+    }
+  }
+
+  "/v1/periods/:period/types/:type/units/:id" should {
+    "return a unit for a valid id (PAYE)" in {
+      val id = "2738768"
+      val unitType = "PAYE"
+      val body = "{\"Row\":[{\"key\":\"MjAxNzA2fjI3Mzg3Njh+UEFZRQ==\",\"Cell\":[{\"column\":\"ZDpwX0VOVA==\",\"timestamp\":1517844790326,\"$\":\"OTkwMDE1NjExNQ==\"},{\"column\":\"ZDpwX0xFVQ==\",\"timestamp\":1517844827832,\"$\":\"MTAyMDU0MTU=\"}]}]}"
+      mockEndpoint(unitLinksTable, firstPeriod, id, Some(unitType), body)
+      val resp = fakeRequest(s"/$version/periods/$firstPeriod/types/$unitType/units/$id")
+      // We don't need to convert the JSON response to an array as only a single JSON object is returned
+      // as by specifying the unit type there can not be multiple responses for one id.
+      val json = contentAsJson(resp)
+      val unit = json.validate[UnitLinks]
+      status(resp) mustBe OK
+      contentType(resp) mustBe Some("application/json")
+      unit.isInstanceOf[JsSuccess[UnitLinks]] mustBe true
     }
   }
 }

@@ -50,7 +50,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def getStatAndUnitLinks[T](id: String, period: String, unitType: Option[String], f: (String, Seq[JsValue], JsValue) => T): Future[Option[T]] = {
     // HBase key format: 201706~01752564~CH, period~id~type
     // When there is no unitType, * is used to get rows of any unit type
-    val rowKey = createUnitLinksRowKey(period, id, None)
+    val rowKey = createUnitLinksRowKey(period, id, unitType)
     val tableAndNameSpace = createTableNameWithNameSpace(unitTableName.getNamespaceAsString, unitTableName.getQualifierAsString)
     val uri = baseUrl / tableAndNameSpace / rowKey / columnFamily
     logger.debug(s"Sending GET request to HBase REST for unit links using rowKey [$rowKey]")

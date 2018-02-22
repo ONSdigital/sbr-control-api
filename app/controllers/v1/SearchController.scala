@@ -124,6 +124,6 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get StatisticalUnitLinks with id [$id] and category [$category] parameters.")
-    handleValidatedParams(validateIdPeriodCatParams[StatUnitLinksParams](id, date, category, StatUnitLinksParams.applyA))
+    handleValidatedParams(validateIdPeriodCatParams[StatUnitLinksParams](id, category, date, StatUnitLinksParams.applyA))
   }
 }
