@@ -10,7 +10,6 @@ GET     /v1/periods/:date/enterprises/:id              controllers.v1.SearchCont
 
 # Edit Enterprise Records Feature
 
-POST    /v1/enterprises/:id                  controllers.v1.EditController.editEnterprise(id)
 POST    /v1/periods/:period/enterprises/:id  controllers.v1.EditController.editEnterpriseForPeriod(period, id)
 
 # Other Routes
@@ -18,18 +17,23 @@ POST    /v1/periods/:period/enterprises/:id  controllers.v1.EditController.editE
 GET     /                                   controllers.HomeController.status
 
 # Route for deployed version information (in JSON).
+
 GET     /version                            controllers.VersionController.version
 
-# build dates
+# Build dates
+
 # GET   /latest                             controllers.v1.LastUpdateController.latestListings
 
 # Route for health check information (in JSON).
+
 GET     /health                             controllers.HealthController.health
 
-# api documentation
+# API Documentation
+
 GET     /swagger.json                       controllers.ApiHelpController.getResources
 GET     /docs                               controllers.HomeController.swagger
 
 
 # Map static resources from the /public folder to the /assets URL path
+
 GET     /assets/*file                       controllers.Assets.versioned(path="/public", file: Asset)
