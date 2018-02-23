@@ -31,7 +31,7 @@ class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppP
 
   // We don't use the normal HBase REST port as it can make testing annoying, this is set as a Java Option
   // in the build.sbt
-  val port = 8081
+  val port = 8075
   val host = "localhost"
   val wireMockServer = new WireMockServer(wireMockConfig().port(port))
 
