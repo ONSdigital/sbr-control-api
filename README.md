@@ -29,19 +29,11 @@ brew install hbase
 
 To compile, build and run the application use the following command:
 ```shell
-sbt "api/run -Dsbr.hbase.inmemory=true"
+sbt "api/run"
 ```
 The default application port is 9000. To specify an alternative port use `-Dhttp.port=8080`.
 
-#### Database Configuration
-sbr-control-api provides the capability to easily switch between two database options: [HBase](https://github.com/ONSdigital/sbr-hbase-connector) and [SQL](https://github.com/ONSdigital/sbr-sql-connector). Although both share the same data source and thereby reveal the same result given the same parameters, the internal process of retrieval varies. Its usages at this point is merely experimental. By default the application uses HBase.
-
-To override the `db.default.name` configuration we can add the following to our run command:
-```shell
--Denv.default.db.default.name=sql
-```
-
-##### HBase
+##### HBase REST
 
 HBase can be started locally by:
 ```shell
@@ -54,14 +46,6 @@ hbase shell
 create_namespace 'sbr_local_db'
 create 'sbr_local_db:enterprise', 'd'
 create 'sbr_local_db:unit_links', 'd'
-```
-
-#### HBase REST
-
-To start HBase, use the following command:
-
-```shell
-start-hbase.sh
 ```
 
 We now need to start HBase REST.
