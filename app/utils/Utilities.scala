@@ -29,7 +29,7 @@ object Utilities {
     )
   }
 
-  def createEntRowKey(period: String, id: String): String = String.join(DELIMITER, period, id)
+  def createEntRowKey(period: String, id: String): String = String.join(DELIMITER, id, period)
 
   def createUnitLinksRowKey(period: String, id: String, unitType: Option[String]): String = unitType match {
     case Some(u) => String.join(DELIMITER, period, id, u)
