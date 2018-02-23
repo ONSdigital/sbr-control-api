@@ -11,9 +11,6 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import play.api.libs.json.{ JsArray, JsSuccess }
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
-
 /**
  * Created by coolit on 13/02/2018.
  */
@@ -50,7 +47,7 @@ class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppP
   def mockEndpoint(tableName: String, period: String, id: String, unitType: Option[String], body: String): Unit = {
     val path = unitType match {
       case Some(s) => s"/$nameSpace:$tableName/$period~$id~$s/$columnFamily"
-      case None => s"/$nameSpace:$tableName/$id~$period/$columnFamily"
+      case None => s"/$nameSpace:$tableName/${id.reverse}~$period/$columnFamily"
     }
     stubFor(get(urlEqualTo(path))
       .willReturn(

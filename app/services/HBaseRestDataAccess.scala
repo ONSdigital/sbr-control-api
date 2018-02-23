@@ -34,14 +34,14 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   def getEnterprise(id: String, period: String): Future[Option[EnterpriseUnit]] = {
     // HBase key format: 201706~9901566115, period~id
-    val rowKey = createEntRowKey(period, id)
+    val rowKey = createEntRowKey(period, id.reverse)
     val tableAndNameSpace = createTableNameWithNameSpace(enterpriseTableName.getNamespaceAsString, enterpriseTableName.getQualifierAsString)
     val uri = baseUrl / tableAndNameSpace / rowKey / enterpriseColumnFamily
     logger.debug(s"Sending GET request to HBase REST for enterprise using rowKey [$rowKey]")
     singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == Status.OK => {
         val row = (response.json \ "Row").as[JsValue]
-        Some(EnterpriseUnit(id.toLong, period, jsToEntMap(row), "ENT", createEnterpriseChildJSON(id, period)))
+        Some(EnterpriseUnit(id, period, jsToEntMap(row), "ENT", createEnterpriseChildJSON(id, period)))
       }
       case response if response.status == Status.NOT_FOUND => None
       case _ => None
