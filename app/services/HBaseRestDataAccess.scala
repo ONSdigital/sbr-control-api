@@ -8,13 +8,17 @@ import config.HBaseConfig
 import play.api.libs.ws.{ WSClient, WSResponse }
 import play.api.http.Status
 import play.api.Configuration
-import play.api.libs.json.{ JsArray, JsValue }
-import uk.gov.ons.sbr.models.units.UnitLinks
-import uk.gov.ons.sbr.models.units.EnterpriseUnit
+import play.api.libs.json.{ JsArray, JsValue, Json, OFormat }
+import uk.gov.ons.sbr.models.units.{ Child, EnterpriseUnit, LEU, UnitLinks }
 import utils.Utilities._
 
-import scala.concurrent.Future
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+
+// TODO:
+// - when creating the childrenJSON, blocking code is used to resolve the Future, rather than
+//   using a Future within a case class, this may not be the best way to do it
 
 /**
  * Created by coolit on 05/02/2018.
@@ -37,7 +41,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == Status.OK => {
         val row = (response.json \ "Row").as[JsValue]
-        Some(EnterpriseUnit(id.toLong, period, jsToEntMap(row), "ENT", List()))
+        Some(EnterpriseUnit(id.toLong, period, jsToEntMap(row), "ENT", createEnterpriseChildJSON(id, period)))
       }
       case response if response.status == Status.NOT_FOUND => None
       case _ => None
@@ -65,6 +69,58 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       }
       case response if response.status == Status.NOT_FOUND => None
       case _ => None
+    }
+  }
+
+  /**
+   * Whenever an enterprise is returned, a field called childrenJSON in the model needs to be populated.
+   * This will involve getting the unit links for that particular enterprise and forming a tree of nested
+   * JSON of each child, and any children of that child. Example:
+   *
+   * {
+   *   "childrenJson": [
+   *     {
+   *       "type": "LEU",
+   *       "id": "12345",
+   *       "children": [
+   *         { "type": "CH", "id": "5325" },
+   *         { "type": "VAT", "id": "2947" },
+   *       ]
+   *     },
+   *    ...
+   *   ]
+   * }
+   *
+   */
+  def createEnterpriseChildJSON(entId: String, period: String): List[LEU] = {
+    logger.info(s"Creating child JSON for enterprise [$entId] with period [$period]")
+    val unitLinks = getStatUnitLinks(entId, "ENT", period)
+    // The await is a temporary measure to use whilst testing
+    Await.result(unitLinks, 2 seconds) match {
+      case Some(s) => s.children match {
+        case Some(c) => {
+          // Now that we have the unitLinks and we know that there are items in this list,
+          // we need to form the correct JSON format using the Map[String, String] which is
+          // a map of Map[id, unitType]. We can ignore the unitType's that are at the bottom
+          // of the hierarchy (VAT, PAYE, CH) as we do not know which of the LEUs is their parent.
+          val leus = c.filter(_._2 == "LEU").keySet.toList
+          leus.map(x => LEU("LEU", x, getChildrenForLEU(x, period)))
+        }
+        case None => List()
+      }
+      case None => List()
+    }
+  }
+
+  def getChildrenForLEU(childId: String, period: String): List[Child] = {
+    val unitLinks = getStatUnitLinks(childId, "LEU", period)
+    // The await is a temporary measure to use whilst testing
+    Await.result(unitLinks, 2 seconds) match {
+      case Some(s) => s.children match {
+        case Some(c) => c.map(x => Child(x._2, x._1)).toList
+        case None => List()
+      }
+      case None => List()
     }
   }
 
