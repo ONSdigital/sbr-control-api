@@ -26,6 +26,7 @@ pipeline {
         MODULE_NAME = "sbr-control-api"
 
         NAMESPACE = "sbr_dev_db"
+        TABLENAME = "empty"
     }
     options {
         skipDefaultCheckout()
@@ -55,7 +56,7 @@ pipeline {
             steps {
                 colourText("info", "Building ${env.BUILD_ID} on ${env.JENKINS_URL} from branch ${env.BRANCH_NAME}")
                 dir('gitlab') {
-                    git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'feature/tablename-env-var')
+                    git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'develop')
                 }
                         
                 sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
@@ -65,15 +66,15 @@ pipeline {
                     env.NODE_STAGE = "Build"
                     if (BRANCH_NAME == BRANCH_DEV) {
                         env.DEPLOY_NAME = DEPLOY_DEV
-                        sh "cp target/universal/${MODULE_NAME}-*.zip ${DEPLOY_DEV}-${ORGANIZATION}-${MODULE_NAME}.zip"
+                        sh "cp target/universal/${ORGANIZATION}-${MODULE_NAME}-*.zip ${DEPLOY_DEV}-${ORGANIZATION}-${MODULE_NAME}.zip"
                     }
                     else if  (BRANCH_NAME == BRANCH_TEST) {
                         env.DEPLOY_NAME = DEPLOY_TEST
-                        sh "cp target/universal/${MODULE_NAME}-*.zip ${DEPLOY_TEST}-${ORGANIZATION}-${MODULE_NAME}.zip"
+                        sh "cp target/universal/${ORGANIZATION}-${MODULE_NAME}-*.zip ${DEPLOY_TEST}-${ORGANIZATION}-${MODULE_NAME}.zip"
                     }
                     else if (BRANCH_NAME == BRANCH_PROD) {
                         env.DEPLOY_NAME = DEPLOY_PROD
-                        sh "cp target/universal/${MODULE_NAME}-*.zip ${DEPLOY_PROD}-${ORGANIZATION}-${MODULE_NAME}.zip"
+                        sh "cp target/universal/${ORGANIZATION}-${MODULE_NAME}-*.zip ${DEPLOY_PROD}-${ORGANIZATION}-${MODULE_NAME}.zip"
                     }
                 }
             }
@@ -248,6 +249,6 @@ def deploy () {
     cf_env = "${env.DEPLOY_NAME}".capitalize()
     echo "Deploying Api app to ${env.DEPLOY_NAME}"
     withCredentials([string(credentialsId: "sbr-api-dev-secret-key", variable: 'APPLICATION_SECRET')]) {
-         deployToCloudFoundryHBase("${TEAM}-${env.DEPLOY_NAME}-cf", "${CF_PROJECT}", "${cf_env}", "${env.DEPLOY_NAME}-${MODULE_NAME}", "${env.DEPLOY_NAME}-${ORGANIZATION}-${MODULE_NAME}.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml", "notUsed", NAMESPACE)
+         deployToCloudFoundryHBase("${TEAM}-${env.DEPLOY_NAME}-cf", "${CF_PROJECT}", "${cf_env}", "${env.DEPLOY_NAME}-${MODULE_NAME}", "${env.DEPLOY_NAME}-${ORGANIZATION}-${MODULE_NAME}.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml", TABLENAME, NAMESPACE)
     }
 }

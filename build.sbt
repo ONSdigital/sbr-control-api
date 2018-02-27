@@ -88,7 +88,7 @@ lazy val api = (project in file("."))
     publishLocal := {},
     publish := {},
     name := Constant.appName,
-    moduleName := "sbr-control-api",
+    moduleName := "ons-sbr-control-api",
     version := Versions.appVersion,
     buildInfoPackage := "controllers",
     // gives us last compile time and tagging info
