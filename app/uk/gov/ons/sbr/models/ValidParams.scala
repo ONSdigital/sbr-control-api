@@ -12,10 +12,11 @@ import scala.util.{ Failure, Success, Try }
  * parameters as the normal case class apply method
  * http://www.scala-lang.org/old/node/2211
  *
- * TODO:
- * - Use dependancy injected config for min/max key length, period format, id regex, valid categories
- *
  */
+
+// @todo - Use dependancy injected config for min/max key length, period format, id regex, valid categories
+// @todo - Make ValidParams trait more dynamic, e.g. common apply method for Ent/UnitLinks
+
 sealed trait ValidParams {
 
   private val minKeyLength: Int = 4

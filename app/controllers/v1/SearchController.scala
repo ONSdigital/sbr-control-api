@@ -2,7 +2,7 @@ package controllers.v1
 
 import javax.inject.Inject
 
-import com.typesafe.scalalogging.{ LazyLogging, StrictLogging }
+import com.typesafe.scalalogging.LazyLogging
 import io.swagger.annotations._
 import play.api.Configuration
 import play.api.i18n.{ Lang, Langs, MessagesApi }
