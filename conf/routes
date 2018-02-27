@@ -8,10 +8,6 @@ GET     /v1/periods/:date/units/:id                    controllers.v1.SearchCont
 GET     /v1/periods/:date/types/:category/units/:id    controllers.v1.SearchController.retrieveStatUnitLinks(date, category, id)
 GET     /v1/periods/:date/enterprises/:id              controllers.v1.SearchController.retrieveEnterprise(date, id)
 
-# Edit Enterprise Records Feature
-
-POST    /v1/periods/:period/enterprises/:id  controllers.v1.EditController.editEnterpriseForPeriod(period, id)
-
 # Other Routes
 
 GET     /                                   controllers.HomeController.status

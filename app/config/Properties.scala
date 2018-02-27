@@ -1,20 +1,24 @@
 package config
 
 import com.typesafe.config.{ Config, ConfigFactory }
+import play.api.Configuration
 
 /**
  * Created by haqa on 28/07/2017.
  */
-object Properties {
+trait Properties {
 
-  private val config: Config = SBRPropertiesConfiguration.envConfig(ConfigFactory.load())
+  implicit val config: Configuration
+  private val propertiesConfig = config.underlying
 
-  lazy val dbConfig = config.getConfig("db")
+  //private val config: Config = SBRPropertiesConfiguration.envConfig(ConfigFactory.load())
 
-  lazy val requestTimeout: Int = config.getInt("request.timeout")
-  lazy val minKeyLength: Int = config.getInt("search.minKeyLength")
+  lazy val dbConfig = propertiesConfig.getConfig("db")
+
+  lazy val requestTimeout: Int = propertiesConfig.getInt("request.timeout")
+  lazy val minKeyLength: Int = propertiesConfig.getInt("search.minKeyLength")
 
   // db
-  lazy val defaultDBInit: String = config.getString("db.default.name")
+  lazy val defaultDBInit: String = propertiesConfig.getString("db.default.name")
 
 }

@@ -2,7 +2,6 @@ import com.google.inject.AbstractModule
 import java.time.Clock
 
 import com.typesafe.config.{ Config, ConfigFactory }
-import config.SBRPropertiesConfiguration
 import play.api.{ Configuration, Environment }
 import services.{ DataAccess, HBaseRestDataAccess }
 
@@ -18,16 +17,9 @@ import services.{ DataAccess, HBaseRestDataAccess }
  */
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule {
   override def configure() = {
-    val config = SBRPropertiesConfiguration.envConfig(ConfigFactory.load())
+    bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
 
-    // In addition to using -Ddatabase=hbase-in-memory, -Dsbr.hbase.inmemory=true needs to be set to true for
-    // HBase in memory to work (this is required by the HBase connector .jar)
-    config.getString("db.default") match {
-      case "hbase-rest" => bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
-      case _ => bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
-    }
-
-    bind(classOf[Config]).toInstance(config)
+    // bind(classOf[Config]).toInstance(config)
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
   }
 }

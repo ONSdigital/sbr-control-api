@@ -2,13 +2,12 @@ package controllers.v1
 
 import javax.inject.Inject
 
-import com.typesafe.scalalogging.StrictLogging
+import com.typesafe.scalalogging.{ LazyLogging, StrictLogging }
 import io.swagger.annotations._
 import play.api.Configuration
 import play.api.i18n.{ Lang, Langs, MessagesApi }
 import play.api.libs.json.Json
-import play.api.mvc.{ Action, AnyContent, Result }
-
+import play.api.mvc.{ Action, AnyContent, Controller, Result }
 import services.DataAccess
 import uk.gov.ons.sbr.models._
 import uk.gov.ons.sbr.models.units._
@@ -23,13 +22,13 @@ import scala.util.{ Failure, Success, Try }
  * Created by haqa on 04/08/2017.
  */
 @Api("Search")
-class SearchController @Inject() (db: DataAccess, playConfig: Configuration, langs: Langs, messagesApi: MessagesApi) extends StrictLogging with ControllerUtils {
+class SearchController @Inject() (db: DataAccess, playConfig: Configuration, langs: Langs, messagesApi: MessagesApi) extends Controller with LazyLogging {
 
   // Use langs implicitly so we don't have to curry messagesApi("message")(langs) with every use of the messagesApi
   implicit val lang: Lang = langs.availables.head
 
   // There is probably a more generic way of combining the logic in the two methods below
-  def validateIdPeriodCatParams[T](id: String, period: String, category: String, apply: (String, String, String) => Either[T, InvalidParams]): Either[T, InvalidParams] = apply(id, period, category)
+  def validateIdPeriodCatParams(id: String, period: String, category: String, apply: (String, String, String) => Either[StatUnitLinksParams, InvalidParams]): Either[StatUnitLinksParams, InvalidParams] = apply(id, period, category)
 
   def validateIdPeriodParams[T](id: String, period: String, apply: (String, String) => Either[T, InvalidParams]): Either[T, InvalidParams] = apply(id, period)
 
@@ -43,18 +42,16 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
   }
 
   def dbResultMatcher[T](result: Try[Future[Option[T]]]): Future[Result] = result match {
-    case Success(s) => s.flatMap(x => {
-      x match {
-        case Some(a) => a match {
-          case e: EnterpriseUnit => Ok(Json.toJson(e)).future
-          case u: UnitLinks => Ok(Json.toJson(u)).future
-          case l: List[UnitLinks] => Ok(Json.toJson(l)).future
-        }
-        case None => NotFound(messagesApi("controller.not.found")).future
+    case Success(s) => s.flatMap(x => x match {
+      case Some(a) => a match {
+        case e: EnterpriseUnit => Ok(Json.toJson(e)).future
+        case u: UnitLinks => Ok(Json.toJson(u)).future
+        case l: List[UnitLinks] => Ok(Json.toJson(l)).future
       }
+      case None => NotFound(messagesApi("controller.not.found")).future
     })
     case Failure(ex) => {
-      logger.error(s"Returned Internal Server Error response with exception: ${ex.printStackTrace}")
+      logger.error(s"Returned Internal Server Error response with exception", ex)
       InternalServerError(messagesApi("controller.internal.server.error")).future
     }
   }
@@ -124,6 +121,6 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get StatisticalUnitLinks with id [$id] and category [$category] parameters.")
-    handleValidatedParams(validateIdPeriodCatParams[StatUnitLinksParams](id, category, date, StatUnitLinksParams.applyA))
+    handleValidatedParams(validateIdPeriodCatParams(id, category, date, StatUnitLinksParams.applyA))
   }
 }

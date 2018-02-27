@@ -95,7 +95,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def createEnterpriseChildJSON(entId: String, period: String): List[LEU] = {
     logger.info(s"Creating child JSON for enterprise [$entId] with period [$period]")
     val unitLinks = getStatUnitLinks(entId, "ENT", period)
-    // The await is a temporary measure to use whilst testing
+    // @TODO: The await is a temporary measure to use whilst testing
     Await.result(unitLinks, 2 seconds) match {
       case Some(s) => s.children match {
         case Some(c) => {
@@ -114,7 +114,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   def getChildrenForLEU(childId: String, period: String): List[Child] = {
     val unitLinks = getStatUnitLinks(childId, "LEU", period)
-    // The await is a temporary measure to use whilst testing
+    // @TODO: The await is a temporary measure to use whilst testing
     Await.result(unitLinks, 2 seconds) match {
       case Some(s) => s.children match {
         case Some(c) => c.map(x => Child(x._2, x._1)).toList
