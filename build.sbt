@@ -65,7 +65,6 @@ lazy val commonSettings = Seq (
     "-Xlint", // recommended additional warnings
     "-Xcheckinit", // runtime error when a val is not initialized due to trait hierarchies (instead of NPE somewhere else)
     "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver
-    //"-Yno-adapted-args", // Do not adapt an argument list (either by inserting () or creating a tuple) to match the receiver
     "-Ywarn-value-discard", // Warn when non-Unit expression results are unused
     "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures
     "-Ywarn-dead-code", // Warn when dead code is identified
@@ -88,7 +87,7 @@ lazy val api = (project in file("."))
     publishLocal := {},
     publish := {},
     name := Constant.appName,
-    moduleName := "ons-sbr-control-api",
+    moduleName := s"${Constant.organisation}-${Constant.appName}",
     version := Versions.appVersion,
     buildInfoPackage := "controllers",
     // gives us last compile time and tagging info
@@ -101,13 +100,7 @@ lazy val api = (project in file("."))
       BuildInfoKey.action("gitVersion") {
         git.gitTagToVersionNumber.?.value.getOrElse(Some(Constant.projectStage))+"@"+ git.formattedDateVersion.?.value.getOrElse("")
     }),
-
-    // Run with proper default env vars set for hbaseInMemory
-    javaOptions in Test += "-DSBR_DB_DEFAULT_NAME=hbase-rest",
     javaOptions in Test += "-DSBR_DB_PORT=8075",
-//    javaOptions in Universal ++= Seq(
-//      "-Dsbr.hbase.inmemory=true"
-//    ),
     // di router -> swagger
     routesGenerator := InjectedRoutesGenerator,
     buildInfoOptions += BuildInfoOption.ToMap,
@@ -116,24 +109,23 @@ lazy val api = (project in file("."))
     libraryDependencies ++= Seq (
       filters,
       ws,
-      // Using ws from typesafe due to the following issue: https://github.com/playframework/playframework/issues/6628
-      // "com.typesafe.play"            %%    "play-ws"             %    "2.5.8",
       "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "2.0.0"           % Test,
       "org.scalatest"                %%    "scalatest"           %    "3.0.4"           % Test,
       "com.github.tomakehurst"       %     "wiremock"            %    "1.33"            % Test,
       "org.webjars"                  %%    "webjars-play"        %    "2.5.0-3",
-      "io.lemonlabs"            %%  "scala-uri"                     % "0.5.0",
+      "io.lemonlabs"                 %%    "scala-uri"           %    "0.5.0",
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",
       "com.typesafe"                 %     "config"              %    "1.3.1",
-      //swagger
+      // Swagger
       "io.swagger"                   %%    "swagger-play2"       %    "1.5.3",
       "org.webjars"                  %     "swagger-ui"          %    "3.1.4",
+      // Hadoop & HBase (for creating the tableName)
       "org.apache.hadoop" % "hadoop-common" % "2.6.0",
       "org.apache.hbase" % "hbase-common" % "1.0.0",
       "org.apache.hbase" % "hbase-client" % "1.0.0"
       excludeAll ExclusionRule("commons-logging", "commons-logging")
     ),
-    // assembly
+    // Assembly
     assemblyJarName in assembly := s"${Constant.appName}-${Versions.appVersion}.jar",
     assemblyMergeStrategy in assembly := {
       case PathList("io", "netty", xs@_*)                                => MergeStrategy.last
