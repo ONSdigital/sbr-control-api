@@ -46,7 +46,7 @@ class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppP
 
   def mockEndpoint(tableName: String, period: String, id: String, unitType: Option[String], body: String): Unit = {
     val path = unitType match {
-      case Some(s) => s"/$nameSpace:$tableName/$period~$id~$s/$columnFamily"
+      case Some(s) => s"/$nameSpace:$tableName/$id~$s~$period/$columnFamily"
       case None => s"/$nameSpace:$tableName/${id.reverse}~$period/$columnFamily"
     }
     stubFor(get(urlEqualTo(path))
