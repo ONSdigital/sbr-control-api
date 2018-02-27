@@ -1,7 +1,6 @@
 import com.google.inject.AbstractModule
 import java.time.Clock
 
-import com.typesafe.config.{ Config, ConfigFactory }
 import play.api.{ Configuration, Environment }
 import services.{ DataAccess, HBaseRestDataAccess }
 
@@ -18,8 +17,6 @@ import services.{ DataAccess, HBaseRestDataAccess }
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule {
   override def configure() = {
     bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
-
-    // bind(classOf[Config]).toInstance(config)
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
   }
 }

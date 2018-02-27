@@ -4,11 +4,11 @@ import javax.inject.Inject
 
 import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
-import config.HBaseConfig
+import config.Properties
 import play.api.libs.ws.{ WSClient, WSResponse }
 import play.api.http.Status
 import play.api.Configuration
-import play.api.libs.json.{ JsArray, JsValue, Json, OFormat }
+import play.api.libs.json.{ JsArray, JsValue }
 import uk.gov.ons.sbr.models.units.{ Child, EnterpriseUnit, LEU, UnitLinks }
 import utils.Utilities._
 
@@ -23,7 +23,7 @@ import scala.concurrent.duration._
 /**
  * Created by coolit on 05/02/2018.
  */
-class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configuration) extends DataAccess with HBaseConfig with LazyLogging {
+class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configuration) extends DataAccess with Properties with LazyLogging {
 
   private val columnFamilyAndValueSubstring: Int = 2
   private val AUTH = encodeBase64(Seq(username, password))
