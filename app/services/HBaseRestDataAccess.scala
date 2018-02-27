@@ -37,6 +37,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val rowKey = createEntRowKey(period, id.reverse)
     val tableAndNameSpace = createTableNameWithNameSpace(enterpriseTableName.getNamespaceAsString, enterpriseTableName.getQualifierAsString)
     val uri = baseUrl / tableAndNameSpace / rowKey / enterpriseColumnFamily
+    logger.info(s"Using URI [$uri] for getEnterprise")
     logger.debug(s"Sending GET request to HBase REST for enterprise using rowKey [$rowKey]")
     singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == Status.OK => {
@@ -57,6 +58,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val rowKey = createUnitLinksRowKey(period, id, unitType)
     val tableAndNameSpace = createTableNameWithNameSpace(unitTableName.getNamespaceAsString, unitTableName.getQualifierAsString)
     val uri = baseUrl / tableAndNameSpace / rowKey / unitLinksColumnFamily
+    logger.info(s"Using URI [$uri] for getStatAndUnitLinks")
     logger.debug(s"Sending GET request to HBase REST for unit links using rowKey [$rowKey]")
     singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == Status.OK => {
