@@ -129,7 +129,6 @@ lazy val api = (project in file("."))
       "io.swagger"                   %%    "swagger-play2"       %    "1.5.3",
       "org.webjars"                  %     "swagger-ui"          %    "3.1.4",
       "org.apache.hadoop" % "hadoop-common" % "2.6.0",
-      "org.apache.hadoop" % "hadoop-mapred" % "0.22.0",
       "org.apache.hbase" % "hbase-common" % "1.0.0",
       "org.apache.hbase" % "hbase-client" % "1.0.0"
       excludeAll ExclusionRule("commons-logging", "commons-logging")
