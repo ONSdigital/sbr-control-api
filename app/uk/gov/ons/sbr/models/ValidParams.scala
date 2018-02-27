@@ -20,7 +20,7 @@ import scala.util.{ Failure, Success, Try }
 sealed trait ValidParams {
 
   private val minKeyLength: Int = 4
-  private val maxKeyLength: Int = 13
+  private val maxKeyLength: Int = 20
   private val periodFormat: String = "yyyyMM"
 
   def validId(id: String): Boolean = id.length < maxKeyLength && id.length > minKeyLength
