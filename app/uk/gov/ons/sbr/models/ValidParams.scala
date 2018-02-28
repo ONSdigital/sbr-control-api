@@ -40,11 +40,11 @@ object UnitLinksParams extends ValidParams {
   }
 }
 
-case class EnterpriseParams(id: String, period: String) extends ValidParams
+case class EnterpriseParams(id: String, period: Option[String]) extends ValidParams
 object EnterpriseParams extends ValidParams {
-  def applyA(id: String, period: String): Either[EnterpriseParams, InvalidParams] = (id, period) match {
+  def applyA(id: String, period: Option[String]): Either[EnterpriseParams, InvalidParams] = (id, period) match {
     case (id, _) if (!validId(id)) => Right(InvalidId())
-    case (_, period) if (!validPeriod(period)) => Right(InvalidPeriod())
+    case (_, Some(p)) if (!validPeriod(p)) => Right(InvalidPeriod())
     case (id, period) => Left(EnterpriseParams(id, period))
   }
 }

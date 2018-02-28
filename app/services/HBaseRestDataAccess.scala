@@ -8,7 +8,7 @@ import config.Properties
 import play.api.libs.ws.{ WSClient, WSResponse }
 import play.api.http.Status
 import play.api.Configuration
-import play.api.libs.json.{ JsArray, JsValue }
+import play.api.libs.json.{ JsArray, JsLookupResult, JsValue }
 import uk.gov.ons.sbr.models.units.{ Child, EnterpriseUnit, LEU, UnitLinks }
 import utils.Utilities._
 
@@ -32,8 +32,8 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def getUnitLinks(id: String, period: String): Future[Option[List[UnitLinks]]] =
     getStatAndUnitLinks[List[UnitLinks]](id, period, None, transformUnitSeqJson)
 
-  def getEnterprise(id: String, period: String): Future[Option[EnterpriseUnit]] = {
-    // HBase key format: 201706~9901566115, period~id
+  def getEnterprise(id: String, period: Option[String]): Future[Option[EnterpriseUnit]] = {
+    // HBase key format: 9901566115~201706, id~period
     val rowKey = createEntRowKey(period, id.reverse)
     val tableAndNameSpace = createTableNameWithNameSpace(enterpriseTableName.getNamespaceAsString, enterpriseTableName.getQualifierAsString)
     val uri = baseUrl / tableAndNameSpace / rowKey / enterpriseColumnFamily
@@ -42,7 +42,17 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     singleGETRequest(uri.toString, HEADERS) map {
       case response if response.status == Status.OK => {
         val row = (response.json \ "Row").as[JsValue]
-        Some(EnterpriseUnit(id, period, jsToEntMap(row), "ENT", createEnterpriseChildJSON(id, period)))
+        // If the period is present, we use the first result, as using id~period as the row key will get one result
+        // For the most recent period (i.e. period is None), we need to use the last result (Due to how the HBase
+        // REST API scan works (if we could do a reverse scan we'd only have to get the first result)
+        period match {
+          case Some(p) => Some(EnterpriseUnit(id, p, jsToEntMap(row(0)), "ENT", createEnterpriseChildJSON(id, p)))
+          case None => {
+            // We need to get the period from the HBase row key
+            val keyPeriod = decodeBase64((row.last \ "key").as[String]).split("~").last
+            Some(EnterpriseUnit(id, keyPeriod, jsToEntMap(row.last), "ENT", createEnterpriseChildJSON(id, keyPeriod)))
+          }
+        }
       }
       case response if response.status == Status.NOT_FOUND => None
       case _ => None
@@ -167,9 +177,9 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     }.toMap
   }
 
-  private def jsToEntMap(js: JsValue): Map[String, String] = {
+  private def jsToEntMap(js: JsLookupResult): Map[String, String] = {
     // An enterprise id is unique so we can safely always get the first JS value
-    (js(0) \ "Cell").as[Seq[JsValue]].map { cell =>
+    (js \ "Cell").as[Seq[JsValue]].map { cell =>
       val column = decodeBase64((cell \ "column").as[String]).split(":", columnFamilyAndValueSubstring).last
       val value = decodeBase64((cell \ "$").as[String])
       column -> value

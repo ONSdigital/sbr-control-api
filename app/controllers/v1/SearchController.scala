@@ -30,7 +30,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
   // There is probably a more generic way of combining the logic in the two methods below
   def validateIdPeriodCatParams(id: String, period: String, category: String, apply: (String, String, String) => Either[StatUnitLinksParams, InvalidParams]): Either[StatUnitLinksParams, InvalidParams] = apply(id, period, category)
 
-  def validateIdPeriodParams[T](id: String, period: String, apply: (String, String) => Either[T, InvalidParams]): Either[T, InvalidParams] = apply(id, period)
+  def validateIdPeriodParams[T](id: String, period: Option[String], apply: (String, Option[String]) => Either[T, InvalidParams]): Either[T, InvalidParams] = apply(id, period)
 
   def handleValidatedParams(params: Either[ValidParams, InvalidParams]): Future[Result] = params match {
     case Left(v: ValidParams) => v match {
@@ -75,12 +75,13 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get a List of StatisticalUnits with period [$date] and id [$id] parameters.")
-    handleValidatedParams(validateIdPeriodParams[UnitLinksParams](id, date, UnitLinksParams.applyA))
+    // handleValidatedParams(validateIdPeriodParams[UnitLinksParams](id, date, UnitLinksParams.applyA))
+    Ok.future
   }
 
   @ApiOperation(
     value = "Json response of matching id and date",
-    notes = "Invokes a HBase api function to retrieve data by using the date and id param",
+    notes = "Invokes a HBase api function to retrieve data by using the date (optional) and id param",
     responseContainer = "JSONObject",
     code = 200,
     httpMethod = "GET"
@@ -94,7 +95,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveEnterprise(
-    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
+    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: Option[String],
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get Enterprise with period [$date] and id [$id] parameters.")

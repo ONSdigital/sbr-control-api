@@ -84,6 +84,7 @@ lazy val api = (project in file("."))
   .settings(testSettings:_*)
   .settings(publishingSettings:_*)
   .settings(
+    routesImport += "extensions.Binders._",
     publishLocal := {},
     publish := {},
     name := Constant.appName,

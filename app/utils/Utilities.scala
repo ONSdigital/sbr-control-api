@@ -29,11 +29,11 @@ object Utilities {
     )
   }
 
-  def createEntRowKey(period: String, id: String): String = String.join(DELIMITER, id, period)
+  def createEntRowKey(period: Option[String], id: String): String = String.join(DELIMITER, id, period.getOrElse("*"))
 
   def createUnitLinksRowKey(period: String, id: String, unitType: Option[String]): String = unitType match {
-    case Some(u) => String.join(DELIMITER, id, u, period)
-    case None => String.join(DELIMITER, id, "*", period)
+    case Some(u) => String.join(DELIMITER, period, id, u)
+    case None => String.join(DELIMITER, period, id, "*")
   }
 
   def createTableNameWithNameSpace(nameSpace: String, tableName: String): String = s"$nameSpace:$tableName"
