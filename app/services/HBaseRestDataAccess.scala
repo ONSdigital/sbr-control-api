@@ -19,6 +19,7 @@ import scala.concurrent.duration._
 // TODO:
 // - when creating the childrenJSON, blocking code is used to resolve the Future, rather than
 //   using a Future within a case class, this may not be the best way to do it
+// - there are quite a few repeated .split("~").last, this could be put in a function
 
 /**
  * Created by coolit on 05/02/2018.
@@ -29,8 +30,8 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   private val AUTH = encodeBase64(Seq(username, password))
   private val HEADERS = Seq("Accept" -> "application/json", "Authorization" -> s"Basic $AUTH")
 
-  def getUnitLinks(id: String, period: String): Future[Option[List[UnitLinks]]] =
-    getStatAndUnitLinks[List[UnitLinks]](id, period, None, transformUnitSeqJson)
+  def getUnitLinks(id: String): Future[Option[List[UnitLinks]]] =
+    getStatAndUnitLinks[List[UnitLinks]](id, None, None, transformUnitSeqJson)
 
   def getEnterprise(id: String, period: Option[String]): Future[Option[EnterpriseUnit]] = {
     // HBase key format: 9901566115~201706, id~period
@@ -60,12 +61,12 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   }
 
   def getStatUnitLinks(id: String, category: String, period: String): Future[Option[UnitLinks]] =
-    getStatAndUnitLinks[UnitLinks](id, period, Some(category), transformStatSeqJson)
+    getStatAndUnitLinks[UnitLinks](id, Some(period), Some(category), transformStatSeqJson)
 
-  def getStatAndUnitLinks[T](id: String, period: String, unitType: Option[String], f: (String, Seq[JsValue], JsValue) => T): Future[Option[T]] = {
+  def getStatAndUnitLinks[T](id: String, period: Option[String], unitType: Option[String], f: (String, Seq[JsValue], JsValue) => T): Future[Option[T]] = {
     // HBase key format: 201706~01752564~CH, period~id~type
     // When there is no unitType, * is used to get rows of any unit type
-    val rowKey = createUnitLinksRowKey(period, id, unitType)
+    val rowKey = createUnitLinksRowKey(id, period, unitType)
     val tableAndNameSpace = createTableNameWithNameSpace(unitTableName.getNamespaceAsString, unitTableName.getQualifierAsString)
     val uri = baseUrl / tableAndNameSpace / rowKey / unitLinksColumnFamily
     logger.info(s"Using URI [$uri] for getStatAndUnitLinks")
@@ -137,14 +138,18 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   }
 
   def transformStatSeqJson(id: String, seqJSON: Seq[JsValue], row: JsValue): UnitLinks = {
-    val unit = decodeBase64((seqJSON(0) \ "key").as[String]).split("~").last
-    UnitLinks(id, extractParents(unit, convertToUnitMap(row)), extractChildren(unit, convertToUnitMap(row)), unit)
+    val unitType = decodeBase64((seqJSON(0) \ "key").as[String]).split("~").tail.head
+    UnitLinks(id, extractParents(unitType, convertToUnitMap(row)), extractChildren(unitType, convertToUnitMap(row)), unitType)
   }
 
+  // Get every bit of data for the most recent period
   def transformUnitSeqJson(id: String, seqJSON: Seq[JsValue], row: JsValue): List[UnitLinks] = {
-    seqJSON.map(x => {
-      val unit = decodeBase64((x \ "key").as[String]).split("~").last
-      UnitLinks(id, extractParents(unit, jsToUnitMap(x)), extractChildren(unit, jsToUnitMap(x)), unit)
+    val period = decodeBase64((seqJSON.last \ "key").as[String]).split("~").last
+    // We only want the most recent period
+    val filteredJSON = seqJSON.filter(x => decodeBase64((x \ "key").as[String]).split("~").last == period)
+    filteredJSON.map(x => {
+      val unitType = decodeBase64((x \ "key").as[String]).split("~").tail.head
+      UnitLinks(id, extractParents(unitType, jsToUnitMap(x)), extractChildren(unitType, jsToUnitMap(x)), unitType)
     }).toList
   }
 

@@ -31,21 +31,20 @@ sealed trait ValidParams {
   }
 }
 
-case class UnitLinksParams(id: String, period: String) extends ValidParams
+case class UnitLinksParams(id: String) extends ValidParams
 object UnitLinksParams extends ValidParams {
-  def applyA(id: String, period: String): Either[UnitLinksParams, InvalidParams] = (id, period) match {
-    case (id, _) if (!validId(id)) => Right(InvalidId())
-    case (_, period) if (!validPeriod(period)) => Right(InvalidPeriod())
-    case (id, period) => Left(UnitLinksParams(id, period))
+  def applyA(id: String): Either[UnitLinksParams, InvalidParams] = id match {
+    case i if (!validId(i)) => Right(InvalidId())
+    case i => Left(UnitLinksParams(i))
   }
 }
 
 case class EnterpriseParams(id: String, period: Option[String]) extends ValidParams
 object EnterpriseParams extends ValidParams {
   def applyA(id: String, period: Option[String]): Either[EnterpriseParams, InvalidParams] = (id, period) match {
-    case (id, _) if (!validId(id)) => Right(InvalidId())
+    case (i, _) if (!validId(i)) => Right(InvalidId())
     case (_, Some(p)) if (!validPeriod(p)) => Right(InvalidPeriod())
-    case (id, period) => Left(EnterpriseParams(id, period))
+    case (i, p) => Left(EnterpriseParams(i, p))
   }
 }
 
@@ -53,11 +52,11 @@ case class StatUnitLinksParams(id: String, category: String, period: String) ext
 object StatUnitLinksParams extends ValidParams {
   private val validCategories: List[String] = List("ENT", "LEU", "VAT", "PAYE", "CH")
 
-  def applyA(id: String, category: String, period: String): Either[StatUnitLinksParams, InvalidParams] = (id, period, category) match {
-    case (id, _, _) if (!validId(id)) => Right(InvalidId())
-    case (_, period, _) if (!validPeriod(period)) => Right(InvalidPeriod())
-    case (_, _, category) if (!validCategory(category)) => Right(InvalidCategory())
-    case (id, period, category) => Left(StatUnitLinksParams(id, category, period))
+  def applyA(id: String, period: String, category: String): Either[StatUnitLinksParams, InvalidParams] = (id, period, category) match {
+    case (i, _, _) if (!validId(i)) => Right(InvalidId())
+    case (_, p, _) if (!validPeriod(p)) => Right(InvalidPeriod())
+    case (_, _, c) if (!validCategory(c)) => Right(InvalidCategory())
+    case (i, p, c) => Left(StatUnitLinksParams(i, c, p))
   }
 
   def validCategory(category: String): Boolean = validCategories.contains(category)

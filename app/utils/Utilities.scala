@@ -31,9 +31,14 @@ object Utilities {
 
   def createEntRowKey(period: Option[String], id: String): String = String.join(DELIMITER, id, period.getOrElse("*"))
 
-  def createUnitLinksRowKey(period: String, id: String, unitType: Option[String]): String = unitType match {
-    case Some(u) => String.join(DELIMITER, period, id, u)
-    case None => String.join(DELIMITER, period, id, "*")
+  /**
+   * endpoint => rowKey
+   * /v1/units/:id => id~*
+   * /v1/periods/:period/types/:type/units/:id => id~type~period
+   */
+  def createUnitLinksRowKey(id: String, period: Option[String], unitType: Option[String]): String = (period, unitType) match {
+    case (Some(p), Some(u)) => String.join(DELIMITER, id, u, p)
+    case (None, None) => String.join(DELIMITER, id, "*")
   }
 
   def createTableNameWithNameSpace(nameSpace: String, tableName: String): String = s"$nameSpace:$tableName"

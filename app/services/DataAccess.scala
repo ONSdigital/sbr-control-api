@@ -9,9 +9,9 @@ import scala.concurrent.Future
  */
 trait DataAccess {
 
-  def getUnitLinks(id: String, period: String): Future[Option[List[UnitLinks]]]
-
   def getEnterprise(id: String, period: Option[String]): Future[Option[EnterpriseUnit]]
+
+  def getUnitLinks(id: String): Future[Option[List[UnitLinks]]]
 
   def getStatUnitLinks(id: String, category: String, period: String): Future[Option[UnitLinks]]
 }

@@ -28,13 +28,16 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
   implicit val lang: Lang = langs.availables.head
 
   // There is probably a more generic way of combining the logic in the two methods below
-  def validateIdPeriodCatParams(id: String, period: String, category: String, apply: (String, String, String) => Either[StatUnitLinksParams, InvalidParams]): Either[StatUnitLinksParams, InvalidParams] = apply(id, period, category)
 
-  def validateIdPeriodParams[T](id: String, period: Option[String], apply: (String, Option[String]) => Either[T, InvalidParams]): Either[T, InvalidParams] = apply(id, period)
+  def validateStatUnitLinksParams(id: String, category: String, period: String, apply: (String, String, String) => Either[StatUnitLinksParams, InvalidParams]): Either[StatUnitLinksParams, InvalidParams] = apply(id, period, category)
+
+  def validateUnitLinksParams(id: String, apply: (String) => Either[UnitLinksParams, InvalidParams]): Either[UnitLinksParams, InvalidParams] = apply(id)
+
+  def validateEntParams(id: String, period: Option[String], apply: (String, Option[String]) => Either[EnterpriseParams, InvalidParams]): Either[EnterpriseParams, InvalidParams] = apply(id, period)
 
   def handleValidatedParams(params: Either[ValidParams, InvalidParams]): Future[Result] = params match {
     case Left(v: ValidParams) => v match {
-      case u: UnitLinksParams => dbResultMatcher(Try(db.getUnitLinks(u.id, u.period)))
+      case u: UnitLinksParams => dbResultMatcher(Try(db.getUnitLinks(u.id)))
       case s: StatUnitLinksParams => dbResultMatcher(Try(db.getStatUnitLinks(s.id, s.category, s.period)))
       case e: EnterpriseParams => dbResultMatcher(Try(db.getEnterprise(e.id, e.period)))
     }
@@ -57,29 +60,6 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
   }
 
   @ApiOperation(
-    value = "Json response of links that correspond to an id and period.",
-    notes = "Gets the links for a specific id, which could include conflicts so multiple results may be returned.",
-    responseContainer = "JSONObject",
-    code = 200,
-    httpMethod = "GET"
-  )
-  @ApiResponses(Array(
-    new ApiResponse(code = 200, response = classOf[UnitLinks], responseContainer = "JsValue", message = "Ok -> Retrieved Links for given id."),
-    new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
-    new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
-    new ApiResponse(code = 500, responseContainer = "JsValue",
-      message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
-  ))
-  def retrieveUnitLinks(
-    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: String,
-    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
-  ): Action[AnyContent] = Action.async { implicit request =>
-    logger.info(s"Received request to get a List of StatisticalUnits with period [$date] and id [$id] parameters.")
-    // handleValidatedParams(validateIdPeriodParams[UnitLinksParams](id, date, UnitLinksParams.applyA))
-    Ok.future
-  }
-
-  @ApiOperation(
     value = "Json response of matching id and date",
     notes = "Invokes a HBase api function to retrieve data by using the date (optional) and id param",
     responseContainer = "JSONObject",
@@ -95,11 +75,32 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
       message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
   ))
   def retrieveEnterprise(
-    @ApiParam(value = "Identifier creation date", example = "2017/07", required = true) date: Option[String],
-    @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
+    @ApiParam(value = "Identifier creation date", example = "201707", required = false) date: Option[String],
+    @ApiParam(value = "An identifier of any type", example = "12345", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get Enterprise with period [$date] and id [$id] parameters.")
-    handleValidatedParams(validateIdPeriodParams[EnterpriseParams](id, date, EnterpriseParams.applyA))
+    handleValidatedParams(validateEntParams(id, date, EnterpriseParams.applyA))
+  }
+
+  @ApiOperation(
+    value = "Json response of links that correspond to an id and period.",
+    notes = "Gets the links for a specific id, which could include conflicts so multiple results may be returned.",
+    responseContainer = "JSONObject",
+    code = 200,
+    httpMethod = "GET"
+  )
+  @ApiResponses(Array(
+    new ApiResponse(code = 200, response = classOf[UnitLinks], responseContainer = "JsValue", message = "Ok -> Retrieved Links for given id."),
+    new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
+    new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
+    new ApiResponse(code = 500, responseContainer = "JsValue",
+      message = "InternalServerError -> Failed to get valid response from endpoint this maybe due to connection timeout or invalid endpoint.")
+  ))
+  def retrieveUnitLinks(
+    @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
+  ): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"Received request to get a List of StatUnitLinks with id [$id] parameters.")
+    handleValidatedParams(validateUnitLinksParams(id, UnitLinksParams.applyA))
   }
 
   @ApiOperation(
@@ -122,6 +123,6 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get StatisticalUnitLinks with id [$id] and category [$category] parameters.")
-    handleValidatedParams(validateIdPeriodCatParams(id, category, date, StatUnitLinksParams.applyA))
+    handleValidatedParams(validateStatUnitLinksParams(id, category, date, StatUnitLinksParams.applyA))
   }
 }
