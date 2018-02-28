@@ -56,5 +56,4 @@ object Utilities {
   }
 
   def unquote(s: String) = s.replace("\"", "")
-
 }
