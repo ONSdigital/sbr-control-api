@@ -5,6 +5,15 @@
 ### What is this repository?
 sbr-control-api is a Play Framework application written predominantly in Scala. This api, sbr-control-api, extends [sbr-api](https://github.com/ONSdigital/sbr-api) and acts as an intermediary that handles requests (from sbr-api) to query HBase. Its current privileges to the data are both read and write.
 
+### Endpoints
+
+| method | endpoint                                      | example                                  |
+|--------|-----------------------------------------------|------------------------------------------|
+| GET    | /v1/units/:id                                 | /v1/units/12345                          |
+| GET    | /v1/periods/:period/types/:unitType/units/:id | /v1/periods/201802/types/ENT/units/12345 |
+| GET    | /v1/enterprises/:id                           | /v1/enterprises/12345                    |
+| GET    | /v1/periods/:period/enterprises/:id           | /v1/periods/201802/enterprises/12345     |
+
 ### Prerequisites
 
 * Java 8 or higher
@@ -43,10 +52,12 @@ start-hbase.sh
 Now that HBase has started, we can open the shell and create the namespace and tables.
 ```sbtshell
 hbase shell
-create_namespace 'sbr_local_db'
-create 'sbr_local_db:enterprise', 'd'
-create 'sbr_local_db:unit_links', 'd'
+create_namespace 'sbr_control_db'
+create 'sbr_control_db:enterprise', 'd'
+create 'sbr_control_db:unit_links', 'l'
 ```
+
+For instructions on loading some test data into HBase, see the [HBASE.md](./HBASE.md).
 
 We now need to start HBase REST.
 
@@ -84,7 +95,6 @@ To run integration test run:
 sbt it:test
 ```
 See [CONTRIBUTING](CONTRIBUTING.md) for more details on creating tests. 
-
 
 #### API Documentation
 Swagger API is used to document and expose swagger definitions of the routes and capabilities for this project.

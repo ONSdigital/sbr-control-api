@@ -97,4 +97,4 @@ Test the API routes:
 [http://localhost:9000/v1/units/12345](http://localhost:9000/v1/units/12345)
 [http://localhost:9000/v1/periods/201802/types/ENT/units/12345](http://localhost:9000/v1/periods/201802/types/ENT/units/12345)
 [http://localhost:9000/v1/enterprises/12345](http://localhost:9000/v1/enterprises/12345)
-[http://localhost:9000/v1/enterprises/12345](http://localhost:9000/v1/enterprises/12345)
+[http://localhost:9000/v1/periods/201802/enterprises/12345](http://localhost:9000/v1/periods/201802/enterprises/12345)
