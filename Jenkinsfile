@@ -23,7 +23,10 @@ pipeline {
 
         ORGANIZATION = "ons"
         TEAM = "sbr"
-        MODULE_NAME = "sbr-control-api"  
+        MODULE_NAME = "sbr-control-api"
+
+        NAMESPACE = "sbr_dev_db"
+        TABLENAME = "empty"
     }
     options {
         skipDefaultCheckout()
@@ -55,64 +58,9 @@ pipeline {
                 dir('gitlab') {
                     git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'develop')
                 }
-                // Remove the synthetics data for june data
-                sh 'rm -rf conf/sample/201706/sbr-2500-ent-data.csv'
-                sh 'rm -rf conf/sample/201706/sbr-2500-ent-ch-links.csv'
-                sh 'rm -rf conf/sample/201706/sbr-2500-ent-vat-links.csv'
-                sh 'rm -rf conf/sample/201706/sbr-2500-ent-paye-links.csv'
-                sh 'rm -rf conf/sample/201706/sbr-2500-ent-leu-links.csv'
-                sh 'rm -rf conf/sample/201706/sbr-2500-leu-ch-links.csv'
-                sh 'rm -rf conf/sample/201706/sbr-2500-leu-paye-links.csv'
-                sh 'rm -rf conf/sample/201706/sbr-2500-leu-vat-links.csv'
-              
-                // Remove fake data for August data
-                sh 'rm -rf conf/sample/201708/sbr-2500-ent-data.csv'
-                sh 'rm -rf conf/sample/201708/sbr-2500-ent-ch-links.csv'
-                sh 'rm -rf conf/sample/201708/sbr-2500-ent-vat-links.csv'
-                sh 'rm -rf conf/sample/201708/sbr-2500-ent-paye-links.csv'
-                sh 'rm -rf conf/sample/201708/sbr-2500-ent-leu-links.csv'
-                sh 'rm -rf conf/sample/201708/sbr-2500-leu-ch-links.csv'
-                sh 'rm -rf conf/sample/201708/sbr-2500-leu-paye-links.csv'
-                sh 'rm -rf conf/sample/201708/sbr-2500-leu-vat-links.csv'
-
-                // Copy over the real data for June
-                sh 'cp gitlab/dev/data/201706/sbr-2500-ent-data.csv conf/sample/201706/sbr-2500-ent-data.csv'
-                sh 'cp gitlab/dev/data/201706/sbr-2500-ent-ch-links.csv conf/sample/201706/sbr-2500-ent-ch-links.csv'
-                sh 'cp gitlab/dev/data/201706/sbr-2500-ent-paye-links.csv conf/sample/201706/sbr-2500-ent-paye-links.csv'
-                sh 'cp gitlab/dev/data/201706/sbr-2500-ent-vat-links.csv conf/sample/201706/sbr-2500-ent-vat-links.csv'
-                sh 'cp gitlab/dev/data/201706/sbr-2500-ent-leu-links.csv conf/sample/201706/sbr-2500-ent-leu-links.csv'
-                sh 'cp gitlab/dev/data/201706/sbr-2500-leu-ch-links.csv conf/sample/201706/sbr-2500-leu-ch-links.csv'
-                sh 'cp gitlab/dev/data/201706/sbr-2500-leu-paye-links.csv conf/sample/201706/sbr-2500-leu-paye-links.csv'
-                sh 'cp gitlab/dev/data/201706/sbr-2500-leu-vat-links.csv conf/sample/201706/sbr-2500-leu-vat-links.csv'
-
-                // Copy over the real data for August
-                sh 'cp gitlab/dev/data/201708/sbr-2500-ent-data.csv conf/sample/201708/sbr-2500-ent-data.csv'
-                sh 'cp gitlab/dev/data/201708/sbr-2500-ent-ch-links.csv conf/sample/201708/sbr-2500-ent-ch-links.csv'
-                sh 'cp gitlab/dev/data/201708/sbr-2500-ent-paye-links.csv conf/sample/201708/sbr-2500-ent-paye-links.csv'
-                sh 'cp gitlab/dev/data/201708/sbr-2500-ent-vat-links.csv conf/sample/201708/sbr-2500-ent-vat-links.csv'
-                sh 'cp gitlab/dev/data/201708/sbr-2500-ent-leu-links.csv conf/sample/201708/sbr-2500-ent-leu-links.csv'
-                sh 'cp gitlab/dev/data/201708/sbr-2500-leu-ch-links.csv conf/sample/201708/sbr-2500-leu-ch-links.csv'
-                sh 'cp gitlab/dev/data/201708/sbr-2500-leu-paye-links.csv conf/sample/201708/sbr-2500-leu-paye-links.csv'
-                sh 'cp gitlab/dev/data/201708/sbr-2500-leu-vat-links.csv conf/sample/201708/sbr-2500-leu-vat-links.csv'
                         
                 sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
                 stash name: 'compiled'
-                  
-                 // Remove Fake SQL data 
-                sh 'rm -rf conf/sample/ch_2500_data.sql'
-                sh 'rm -rf conf/sample/ent_2500_data.sql'
-                sh 'rm -rf conf/sample/leu_2500_data.sql'
-                sh 'rm -rf conf/sample/paye_2500_data.sql'
-                sh 'rm -rf conf/sample/unit_links_2500_data.sql'
-                sh 'rm -rf conf/sample/vat_2500_data.sql'
-
-                // Copy over real SQL data
-                sh 'cp gitlab/dev/data/sbr_inserts/ch_2500_data.sql conf/sample/ch_2500_data.sql'
-                sh 'cp gitlab/dev/data/sbr_inserts/ent_2500_data.sql conf/sample/ent_2500_data.sql'
-                sh 'cp gitlab/dev/data/sbr_inserts/leu_2500_data.sql conf/sample/leu_2500_data.sql'
-                sh 'cp gitlab/dev/data/sbr_inserts/paye_2500_data.sql conf/sample/paye_2500_data.sql'
-                sh 'cp gitlab/dev/data/sbr_inserts/unit_links_2500_data.sql conf/sample/unit_links_2500_data.sql'
-                sh 'cp gitlab/dev/data/sbr_inserts/vat_2500_data.sql conf/sample/vat_2500_data.sql'
               
                 script {
                     env.NODE_STAGE = "Build"
@@ -301,6 +249,6 @@ def deploy () {
     cf_env = "${env.DEPLOY_NAME}".capitalize()
     echo "Deploying Api app to ${env.DEPLOY_NAME}"
     withCredentials([string(credentialsId: "sbr-api-dev-secret-key", variable: 'APPLICATION_SECRET')]) {
-         deployToCloudFoundry("${TEAM}-${env.DEPLOY_NAME}-cf", "${CF_PROJECT}", "${cf_env}", "${env.DEPLOY_NAME}-${MODULE_NAME}", "${env.DEPLOY_NAME}-${ORGANIZATION}-${MODULE_NAME}.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml")
+         deployToCloudFoundryHBase("${TEAM}-${env.DEPLOY_NAME}-cf", "${CF_PROJECT}", "${cf_env}", "${env.DEPLOY_NAME}-${MODULE_NAME}", "${env.DEPLOY_NAME}-${ORGANIZATION}-${MODULE_NAME}.zip", "gitlab/${env.DEPLOY_NAME}/manifest.yml", TABLENAME, NAMESPACE)
     }
 }
