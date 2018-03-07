@@ -33,7 +33,7 @@ sealed trait ValidParams {
 
 case class UnitLinksParams(id: String) extends ValidParams
 object UnitLinksParams extends ValidParams {
-  def applyA(id: String): Either[UnitLinksParams, InvalidParams] = id match {
+  def validate(id: String): Either[UnitLinksParams, InvalidParams] = id match {
     case i if (!validId(i)) => Right(InvalidId())
     case i => Left(UnitLinksParams(i))
   }
@@ -41,7 +41,7 @@ object UnitLinksParams extends ValidParams {
 
 case class EnterpriseParams(id: String, period: Option[String]) extends ValidParams
 object EnterpriseParams extends ValidParams {
-  def applyA(id: String, period: Option[String]): Either[EnterpriseParams, InvalidParams] = (id, period) match {
+  def validate(id: String, period: Option[String]): Either[EnterpriseParams, InvalidParams] = (id, period) match {
     case (i, _) if (!validId(i)) => Right(InvalidId())
     case (_, Some(p)) if (!validPeriod(p)) => Right(InvalidPeriod())
     case (i, p) => Left(EnterpriseParams(i, p))
@@ -52,7 +52,7 @@ case class StatUnitLinksParams(id: String, category: String, period: String) ext
 object StatUnitLinksParams extends ValidParams {
   private val validCategories: List[String] = List("ENT", "LEU", "VAT", "PAYE", "CH")
 
-  def applyA(id: String, period: String, category: String): Either[StatUnitLinksParams, InvalidParams] = (id, period, category) match {
+  def validate(id: String, period: String, category: String): Either[StatUnitLinksParams, InvalidParams] = (id, period, category) match {
     case (i, _, _) if (!validId(i)) => Right(InvalidId())
     case (_, p, _) if (!validPeriod(p)) => Right(InvalidPeriod())
     case (_, _, c) if (!validCategory(c)) => Right(InvalidCategory())

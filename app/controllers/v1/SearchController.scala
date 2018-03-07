@@ -79,7 +79,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
     @ApiParam(value = "An identifier of any type", example = "12345", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get Enterprise with period [$date] and id [$id] parameters.")
-    handleValidatedParams(validateEntParams(id, date, EnterpriseParams.applyA))
+    handleValidatedParams(validateEntParams(id, date, EnterpriseParams.validate))
   }
 
   @ApiOperation(
@@ -100,7 +100,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
     @ApiParam(value = "An identifier of any type", example = "825039145000", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get a List of StatUnitLinks with id [$id] parameters.")
-    handleValidatedParams(validateUnitLinksParams(id, UnitLinksParams.applyA))
+    handleValidatedParams(validateUnitLinksParams(id, UnitLinksParams.validate))
   }
 
   @ApiOperation(
@@ -123,6 +123,6 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
     @ApiParam(value = "An identifier of any type", example = "1244", required = true) id: String
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get StatisticalUnitLinks with id [$id] and category [$category] parameters.")
-    handleValidatedParams(validateStatUnitLinksParams(id, category, date, StatUnitLinksParams.applyA))
+    handleValidatedParams(validateStatUnitLinksParams(id, category, date, StatUnitLinksParams.validate))
   }
 }
