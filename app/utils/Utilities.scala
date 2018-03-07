@@ -43,17 +43,5 @@ object Utilities {
 
   def createTableNameWithNameSpace(nameSpace: String, tableName: String): String = s"$nameSpace:$tableName"
 
-  // ret: AnyVal
-  def getElement(value: Any) = {
-    val res = value match {
-      case None => ""
-      case Some(i: Int) => i
-      case Some(l: Long) => l
-      case Some(z) => s""""${z}""""
-      case x => s"${x.toString}"
-    }
-    res
-  }
-
   def unquote(s: String) = s.replace("\"", "")
 }
