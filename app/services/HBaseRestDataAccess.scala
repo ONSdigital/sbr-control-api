@@ -4,17 +4,19 @@ import javax.inject.Inject
 
 import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
-import config.Properties
+
 import play.api.libs.ws.{ WSClient, WSResponse }
 import play.api.http.Status
 import play.api.Configuration
 import play.api.libs.json.{ JsArray, JsLookupResult, JsValue }
-import uk.gov.ons.sbr.models.units.{ Child, EnterpriseUnit, LEU, UnitLinks }
-import utils.Utilities._
 
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+
+import config.Properties
+import uk.gov.ons.sbr.models.units.{ Child, EnterpriseUnit, LEU, UnitLinks }
+import utils.Utilities._
 
 // TODO:
 // - when creating the childrenJSON, blocking code is used to resolve the Future, rather than
