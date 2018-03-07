@@ -17,8 +17,7 @@ trait Properties {
   lazy val requestTimeout: Int = propertiesConfig.getInt("request.timeout")
   lazy val minKeyLength: Int = propertiesConfig.getInt("search.minKeyLength")
 
-  private val hBaseConfig: Config = configuration.underlying.getConfig("db")
-  private val hBaseRestConfig: Config = hBaseConfig.getConfig("hbase-rest")
+  private val hBaseRestConfig: Config = dbConfig.getConfig("hbase-rest")
 
   private val hbaseRestNameSpace: String = hBaseRestConfig.getString("namespace")
 
