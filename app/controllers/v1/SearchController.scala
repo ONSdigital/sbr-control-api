@@ -44,13 +44,13 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
     case Right(i: InvalidParams) => BadRequest(messagesApi(i.msg)).future
   }
 
-  def dbResultMatcher[T](result: Future[DbResult]): Future[Result] = result.map(x => x match {
-    case b: DbSuccessEnterprise => Ok(Json.toJson(b.result))
-    case c: DbSuccessUnitLinks => Ok(Json.toJson(c.result))
-    case d: DbSuccessUnitLinksList => Ok(Json.toJson(d.result))
-    case e: DbFailureNotFound => NotFound(messagesApi("controller.not.found"))
-    case f: DbFailureServerError => dbError(f)
-    case g: DbFailureTimeout => dbError(g)
+  def dbResultMatcher(result: Future[DbResponse]): Future[Result] = result.map(x => x match {
+    case b: DbResult[UnitLinks] => Ok(Json.toJson(b.result))
+    case a: DbResult[EnterpriseUnit] => Ok(Json.toJson(a.result))
+    case c: DbResult[List[UnitLinks]] => Ok(Json.toJson(c.result))
+    case e: DbNotFound => NotFound(messagesApi("controller.not.found"))
+    case f: DbServerError => dbError(f)
+    case g: DbTimeout => dbError(g)
   })
 
   //    result match {
@@ -62,7 +62,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
   //    case g: DbFailureTimeout => dbError(g)
   //  }
 
-  def dbError(failure: DbFailure): Result = {
+  def dbError(failure: DbErrorMsg): Result = {
     logger.error(s"Returned Internal Server Error response with DbFailure [$failure]: ${failure.msg}")
     InternalServerError(messagesApi("controller.internal.server.error"))
   }

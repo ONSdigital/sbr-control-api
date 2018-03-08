@@ -4,6 +4,9 @@ import javax.inject.Inject
 
 import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
+
+import org.apache.hadoop.hbase.TableName
+
 import play.api.libs.ws.{ WSClient, WSResponse }
 import play.api.http.Status
 import play.api.Configuration
@@ -12,6 +15,7 @@ import play.api.libs.json.{ JsArray, JsLookupResult, JsValue }
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+
 import config.Properties
 import uk.gov.ons.sbr.models._
 import uk.gov.ons.sbr.models.units.{ Child, EnterpriseUnit, LEU, UnitLinks }
@@ -31,13 +35,12 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   private val AUTH = encodeBase64(Seq(username, password))
   private val HEADERS = Seq("Accept" -> "application/json", "Authorization" -> s"Basic $AUTH")
 
-  def getUnitLinks(id: String): Future[DbResult] = getStatAndUnitLinks[List[UnitLinks]](id, None, None, transformUnitSeqJson)
+  def getUnitLinks(id: String): Future[DbResponse] = getStatAndUnitLinks[List[UnitLinks]](id, None, None, transformUnitSeqJson)
 
-  def getEnterprise(id: String, period: Option[String]): Future[DbResult] = {
+  def getEnterprise(id: String, period: Option[String]): Future[DbResponse] = {
     // HBase key format: 9901566115~201706, id~period
     val rowKey = createEntRowKey(period, id.reverse)
-    val tableAndNameSpace = createTableNameWithNameSpace(enterpriseTableName.getNamespaceAsString, enterpriseTableName.getQualifierAsString)
-    val uri = baseUrl / tableAndNameSpace / rowKey / enterpriseColumnFamily
+    val uri = baseUrl / enterpriseTableName.getNameAsString / rowKey / enterpriseColumnFamily
     logger.info(s"Using URI [$uri] for getEnterprise")
     logger.debug(s"Sending GET request to HBase REST for enterprise using rowKey [$rowKey]")
     singleGETRequest(uri.toString, HEADERS) map {
@@ -47,28 +50,27 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
         // For the most recent period (i.e. period is None), we need to use the last result (Due to how the HBase
         // REST API scan works (if we could do a reverse scan we'd only have to get the first result)
         val a = period match {
-          case Some(p) => DbSuccessEnterprise(EnterpriseUnit(id, p, jsToEntMap(row(0)), "ENT", createEnterpriseChildJSON(id, p)))
+          case Some(p) => DbResult(EnterpriseUnit(id, p, jsToEntMap(row(0)), "ENT", createEnterpriseChildJSON(id, p)))
           case None => {
             // We need to get the period from the HBase row key
             val keyPeriod = decodeBase64((row.last \ "key").as[String]).split("~").last
-            DbSuccessEnterprise(EnterpriseUnit(id, keyPeriod, jsToEntMap(row.last), "ENT", createEnterpriseChildJSON(id, keyPeriod)))
+            DbResult(EnterpriseUnit(id, keyPeriod, jsToEntMap(row.last), "ENT", createEnterpriseChildJSON(id, keyPeriod)))
           }
         }
         a
       }
-      case response if response.status == Status.NOT_FOUND => DbFailureNotFound()
-      case _ => DbFailureNotFound()
+      case response if response.status == Status.NOT_FOUND => DbNotFound()
+      case _ => DbNotFound()
     }
   }
 
-  def getStatUnitLinks(id: String, category: String, period: String): Future[DbResult] = getStatAndUnitLinks[UnitLinks](id, Some(period), Some(category), transformStatSeqJson)
+  def getStatUnitLinks(id: String, category: String, period: String): Future[DbResponse] = getStatAndUnitLinks[UnitLinks](id, Some(period), Some(category), transformStatSeqJson)
 
-  def getStatAndUnitLinks[T](id: String, period: Option[String], unitType: Option[String], transformJson: (String, Seq[JsValue], JsValue) => T): Future[DbResult] = {
+  def getStatAndUnitLinks[T](id: String, period: Option[String], unitType: Option[String], transformJson: (String, Seq[JsValue], JsValue) => T): Future[DbResponse] = {
     // HBase key format: 201706~01752564~CH, period~id~type
     // When there is no unitType, * is used to get rows of any unit type
     val rowKey = createUnitLinksRowKey(id, period, unitType)
-    val tableAndNameSpace = createTableNameWithNameSpace(unitTableName.getNamespaceAsString, unitTableName.getQualifierAsString)
-    val uri = baseUrl / tableAndNameSpace / rowKey / unitLinksColumnFamily
+    val uri = baseUrl / unitTableName.getNameAsString / rowKey / unitLinksColumnFamily
     logger.info(s"Using URI [$uri] for getStatAndUnitLinks")
     logger.debug(s"Sending GET request to HBase REST for unit links using rowKey [$rowKey]")
     singleGETRequest(uri.toString, HEADERS) map {
@@ -79,12 +81,12 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
         // from HBase, either returning UnitLinks (when unitType is present) or List[UnitLinks] when there is
         // no unitType present
         transformJson(id, seqJSON, row) match {
-          case a: UnitLinks => DbSuccessUnitLinks(a)
-          case b: List[UnitLinks] => DbSuccessUnitLinksList(b)
+          case a: UnitLinks => DbResult[UnitLinks](a)
+          case b: List[UnitLinks] => DbResult[List[UnitLinks]](b)
         }
       }
-      case response if response.status == Status.NOT_FOUND => DbFailureNotFound()
-      case _ => DbFailureNotFound()
+      case response if response.status == Status.NOT_FOUND => DbNotFound()
+      case _ => DbNotFound()
     }
   }
 
@@ -113,7 +115,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val unitLinks = getStatUnitLinks(entId, "ENT", period)
     // @TODO: The await is a temporary measure to use whilst testing
     Await.result(unitLinks, 2 seconds) match {
-      case a: DbSuccessUnitLinks => a.result.children match {
+      case a: DbResult[UnitLinks] => a.result.children match {
         case Some(c) => {
           // Now that we have the unitLinks and we know that there are items in this list,
           // we need to form the correct JSON format using the Map[String, String] which is
@@ -131,7 +133,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val unitLinks = getStatUnitLinks(childId, "LEU", period)
     // @TODO: The await is a temporary measure to use whilst testing
     Await.result(unitLinks, 2 seconds) match {
-      case a: DbSuccessUnitLinks => a.result.children match {
+      case a: DbResult[UnitLinks] => a.result.children match {
         case Some(c) => c.map(x => Child(x._2, x._1)).toList
         case None => List()
       }
