@@ -14,5 +14,6 @@ sealed trait DbErrorMsg extends DbResponse {
 
 case class DbResult[T](result: T) extends DbResponse
 case class DbNotFound(msg: String = "Not Found") extends DbErrorMsg
-case class DbTimeout(msg: String) extends DbErrorMsg
-case class DbServerError(msg: String) extends DbErrorMsg
+case class DbTimeout(msg: String = "Timeout") extends DbErrorMsg
+case class DbServiceUnavailable(msg: String = "Service Unavailable") extends DbErrorMsg
+case class DbServerError(msg: String = "Internal Server Error") extends DbErrorMsg
