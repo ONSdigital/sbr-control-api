@@ -98,3 +98,46 @@ Test the API routes:
 [http://localhost:9000/v1/periods/201802/types/ENT/units/12345](http://localhost:9000/v1/periods/201802/types/ENT/units/12345)
 [http://localhost:9000/v1/enterprises/12345](http://localhost:9000/v1/enterprises/12345)
 [http://localhost:9000/v1/periods/201802/enterprises/12345](http://localhost:9000/v1/periods/201802/enterprises/12345)
+
+Second data set:
+
+```shell
+put 'sbr_control_db:enterprise' , '98765~201802', 'd:entref', '56789'
+put 'sbr_control_db:enterprise' , '98765~201802', 'd:ent_name', 'ASDA'
+
+put 'sbr_control_db:enterprise' , '98765~201801', 'd:entref', '56789'
+put 'sbr_control_db:enterprise' , '98765~201801', 'd:ent_name', 'ASDA'
+
+put 'sbr_control_db:enterprise' , '98765~201712', 'd:entref', '56789'
+put 'sbr_control_db:enterprise' , '98765~201712', 'd:ent_name', 'ASDA'
+
+
+put 'sbr_control_db:unit_links' , '56789~ENT~201802', 'l:c_180912831093', 'LEU'
+put 'sbr_control_db:unit_links' , '56789~ENT~201802', 'l:c_24098400', 'CH'
+put 'sbr_control_db:unit_links' , '56789~ENT~201802', 'l:c_39874928', 'PAYE'
+put 'sbr_control_db:unit_links' , '56789~ENT~201802', 'l:c_42098320', 'VAT'
+
+put 'sbr_control_db:unit_links' , '56789~ENT~201801', 'l:c_180912831093', 'LEU'
+put 'sbr_control_db:unit_links' , '56789~ENT~201801', 'l:c_24098400', 'CH'
+put 'sbr_control_db:unit_links' , '56789~ENT~201801', 'l:c_39874928', 'PAYE'
+put 'sbr_control_db:unit_links' , '56789~ENT~201801', 'l:c_42098320', 'VAT'
+
+put 'sbr_control_db:unit_links' , '180912831093~LEU~201802', 'l:p_ENT', '56789'
+put 'sbr_control_db:unit_links' , '180912831093~LEU~201802', 'l:c_24098400', 'CH'
+put 'sbr_control_db:unit_links' , '180912831093~LEU~201802', 'l:c_39874928', 'PAYE'
+put 'sbr_control_db:unit_links' , '180912831093~LEU~201802', 'l:c_42098320', 'VAT'
+
+put 'sbr_control_db:unit_links' , '180912831093~LEU~201801', 'l:p_ENT', '56789'
+put 'sbr_control_db:unit_links' , '180912831093~LEU~201801', 'l:c_24098400', 'CH'
+put 'sbr_control_db:unit_links' , '180912831093~LEU~201801', 'l:c_39874928', 'PAYE'
+put 'sbr_control_db:unit_links' , '180912831093~LEU~201801', 'l:c_42098320', 'VAT'
+
+put 'sbr_control_db:unit_links' , '24098400~CH~201802', 'l:p_LEU', '180912831093'
+put 'sbr_control_db:unit_links' , '24098400~CH~201801', 'l:p_LEU', '180912831093'
+
+put 'sbr_control_db:unit_links' , '42098320~VAT~201802', 'l:p_LEU', '180912831093'
+put 'sbr_control_db:unit_links' , '42098320~VAT~201801', 'l:p_LEU', '180912831093'
+
+put 'sbr_control_db:unit_links' , '39874928~PAYE~201802', 'l:p_LEU', '180912831093'
+put 'sbr_control_db:unit_links' , '39874928~PAYE~201801', 'l:p_LEU', '180912831093'
+```

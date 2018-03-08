@@ -65,7 +65,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def getStatUnitLinks(id: String, category: String, period: String): Future[Option[UnitLinks]] =
     getStatAndUnitLinks[UnitLinks](id, Some(period), Some(category), transformStatSeqJson)
 
-  def getStatAndUnitLinks[T](id: String, period: Option[String], unitType: Option[String], f: (String, Seq[JsValue], JsValue) => T): Future[Option[T]] = {
+  def getStatAndUnitLinks[T](id: String, period: Option[String], unitType: Option[String], transformJson: (String, Seq[JsValue], JsValue) => T): Future[Option[T]] = {
     // HBase key format: 201706~01752564~CH, period~id~type
     // When there is no unitType, * is used to get rows of any unit type
     val rowKey = createUnitLinksRowKey(id, period, unitType)
@@ -80,7 +80,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
         // Depending on whether the unitType is present or not, we use a different function to transform the JSON
         // from HBase, either returning UnitLinks (when unitType is present) or List[UnitLinks] when there is
         // no unitType present
-        Some(f(id, seqJSON, row))
+        Some(transformJson(id, seqJSON, row))
       }
       case response if response.status == Status.NOT_FOUND => None
       case _ => None
