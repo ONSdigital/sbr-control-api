@@ -37,26 +37,34 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
 
   def handleValidatedParams(params: Either[ValidParams, InvalidParams]): Future[Result] = params match {
     case Left(v: ValidParams) => v match {
-      case u: UnitLinksParams => dbResultMatcher(Try(db.getUnitLinks(u.id)))
-      case s: StatUnitLinksParams => dbResultMatcher(Try(db.getStatUnitLinks(s.id, s.category, s.period)))
-      case e: EnterpriseParams => dbResultMatcher(Try(db.getEnterprise(e.id, e.period)))
+      case u: UnitLinksParams => dbResultMatcher(db.getUnitLinks(u.id))
+      case s: StatUnitLinksParams => dbResultMatcher(db.getStatUnitLinks(s.id, s.category, s.period))
+      case e: EnterpriseParams => dbResultMatcher(db.getEnterprise(e.id, e.period))
     }
     case Right(i: InvalidParams) => BadRequest(messagesApi(i.msg)).future
   }
 
-  def dbResultMatcher[T](result: Try[Future[Option[T]]]): Future[Result] = result match {
-    case Success(s) => s.flatMap(x => x match {
-      case Some(a) => a match {
-        case e: EnterpriseUnit => Ok(Json.toJson(e)).future
-        case u: UnitLinks => Ok(Json.toJson(u)).future
-        case l: List[UnitLinks] => Ok(Json.toJson(l)).future
-      }
-      case None => NotFound(messagesApi("controller.not.found")).future
-    })
-    case Failure(ex) => {
-      logger.error(s"Returned Internal Server Error response with exception", ex)
-      InternalServerError(messagesApi("controller.internal.server.error")).future
-    }
+  def dbResultMatcher[T](result: Future[DbResult]): Future[Result] = result.map(x => x match {
+    case b: DbSuccessEnterprise => Ok(Json.toJson(b.result))
+    case c: DbSuccessUnitLinks => Ok(Json.toJson(c.result))
+    case d: DbSuccessUnitLinksList => Ok(Json.toJson(d.result))
+    case e: DbFailureNotFound => NotFound(messagesApi("controller.not.found"))
+    case f: DbFailureServerError => dbError(f)
+    case g: DbFailureTimeout => dbError(g)
+  })
+
+  //    result match {
+  //    case b: DbSuccessEnterprise => Ok(Json.toJson(b.result)).future
+  //    case c: DbSuccessUnitLinks => Ok(Json.toJson(c.result)).future
+  //    case d: DbSuccessUnitLinksList => Ok(Json.toJson(d.result)).future
+  //    case e: DbFailureNotFound => NotFound(messagesApi("controller.not.found")).future
+  //    case f: DbFailureServerError => dbError(f)
+  //    case g: DbFailureTimeout => dbError(g)
+  //  }
+
+  def dbError(failure: DbFailure): Result = {
+    logger.error(s"Returned Internal Server Error response with DbFailure [$failure]: ${failure.msg}")
+    InternalServerError(messagesApi("controller.internal.server.error"))
   }
 
   @ApiOperation(
