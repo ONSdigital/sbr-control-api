@@ -29,14 +29,14 @@ class HBaseRestUtils @Inject() (ws: WSClient, val configuration: Configuration) 
   def decodeBase64(str: String): String = new String(BaseEncoding.base64().decode(str), "UTF-8")
 
   def extractParents(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
-    case entUnit => None
-    case leuUnit => Some(map.filterKeys(_ == entUnit))
+    case a if (a == entUnit) => None
+    case b if (b == leuUnit) => Some(map.filterKeys(_ == entUnit))
     case _ => Some(map filterKeys Set(leuUnit, entUnit))
   }
 
   def extractChildren(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
-    case entUnit => Some(map)
-    case leuUnit => Some(map - entUnit)
+    case a if (a == entUnit) => Some(map)
+    case b if (b == leuUnit) => Some(map - entUnit)
     case _ => None
   }
 

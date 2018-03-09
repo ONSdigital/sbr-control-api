@@ -134,7 +134,6 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     Await.result(unitLinks, 2 seconds) match {
       case a: DbSuccessUnitLinks => a.result.children match {
         case Some(c) => c.map { case (x, y) => Child(x, y) }.toList
-        case Some(c) => c.map(x => Child(x._2, x._1)).toList
         case None => List()
       }
       case _ => List()
