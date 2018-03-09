@@ -4,8 +4,7 @@ import javax.inject.Inject
 
 import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
-
-import play.api.libs.ws.{ WSClient, WSResponse }
+import play.api.libs.ws.{ WSAuthScheme, WSClient, WSResponse }
 import play.api.http.Status
 import play.api.Configuration
 import play.api.libs.json.{ JsArray, JsLookupResult, JsValue }
@@ -13,7 +12,6 @@ import play.api.libs.json.{ JsArray, JsLookupResult, JsValue }
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-
 import config.Properties
 import uk.gov.ons.sbr.models._
 import uk.gov.ons.sbr.models.units.{ Child, EnterpriseUnit, LEU, UnitLinks }
@@ -30,8 +28,7 @@ import utils.Utilities._
 class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configuration) extends DataAccess with Properties with LazyLogging {
 
   private val columnFamilyAndValueSubstring: Int = 2
-  private val AUTH = encodeBase64(Seq(username, password))
-  private val HEADERS = Seq("Accept" -> "application/json", "Authorization" -> s"Basic $AUTH")
+  private val HEADERS = Seq("Accept" -> "application/json")
 
   val ENT_UNIT = "ENT"
   val LEU_UNIT = "LEU"
@@ -177,6 +174,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     ws.url(path.toString)
       .withQueryString(params: _*)
       .withHeaders(headers: _*)
+      .withAuth(username, password, WSAuthScheme.BASIC)
       .get
   }
 
