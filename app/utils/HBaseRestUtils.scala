@@ -11,6 +11,8 @@ object HBaseRestUtils {
   // These are duplicated, need to inject the config in?
   val ENT_UNIT = "ENT"
   val LEU_UNIT = "LEU"
+  val CHILD_LINK = "c"
+  val PARENT_LINK = "p"
 
   private val DELIMITER: String = "~"
   private val columnFamilyAndValueSubstring: Int = 2
@@ -41,14 +43,14 @@ object HBaseRestUtils {
     case (None, None) => String.join(DELIMITER, id, "*")
   }
 
-  def jsonToMap(unitType: String, js: JsLookupResult): Map[String, String] = {
-    (js \ "Cell").as[Seq[JsValue]].map { cell =>
+  def jsonToMap(json: JsValue): Map[String, String] = {
+    (json \ "Cell").as[Seq[JsValue]].map { cell =>
       val col = decodeBase64((cell \ "column").as[String]).split(":", columnFamilyAndValueSubstring).last
       val value = decodeBase64((cell \ "$").as[String])
       // Below is needed as the format in HBase for child vs parent links are different
-      val column = unitType match {
-        case ENT_UNIT => col
-        case _ => col.split("_").last
+      val column = col.split("_").head match {
+        case (CHILD_LINK | PARENT_LINK) => col.split("_").last
+        case _ => col
       }
       column -> value
     }.toMap
