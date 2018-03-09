@@ -33,6 +33,9 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   private val AUTH = encodeBase64(Seq(username, password))
   private val HEADERS = Seq("Accept" -> "application/json", "Authorization" -> s"Basic $AUTH")
 
+  val ENT_UNIT = "ENT"
+  val LEU_UNIT = "LEU"
+
   def getUnitLinks(id: String): Future[DbResponse] = getStatAndUnitLinks[List[UnitLinks]](id, None, None, transformUnitSeqJson)
 
   def getStatUnitLinks(id: String, category: String, period: String): Future[DbResponse] = getStatAndUnitLinks[UnitLinks](id, Some(period), Some(category), transformStatSeqJson)
@@ -70,11 +73,11 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     // For the most recent period (i.e. period is None), we need to use the last result (Due to how the HBase
     // REST API scan works (if we could do a reverse scan we'd only have to get the first result)
     period match {
-      case Some(p) => DbResult(EnterpriseUnit(id, p, jsToEntMap(row(0)), "ENT", createEnterpriseChildJSON(id, p)))
+      case Some(p) => DbResult(EnterpriseUnit(id, p, jsToEntMap(row(0)), ENT_UNIT, createEnterpriseChildJSON(id, p)))
       case None => {
         // We need to get the period from the HBase row key
         val keyPeriod = decodeBase64((row.last \ "key").as[String]).split("~").last
-        DbResult(EnterpriseUnit(id, keyPeriod, jsToEntMap(row.last), "ENT", createEnterpriseChildJSON(id, keyPeriod)))
+        DbResult(EnterpriseUnit(id, keyPeriod, jsToEntMap(row.last), ENT_UNIT, createEnterpriseChildJSON(id, keyPeriod)))
       }
     }
   }
@@ -113,7 +116,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
    */
   def createEnterpriseChildJSON(entId: String, period: String): List[LEU] = {
     logger.info(s"Creating child JSON for enterprise [$entId] with period [$period]")
-    val unitLinks = getStatUnitLinks(entId, "ENT", period)
+    val unitLinks = getStatUnitLinks(entId, ENT_UNIT, period)
     // @TODO: The await is a temporary measure to use whilst testing
     Await.result(unitLinks, 2 seconds) match {
       case a: DbResult[UnitLinks] => a.result.children match {
@@ -122,8 +125,8 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
           // we need to form the correct JSON format using the Map[String, String] which is
           // a map of Map[id, unitType]. We can ignore the unitType's that are at the bottom
           // of the hierarchy (VAT, PAYE, CH) as we do not know which of the LEUs is their parent.
-          val leus = c.filter(_._2 == "LEU").keySet.toList
-          leus.map(x => LEU("LEU", x, getChildrenForLEU(x, period)))
+          val leus = c.filter(_._2 == LEU_UNIT).keySet.toList
+          leus.map(x => LEU(LEU_UNIT, x, getChildrenForLEU(x, period)))
         }
         case None => List()
       }
@@ -159,14 +162,14 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   }
 
   def extractParents(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
-    case "ENT" => None
-    case "LEU" => Some(map.filterKeys(_ == "ENT"))
-    case _ => Some(map filterKeys Set("LEU", "ENT"))
+    case ENT_UNIT => None
+    case LEU_UNIT => Some(map.filterKeys(_ == ENT_UNIT))
+    case _ => Some(map filterKeys Set(LEU_UNIT, ENT_UNIT))
   }
 
   def extractChildren(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
-    case "ENT" => Some(map)
-    case "LEU" => Some(map - "ENT")
+    case ENT_UNIT => Some(map)
+    case LEU_UNIT => Some(map - ENT_UNIT)
     case _ => None
   }
 
