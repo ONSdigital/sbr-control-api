@@ -73,7 +73,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       case Some(p) => DbResult(EnterpriseUnit(id, p, jsToEntMap(row(0)), ENT_UNIT, createEnterpriseChildJSON(id, p)))
       case None => {
         // We need to get the period from the HBase row key
-        val keyPeriod = decodeBase64((row.last \ "key").as[String]).split("~").last
+        val keyPeriod = decodeBase64((row.last \ "key").as[String]).split(delimiter).last
         DbResult(EnterpriseUnit(id, keyPeriod, jsToEntMap(row.last), ENT_UNIT, createEnterpriseChildJSON(id, keyPeriod)))
       }
     }
@@ -143,17 +143,17 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   }
 
   def transformStatSeqJson(id: String, seqJSON: Seq[JsValue], row: JsValue): UnitLinks = {
-    val unitType = decodeBase64((seqJSON(0) \ "key").as[String]).split("~").tail.head
+    val unitType = decodeBase64((seqJSON(0) \ "key").as[String]).split(delimiter).tail.head
     UnitLinks(id, extractParents(unitType, convertToUnitMap(row)), extractChildren(unitType, convertToUnitMap(row)), unitType)
   }
 
   // Get every bit of data for the most recent period
   def transformUnitSeqJson(id: String, seqJSON: Seq[JsValue], row: JsValue): List[UnitLinks] = {
-    val period = decodeBase64((seqJSON.last \ "key").as[String]).split("~").last
+    val period = decodeBase64((seqJSON.last \ "key").as[String]).split(delimiter).last
     // We only want the most recent period
-    val filteredJSON = seqJSON.filter(x => decodeBase64((x \ "key").as[String]).split("~").last == period)
+    val filteredJSON = seqJSON.filter(x => decodeBase64((x \ "key").as[String]).split(delimiter).last == period)
     filteredJSON.map(x => {
-      val unitType = decodeBase64((x \ "key").as[String]).split("~").tail.head
+      val unitType = decodeBase64((x \ "key").as[String]).split(delimiter).tail.head
       UnitLinks(id, extractParents(unitType, jsToUnitMap(x)), extractChildren(unitType, jsToUnitMap(x)), unitType)
     }).toList
   }
@@ -170,13 +170,11 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     case _ => None
   }
 
-  def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq(), params: Seq[(String, String)] = Seq()): Future[WSResponse] = {
-    ws.url(path.toString)
-      .withQueryString(params: _*)
-      .withHeaders(headers: _*)
-      .withAuth(username, password, WSAuthScheme.BASIC)
-      .get
-  }
+  def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq.empty, params: Seq[(String, String)] = Seq.empty): Future[WSResponse] = ws.url(path.toString)
+    .withQueryString(params: _*)
+    .withHeaders(headers: _*)
+    .withAuth(username, password, WSAuthScheme.BASIC)
+    .get
 
   private def jsToUnitMap(js: JsValue): Map[String, String] = {
     (js \ "Cell").as[Seq[JsValue]].map { cell =>
