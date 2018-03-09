@@ -4,18 +4,20 @@ import javax.inject.Inject
 
 import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
+
 import play.api.libs.ws.{ WSAuthScheme, WSClient, WSResponse }
 import play.api.http.Status
 import play.api.Configuration
-import play.api.libs.json.{ JsArray, JsLookupResult, JsValue }
+import play.api.libs.json.JsValue
 
 import scala.concurrent.{ Await, Future }
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import config.Properties
 import uk.gov.ons.sbr.models._
 import uk.gov.ons.sbr.models.units.{ Child, EnterpriseUnit, LEU, UnitLinks }
-import utils.Utilities._
+import utils.HBaseRestUtils._
 
 // TODO:
 // - when creating the childrenJSON, blocking code is used to resolve the Future, rather than
@@ -27,7 +29,6 @@ import utils.Utilities._
  */
 class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configuration) extends DataAccess with Properties with LazyLogging {
 
-  private val columnFamilyAndValueSubstring: Int = 2
   private val HEADERS = Seq("Accept" -> "application/json")
 
   val ENT_UNIT = "ENT"
@@ -158,52 +159,8 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     }).toList
   }
 
-  def extractParents(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
-    case ENT_UNIT => None
-    case LEU_UNIT => Some(map.filterKeys(_ == ENT_UNIT))
-    case _ => Some(map filterKeys Set(LEU_UNIT, ENT_UNIT))
-  }
-
-  def extractChildren(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
-    case ENT_UNIT => Some(map)
-    case LEU_UNIT => Some(map - ENT_UNIT)
-    case _ => None
-  }
-
-  def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq.empty, params: Seq[(String, String)] = Seq.empty): Future[WSResponse] = ws.url(path.toString)
-    .withQueryString(params: _*)
+  def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq.empty): Future[WSResponse] = ws.url(path.toString)
     .withHeaders(headers: _*)
     .withAuth(username, password, WSAuthScheme.BASIC)
     .get
-
-  private def jsToUnitMap(js: JsValue): Map[String, String] = {
-    (js \ "Cell").as[Seq[JsValue]].map { cell =>
-      val column = decodeBase64((cell \ "column").as[String])
-        .split(":", columnFamilyAndValueSubstring).last
-        .split("_").last
-      val value = decodeBase64((cell \ "$").as[String])
-      column -> value
-    }.toMap
-  }
-
-  private def jsToEntMap(js: JsLookupResult): Map[String, String] = {
-    // An enterprise id is unique so we can safely always get the first JS value
-    (js \ "Cell").as[Seq[JsValue]].map { cell =>
-      val column = decodeBase64((cell \ "column").as[String]).split(":", columnFamilyAndValueSubstring).last
-      val value = decodeBase64((cell \ "$").as[String])
-      column -> value
-    }.toMap
-  }
-
-  private def convertToUnitMap(result: JsValue): Map[String, String] = {
-    val js = result.as[JsArray]
-    val columnFamilyAndValueSubstring = 2
-    (js(0) \ "Cell").as[Seq[JsValue]].map { cell =>
-      val column = decodeBase64((cell \ "column").as[String])
-        .split(":", columnFamilyAndValueSubstring).last
-        .split("_").last
-      val value = decodeBase64((cell \ "$").as[String])
-      column -> value
-    }.toMap
-  }
 }
