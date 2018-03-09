@@ -14,13 +14,15 @@ trait Properties {
 
   lazy val dbConfig = propertiesConfig.getConfig("db")
 
-  lazy val requestTimeout: Int = propertiesConfig.getInt("request.timeout")
+  // Validation
   lazy val minKeyLength: Int = propertiesConfig.getInt("search.minKeyLength")
 
+  // HBase REST
   private val hBaseRestConfig: Config = dbConfig.getConfig("hbase-rest")
-
   private val hbaseRestNameSpace: String = hBaseRestConfig.getString("namespace")
+  lazy val timeout: Int = hBaseRestConfig.getInt("timeout")
 
+  // HBase REST table/namespace/column family details
   lazy val enterpriseTableName: TableName = TableName.valueOf(
     hbaseRestNameSpace,
     hBaseRestConfig.getString("enterprise.table.name")
@@ -31,13 +33,21 @@ trait Properties {
     hBaseRestConfig.getString("unit.links.table.name")
   )
 
+  lazy val enterpriseColumnFamily: String = hBaseRestConfig.getString("column.family.enterprise")
+  lazy val unitLinksColumnFamily: String = hBaseRestConfig.getString("column.family.unit.links")
+
+  // HBase REST Auth/URLs
   lazy val username: String = hBaseRestConfig.getString("username")
   lazy val password: String = hBaseRestConfig.getString("password")
   lazy val host: String = hBaseRestConfig.getString("host")
   lazy val port: String = hBaseRestConfig.getString("port")
   lazy val baseUrl: String = s"$host:$port"
-  lazy val enterpriseColumnFamily: String = hBaseRestConfig.getString("column.family.enterprise")
-  lazy val unitLinksColumnFamily: String = hBaseRestConfig.getString("column.family.unit.links")
+
+  // HBase REST data formatting config
   lazy val delimiter: String = hBaseRestConfig.getString("delimiter")
-  lazy val timeout: Int = hBaseRestConfig.getInt("timeout")
+  lazy val columnFamilyAndValueSubstring: Int = 2
+
+  // Units
+  lazy val entUnit: String = "ENT"
+  lazy val leuUnit: String = "LEU"
 }

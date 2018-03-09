@@ -1,37 +1,34 @@
 package utils
 
+import javax.inject.Inject
+import javax.inject.Singleton
+
 import com.google.common.io.BaseEncoding
-import play.api.libs.json.{ JsArray, JsLookupResult, JsValue }
+import config.Properties
+import play.api.Configuration
+import play.api.libs.json.JsValue
 
 /**
  * Created by coolit on 09/03/2018.
  */
-object HBaseRestUtils {
-
-  // These are duplicated, need to inject the config in?
-  val ENT_UNIT = "ENT"
-  val LEU_UNIT = "LEU"
-  val CHILD_LINK = "c"
-  val PARENT_LINK = "p"
-
-  private val DELIMITER: String = "~"
-  private val columnFamilyAndValueSubstring: Int = 2
+@Singleton
+class HBaseRestUtils @Inject() (val configuration: Configuration) extends Properties {
 
   def decodeBase64(str: String): String = new String(BaseEncoding.base64().decode(str), "UTF-8")
 
-  def createEntRowKey(period: Option[String], id: String): String = String.join(DELIMITER, id, period.getOrElse("*"))
-
   def extractParents(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
-    case ENT_UNIT => None
-    case LEU_UNIT => Some(map.filterKeys(_ == ENT_UNIT))
-    case _ => Some(map filterKeys Set(LEU_UNIT, ENT_UNIT))
+    case entUnit => None
+    case leuUnit => Some(map.filterKeys(_ == entUnit))
+    case _ => Some(map filterKeys Set(leuUnit, entUnit))
   }
 
   def extractChildren(key: String, map: Map[String, String]): Option[Map[String, String]] = key match {
-    case ENT_UNIT => Some(map)
-    case LEU_UNIT => Some(map - ENT_UNIT)
+    case entUnit => Some(map)
+    case leuUnit => Some(map - entUnit)
     case _ => None
   }
+
+  def createEntRowKey(period: Option[String], id: String): String = String.join(delimiter, id, period.getOrElse("*"))
 
   /**
    * endpoint => rowKey
@@ -39,20 +36,21 @@ object HBaseRestUtils {
    * /v1/periods/:period/types/:type/units/:id => id~type~period
    */
   def createUnitLinksRowKey(id: String, period: Option[String], unitType: Option[String]): String = (period, unitType) match {
-    case (Some(p), Some(u)) => String.join(DELIMITER, id, u, p)
-    case (None, None) => String.join(DELIMITER, id, "*")
+    case (Some(p), Some(u)) => String.join(delimiter, id, u, p)
+    case (None, None) => String.join(delimiter, id, "*")
   }
 
-  def jsonToMap(json: JsValue): Map[String, String] = {
+  def jsonToMap(json: JsValue, formKey: String => String): Map[String, String] = {
     (json \ "Cell").as[Seq[JsValue]].map { cell =>
       val col = decodeBase64((cell \ "column").as[String]).split(":", columnFamilyAndValueSubstring).last
       val value = decodeBase64((cell \ "$").as[String])
-      // Below is needed as the format in HBase for child vs parent links are different
-      val column = col.split("_").head match {
-        case (CHILD_LINK | PARENT_LINK) => col.split("_").last
-        case _ => col
-      }
+      // Use the passed in function to create the key for the Map
+      val column = formKey(col)
       column -> value
     }.toMap
   }
+
+  def formUnitKey(col: String): String = col.split("_").last
+
+  def formEntKey(col: String): String = col
 }
