@@ -4,19 +4,19 @@ import javax.inject.Inject
 
 import com.typesafe.scalalogging.LazyLogging
 import io.swagger.annotations._
+
 import play.api.Configuration
 import play.api.i18n.{ Lang, Langs, MessagesApi }
 import play.api.libs.json.Json
 import play.api.mvc.{ Action, AnyContent, Controller, Result }
+
 import services.DataAccess
 import uk.gov.ons.sbr.models._
 import uk.gov.ons.sbr.models.units._
-
-import scala.concurrent.Future
 import utils.FutureResponse._
 
+import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{ Failure, Success, Try }
 
 /**
  * Created by haqa on 04/08/2017.
@@ -26,8 +26,6 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
 
   // Use langs implicitly so we don't have to curry messagesApi("message")(langs) with every use of the messagesApi
   implicit val lang: Lang = langs.availables.head
-
-  // There is probably a more generic way of combining the logic in the two methods below
 
   def validateStatUnitLinksParams(id: String, category: String, period: String, apply: (String, String, String) => Either[StatUnitLinksParams, InvalidParams]): Either[StatUnitLinksParams, InvalidParams] = apply(id, period, category)
 
@@ -52,15 +50,6 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
     case f: DbServerError => dbError(f)
     case g: DbTimeout => dbError(g)
   })
-
-  //    result match {
-  //    case b: DbSuccessEnterprise => Ok(Json.toJson(b.result)).future
-  //    case c: DbSuccessUnitLinks => Ok(Json.toJson(c.result)).future
-  //    case d: DbSuccessUnitLinksList => Ok(Json.toJson(d.result)).future
-  //    case e: DbFailureNotFound => NotFound(messagesApi("controller.not.found")).future
-  //    case f: DbFailureServerError => dbError(f)
-  //    case g: DbFailureTimeout => dbError(g)
-  //  }
 
   def dbError(failure: DbErrorMsg): Result = {
     logger.error(s"Returned Internal Server Error response with DbFailure [$failure]: ${failure.msg}")
