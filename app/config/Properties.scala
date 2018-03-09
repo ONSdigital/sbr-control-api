@@ -48,6 +48,6 @@ trait Properties {
   lazy val columnFamilyAndValueSubstring: Int = 2
 
   // Units
-  val entUnit: String = "ENT"
-  val leuUnit: String = "LEU"
+  lazy val entUnit: String = "ENT"
+  lazy val leuUnit: String = "LEU"
 }

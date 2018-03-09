@@ -141,8 +141,8 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   }
 
   /**
-    * Given a Seq[JsValue], traverse the sequence and create UnitLinks for each item.
-    */
+   * Given a Seq[JsValue], traverse the sequence and create UnitLinks for each item.
+   */
   def transformUnitJson(id: String, seqJSON: Seq[JsValue]): List[UnitLinks] = {
     val period = utils.decodeBase64((seqJSON.last \ "key").as[String]).split(delimiter).last
     // We only want the most recent period
