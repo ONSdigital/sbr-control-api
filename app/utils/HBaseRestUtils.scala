@@ -4,15 +4,27 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 import com.google.common.io.BaseEncoding
-import config.Properties
+
 import play.api.Configuration
 import play.api.libs.json.JsValue
+import play.api.libs.ws.{ WSAuthScheme, WSClient, WSResponse }
+
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
+import config.Properties
 
 /**
  * Created by coolit on 09/03/2018.
  */
 @Singleton
-class HBaseRestUtils @Inject() (val configuration: Configuration) extends Properties {
+class HBaseRestUtils @Inject() (ws: WSClient, val configuration: Configuration) extends Properties {
+
+  def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq.empty): Future[WSResponse] = ws.url(path.toString)
+    .withHeaders(headers: _*)
+    .withAuth(username, password, WSAuthScheme.BASIC)
+    .withRequestTimeout(timeout milliseconds)
+    .get
 
   def decodeBase64(str: String): String = new String(BaseEncoding.base64().decode(str), "UTF-8")
 

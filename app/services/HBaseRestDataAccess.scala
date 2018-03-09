@@ -5,7 +5,7 @@ import javax.inject.Inject
 import com.netaporter.uri.dsl._
 import com.typesafe.scalalogging.LazyLogging
 
-import play.api.libs.ws.{ WSAuthScheme, WSClient, WSResponse }
+import play.api.libs.ws.{ WSClient, WSResponse }
 import play.api.http.Status
 import play.api.Configuration
 import play.api.libs.json.JsValue
@@ -29,7 +29,7 @@ import utils.HBaseRestUtils
  */
 class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configuration) extends DataAccess with Properties with LazyLogging {
 
-  private val utils = new HBaseRestUtils(configuration)
+  private val utils = new HBaseRestUtils(ws, configuration)
 
   private val HEADERS = Seq("Accept" -> "application/json")
 
@@ -42,7 +42,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val rowKey = utils.createEntRowKey(period, id.reverse)
     val uri = baseUrl / enterpriseTableName.getNameAsString / rowKey / enterpriseColumnFamily
     logger.info(s"Getting Enterprise from HBase REST using URI [$uri]")
-    singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleEntResponse))
+    utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleEntResponse))
   }
 
   def getStatAndUnitLinks(id: String, period: Option[String], unitType: Option[String]): Future[DbResponse] = {
@@ -51,7 +51,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val rowKey = utils.createUnitLinksRowKey(id, period, unitType)
     val uri = baseUrl / unitTableName.getNameAsString / rowKey / unitLinksColumnFamily
     logger.info(s"Getting UnitLinks from HBase REST using URI [$uri]")
-    singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleLinksResponse))
+    utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleLinksResponse))
   }
 
   /**
@@ -155,10 +155,4 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       )
     }).toList
   }
-
-  def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq.empty): Future[WSResponse] = ws.url(path.toString)
-    .withHeaders(headers: _*)
-    .withAuth(username, password, WSAuthScheme.BASIC)
-    .withRequestTimeout(timeout milliseconds)
-    .get
 }
