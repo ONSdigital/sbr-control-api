@@ -42,26 +42,14 @@ object HBaseRestUtils {
   }
 
   def jsonToMap(unitType: String, js: JsLookupResult): Map[String, String] = {
-    // An enterprise id is unique so we can safely always get the first JS value
     (js \ "Cell").as[Seq[JsValue]].map { cell =>
       val col = decodeBase64((cell \ "column").as[String]).split(":", columnFamilyAndValueSubstring).last
       val value = decodeBase64((cell \ "$").as[String])
+      // Below is needed as the format in HBase for child vs parent links are different
       val column = unitType match {
         case ENT_UNIT => col
-        case LEU_UNIT => col.split("_").last
+        case _ => col.split("_").last
       }
-      column -> value
-    }.toMap
-  }
-
-  def convertToUnitMap(result: JsValue): Map[String, String] = {
-    val js = result.as[JsArray]
-    val columnFamilyAndValueSubstring = 2
-    (js(0) \ "Cell").as[Seq[JsValue]].map { cell =>
-      val column = decodeBase64((cell \ "column").as[String])
-        .split(":", columnFamilyAndValueSubstring).last
-        .split("_").last
-      val value = decodeBase64((cell \ "$").as[String])
       column -> value
     }.toMap
   }

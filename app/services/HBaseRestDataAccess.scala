@@ -145,7 +145,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   def transformStatSeqJson(id: String, seqJSON: Seq[JsValue], row: JsValue): UnitLinks = {
     val unitType = decodeBase64((seqJSON(0) \ "key").as[String]).split(delimiter).tail.head
-    UnitLinks(id, extractParents(unitType, convertToUnitMap(row)), extractChildren(unitType, convertToUnitMap(row)), unitType)
+    UnitLinks(id, extractParents(unitType, jsonToMap("UNIT", row(0))), extractChildren(unitType, jsonToMap("UNIT", row(0))), unitType)
   }
 
   // Get every bit of data for the most recent period
