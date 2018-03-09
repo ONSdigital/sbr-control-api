@@ -39,4 +39,5 @@ trait Properties {
   lazy val enterpriseColumnFamily: String = hBaseRestConfig.getString("column.family.enterprise")
   lazy val unitLinksColumnFamily: String = hBaseRestConfig.getString("column.family.unit.links")
   lazy val delimiter: String = hBaseRestConfig.getString("delimiter")
+  lazy val timeout: Int = hBaseRestConfig.getInt("timeout")
 }

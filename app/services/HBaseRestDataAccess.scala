@@ -162,5 +162,6 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def singleGETRequest(path: String, headers: Seq[(String, String)] = Seq.empty): Future[WSResponse] = ws.url(path.toString)
     .withHeaders(headers: _*)
     .withAuth(username, password, WSAuthScheme.BASIC)
+    .withRequestTimeout(timeout milliseconds)
     .get
 }
