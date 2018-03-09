@@ -45,9 +45,9 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
   }
 
   def dbResultMatcher(result: Future[DbResponse]): Future[Result] = result.map(x => x match {
-    case b: DbResult[UnitLinks] => Ok(Json.toJson(b.result))
-    case a: DbResult[EnterpriseUnit] => Ok(Json.toJson(a.result))
-    case c: DbResult[List[UnitLinks]] => Ok(Json.toJson(c.result))
+    case b: DbSuccessUnitLinks => Ok(Json.toJson(b.result))
+    case a: DbSuccessEnterprise => Ok(Json.toJson(a.result))
+    case c: DbSuccessUnitLinksList => Ok(Json.toJson(c.result))
     case e: DbNotFound => NotFound(messagesApi("controller.not.found"))
     case f: DbServerError => dbError(f)
     case g: DbTimeout => dbError(g)

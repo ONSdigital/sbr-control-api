@@ -71,11 +71,11 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     // For the most recent period (i.e. period is None), we need to use the last result (Due to how the HBase
     // REST API scan works (if we could do a reverse scan we'd only have to get the first result)
     period match {
-      case Some(p) => DbResult(EnterpriseUnit(id, p, jsonToMap(ENT_UNIT, row(0)), ENT_UNIT, createEnterpriseChildJSON(id, p)))
+      case Some(p) => DbSuccessEnterprise(EnterpriseUnit(id, p, jsonToMap(ENT_UNIT, row(0)), ENT_UNIT, createEnterpriseChildJSON(id, p)))
       case None => {
         // We need to get the period from the HBase row key
         val keyPeriod = decodeBase64((row.last \ "key").as[String]).split(delimiter).last
-        DbResult(EnterpriseUnit(id, keyPeriod, jsonToMap(ENT_UNIT, row.last), ENT_UNIT, createEnterpriseChildJSON(id, keyPeriod)))
+        DbSuccessEnterprise(EnterpriseUnit(id, keyPeriod, jsonToMap(ENT_UNIT, row.last), ENT_UNIT, createEnterpriseChildJSON(id, keyPeriod)))
       }
     }
   }
@@ -87,8 +87,8 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     // from HBase, either returning UnitLinks (when unitType is present) or List[UnitLinks] when there is
     // no unitType present
     period match {
-      case Some(_) => DbResult[UnitLinks](transformStatSeqJson(id, seqJSON, row))
-      case None => DbResult[List[UnitLinks]](transformUnitSeqJson(id, seqJSON, row))
+      case Some(_) => DbSuccessUnitLinks(transformStatSeqJson(id, seqJSON, row))
+      case None => DbSuccessUnitLinksList(transformUnitSeqJson(id, seqJSON, row))
     }
   }
 
@@ -117,7 +117,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val unitLinks = getStatUnitLinks(entId, ENT_UNIT, period)
     // @TODO: The await is a temporary measure to use whilst testing
     Await.result(unitLinks, 2 seconds) match {
-      case a: DbResult[UnitLinks] => a.result.children match {
+      case a: DbSuccessUnitLinks => a.result.children match {
         case Some(c) => {
           // Now that we have the unitLinks and we know that there are items in this list,
           // we need to form the correct JSON format using the Map[String, String] which is
@@ -135,7 +135,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val unitLinks = getStatUnitLinks(childId, "LEU", period)
     // @TODO: The await is a temporary measure to use whilst testing
     Await.result(unitLinks, 2 seconds) match {
-      case a: DbResult[UnitLinks] => a.result.children match {
+      case a: DbSuccessUnitLinks => a.result.children match {
         case Some(c) => c.map(x => Child(x._2, x._1)).toList
         case None => List()
       }
