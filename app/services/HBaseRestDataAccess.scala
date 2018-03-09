@@ -71,11 +71,11 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     // For the most recent period (i.e. period is None), we need to use the last result (Due to how the HBase
     // REST API scan works (if we could do a reverse scan we'd only have to get the first result)
     period match {
-      case Some(p) => DbResult(EnterpriseUnit(id, p, jsToEntMap(row(0)), ENT_UNIT, createEnterpriseChildJSON(id, p)))
+      case Some(p) => DbResult(EnterpriseUnit(id, p, jsonToMap(ENT_UNIT, row(0)), ENT_UNIT, createEnterpriseChildJSON(id, p)))
       case None => {
         // We need to get the period from the HBase row key
         val keyPeriod = decodeBase64((row.last \ "key").as[String]).split(delimiter).last
-        DbResult(EnterpriseUnit(id, keyPeriod, jsToEntMap(row.last), ENT_UNIT, createEnterpriseChildJSON(id, keyPeriod)))
+        DbResult(EnterpriseUnit(id, keyPeriod, jsonToMap(ENT_UNIT, row.last), ENT_UNIT, createEnterpriseChildJSON(id, keyPeriod)))
       }
     }
   }
@@ -155,7 +155,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val filteredJSON = seqJSON.filter(x => decodeBase64((x \ "key").as[String]).split(delimiter).last == period)
     filteredJSON.map(x => {
       val unitType = decodeBase64((x \ "key").as[String]).split(delimiter).tail.head
-      UnitLinks(id, extractParents(unitType, jsToUnitMap(x)), extractChildren(unitType, jsToUnitMap(x)), unitType)
+      UnitLinks(id, extractParents(unitType, jsonToMap(LEU_UNIT, x(0))), extractChildren(unitType, jsonToMap(LEU_UNIT, x(0))), unitType)
     }).toList
   }
 
