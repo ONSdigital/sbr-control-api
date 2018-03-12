@@ -1,12 +1,7 @@
 package uk.gov.ons.sbr.models.units
 
-import scala.collection.JavaConverters._
-
 import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{ Json, OFormat }
-
-import uk.gov.ons.sbr.data.domain.StatisticalUnit
-import uk.gov.ons.sbr.data.model.StatUnitLinks
 import uk.gov.ons.sbr.models.DataUnit
 
 /**
@@ -24,23 +19,4 @@ case class UnitLinks(
 object UnitLinks {
 
   implicit val unitFormat: OFormat[UnitLinks] = Json.format[UnitLinks]
-
-  def apply(u: StatisticalUnit): UnitLinks = {
-    val parentMap = u.getLinks.getParents match {
-      case y if !y.isEmpty =>
-        Some(y.asScala.map { case (group, id) => group.toString -> id }.toMap)
-      case _ => None
-    }
-    val childrenMap = u.getLinks.getChildren match {
-      case x if !x.isEmpty =>
-        Some(x.asScala.map { case (id, group) => id -> group.toString }.toMap)
-      case _ => None
-    }
-    UnitLinks(u.getKey, parentMap, childrenMap, u.getType.toString)
-  }
-
-  def apply(u: StatUnitLinks): UnitLinks = {
-    UnitLinks(u.key, Option(u.parents), Option(u.children), u.unitType)
-  }
-
 }

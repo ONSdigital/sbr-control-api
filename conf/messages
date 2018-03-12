@@ -1,0 +1,5 @@
+controller.invalid.id=Invalid id
+controller.invalid.period=Invalid period
+controller.invalid.category=Invalid category
+controller.not.found=404 Not Found
+controller.internal.server.error=Internal Server Error

@@ -65,7 +65,6 @@ lazy val commonSettings = Seq (
     "-Xlint", // recommended additional warnings
     "-Xcheckinit", // runtime error when a val is not initialized due to trait hierarchies (instead of NPE somewhere else)
     "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver
-    //"-Yno-adapted-args", // Do not adapt an argument list (either by inserting () or creating a tuple) to match the receiver
     "-Ywarn-value-discard", // Warn when non-Unit expression results are unused
     "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures
     "-Ywarn-dead-code", // Warn when dead code is identified
@@ -85,10 +84,11 @@ lazy val api = (project in file("."))
   .settings(testSettings:_*)
   .settings(publishingSettings:_*)
   .settings(
+    routesImport += "extensions.Binders._",
     publishLocal := {},
     publish := {},
     name := Constant.appName,
-    moduleName := "sbr-control-api",
+    moduleName := s"${Constant.organisation}-${Constant.appName}",
     version := Versions.appVersion,
     buildInfoPackage := "controllers",
     // gives us last compile time and tagging info
@@ -101,21 +101,7 @@ lazy val api = (project in file("."))
       BuildInfoKey.action("gitVersion") {
         git.gitTagToVersionNumber.?.value.getOrElse(Some(Constant.projectStage))+"@"+ git.formattedDateVersion.?.value.getOrElse("")
     }),
-    // After universal:packageBin has run, the csv files cannot be found, so need to move them to the right place.
-    // replace sample sql with actual sql date files for SQLConnect
-    mappings in Universal += file("conf/sample/ch_2500_data.sql") -> "bin/conf/sample/ch_2500_data.sql",
-    mappings in Universal += file("conf/sample/ent_2500_data.sql") -> "bin/conf/sample/ent_2500_data.sql",
-    mappings in Universal += file("conf/sample/leu_2500_data.sql") -> "bin/conf/sample/leu_2500_data.sql",
-    mappings in Universal += file("conf/sample/paye_2500_data.sql") -> "bin/conf/sample/paye_2500_data.sql",
-    mappings in Universal += file("conf/sample/unit_links_2500_data.sql") -> "bin/conf/sample/unit_links_2500_data.sql",
-    mappings in Universal += file("conf/sample/vat_2500_data.sql") -> "bin/conf/sample/vat_2500_data.sql",
-
-
-    // Run with proper default env vars set for hbaseInMemory
-    javaOptions in Test += "-Dsbr.hbase.inmemory=true",
-    javaOptions in Universal ++= Seq(
-      "-Dsbr.hbase.inmemory=true"
-    ),
+    javaOptions in Test += "-DSBR_DB_PORT=8075",
     // di router -> swagger
     routesGenerator := InjectedRoutesGenerator,
     buildInfoOptions += BuildInfoOption.ToMap,
@@ -123,17 +109,24 @@ lazy val api = (project in file("."))
     buildInfoOptions += BuildInfoOption.BuildTime,
     libraryDependencies ++= Seq (
       filters,
+      ws,
       "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "2.0.0"           % Test,
-      "org.scalatest"                %%    "scalatest"           %    "3.0.0"           % Test,
+      "org.scalatest"                %%    "scalatest"           %    "3.0.4"           % Test,
+      "com.github.tomakehurst"       %     "wiremock"            %    "1.33"            % Test,
       "org.webjars"                  %%    "webjars-play"        %    "2.5.0-3",
+      "io.lemonlabs"                 %%    "scala-uri"           %    "0.5.0",
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",
       "com.typesafe"                 %     "config"              %    "1.3.1",
-      //swagger
+      // Swagger
       "io.swagger"                   %%    "swagger-play2"       %    "1.5.3",
-      "org.webjars"                  %     "swagger-ui"          %    "3.1.4"
+      "org.webjars"                  %     "swagger-ui"          %    "3.1.4",
+      // Hadoop & HBase (for creating the tableName)
+      "org.apache.hadoop" % "hadoop-common" % "2.6.0",
+      "org.apache.hbase" % "hbase-common" % "1.0.0",
+      "org.apache.hbase" % "hbase-client" % "1.0.0"
       excludeAll ExclusionRule("commons-logging", "commons-logging")
     ),
-    // assembly
+    // Assembly
     assemblyJarName in assembly := s"${Constant.appName}-${Versions.appVersion}.jar",
     assemblyMergeStrategy in assembly := {
       case PathList("io", "netty", xs@_*)                                => MergeStrategy.last
@@ -148,6 +141,8 @@ lazy val api = (project in file("."))
         val oldStrategy = (assemblyMergeStrategy in assembly).value
         oldStrategy(x)
     },
+    name in Universal := s"${Constant.organisation}-${Constant.appName}",
+    packageName in Universal := s"${Constant.organisation}-${Constant.appName}",
     mainClass in assembly := Some("play.core.server.ProdServerStart"),
     fullClasspath in assembly += Attributed.blank(PlayKeys.playPackageAssets.value),
     dockerBaseImage := "openjdk:8-jre",
