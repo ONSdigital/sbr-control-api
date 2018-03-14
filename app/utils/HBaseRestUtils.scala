@@ -42,6 +42,11 @@ class HBaseRestUtils @Inject() (ws: WSClient, val configuration: Configuration) 
 
   def createEntRowKey(period: Option[String], id: String): String = String.join(delimiter, id, period.getOrElse("*"))
 
+  def createEntHistoryRowKey(period: Option[Int], id: String): String = period match {
+    case (Some(p)) => String.join(delimiter, id, p.toString)
+    case (None) => String.join(delimiter, id)
+  }
+
   /**
    * endpoint => rowKey
    * /v1/units/:id => id~*
@@ -49,6 +54,10 @@ class HBaseRestUtils @Inject() (ws: WSClient, val configuration: Configuration) 
    */
   def createUnitLinksRowKey(id: String, period: Option[String], unitType: Option[String]): String = (period, unitType) match {
     case (Some(p), Some(u)) => String.join(delimiter, id, u, p)
+    case (None, None) => String.join(delimiter, id, "*")
+  }
+  def createUnitLinksHistoryRowKey(id: String, period: Option[Int], unitType: Option[String]): String = (period, unitType) match {
+    case (Some(p), Some(u)) => String.join(delimiter, id, u, p.toString)
     case (None, None) => String.join(delimiter, id, "*")
   }
 

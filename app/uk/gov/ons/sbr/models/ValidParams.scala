@@ -29,6 +29,7 @@ sealed trait ValidParams {
     case Success(_) => true
     case Failure(_) => false
   }
+
 }
 
 case class UnitLinksParams(id: String) extends ValidParams
@@ -46,6 +47,16 @@ object EnterpriseParams extends ValidParams {
     case (_, Some(p)) if (!validPeriod(p)) => Right(InvalidPeriod())
     case (i, p) => Left(EnterpriseParams(i, p))
   }
+}
+
+case class EnterpriseHistoryParams(id: String, period: Option[Int]) extends ValidParams
+object EnterpriseHistoryParams extends ValidParams {
+  def validate(id: String, period: Option[Int]): Either[EnterpriseHistoryParams, InvalidParams] = (id, period) match {
+    case (i, _) if (!validId(i)) => Right(InvalidId())
+    case (_, Some(p)) if (!validPeriodMax(p)) => Right(InvalidPeriod())
+    case (i, p) => Left(EnterpriseHistoryParams(i, p))
+  }
+  def validPeriodMax(period: Int): Boolean = period > 0
 }
 
 case class StatUnitLinksParams(id: String, category: String, period: String) extends ValidParams

@@ -43,6 +43,9 @@ trait Properties {
   lazy val port: String = hBaseRestConfig.getString("port")
   lazy val baseUrl: String = s"$host:$port"
 
+  lazy val portHist: String = "9000"
+  lazy val baseUrlHist: String = s"$host:$portHist"
+
   // HBase REST data formatting config
   lazy val delimiter: String = hBaseRestConfig.getString("delimiter")
   lazy val columnFamilyAndValueSubstring: Int = 2

@@ -33,11 +33,14 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
 
   def validateEntParams(id: String, period: Option[String], apply: (String, Option[String]) => Either[EnterpriseParams, InvalidParams]): Either[EnterpriseParams, InvalidParams] = apply(id, period)
 
+  def validateEntHistoryParams(id: String, period: Option[Int], apply: (String, Option[Int]) => Either[EnterpriseHistoryParams, InvalidParams]): Either[EnterpriseHistoryParams, InvalidParams] = apply(id, period)
+
   def handleValidatedParams(params: Either[ValidParams, InvalidParams]): Future[Result] = params match {
     case Left(v: ValidParams) => v match {
       case u: UnitLinksParams => dbResultMatcher(db.getUnitLinks(u.id))
       case s: StatUnitLinksParams => dbResultMatcher(db.getStatUnitLinks(s.id, s.category, s.period))
       case e: EnterpriseParams => dbResultMatcher(db.getEnterprise(e.id, e.period))
+      case h: EnterpriseHistoryParams => dbResultMatcher(db.getEnterpriseHistory(h.id, h.period))
     }
     case Right(i: InvalidParams) => BadRequest(messagesApi(i.msg)).future
   }
@@ -77,6 +80,13 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
   ): Action[AnyContent] = Action.async { implicit request =>
     logger.info(s"Received request to get Enterprise with period [$date] and id [$id] parameters.")
     handleValidatedParams(validateEntParams(id, date, EnterpriseParams.validate))
+  }
+  def retrieveEnterpriseHistory(
+    @ApiParam(value = "An identifier of any type", example = "12345", required = true) id: String,
+    @ApiParam(value = "Identifier for the number of records back", example = "2", required = false) max: Option[Int]
+  ): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"Received request to get the history of an Enterprise with id [$id] limited to [$max] records.")
+    handleValidatedParams(validateEntHistoryParams(id, max, EnterpriseHistoryParams.validate))
   }
 
   @ApiOperation(
