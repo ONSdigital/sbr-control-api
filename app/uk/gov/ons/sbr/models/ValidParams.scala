@@ -25,10 +25,7 @@ sealed trait ValidParams {
 
   def validId(id: String): Boolean = id.length < maxKeyLength && id.length > minKeyLength
 
-  def validPeriod(period: String): Boolean = Try(YearMonth.parse(period), DateTimeFormat.forPattern(periodFormat)) match {
-    case Success(_) => true
-    case Failure(_) => false
-  }
+  def validPeriod(period: String): Boolean = Try(YearMonth.parse(period, DateTimeFormat.forPattern(periodFormat))).isSuccess
 }
 
 case class UnitLinksParams(id: String) extends ValidParams
