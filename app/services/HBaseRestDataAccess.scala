@@ -151,6 +151,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       val unitType = utils.decodeBase64((x \ "key").as[String]).split(delimiter).tail.head
       UnitLinks(
         id,
+        period,
         utils.extractParents(unitType, utils.jsonToMap(x, utils.formUnitKey)),
         utils.extractChildren(unitType, utils.jsonToMap(x, utils.formUnitKey)),
         unitType
