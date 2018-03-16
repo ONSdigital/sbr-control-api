@@ -19,11 +19,11 @@ import scala.util.{ Failure, Success, Try }
 
 sealed trait ValidParams {
 
-  private val minKeyLength: Int = 4
+  private val minKeyLength: Int = 5
   private val maxKeyLength: Int = 20
   private val periodFormat: String = "yyyyMM"
 
-  def validId(id: String): Boolean = id.length < maxKeyLength && id.length > minKeyLength
+  def validId(id: String): Boolean = id.length < (maxKeyLength + 1) && id.length > (minKeyLength - 1)
 
   def validPeriod(period: String): Boolean = Try(YearMonth.parse(period, DateTimeFormat.forPattern(periodFormat))).isSuccess
 }
