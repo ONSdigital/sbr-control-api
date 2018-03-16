@@ -4,15 +4,7 @@ import utils.Validation._
 
 /**
  * Created by coolit on 19/02/2018.
- *
- * I have to call the companion apply methods applyA not apply because they take the same
- * parameters as the normal case class apply method
- * http://www.scala-lang.org/old/node/2211
- *
  */
-
-// @todo - Use dependancy injected config for min/max key length, period format, id regex, valid categories
-// @todo - Make ValidParams trait more dynamic, e.g. common apply method for Ent/UnitLinks
 
 sealed trait ValidParams
 
