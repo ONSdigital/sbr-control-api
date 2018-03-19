@@ -20,7 +20,7 @@ lazy val Versions = new {
 }
 
 lazy val Constant = new {
-  val appName = "sbr-control-api"
+  val appName = "control-api"
   val projectStage = "alpha"
   val organisation = "ons"
   val team = "sbr"
@@ -87,8 +87,11 @@ lazy val api = (project in file("."))
     routesImport += "extensions.Binders._",
     publishLocal := {},
     publish := {},
-    name := Constant.appName,
-    moduleName := s"${Constant.organisation}-${Constant.appName}",
+    organizationName := "ons",
+    organization := "uk.gov.ons",
+//     name := Constant.appName,
+    moduleName := s"${Constant.appName}",
+    name := s"${organizationName.value}-${Constant.team}-${moduleName.value}",
     version := Versions.appVersion,
     buildInfoPackage := "controllers",
     // gives us last compile time and tagging info
