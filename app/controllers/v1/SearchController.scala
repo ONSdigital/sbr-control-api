@@ -33,7 +33,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
 
   def validateEntParams(id: String, period: Option[String], apply: (String, Option[String]) => Either[EnterpriseParams, InvalidParams]): Either[EnterpriseParams, InvalidParams] = apply(id, period)
 
-  def validateEntHistoryParams(id: String, period: Option[Int], apply: (String, Option[Int]) => Either[EnterpriseHistoryParams, InvalidParams]): Either[EnterpriseHistoryParams, InvalidParams] = apply(id, period)
+  def validateEntHistoryParams(id: String, max: Option[Int], apply: (String, Option[Int]) => Either[EnterpriseHistoryParams, InvalidParams]): Either[EnterpriseHistoryParams, InvalidParams] = apply(id, max)
 
   def handleValidatedParams(params: Either[ValidParams, InvalidParams]): Future[Result] = params match {
     case Left(v: ValidParams) => v match {
@@ -48,6 +48,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
   def dbResultMatcher(result: Future[DbResponse]): Future[Result] = result.map(x => x match {
     case b: DbSuccessUnitLinks => Ok(Json.toJson(b.result))
     case a: DbSuccessEnterprise => Ok(Json.toJson(a.result))
+    case q: DbSuccessEnterpriseHistory => Ok(Json.toJson(q.result))
     case c: DbSuccessUnitLinksList => Ok(Json.toJson(c.result))
     case e: DbNotFound => NotFound(messagesApi("controller.not.found"))
     case f: DbServerError => dbError(f)

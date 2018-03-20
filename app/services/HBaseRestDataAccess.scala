@@ -38,13 +38,13 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   def getStatUnitLinks(id: String, category: String, period: String): Future[DbResponse] = getStatAndUnitLinks(id, Some(period), Some(category))
 
   //for ent history
-  def getStatUnitLinksHistory(id: String, category: String, period: Int): Future[DbResponse] = getStatAndUnitLinksHistory(id, Some(period), Some(category))
+  def getStatUnitLinksHistory(id: String, category: String, period: String): Future[DbResponse] = getStatAndUnitLinksHistory(id, Some(period), Some(category))
 
   def getEnterprise(id: String, period: Option[String]): Future[DbResponse] = {
     // HBase key format: 9901566115~201706, id~period
     val rowKey = utils.createEntRowKey(period, id.reverse)
     val uri = baseUrl / enterpriseTableName.getNameAsString / rowKey / enterpriseColumnFamily
-    logger.info(s"1 Getting Enterprise from HBase REST using URI [$uri]")
+    logger.info(s"Getting Enterprise from HBase REST using URI [$uri]")
     utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleEntResponse))
   }
   //for ent history
@@ -55,7 +55,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val uri = baseUrl / enterpriseTableName.getNameAsString / rowKey / enterpriseColumnFamily
     //val uri = baseUrl / enterpriseTableName.getNameAsString / rowKey / "history"
     //val uri = baseUrl / "v1" / "enterprise" / rowKey / "history"
-    logger.info(s"2 Getting Enterprise from HBase REST using URI [$uri]")
+    logger.info(s"Getting Enterprise from HBase REST using URI [$uri]")
     utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponseHistory(id, period, x, handleEntHistoryResponse))
   }
 
@@ -68,13 +68,13 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleLinksResponse))
   }
 
-  def getStatAndUnitLinksHistory(id: String, period: Option[Int], unitType: Option[String]): Future[DbResponse] = {
+  def getStatAndUnitLinksHistory(id: String, period: Option[String], unitType: Option[String]): Future[DbResponse] = {
     // HBase key format: 201706~01752564~CH, period~id~type
     // When there is no unitType, * is used to get rows of any unit type
-    val rowKey = utils.createUnitLinksHistoryRowKey(id, period, unitType)
+    val rowKey = utils.createUnitLinksRowKey(id, period, unitType)
     val uri = baseUrl / unitTableName.getNameAsString / rowKey / unitLinksColumnFamily
     logger.info(s"4 Getting UnitLinks from HBase REST using URI [$uri]")
-    utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponseHistory(id, period, x, handleLinksResponseHistory))
+    utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleLinksResponse))
   }
 
   /**
@@ -116,29 +116,24 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   def handleEntHistoryResponse(id: String, max: Option[Int], response: WSResponse): DbResponse = {
     val row = (response.json \ "Row").as[Seq[JsValue]]
-    DbSuccessEnterpriseHistory(row.map(x => x))
-    
-    //    period match {
-    //      case Some(p) => DbSuccessEnterpriseHistory(EnterpriseHistoryUnit(id, p, utils.jsonToMap(row.head, utils.formEntKey), entUnit, createEnterpriseHistoryChildJSON(id, p)))
-    //      case None => {
-    //        // We do not know what the period is so we need to get it from the HBase row key
-    //        val keyPeriod = utils.decodeBase64((row.last \ "key").as[String]).split(delimiter).last
-    //        DbSuccessEnterprise(EnterpriseUnit(id, keyPeriod, utils.jsonToMap(row.last, utils.formEntKey), entUnit, createEnterpriseChildJSON(id, keyPeriod)))
-    //      }
-    //    }
+    //DbSuccessEnterpriseHistory(row.map(x => x))
+    max match {
+      case Some(m) => {
+        val allEnts = row.map(x => {
+          val period = utils.decodeBase64((x \ "key").as[String]).split(delimiter).last
+          EnterpriseUnit(id, period, utils.jsonToMap(row.head, utils.formEntKey), entUnit, createEnterpriseChildJSON(id, period))
+        })
+        DbSuccessEnterpriseHistory(allEnts.toList.reverse.slice(0, m))
+      }
+      case None => {
+        val allEnts = row.map(x => {
+          val period = utils.decodeBase64((x \ "key").as[String]).split(delimiter).last
+          EnterpriseUnit(id, period, utils.jsonToMap(row.head, utils.formEntKey), entUnit, createEnterpriseChildJSON(id, period))
+        })
+        DbSuccessEnterpriseHistory(allEnts.toList)
+      }
+    }
   }
-
-
-  //  val filteredJSON = seqJSON.filter(x => utils.decodeBase64((x \ "key").as[String]).split(delimiter).last == period)
-//  filteredJSON.map(x => {
-//    val unitType = utils.decodeBase64((x \ "key").as[String]).split(delimiter).tail.head
-//    UnitLinks(
-//      id,
-//      utils.extractParents(unitType, utils.jsonToMap(x, utils.formUnitKey)),
-//      utils.extractChildren(unitType, utils.jsonToMap(x, utils.formUnitKey)),
-//      unitType
-//    )
-//  }).toList
 
   /**
    * When we have a full row key (id~unitType~period), an exact match will be returned so it does not matter which
@@ -192,42 +187,8 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     }
   }
 
-  def createEnterpriseHistoryChildJSON(entId: String, period: Int): List[LEU] = {
-    logger.info(s"Creating child JSON for enterprise [$entId] with period [$period]")
-    val unitLinks = getStatUnitLinksHistory(entId, entUnit, period)
-    // @TODO: The await is a temporary measure to use whilst testing
-    // @TODO: Add better handling of errors
-    Await.result(unitLinks, 2 seconds) match {
-      case a: DbSuccessUnitLinks => a.result.children match {
-        case Some(childMap) => {
-          // Now that we have the unitLinks and we know that there are items in this list,
-          // we need to form the correct JSON format using the Map[String, String] which is
-          // a map of Map[id, unitType].
-          childMap
-            .filter(_._2 == leuUnit)
-            .keySet.toList
-            .map(id => LEU(leuUnit, id, getChildrenForLEUHistory(id, period)))
-        }
-        case None => List()
-      }
-      case _ => List()
-    }
-  }
-
   def getChildrenForLEU(childId: String, period: String): List[Child] = {
     val unitLinks = getStatUnitLinks(childId, "LEU", period)
-    // @TODO: The await is a temporary measure to use whilst testing
-    Await.result(unitLinks, 2 seconds) match {
-      case a: DbSuccessUnitLinks => a.result.children match {
-        case Some(c) => c.map { case (x, y) => Child(x, y) }.toList
-        case None => List()
-      }
-      case _ => List()
-    }
-  }
-  //for ent history
-  def getChildrenForLEUHistory(childId: String, period: Int): List[Child] = {
-    val unitLinks = getStatUnitLinksHistory(childId, "LEU", period)
     // @TODO: The await is a temporary measure to use whilst testing
     Await.result(unitLinks, 2 seconds) match {
       case a: DbSuccessUnitLinks => a.result.children match {

@@ -10,14 +10,14 @@ import uk.gov.ons.sbr.models.DataUnit
 
 case class EnterpriseHistoryUnit(
   @ApiModelProperty(example = "", dataType = "java.lang.Long") id: String,
-  period: Int,
+  max: Int,
   @ApiModelProperty(value = "A key value pair of all variables associated", example = "",
     dataType = "Map[String,String]") vars: Map[String, String],
   unitType: String,
   childrenJson: List[LEU]
 ) extends DataUnit[String]
 
-object EnterpriseHistoryUnitUnit {
+object EnterpriseHistoryUnit {
 
   implicit val unitFormat: OFormat[EnterpriseHistoryUnit] = Json.format[EnterpriseHistoryUnit]
 }

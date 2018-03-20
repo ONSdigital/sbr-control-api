@@ -67,7 +67,7 @@ class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppP
       ))
   }
 
-  def mockEndpointHistory(tableName: String, period: Option[Int], id: String, unitType: Option[String], body: String): Unit = {
+  def mockEndpointHistory(tableName: String, period: Option[String], id: String, unitType: Option[String], body: String): Unit = {
     val path = period match {
       case Some(p) => s"/enterprises/$id/history?max=$p"
       case None => s"/enterprises/$id/history"
@@ -103,13 +103,11 @@ class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppP
     "return an enterprise for a valid enterprise id" in {
       val id = "12345"
       val body = "{\"Row\":[{\"key\":\"NTQzMjF+MjAxNzEy\",\"Cell\":[{\"column\":\"ZDplbnRfbmFtZQ==\",\"timestamp\":1519809888703,\"$\":\"VGVzY28=\"},{\"column\":\"ZDplbnRyZWY=\",\"timestamp\":1519809884065,\"$\":\"MTIzNDU=\"}]},{\"key\":\"NTQzMjF+MjAxODAx\",\"Cell\":[{\"column\":\"ZDplbnRfbmFtZQ==\",\"timestamp\":1519809879783,\"$\":\"VGVzY28=\"},{\"column\":\"ZDplbnRyZWY=\",\"timestamp\":1519809874856,\"$\":\"MTIzNDU=\"}]},{\"key\":\"NTQzMjF+MjAxODAy\",\"Cell\":[{\"column\":\"ZDplbnRfbmFtZQ==\",\"timestamp\":1519809867579,\"$\":\"VGVzY28=\"},{\"column\":\"ZDplbnRyZWY=\",\"timestamp\":1519809865127,\"$\":\"MTIzNDU=\"}]}]}"
-      val period = 1
+      val period = firstPeriod
       mockEndpointHistory(enterpriseTable, Some(period), id, None, body)
-
       val resp = fakeRequest(s"/$version/enterprises/$id/history")
       logger.error(resp.toString)
       val json = contentAsJson(resp)
-
       val ent = json.validate[EnterpriseUnit]
       status(resp) mustBe OK
       contentType(resp) mustBe Some("application/json")

@@ -56,10 +56,7 @@ class HBaseRestUtils @Inject() (ws: WSClient, val configuration: Configuration) 
     case (Some(p), Some(u)) => String.join(delimiter, id, u, p)
     case (None, None) => String.join(delimiter, id, "*")
   }
-  def createUnitLinksHistoryRowKey(id: String, period: Option[Int], unitType: Option[String]): String = (period, unitType) match {
-    case (Some(p), Some(u)) => String.join(delimiter, id, u, p.toString)
-    case (None, None) => String.join(delimiter, id, "*")
-  }
+
 
   def jsonToMap(json: JsValue, formKey: String => String): Map[String, String] = {
     (json \ "Cell").as[Seq[JsValue]].map { cell =>
