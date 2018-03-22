@@ -42,11 +42,6 @@ class HBaseRestUtils @Inject() (ws: WSClient, val configuration: Configuration) 
 
   def createEntRowKey(period: Option[String], id: String): String = String.join(delimiter, id, period.getOrElse("*"))
 
-  def createEntHistoryRowKey(period: Option[Int], id: String): String = period match {
-    case (Some(p)) => String.join(delimiter, id, p.toString)
-    case (None) => String.join(delimiter, id)
-  }
-
   /**
    * endpoint => rowKey
    * /v1/units/:id => id~*

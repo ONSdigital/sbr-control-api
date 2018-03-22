@@ -58,7 +58,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     // When there is no unitType, * is used to get rows of any unit type
     val rowKey = utils.createUnitLinksRowKey(id, period, unitType)
     val uri = baseUrl / unitTableName.getNameAsString / rowKey / unitLinksColumnFamily
-    logger.info(s"3 Getting UnitLinks from HBase REST using URI [$uri]")
+    logger.info(s"Getting UnitLinks from HBase REST using URI [$uri]")
     utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleLinksResponse))
   }
 
@@ -74,8 +74,10 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     case response if response.status == Status.REQUEST_TIMEOUT => DbTimeout()
   }
 
-  def handleWsResponseHistory(id: String, period: Option[Int], ws: WSResponse, wsToDbResponse: (String, Option[Int], WSResponse) => DbResponse): DbResponse = ws match {
-    case response if response.status == Status.OK => wsToDbResponse(id, period, response)
+  // This method is almost the same as the method above, apart from the type of second parameter (String vs Int)
+  // TODO: refactor common logic into one method
+  def handleWsResponseHistory(id: String, max: Option[Int], ws: WSResponse, wsToDbResponse: (String, Option[Int], WSResponse) => DbResponse): DbResponse = ws match {
+    case response if response.status == Status.OK => wsToDbResponse(id, max, response)
     case response if response.status == Status.NOT_FOUND => DbNotFound()
     case response if response.status == Status.INTERNAL_SERVER_ERROR => DbServerError()
     case response if response.status == Status.SERVICE_UNAVAILABLE => DbServiceUnavailable()
@@ -101,20 +103,10 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   def handleEntHistoryResponse(id: String, max: Option[Int], response: WSResponse): DbResponse = {
     val row = (response.json \ "Row").as[Seq[JsValue]]
-    max match {
-      case Some(m) => {
-        DbSuccessEnterpriseHistory(row.map(x => {
-          val period = getPeriodFromRowKey(x)
-          EnterpriseUnit(id, period, utils.jsonToMap(row.head, utils.formEntKey), entUnit, createEnterpriseChildJSON(id, period))
-        }).toList.reverse.slice(0, m))
-      }
-      case None => {
-        DbSuccessEnterpriseHistory(row.map(x => {
-          val period = getPeriodFromRowKey(x)
-          EnterpriseUnit(id, period, utils.jsonToMap(row.head, utils.formEntKey), entUnit, createEnterpriseChildJSON(id, period))
-        }).toList.reverse)
-      }
-    }
+    DbSuccessEnterpriseHistory(row.map(x => {
+      val period = getPeriodFromRowKey(x)
+      EnterpriseUnit(id, period, utils.jsonToMap(row.head, utils.formEntKey), entUnit, createEnterpriseChildJSON(id, period))
+    }).toList.reverse.slice(0, max.getOrElse(row.length)))
   }
 
   /**

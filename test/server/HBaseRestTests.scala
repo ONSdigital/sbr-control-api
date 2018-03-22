@@ -15,7 +15,7 @@ import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
 /**
  * Created by coolit on 13/02/2018.
  */
-class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppPerSuite with LazyLogging {
+class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppPerSuite {
 
   // TODO:
   // - test each type of endpoint
