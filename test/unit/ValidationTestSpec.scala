@@ -76,4 +76,11 @@ class ValidationTestSpec extends TestUtils {
       validCategory(invalidCategory) mustBe false
     }
   }
+
+  "validMax" should {
+    "return true for a valid max" in {
+      val max = 1
+      validMax(max) mustBe true
+    }
+  }
 }

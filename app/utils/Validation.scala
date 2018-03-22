@@ -18,4 +18,6 @@ object Validation {
   def validPeriod(period: String): Boolean = Try(YearMonth.parse(period, DateTimeFormat.forPattern(periodFormat))).isSuccess
 
   def validCategory(category: String): Boolean = validCategories.contains(category)
+
+  def validMax(max: Int): Boolean = max > 0
 }

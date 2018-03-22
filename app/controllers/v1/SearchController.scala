@@ -33,7 +33,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
 
   def validateEntParams(id: String, period: Option[String], apply: (String, Option[String]) => Either[InvalidParams, EnterpriseParams]): Either[InvalidParams, EnterpriseParams] = apply(id, period)
 
-  def validateEntHistoryParams(id: String, max: Option[Int], apply: (String, Option[Int]) => Either[EnterpriseHistoryParams, InvalidParams]): Either[EnterpriseHistoryParams, InvalidParams] = apply(id, max)
+  def validateEntHistoryParams(id: String, max: Option[Int], apply: (String, Option[Int]) => Either[InvalidParams, EnterpriseHistoryParams]): Either[InvalidParams, EnterpriseHistoryParams] = apply(id, max)
 
   def handleValidatedParams(params: Either[InvalidParams, ValidParams]): Future[Result] = params match {
     case Right(v: ValidParams) => v match {
