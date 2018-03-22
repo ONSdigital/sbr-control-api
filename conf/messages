@@ -1,4 +1,5 @@
 controller.invalid.id=Invalid id
+controller.invalid.max=Invalid max
 controller.invalid.period=Invalid period
 controller.invalid.category=Invalid category
 controller.not.found=404 Not Found

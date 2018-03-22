@@ -40,7 +40,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
       case u: UnitLinksParams => dbResultMatcher(db.getUnitLinks(u.id))
       case s: StatUnitLinksParams => dbResultMatcher(db.getStatUnitLinks(s.id, s.category, s.period))
       case e: EnterpriseParams => dbResultMatcher(db.getEnterprise(e.id, e.period))
-      case h: EnterpriseHistoryParams => dbResultMatcher(db.getEnterpriseHistory(h.id, h.period))
+      case h: EnterpriseHistoryParams => dbResultMatcher(db.getEnterpriseHistory(h.id, h.max))
     }
     case Right(i: InvalidParams) => BadRequest(messagesApi(i.msg)).future
   }

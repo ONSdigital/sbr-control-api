@@ -49,14 +49,15 @@ object EnterpriseParams extends ValidParams {
   }
 }
 
-case class EnterpriseHistoryParams(id: String, period: Option[Int]) extends ValidParams
+case class EnterpriseHistoryParams(id: String, max: Option[Int]) extends ValidParams
 object EnterpriseHistoryParams extends ValidParams {
   def validate(id: String, max: Option[Int]): Either[EnterpriseHistoryParams, InvalidParams] = (id, max) match {
     case (i, _) if (!validId(i)) => Right(InvalidId())
-    case (_, Some(p)) if (!validPeriodMax(p)) => Right(InvalidPeriod())
+    case (_, Some(p)) if (!validMax(p)) => Right(InvalidMax())
     case (i, p) => Left(EnterpriseHistoryParams(i, p))
   }
-  def validPeriodMax(period: Int): Boolean = period > 0
+
+  def validMax(max: Int): Boolean = max > 0
 }
 
 case class StatUnitLinksParams(id: String, category: String, period: String) extends ValidParams

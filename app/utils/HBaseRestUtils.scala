@@ -57,7 +57,6 @@ class HBaseRestUtils @Inject() (ws: WSClient, val configuration: Configuration) 
     case (None, None) => String.join(delimiter, id, "*")
   }
 
-
   def jsonToMap(json: JsValue, formKey: String => String): Map[String, String] = {
     (json \ "Cell").as[Seq[JsValue]].map { cell =>
       val col = decodeBase64((cell \ "column").as[String]).split(":", columnFamilyAndValueSubstring).last

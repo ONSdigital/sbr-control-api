@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import config.Properties
 import uk.gov.ons.sbr.models._
-import uk.gov.ons.sbr.models.units.{ Child, EnterpriseUnit, EnterpriseHistoryUnit, LEU, UnitLinks }
+import uk.gov.ons.sbr.models.units.{ Child, EnterpriseUnit, LEU, UnitLinks }
 import utils.HBaseRestUtils
 
 // TODO:
@@ -37,9 +37,6 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   def getStatUnitLinks(id: String, category: String, period: String): Future[DbResponse] = getStatAndUnitLinks(id, Some(period), Some(category))
 
-  //for ent history
-  def getStatUnitLinksHistory(id: String, category: String, period: String): Future[DbResponse] = getStatAndUnitLinksHistory(id, Some(period), Some(category))
-
   def getEnterprise(id: String, period: Option[String]): Future[DbResponse] = {
     // HBase key format: 9901566115~201706, id~period
     val rowKey = utils.createEntRowKey(period, id.reverse)
@@ -47,16 +44,13 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     logger.info(s"Getting Enterprise from HBase REST using URI [$uri]")
     utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleEntResponse))
   }
-  //for ent history
-  def getEnterpriseHistory(id: String, period: Option[Int]): Future[DbResponse] = {
+
+  def getEnterpriseHistory(id: String, max: Option[Int]): Future[DbResponse] = {
     // HBase key format: 9901566115/1, id/history
-    //val rowKey = utils.createEntHistoryRowKey(period, id)
     val rowKey = utils.createEntRowKey(None, id.reverse)
     val uri = baseUrl / enterpriseTableName.getNameAsString / rowKey / enterpriseColumnFamily
-    //val uri = baseUrl / enterpriseTableName.getNameAsString / rowKey / "history"
-    //val uri = baseUrl / "v1" / "enterprise" / rowKey / "history"
-    logger.info(s"Getting Enterprise from HBase REST using URI [$uri]")
-    utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponseHistory(id, period, x, handleEntHistoryResponse))
+    logger.info(s"Getting Enterprise History from HBase REST using URI [$uri]")
+    utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponseHistory(id, max, x, handleEntHistoryResponse))
   }
 
   def getStatAndUnitLinks(id: String, period: Option[String], unitType: Option[String]): Future[DbResponse] = {
@@ -65,15 +59,6 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     val rowKey = utils.createUnitLinksRowKey(id, period, unitType)
     val uri = baseUrl / unitTableName.getNameAsString / rowKey / unitLinksColumnFamily
     logger.info(s"3 Getting UnitLinks from HBase REST using URI [$uri]")
-    utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleLinksResponse))
-  }
-
-  def getStatAndUnitLinksHistory(id: String, period: Option[String], unitType: Option[String]): Future[DbResponse] = {
-    // HBase key format: 201706~01752564~CH, period~id~type
-    // When there is no unitType, * is used to get rows of any unit type
-    val rowKey = utils.createUnitLinksRowKey(id, period, unitType)
-    val uri = baseUrl / unitTableName.getNameAsString / rowKey / unitLinksColumnFamily
-    logger.info(s"4 Getting UnitLinks from HBase REST using URI [$uri]")
     utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleLinksResponse))
   }
 
@@ -88,7 +73,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     case response if response.status == Status.SERVICE_UNAVAILABLE => DbServiceUnavailable()
     case response if response.status == Status.REQUEST_TIMEOUT => DbTimeout()
   }
-  //made new handleWsResponse fot the history with period: Option[Int]
+
   def handleWsResponseHistory(id: String, period: Option[Int], ws: WSResponse, wsToDbResponse: (String, Option[Int], WSResponse) => DbResponse): DbResponse = ws match {
     case response if response.status == Status.OK => wsToDbResponse(id, period, response)
     case response if response.status == Status.NOT_FOUND => DbNotFound()
@@ -116,21 +101,18 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   def handleEntHistoryResponse(id: String, max: Option[Int], response: WSResponse): DbResponse = {
     val row = (response.json \ "Row").as[Seq[JsValue]]
-    //DbSuccessEnterpriseHistory(row.map(x => x))
     max match {
       case Some(m) => {
-        val allEnts = row.map(x => {
+        DbSuccessEnterpriseHistory(row.map(x => {
           val period = utils.decodeBase64((x \ "key").as[String]).split(delimiter).last
           EnterpriseUnit(id, period, utils.jsonToMap(row.head, utils.formEntKey), entUnit, createEnterpriseChildJSON(id, period))
-        })
-        DbSuccessEnterpriseHistory(allEnts.toList.reverse.slice(0, m))
+        }).toList.reverse.slice(0, m))
       }
       case None => {
-        val allEnts = row.map(x => {
+        DbSuccessEnterpriseHistory(row.map(x => {
           val period = utils.decodeBase64((x \ "key").as[String]).split(delimiter).last
           EnterpriseUnit(id, period, utils.jsonToMap(row.head, utils.formEntKey), entUnit, createEnterpriseChildJSON(id, period))
-        })
-        DbSuccessEnterpriseHistory(allEnts.toList)
+        }).toList.reverse)
       }
     }
   }
@@ -140,13 +122,6 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
    * index of the returned JSON we use, with an incomplete row key (id~*), multiple results will be returned.
    */
   def handleLinksResponse(id: String, period: Option[String], response: WSResponse): DbResponse = {
-    val row = (response.json \ "Row").as[Seq[JsValue]]
-    period match {
-      case Some(_) => DbSuccessUnitLinks(transformUnitJson(id, row).head)
-      case None => DbSuccessUnitLinksList(transformUnitJson(id, row))
-    }
-  }
-  def handleLinksResponseHistory(id: String, period: Option[Int], response: WSResponse): DbResponse = {
     val row = (response.json \ "Row").as[Seq[JsValue]]
     period match {
       case Some(_) => DbSuccessUnitLinks(transformUnitJson(id, row).head)
