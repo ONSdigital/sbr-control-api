@@ -27,22 +27,22 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
   // Use langs implicitly so we don't have to curry messagesApi("message")(langs) with every use of the messagesApi
   implicit val lang: Lang = langs.availables.head
 
-  def validateStatUnitLinksParams(id: String, category: String, period: String, apply: (String, String, String) => Either[StatUnitLinksParams, InvalidParams]): Either[StatUnitLinksParams, InvalidParams] = apply(id, period, category)
+  def validateStatUnitLinksParams(id: String, category: String, period: String, apply: (String, String, String) => Either[InvalidParams, StatUnitLinksParams]): Either[InvalidParams, StatUnitLinksParams] = apply(id, category, period)
 
-  def validateUnitLinksParams(id: String, apply: (String) => Either[UnitLinksParams, InvalidParams]): Either[UnitLinksParams, InvalidParams] = apply(id)
+  def validateUnitLinksParams(id: String, apply: (String) => Either[InvalidParams, UnitLinksParams]): Either[InvalidParams, UnitLinksParams] = apply(id)
 
-  def validateEntParams(id: String, period: Option[String], apply: (String, Option[String]) => Either[EnterpriseParams, InvalidParams]): Either[EnterpriseParams, InvalidParams] = apply(id, period)
+  def validateEntParams(id: String, period: Option[String], apply: (String, Option[String]) => Either[InvalidParams, EnterpriseParams]): Either[InvalidParams, EnterpriseParams] = apply(id, period)
 
   def validateEntHistoryParams(id: String, max: Option[Int], apply: (String, Option[Int]) => Either[EnterpriseHistoryParams, InvalidParams]): Either[EnterpriseHistoryParams, InvalidParams] = apply(id, max)
 
-  def handleValidatedParams(params: Either[ValidParams, InvalidParams]): Future[Result] = params match {
-    case Left(v: ValidParams) => v match {
+  def handleValidatedParams(params: Either[InvalidParams, ValidParams]): Future[Result] = params match {
+    case Right(v: ValidParams) => v match {
       case u: UnitLinksParams => dbResultMatcher(db.getUnitLinks(u.id))
       case s: StatUnitLinksParams => dbResultMatcher(db.getStatUnitLinks(s.id, s.category, s.period))
       case e: EnterpriseParams => dbResultMatcher(db.getEnterprise(e.id, e.period))
       case h: EnterpriseHistoryParams => dbResultMatcher(db.getEnterpriseHistory(h.id, h.max))
     }
-    case Right(i: InvalidParams) => BadRequest(messagesApi(i.msg)).future
+    case Left(i: InvalidParams) => BadRequest(messagesApi(i.msg)).future
   }
 
   def dbResultMatcher(result: Future[DbResponse]): Future[Result] = result.map(x => x match {

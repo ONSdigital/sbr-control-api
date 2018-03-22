@@ -51,7 +51,7 @@ class RouteSpec extends TestUtils {
     }
 
     "return 400 with invalid date when search with date, id and UnitType" in {
-      val dateSearch = fakeRequest("/v1/periods/20177/types/ENT/units/1244")
+      val dateSearch = fakeRequest("/v1/periods/20177/types/ENT/units/124")
       status(dateSearch) mustBe BAD_REQUEST
     }
   }
