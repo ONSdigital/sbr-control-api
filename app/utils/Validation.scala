@@ -9,12 +9,11 @@ import scala.util.Try
  * Created by coolit on 16/03/2018.
  */
 object Validation {
-  private val minKeyLength: Int = 5
-  private val maxKeyLength: Int = 20
+  private val minKeyLength: Int = 4
   private val periodFormat: String = "yyyyMM"
-  private val validCategories: List[String] = List("ENT", "LEU", "VAT", "PAYE", "CH")
+  private val validCategories: Set[String] = Set("ENT", "LEU", "VAT", "PAYE", "CH")
 
-  def validId(id: String): Boolean = id.length < (maxKeyLength + 1) && id.length > (minKeyLength - 1)
+  def validId(id: String): Boolean = id.length >= minKeyLength
 
   def validPeriod(period: String): Boolean = Try(YearMonth.parse(period, DateTimeFormat.forPattern(periodFormat))).isSuccess
 

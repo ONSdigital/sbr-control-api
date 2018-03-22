@@ -25,23 +25,13 @@ class ValidationTestSpec extends TestUtils {
     }
 
     "return true for a valid id (lower end edge case)" in {
-      val edgeCaseLowIdValid = "12345"
+      val edgeCaseLowIdValid = "1234"
       validId(edgeCaseLowIdValid) mustBe true
     }
 
     "return false for an invalid id (lower end edge case)" in {
-      val edgeCaseLowIdInvalid = "1234"
+      val edgeCaseLowIdInvalid = "123"
       validId(edgeCaseLowIdInvalid) mustBe false
-    }
-
-    "return true for a valid id (higher end edge case)" in {
-      val edgeCaseHighIdValid = "12345678911234567892"
-      validId(edgeCaseHighIdValid) mustBe true
-    }
-
-    "return false for an invalid id (higher end edge case)" in {
-      val edgeCaseHighIdInvalid = "123456789112345678923"
-      validId(edgeCaseHighIdInvalid) mustBe false
     }
   }
 
