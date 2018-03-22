@@ -14,6 +14,7 @@ sealed trait DbErrorMsg extends DbResponse {
 }
 
 case class DbSuccessEnterprise(result: EnterpriseUnit) extends DbResponse
+case class DbSuccessEnterpriseHistory(result: List[EnterpriseUnit]) extends DbResponse
 case class DbSuccessUnitLinks(result: UnitLinks) extends DbResponse
 case class DbSuccessUnitLinksList(result: List[UnitLinks]) extends DbResponse
 case class DbNotFound(msg: String = "Not Found") extends DbErrorMsg

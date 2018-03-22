@@ -5,7 +5,6 @@ import utils.Validation._
 /**
  * Created by coolit on 19/02/2018.
  */
-
 sealed trait ValidParams
 
 case class UnitLinksParams(id: String) extends ValidParams
@@ -22,6 +21,15 @@ object EnterpriseParams extends ValidParams {
     case (i, _) if (!validId(i)) => Left(InvalidId())
     case (_, Some(p)) if (!validPeriod(p)) => Left(InvalidPeriod())
     case (i, p) => Right(EnterpriseParams(i, p))
+  }
+}
+
+case class EnterpriseHistoryParams(id: String, max: Option[Int]) extends ValidParams
+object EnterpriseHistoryParams extends ValidParams {
+  def validate(id: String, max: Option[Int]): Either[InvalidParams, EnterpriseHistoryParams] = (id, max) match {
+    case (i, _) if (!validId(i)) => Left(InvalidId())
+    case (_, Some(p)) if (!validMax(p)) => Left(InvalidMax())
+    case (i, p) => Right(EnterpriseHistoryParams(i, p))
   }
 }
 

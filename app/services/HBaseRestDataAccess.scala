@@ -45,6 +45,14 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleEntResponse))
   }
 
+  def getEnterpriseHistory(id: String, max: Option[Int]): Future[DbResponse] = {
+    // HBase key format: 9901566115/1, id/history
+    val rowKey = utils.createEntRowKey(None, id.reverse)
+    val uri = baseUrl / enterpriseTableName.getNameAsString / rowKey / enterpriseColumnFamily
+    logger.info(s"Getting Enterprise History from HBase REST using URI [$uri]")
+    utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponseHistory(id, max, x, handleEntHistoryResponse))
+  }
+
   def getStatAndUnitLinks(id: String, period: Option[String], unitType: Option[String]): Future[DbResponse] = {
     // HBase key format: 201706~01752564~CH, period~id~type
     // When there is no unitType, * is used to get rows of any unit type
@@ -66,6 +74,16 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     case response if response.status == Status.REQUEST_TIMEOUT => DbTimeout()
   }
 
+  // This method is almost the same as the method above, apart from the type of second parameter (String vs Int)
+  // TODO: refactor common logic into one method
+  def handleWsResponseHistory(id: String, max: Option[Int], ws: WSResponse, wsToDbResponse: (String, Option[Int], WSResponse) => DbResponse): DbResponse = ws match {
+    case response if response.status == Status.OK => wsToDbResponse(id, max, response)
+    case response if response.status == Status.NOT_FOUND => DbNotFound()
+    case response if response.status == Status.INTERNAL_SERVER_ERROR => DbServerError()
+    case response if response.status == Status.SERVICE_UNAVAILABLE => DbServiceUnavailable()
+    case response if response.status == Status.REQUEST_TIMEOUT => DbTimeout()
+  }
+
   /**
    * When we pass the JsLookupResult to jsonToMap, the index does not matter for exact matches (wherever the full row key
    * is used without using the "*"). For no period, where the id is id~*, the default HTTP request does a normal
@@ -81,6 +99,14 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
         DbSuccessEnterprise(EnterpriseUnit(id, keyPeriod, utils.jsonToMap(row.last, utils.formEntKey), entUnit, createEnterpriseChildJSON(id, keyPeriod)))
       }
     }
+  }
+
+  def handleEntHistoryResponse(id: String, max: Option[Int], response: WSResponse): DbResponse = {
+    val row = (response.json \ "Row").as[Seq[JsValue]]
+    DbSuccessEnterpriseHistory(row.map(x => {
+      val period = getPeriodFromRowKey(x)
+      EnterpriseUnit(id, period, utils.jsonToMap(row.head, utils.formEntKey), entUnit, createEnterpriseChildJSON(id, period))
+    }).toList.reverse.slice(0, max.getOrElse(row.length)))
   }
 
   /**
@@ -158,4 +184,6 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       )
     }).toList
   }
+
+  def getPeriodFromRowKey(x: JsValue) = utils.decodeBase64((x \ "key").as[String]).split(delimiter).last
 }

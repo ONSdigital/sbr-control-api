@@ -11,6 +11,8 @@ trait DataAccess {
 
   def getEnterprise(id: String, period: Option[String]): Future[DbResponse]
 
+  def getEnterpriseHistory(id: String, max: Option[Int]): Future[DbResponse]
+
   def getUnitLinks(id: String): Future[DbResponse]
 
   def getStatUnitLinks(id: String, category: String, period: String): Future[DbResponse]

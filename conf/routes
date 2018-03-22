@@ -9,6 +9,9 @@ GET     /v1/periods/:date/types/:category/units/:id    controllers.v1.SearchCont
 GET     /v1/enterprises/:id                            controllers.v1.SearchController.retrieveEnterprise(date: Option[String], id)
 GET     /v1/periods/:date/enterprises/:id              controllers.v1.SearchController.retrieveEnterprise(date: Option[String], id)
 
+GET     /v1/enterprises/:id/history                    controllers.v1.SearchController.retrieveEnterpriseHistory(id, max: Option[Int] ?= None)
+
+
 # Other Routes
 
 GET     /                                   controllers.HomeController.status

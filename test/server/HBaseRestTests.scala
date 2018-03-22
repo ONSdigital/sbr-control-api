@@ -8,7 +8,8 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
-import play.api.libs.json.{ JsArray, JsSuccess }
+import com.typesafe.scalalogging.LazyLogging
+import play.api.libs.json.{ JsArray, JsSuccess, JsValue }
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
 
 /**
@@ -66,6 +67,21 @@ class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppP
       ))
   }
 
+  def mockEndpointHistory(tableName: String, period: Option[String], id: String, unitType: Option[String], body: String): Unit = {
+    val path = period match {
+      case Some(p) => s"/enterprises/$id/history?max=$p"
+      case None => s"/enterprises/$id/history"
+    }
+    stubFor(get(urlEqualTo(path))
+      .willReturn(
+        aResponse()
+          .withStatus(200)
+          .withHeader("content-type", "application/json")
+          .withHeader("transfer-encoding", "chunked")
+          .withBody(body)
+      ))
+  }
+
   "/v1/enterprises/:id" should {
     "return an enterprise for a valid enterprise id" in {
       val id = "12345"
@@ -77,6 +93,37 @@ class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppP
       status(resp) mustBe OK
       contentType(resp) mustBe Some("application/json")
       ent.isInstanceOf[JsSuccess[EnterpriseUnit]] mustBe true
+    }
+  }
+
+  "/v1/enterprises/:id/history" should {
+    "return the entire history for an enterprise" in {
+      val id = "12345"
+      val body = "{\"Row\":[{\"key\":\"NTQzMjF+MjAxNzEy\",\"Cell\":[{\"column\":\"ZDplbnRfbmFtZQ==\",\"timestamp\":1519809888703,\"$\":\"VGVzY28=\"},{\"column\":\"ZDplbnRyZWY=\",\"timestamp\":1519809884065,\"$\":\"MTIzNDU=\"}]},{\"key\":\"NTQzMjF+MjAxODAx\",\"Cell\":[{\"column\":\"ZDplbnRfbmFtZQ==\",\"timestamp\":1519809879783,\"$\":\"VGVzY28=\"},{\"column\":\"ZDplbnRyZWY=\",\"timestamp\":1519809874856,\"$\":\"MTIzNDU=\"}]},{\"key\":\"NTQzMjF+MjAxODAy\",\"Cell\":[{\"column\":\"ZDplbnRfbmFtZQ==\",\"timestamp\":1519809867579,\"$\":\"VGVzY28=\"},{\"column\":\"ZDplbnRyZWY=\",\"timestamp\":1519809865127,\"$\":\"MTIzNDU=\"}]}]}"
+      val period = firstPeriod
+      mockEndpointHistory(enterpriseTable, Some(period), id, None, body)
+      val resp = fakeRequest(s"/$version/enterprises/$id/history")
+      val json = contentAsJson(resp)
+      val ents = json.as[Seq[JsValue]].map(x => x.validate[EnterpriseUnit])
+      status(resp) mustBe OK
+      contentType(resp) mustBe Some("application/json")
+      ents.length mustBe 3
+      ents.foreach(x => x.isInstanceOf[JsSuccess[EnterpriseUnit]] mustBe true)
+    }
+
+    "return a subset of the history for an enterprise" in {
+      val id = "12345"
+      val body = "{\"Row\":[{\"key\":\"NTQzMjF+MjAxNzEy\",\"Cell\":[{\"column\":\"ZDplbnRfbmFtZQ==\",\"timestamp\":1519809888703,\"$\":\"VGVzY28=\"},{\"column\":\"ZDplbnRyZWY=\",\"timestamp\":1519809884065,\"$\":\"MTIzNDU=\"}]},{\"key\":\"NTQzMjF+MjAxODAx\",\"Cell\":[{\"column\":\"ZDplbnRfbmFtZQ==\",\"timestamp\":1519809879783,\"$\":\"VGVzY28=\"},{\"column\":\"ZDplbnRyZWY=\",\"timestamp\":1519809874856,\"$\":\"MTIzNDU=\"}]},{\"key\":\"NTQzMjF+MjAxODAy\",\"Cell\":[{\"column\":\"ZDplbnRfbmFtZQ==\",\"timestamp\":1519809867579,\"$\":\"VGVzY28=\"},{\"column\":\"ZDplbnRyZWY=\",\"timestamp\":1519809865127,\"$\":\"MTIzNDU=\"}]}]}"
+      val period = firstPeriod
+      val max = 2
+      mockEndpointHistory(enterpriseTable, Some(period), id, None, body)
+      val resp = fakeRequest(s"/$version/enterprises/$id/history?max=$max")
+      val json = contentAsJson(resp)
+      val ents = json.as[Seq[JsValue]].map(x => x.validate[EnterpriseUnit])
+      status(resp) mustBe OK
+      contentType(resp) mustBe Some("application/json")
+      ents.length mustBe max
+      ents.foreach(x => x.isInstanceOf[JsSuccess[EnterpriseUnit]] mustBe true)
     }
   }
 
@@ -125,7 +172,7 @@ class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppP
   //
 
   "/v1/periods/:period/types/:type/units/:id" should {
-    "return a unit for a valid id (PAYE)" in {
+    "return a unit for a valid id (ENT)" in {
       val id = "12345"
       val unitType = "ENT"
       val body = "{\"Row\":[{\"key\":\"MTIzNDV+RU5UfjIwMTgwMg==\",\"Cell\":[{\"column\":\"bDpjXzE5MjgzNzQ2NTk5OQ==\",\"timestamp\":1519823591909,\"$\":\"TEVV\"},{\"column\":\"bDpjXzIzODQ3NTYz\",\"timestamp\":1519823596475,\"$\":\"Q0g=\"},{\"column\":\"bDpjXzM4NTc2Mzk1\",\"timestamp\":1519823601150,\"$\":\"UEFZRQ==\"},{\"column\":\"bDpjXzQxMDM3NDky\",\"timestamp\":1519823605519,\"$\":\"VkFU\"}]}]}"

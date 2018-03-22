@@ -11,5 +11,6 @@ sealed trait InvalidParams {
   val msg: String
 }
 case class InvalidId(msg: String = "controller.invalid.id") extends InvalidParams
+case class InvalidMax(msg: String = "controller.invalid.max") extends InvalidParams
 case class InvalidPeriod(msg: String = "controller.invalid.period") extends InvalidParams
 case class InvalidCategory(msg: String = "controller.invalid.category") extends InvalidParams
