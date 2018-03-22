@@ -104,13 +104,13 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     max match {
       case Some(m) => {
         DbSuccessEnterpriseHistory(row.map(x => {
-          val period = utils.decodeBase64((x \ "key").as[String]).split(delimiter).last
+          val period = getPeriodFromRowKey(x)
           EnterpriseUnit(id, period, utils.jsonToMap(row.head, utils.formEntKey), entUnit, createEnterpriseChildJSON(id, period))
         }).toList.reverse.slice(0, m))
       }
       case None => {
         DbSuccessEnterpriseHistory(row.map(x => {
-          val period = utils.decodeBase64((x \ "key").as[String]).split(delimiter).last
+          val period = getPeriodFromRowKey(x)
           EnterpriseUnit(id, period, utils.jsonToMap(row.head, utils.formEntKey), entUnit, createEnterpriseChildJSON(id, period))
         }).toList.reverse)
       }
@@ -191,4 +191,6 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
       )
     }).toList
   }
+
+  def getPeriodFromRowKey(x: JsValue) = utils.decodeBase64((x \ "key").as[String]).split(delimiter).last
 }
