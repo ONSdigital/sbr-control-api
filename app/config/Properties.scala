@@ -14,9 +14,6 @@ trait Properties {
 
   lazy val dbConfig = propertiesConfig.getConfig("db")
 
-  // Validation
-  lazy val minKeyLength: Int = propertiesConfig.getInt("search.minKeyLength")
-
   // HBase REST
   private val hBaseRestConfig: Config = dbConfig.getConfig("hbase-rest")
   private val hbaseRestNameSpace: String = hBaseRestConfig.getString("namespace")
