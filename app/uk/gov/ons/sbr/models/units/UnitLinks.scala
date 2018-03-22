@@ -10,6 +10,7 @@ import uk.gov.ons.sbr.models.DataUnit
 
 case class UnitLinks(
   @ApiModelProperty(example = "", dataType = "String") id: String,
+  period: String,
   @ApiModelProperty(value = "A map of parents of returned id [Type, Value]", example = "",
     dataType = "Map[String,String]") parents: Option[Map[String, String]],
   @ApiModelProperty(value = "A string of all related children", example = "") children: Option[Map[String, String]],
