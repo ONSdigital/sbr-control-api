@@ -5,9 +5,6 @@ import org.joda.time.format.DateTimeFormat
 
 import scala.util.Try
 
-/**
- * Created by coolit on 16/03/2018.
- */
 object Validation {
   private val minKeyLength: Int = 4
   private val periodFormat: String = "yyyyMM"

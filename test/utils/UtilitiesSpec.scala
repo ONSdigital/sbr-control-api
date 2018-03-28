@@ -1,10 +1,10 @@
-package unit
+package utils
 
 import play.api.libs.json.JsObject
+import support.TestUtils
 import utils.Utilities._
-import resource.TestUtils
 
-class UtilitiesTestSpec extends TestUtils {
+class UtilitiesSpec extends TestUtils {
 
   "errAsJson" should {
     "create a custom err json object" in {

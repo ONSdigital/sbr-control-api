@@ -4,10 +4,6 @@ import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{ Json, OFormat }
 import uk.gov.ons.sbr.models.DataUnit
 
-/**
- * Created by haqa on 08/08/2017.
- */
-
 case class EnterpriseUnit(
   @ApiModelProperty(example = "", dataType = "java.lang.Long") id: String,
   period: String,

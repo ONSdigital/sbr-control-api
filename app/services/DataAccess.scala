@@ -4,9 +4,6 @@ import uk.gov.ons.sbr.models.DbResponse
 
 import scala.concurrent.Future
 
-/**
- * Created by coolit on 01/02/2018.
- */
 trait DataAccess {
 
   def getEnterprise(id: String, period: Option[String]): Future[DbResponse]

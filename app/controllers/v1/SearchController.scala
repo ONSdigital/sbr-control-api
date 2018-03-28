@@ -18,9 +18,6 @@ import utils.FutureResponse._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-/**
- * Created by haqa on 04/08/2017.
- */
 @Api("Search")
 class SearchController @Inject() (db: DataAccess, playConfig: Configuration, langs: Langs, messagesApi: MessagesApi) extends Controller with LazyLogging {
 

@@ -1,8 +1,12 @@
-import com.google.inject.AbstractModule
 import java.time.Clock
 
+import com.google.inject.{ AbstractModule, TypeLiteral }
+import config.{ HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader }
 import play.api.{ Configuration, Environment }
+import repository.hbase._
+import repository.{ LocalUnitRepository, RestRepository, RowMapper }
 import services.{ DataAccess, HBaseRestDataAccess }
+import uk.gov.ons.sbr.models.localunit.LocalUnit
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -16,7 +20,17 @@ import services.{ DataAccess, HBaseRestDataAccess }
  */
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule {
   override def configure() = {
+    val underlyingConfig = configuration.underlying
+    val hBaseRestConfig = HBaseRestRepositoryConfigLoader.load(underlyingConfig)
+    val hBaseRestLocalUnitConfig = HBaseRestLocalUnitRepositoryConfigLoader.load(underlyingConfig)
+    bind(classOf[HBaseRestRepositoryConfig]).toInstance(hBaseRestConfig)
+    bind(classOf[HBaseRestLocalUnitRepositoryConfig]).toInstance(hBaseRestLocalUnitConfig)
+
     bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
+    bind(classOf[RestRepository]).to(classOf[HBaseRestRepository])
+    bind(classOf[LocalUnitRepository]).to(classOf[HBaseRestLocalUnitRepository])
+    bind(classOf[HBaseResponseReaderMaker]).toInstance(HBaseResponseReader)
+    bind(new TypeLiteral[RowMapper[LocalUnit]]() {}).toInstance(LocalUnitRowMapper)
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
   }
 }

@@ -10,9 +10,6 @@ import play.api.mvc.{ Action, AnyContent, Controller }
 import utils.FutureResponse.futureSuccess
 import controllers.BuildInfo
 
-/**
- * Created by haqa on 30/06/2017.
- */
 @Api("Utils")
 @Singleton
 class LastUpdateController @Inject() (implicit val config: Config) extends Controller {
