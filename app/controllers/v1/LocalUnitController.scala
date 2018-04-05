@@ -21,6 +21,9 @@ class LocalUnitController @Inject() (repository: LocalUnitRepository) extends Co
     code = 200,
     httpMethod = "GET"
   )
+  @ApiResponses(Array(
+    new ApiResponse(code = 404, message = "A Local Unit could not be found with the specified ERN, LURN and Period")
+  ))
   def retrieveLocalUnit(
     @ApiParam(value = "Enterprise Reference Number (ERN)", example = "1000000012", required = true) ernStr: String,
     @ApiParam(value = "Period (unit load date)", example = "201803", required = true) periodStr: String,
