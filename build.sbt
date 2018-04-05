@@ -89,7 +89,6 @@ lazy val api = (project in file("."))
     publish := {},
     organizationName := "ons",
     organization := "uk.gov.ons",
-//     name := Constant.appName,
     moduleName := s"${Constant.appName}",
     name := s"${organizationName.value}-${Constant.team}-${moduleName.value}",
     version := Versions.appVersion,
@@ -131,7 +130,7 @@ lazy val api = (project in file("."))
       excludeAll ExclusionRule("commons-logging", "commons-logging")
     ),
     // Assembly
-    assemblyJarName in assembly := s"${Constant.appName}-${Versions.appVersion}.jar",
+    assemblyJarName in assembly := s"${name.value}-${version.value}.jar",
     assemblyMergeStrategy in assembly := {
       case PathList("io", "netty", xs@_*)                                => MergeStrategy.last
       case PathList("javax", "xml", xs@_*)                               => MergeStrategy.last
@@ -146,7 +145,7 @@ lazy val api = (project in file("."))
         oldStrategy(x)
     },
     name in Universal := s"${Constant.organisation}-${Constant.appName}",
-    packageName in Universal := s"${Constant.organisation}-${Constant.appName}-zip-${version.value}",
+    packageName in Universal := s"${Constant.organisation}-${Constant.appName}-${version.value}.zip",
     mainClass in assembly := Some("play.core.server.ProdServerStart"),
     fullClasspath in assembly += Attributed.blank(PlayKeys.playPackageAssets.value),
     dockerBaseImage := "openjdk:8-jre",
