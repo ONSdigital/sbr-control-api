@@ -1,6 +1,12 @@
 package support
 
 trait HBaseResponseFixture {
+  /*
+   * Cloudera currently returns a 200 OK Response containing an "empty row".
+   * Note that the latest version of Apache HBase returns a 404 NOT FOUND Response -
+   * so we may encounter a change in behaviour with a future Cloudera upgrade.
+   */
+  val NoMatchFoundResponse = """{"Row":[]}"""
 
   val hbaseEncode: String => String =
     Base64.encode

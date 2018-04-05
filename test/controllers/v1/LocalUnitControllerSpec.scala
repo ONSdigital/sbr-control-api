@@ -42,6 +42,17 @@ class LocalUnitControllerSpec extends FreeSpec with Matchers with MockFactory wi
         contentType(response).value shouldBe JSON
         contentAsJson(response) shouldBe Json.toJson(TargetLocalUnit)
       }
+
+      "returns NOT FOUND when the local unit cannot be found" in new Fixture {
+        (repository.retrieveLocalUnit _).expects(TargetErn, TargetPeriod, TargetLurn).returning(
+          Future.successful(None)
+        )
+
+        val action = controller.retrieveLocalUnit(TargetErn.value, Period.asString(TargetPeriod), TargetLurn.value)
+        val response = action.apply(FakeRequest())
+
+        status(response) shouldBe NOT_FOUND
+      }
     }
   }
 }

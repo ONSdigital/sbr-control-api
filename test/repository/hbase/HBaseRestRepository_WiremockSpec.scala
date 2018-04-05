@@ -36,7 +36,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
   }
 
   "A HBase REST Repository" - {
-    "can process a request when a single row is found" in { fixture =>
+    "can process a success response" in { fixture =>
       val targetUrl = s"/${fixture.config.namespace}:table/rowKey/$ColumnGroup"
       val auth = Authorization(fixture.config.username, fixture.config.password)
       val expectedRow = Map("key1" -> "value1")
