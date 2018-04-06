@@ -14,7 +14,7 @@ object HBaseRestRepositoryConfigLoader extends ConfigLoader[HBaseRestRepositoryC
     val config = rootConfig.getConfig(path)
     HBaseRestRepositoryConfig(
       protocolWithHostname = config.getString("host"),
-      port = config.getInt("port"),
+      port = config.getString("port"),
       namespace = config.getString("namespace"),
       username = config.getString("username"),
       password = config.getString("password"),

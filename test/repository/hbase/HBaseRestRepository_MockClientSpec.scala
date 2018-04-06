@@ -19,7 +19,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
   private trait Fixture {
     val wsClient = stub[WSClient]
     val wsRequest = mock[WSRequest]
-    val config = HBaseRestRepositoryConfig(protocolWithHostname = "http://somehost", port = 4321, "namespace",
+    val config = HBaseRestRepositoryConfig(protocolWithHostname = "http://somehost", port = "4321", "namespace",
       "username", "password", timeout = 3321L)
 
     val restRepository = new HBaseRestRepository(config, wsClient, stub[HBaseResponseReaderMaker])

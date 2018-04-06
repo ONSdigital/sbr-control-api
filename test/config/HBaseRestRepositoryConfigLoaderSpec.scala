@@ -25,7 +25,7 @@ class HBaseRestRepositoryConfigLoaderSpec extends FreeSpec with Matchers {
     "can be successfully loaded when valid" in new Fixture {
       HBaseRestRepositoryConfigLoader.load(config) shouldBe HBaseRestRepositoryConfig(
         protocolWithHostname = "http://example-hostname",
-        port = 1234,
+        port = "1234",
         namespace = "example-namespace",
         username = "example-username",
         password = "example-password",

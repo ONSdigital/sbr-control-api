@@ -13,7 +13,7 @@ import repository.RestRepository.Row
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-case class HBaseRestRepositoryConfig(protocolWithHostname: String, port: Int,
+case class HBaseRestRepositoryConfig(protocolWithHostname: String, port: String,
   namespace: String, username: String, password: String, timeout: Long)
 
 class HBaseRestRepository @Inject() (
