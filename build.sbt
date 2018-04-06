@@ -145,7 +145,7 @@ lazy val api = (project in file("."))
         oldStrategy(x)
     },
     name in Universal := s"${Constant.organisation}-${Constant.appName}",
-    packageName in Universal := s"${Constant.organisation}-${Constant.appName}-${version.value}.zip",
+    packageName in Universal := s"${name.value}-${version.value}",
     mainClass in assembly := Some("play.core.server.ProdServerStart"),
     fullClasspath in assembly += Attributed.blank(PlayKeys.playPackageAssets.value),
     dockerBaseImage := "openjdk:8-jre",
