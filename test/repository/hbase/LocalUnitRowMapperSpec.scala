@@ -23,39 +23,46 @@ class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
     val sic07Value = "yz"
     val employeesValue = "34"
 
-    val variables = Map(lurn -> lurnValue, luref -> lurefValue, ern -> ernValue, entref -> entrefValue,
+    val allVariables = Map(lurn -> lurnValue, luref -> lurefValue, ern -> ernValue, entref -> entrefValue,
       name -> nameValue, tradingstyle -> tradingstyleValue, address1 -> address1Value, address2 -> address2Value,
       address3 -> address3Value, address4 -> address4Value, address5 -> address5Value, postcode -> postcodeValue,
       sic07 -> sic07Value, employees -> employeesValue)
+    private val optionalColumns = Seq(luref, entref, tradingstyle, address2, address3, address4, address5)
+    val mandatoryVariables = allVariables -- optionalColumns
   }
 
   "A LocalUnit row mapper" - {
-    "can create a LocalUnit from a set of variables" in new Fixture {
-      LocalUnitRowMapper.fromRow(variables) shouldBe Some(LocalUnit(Lurn(lurnValue), luref = lurefValue, name = nameValue,
+    "can create a LocalUnit when all possible variables are defined" in new Fixture {
+      LocalUnitRowMapper.fromRow(allVariables) shouldBe Some(LocalUnit(Lurn(lurnValue), luref = lurefValue, name = nameValue,
         tradingStyle = tradingstyleValue, sic07 = sic07Value, employees = employeesValue.toInt,
         enterprise = EnterpriseLink(Ern(ernValue), entref = entrefValue),
         address = Address(line1 = address1Value, line2 = address2Value, line3 = address3Value, line4 = address4Value,
           line5 = address5Value, postcode = postcodeValue)))
     }
 
-    "cannot create a LocalUnit when" - {
-      "any variable is missing" in new Fixture {
-        val keys = Seq(lurn, luref, ern, entref, name, tradingstyle, address1, address2, address3, address4, address5,
-          postcode, sic07, employees)
+    "can create a LocalUnit when only the mandatory variables are defined" in new Fixture {
+      LocalUnitRowMapper.fromRow(mandatoryVariables) shouldBe Some(LocalUnit(Lurn(lurnValue), luref = "", name = nameValue,
+        tradingStyle = "", sic07 = sic07Value, employees = employeesValue.toInt,
+        enterprise = EnterpriseLink(Ern(ernValue), entref = ""),
+        address = Address(line1 = address1Value, line2 = "", line3 = "", line4 = "", line5 = "", postcode = postcodeValue)))
+    }
 
-        keys.foreach { key =>
-          withClue(s"with missing key [$key]") {
-            LocalUnitRowMapper.fromRow(variables - key) shouldBe None
+    "cannot create a LocalUnit when" - {
+      "a mandatory variable is missing" in new Fixture {
+        val mandatoryColumns = mandatoryVariables.keys
+        mandatoryColumns.foreach { column =>
+          withClue(s"with missing column [$column]") {
+            LocalUnitRowMapper.fromRow(mandatoryVariables - column) shouldBe None
           }
         }
       }
 
       "the value of employees is non-numeric" in new Fixture {
-        LocalUnitRowMapper.fromRow(variables.updated(employees, "non-numeric")) shouldBe None
+        LocalUnitRowMapper.fromRow(allVariables.updated(employees, "non-numeric")) shouldBe None
       }
 
       "the value of employees is not an integral value" in new Fixture {
-        LocalUnitRowMapper.fromRow(variables.updated(employees, "3.14159")) shouldBe None
+        LocalUnitRowMapper.fromRow(allVariables.updated(employees, "3.14159")) shouldBe None
       }
     }
   }
