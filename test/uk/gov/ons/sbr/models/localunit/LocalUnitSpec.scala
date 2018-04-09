@@ -7,6 +7,15 @@ import support.sample.SampleLocalUnit
 class LocalUnitSpec extends FreeSpec with Matchers {
 
   private trait Fixture extends SampleLocalUnit {
+    private def string(name: String, value: String): Option[String] =
+      Some(s""""$name":"$value"""")
+
+    private def optionalString(name: String, optValue: Option[String]): Option[String] =
+      optValue.flatMap(string(name, _))
+
+    private def withValues(values: Option[String]*): String =
+      values.flatten.mkString(",")
+
     def expectedJsonStrOf(localUnit: LocalUnit): String =
       s"""
          |{
@@ -16,9 +25,9 @@ class LocalUnitSpec extends FreeSpec with Matchers {
          | "tradingStyle":"${localUnit.tradingStyle}",
          | "sic07":"${localUnit.sic07}",
          | "employees":${localUnit.employees},
-         | "enterprise": {
-         |   "ern":"${localUnit.enterprise.ern.value}",
-         |   "entref":"${localUnit.enterprise.entref}"
+         | "enterprise": {${withValues(
+             string("ern", localUnit.enterprise.ern.value),
+             optionalString("entref", localUnit.enterprise.entref))}
          | },
          | "address": {
          |   "line1":"${localUnit.address.line1}",
@@ -33,8 +42,14 @@ class LocalUnitSpec extends FreeSpec with Matchers {
   }
 
   "A LocalUnit" - {
-    "can be represented as JSON" in new Fixture {
-      Json.toJson(SampleLocalUnit) shouldBe Json.parse(expectedJsonStrOf(SampleLocalUnit))
+    "can be represented as JSON" - {
+      "when all fields are defined" in new Fixture {
+        Json.toJson(SampleAllValuesLocalUnit) shouldBe Json.parse(expectedJsonStrOf(SampleAllValuesLocalUnit))
+      }
+
+      "when only the mandatory fields are defined" in new Fixture {
+        Json.toJson(SampleMandatoryValuesLocalUnit) shouldBe Json.parse(expectedJsonStrOf(SampleMandatoryValuesLocalUnit))
+      }
     }
   }
 }

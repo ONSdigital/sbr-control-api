@@ -5,7 +5,7 @@ import play.api.libs.json.Json
 
 case class EnterpriseLink(
   @ApiModelProperty(value = "Enterprise Reference Number (ERN)", dataType = "string", example = "1000000012", required = true) ern: Ern,
-  @ApiModelProperty(value = "IDBR Enterprise Reference", dataType = "string", example = "9999999999", required = true) entref: String
+  @ApiModelProperty(value = "IDBR Enterprise Reference", dataType = "string", example = "9999999999", required = false) entref: Option[String]
 )
 
 object EnterpriseLink {

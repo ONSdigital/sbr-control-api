@@ -40,7 +40,7 @@ object LocalUnitRowMapper extends RowMapper[LocalUnit] {
     for {
       ern <- variables.get(ern)
       optEntref = variables.get(entref)
-    } yield EnterpriseLink(Ern(ern), optEntref.getOrElse(""))
+    } yield EnterpriseLink(Ern(ern), optEntref)
 
   private def toAddress(variables: Map[String, String]): Option[Address] =
     for {
