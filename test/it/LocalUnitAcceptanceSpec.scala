@@ -58,8 +58,8 @@ class LocalUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
       response.json.as[LocalUnit] shouldBe
         LocalUnit(TargetLurn, luref = "some-luref", name = "some-name", tradingStyle = "some-tradingstyle",
           sic07 = "some-sic07", employees = 99, enterprise = EnterpriseLink(TargetErn, entref = Some("some-entref")),
-          address = Address(line1 = "some-address1", line2 = "some-address2", line3 = "some-address3",
-            line4 = "some-address4", line5 = "some-address5", postcode = "some-postcode"))
+          address = Address(line1 = "some-address1", line2 = Some("some-address2"), line3 = Some("some-address3"),
+            line4 = Some("some-address4"), line5 = Some("some-address5"), postcode = "some-postcode"))
     }
   }
 }

@@ -2,19 +2,17 @@ package uk.gov.ons.sbr.models.enterprise
 
 import org.scalatest.{ FreeSpec, Matchers }
 import play.api.libs.json.Json
+import support.JsonString
+import support.JsonString.{ optionalString, string }
 
 class EnterpriseLinkSpec extends FreeSpec with Matchers {
 
   private trait Fixture {
-    private def stringField(name: String, value: String): String =
-      s""""$name":"$value""""
-
     def expectedJsonStrOf(enterpriseLink: EnterpriseLink): String =
-      Seq(
-        Some(stringField("ern", enterpriseLink.ern.value)),
-        enterpriseLink.entref.map(stringField("entref", _))
-      ).
-        flatten.mkString("{", ",", "}")
+      JsonString.withObject(
+        string("ern", enterpriseLink.ern.value),
+        optionalString("entref", enterpriseLink.entref)
+      )
   }
 
   "An EnterpriseLink" - {

@@ -18,7 +18,7 @@ import LocalUnitColumns._
  * - address5
  *
  * Note that we use '=' for these fields within the body of the for expression rather than a generator '<-', so
- * that we capture the field as an option.
+ * that we capture the field as an Option.
  */
 object LocalUnitRowMapper extends RowMapper[LocalUnit] {
 
@@ -50,6 +50,5 @@ object LocalUnitRowMapper extends RowMapper[LocalUnit] {
       optLine4 = variables.get(address4)
       optLine5 = variables.get(address5)
       postcode <- variables.get(postcode)
-    } yield Address(line1, optLine2.getOrElse(""), optLine3.getOrElse(""), optLine4.getOrElse(""), optLine5.getOrElse(""),
-      postcode)
+    } yield Address(line1, optLine2, optLine3, optLine4, optLine5, postcode)
 }

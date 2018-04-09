@@ -3,19 +3,11 @@ package uk.gov.ons.sbr.models.localunit
 import org.scalatest.{ FreeSpec, Matchers }
 import play.api.libs.json.Json
 import support.sample.SampleLocalUnit
+import support.JsonString.{ optionalString, string, withValues }
 
 class LocalUnitSpec extends FreeSpec with Matchers {
 
   private trait Fixture extends SampleLocalUnit {
-    private def string(name: String, value: String): Option[String] =
-      Some(s""""$name":"$value"""")
-
-    private def optionalString(name: String, optValue: Option[String]): Option[String] =
-      optValue.flatMap(string(name, _))
-
-    private def withValues(values: Option[String]*): String =
-      values.flatten.mkString(",")
-
     def expectedJsonStrOf(localUnit: LocalUnit): String =
       s"""
          |{
@@ -29,13 +21,13 @@ class LocalUnitSpec extends FreeSpec with Matchers {
              string("ern", localUnit.enterprise.ern.value),
              optionalString("entref", localUnit.enterprise.entref))}
          | },
-         | "address": {
-         |   "line1":"${localUnit.address.line1}",
-         |   "line2":"${localUnit.address.line2}",
-         |   "line3":"${localUnit.address.line3}",
-         |   "line4":"${localUnit.address.line4}",
-         |   "line5":"${localUnit.address.line5}",
-         |   "postcode":"${localUnit.address.postcode}"
+         | "address": {${withValues(
+             string("line1", localUnit.address.line1),
+             optionalString("line2", localUnit.address.line2),
+             optionalString("line3", localUnit.address.line3),
+             optionalString("line4", localUnit.address.line4),
+             optionalString("line5", localUnit.address.line5),
+             string("postcode", localUnit.address.postcode))}
          | }
          |}
        """.stripMargin

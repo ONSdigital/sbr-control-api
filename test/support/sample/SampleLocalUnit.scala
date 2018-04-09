@@ -4,9 +4,12 @@ import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
 import uk.gov.ons.sbr.models.localunit.{ Address, LocalUnit, Lurn }
 
 trait SampleLocalUnit {
-  val SampleMandatoryValuesAddress = Address(line1 = "line1-value", line2 = "line2-value", line3 = "line3-value",
-    line4 = "line4-value", line5 = "line5-value", postcode = "postcode-value")
-  val SampleAllValuesAddress = SampleMandatoryValuesAddress.copy()
+  val SampleMandatoryValuesAddress = Address(line1 = "line1-value", line2 = None, line3 = None,
+    line4 = None, line5 = None, postcode = "postcode-value")
+  val SampleAllValuesAddress = SampleMandatoryValuesAddress.copy(
+    line2 = Some("line2-value"),
+    line3 = Some("line3-value"), line4 = Some("line4-value"), line5 = Some("line5-value")
+  )
 
   val SampleMandatoryValuesEnterpriseLink = EnterpriseLink(Ern("1000000012"), entref = None)
   val SampleAllValuesEnterpriseLink = SampleMandatoryValuesEnterpriseLink.copy(entref = Some("entref-value"))
