@@ -54,7 +54,7 @@ class LocalUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
       response.status shouldBe OK
       response.header("Content-Type").value shouldBe JSON
       response.json.as[LocalUnit] shouldBe
-        LocalUnit(TargetLurn, luref = "some-luref", name = "some-name", tradingStyle = "some-tradingstyle",
+        LocalUnit(TargetLurn, luref = Some("some-luref"), name = "some-name", tradingStyle = Some("some-tradingstyle"),
           sic07 = "some-sic07", employees = 99, enterprise = EnterpriseLink(TargetErn, entref = Some("some-entref")),
           address = Address(line1 = "some-address1", line2 = Some("some-address2"), line3 = None, line4 = None,
             line5 = Some("some-address5"), postcode = "some-postcode"))

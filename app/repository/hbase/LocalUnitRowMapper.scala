@@ -33,8 +33,7 @@ object LocalUnitRowMapper extends RowMapper[LocalUnit] {
       employeesInt <- Try(employees.toInt).toOption
       enterpriseLink <- toEnterpriseLink(variables)
       address <- toAddress(variables)
-    } yield LocalUnit(Lurn(lurn), optLuref.getOrElse(""), name, optTradingStyle.getOrElse(""), sic07, employeesInt,
-      enterpriseLink, address)
+    } yield LocalUnit(Lurn(lurn), optLuref, name, optTradingStyle, sic07, employeesInt, enterpriseLink, address)
 
   private def toEnterpriseLink(variables: Map[String, String]): Option[EnterpriseLink] =
     for {

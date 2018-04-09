@@ -14,10 +14,13 @@ trait SampleLocalUnit {
   val SampleMandatoryValuesEnterpriseLink = EnterpriseLink(Ern("1000000012"), entref = None)
   val SampleAllValuesEnterpriseLink = SampleMandatoryValuesEnterpriseLink.copy(entref = Some("entref-value"))
 
-  val SampleMandatoryValuesLocalUnit = LocalUnit(Lurn("900000011"), luref = "luref-value",
-    name = "COMPANY X", tradingStyle = "tradingStyle-value", sic07 = "sic07-value", employees = 42,
+  val SampleMandatoryValuesLocalUnit = LocalUnit(Lurn("900000011"), luref = None, name = "COMPANY X",
+    tradingStyle = None, sic07 = "sic07-value", employees = 42,
     SampleMandatoryValuesEnterpriseLink, SampleMandatoryValuesAddress)
+
   val SampleAllValuesLocalUnit = SampleMandatoryValuesLocalUnit.copy(
+    luref = Some("luref-value"),
+    tradingStyle = Some("tradingStyle-value"),
     enterprise = SampleAllValuesEnterpriseLink,
     address = SampleAllValuesAddress
   )
