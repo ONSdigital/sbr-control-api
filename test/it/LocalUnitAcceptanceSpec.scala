@@ -29,8 +29,6 @@ class LocalUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
           aColumnWith(name = tradingstyle, value = "some-tradingstyle"),
           aColumnWith(name = address1, value = "some-address1"),
           aColumnWith(name = address2, value = "some-address2"),
-          aColumnWith(name = address3, value = "some-address3"),
-          aColumnWith(name = address4, value = "some-address4"),
           aColumnWith(name = address5, value = "some-address5"),
           aColumnWith(name = postcode, value = "some-postcode"),
           aColumnWith(name = sic07, value = "some-sic07"),
@@ -58,8 +56,8 @@ class LocalUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
       response.json.as[LocalUnit] shouldBe
         LocalUnit(TargetLurn, luref = "some-luref", name = "some-name", tradingStyle = "some-tradingstyle",
           sic07 = "some-sic07", employees = 99, enterprise = EnterpriseLink(TargetErn, entref = Some("some-entref")),
-          address = Address(line1 = "some-address1", line2 = Some("some-address2"), line3 = Some("some-address3"),
-            line4 = Some("some-address4"), line5 = Some("some-address5"), postcode = "some-postcode"))
+          address = Address(line1 = "some-address1", line2 = Some("some-address2"), line3 = None, line4 = None,
+            line5 = Some("some-address5"), postcode = "some-postcode"))
     }
   }
 }
