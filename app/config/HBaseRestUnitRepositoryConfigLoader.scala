@@ -8,5 +8,4 @@ trait HBaseRestUnitRepositoryConfigLoader[T] extends ConfigLoader[T] {
 
   def load(rootConfig: Config): T =
     load(rootConfig, RootPath)
-
 }

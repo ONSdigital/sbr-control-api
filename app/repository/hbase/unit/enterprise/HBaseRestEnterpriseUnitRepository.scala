@@ -15,18 +15,22 @@ import scala.concurrent.ExecutionContext.Implicits.global
 case class HBaseRestEnterpriseUnitRepositoryConfig(tableName: String)
 
 class HBaseRestEnterpriseUnitRepository @Inject() (
-    respRepository: RestRepository,
+  restRepository: RestRepository,
     config: HBaseRestEnterpriseUnitRepositoryConfig,
     rowMapper: RowMapper[Enterprise]
 ) extends EnterpriseUnitRepository with LazyLogging {
 
   override def retrieveEnterpriseUnit(ern: Ern, period: Period): Future[Option[Enterprise]] = {
-    respRepository.get(table = config.tableName, rowKey = EnterpriseUnitRowKey(ern, period), columnGroup = DefaultColumnGroup).map { row =>
-      logger.info(s"Retrieving Local Unit with [$ern] for [$period].")
-      val resOpt = row.headOption.flatMap(rowMapper.fromRow)
-      logger.debug(s"Local Unit result was [$resOpt].")
-      resOpt
+    logger.info(s"Retrieving Enterprise with [$ern] for [$period].")
+    restRepository.findRow(config.tableName, EnterpriseUnitRowKey(ern, period), DefaultColumnGroup).map { errorOrRow =>
+      errorOrRow.fold(
+        _ => None,
+        optRow => {
+          val optEnterprise = optRow.flatMap(rowMapper.fromRow)
+          logger.debug(s"Enterprise result was [$optEnterprise].")
+          optEnterprise
+        }
+      )
     }
   }
-
 }

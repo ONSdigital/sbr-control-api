@@ -4,12 +4,16 @@ import com.typesafe.config.Config
 import com.typesafe.sslconfig.util.ConfigLoader
 import repository.hbase.HBaseRestRepositoryConfig
 
-object HBaseRestRepositoryConfigLoader extends ConfigLoader[HBaseRestRepositoryConfig] {
-  private val RootPath = "db.hbase-rest"
-
-  def load(rootConfig: Config): HBaseRestRepositoryConfig =
-    load(rootConfig, RootPath)
-
+/*
+ * We want a misconfigured server to "fail fast".
+ * The Guice module should be configured to use this ConfigLoader during its configure method.
+ * If any required key is missing / any value cannot be successfully parsed, an exception should be thrown
+ * which will fail the startup of the service (at deployment time).
+ *
+ * Note that we cannot currently enforce that port is numeric, because some environments rely on this
+ * being configured with a trailing path, such as "8080/hbase".
+ */
+object HBaseRestRepositoryConfigLoader extends HBaseRestUnitRepositoryConfigLoader[HBaseRestRepositoryConfig] {
   override def load(rootConfig: Config, path: String): HBaseRestRepositoryConfig = {
     val config = rootConfig.getConfig(path)
     HBaseRestRepositoryConfig(

@@ -1,13 +1,14 @@
 package repository
 
-import repository.RestRepository.Row
+import repository.RestRepository.{ ErrorMessage, Row }
 
 import scala.concurrent.Future
 
 trait RestRepository {
-  def get(table: String, rowKey: String, columnGroup: String): Future[Seq[Row]]
+  def findRow(table: String, rowKey: String, columnGroup: String): Future[Either[ErrorMessage, Option[Row]]]
 }
 
 object RestRepository {
+  type ErrorMessage = String
   type Row = Map[String, String]
 }
