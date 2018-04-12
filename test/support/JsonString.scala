@@ -10,6 +10,9 @@ object JsonString {
   def int(name: String, value: Int): Option[String] =
     Some(s""""$name":$value""")
 
+  def optionalInt(name: String, optValue: Option[Int]): Option[String] =
+    optValue.flatMap(int(name, _))
+
   def withValues(values: Option[String]*): String =
     values.flatten.mkString(",")
 

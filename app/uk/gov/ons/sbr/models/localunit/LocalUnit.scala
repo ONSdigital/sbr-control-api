@@ -1,7 +1,8 @@
 package uk.gov.ons.sbr.models.localunit
 
 import io.swagger.annotations.ApiModelProperty
-import play.api.libs.json.Json
+import play.api.libs.json.{ Json, OWrites }
+
 import uk.gov.ons.sbr.models.enterprise.EnterpriseLink
 
 case class LocalUnit(
@@ -16,5 +17,5 @@ case class LocalUnit(
 )
 
 object LocalUnit {
-  implicit val writes = Json.writes[LocalUnit]
+  implicit val writes: OWrites[LocalUnit] = Json.writes[LocalUnit]
 }

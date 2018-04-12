@@ -18,7 +18,7 @@ case class HBaseRestRepositoryConfig(protocolWithHostname: String, port: String,
   namespace: String, username: String, password: String, timeout: Long)
 
 class HBaseRestRepository @Inject() (
-  config: HBaseRestRepositoryConfig,
+    config: HBaseRestRepositoryConfig,
     wsClient: WSClient,
     responseReaderMaker: HBaseResponseReaderMaker
 ) extends RestRepository with LazyLogging {

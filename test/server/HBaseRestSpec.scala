@@ -76,19 +76,19 @@ class HBaseRestSpec extends TestUtils with BeforeAndAfterEach with GuiceOneAppPe
     }
   }
 
-  "/v1/periods/:period/enterprises/:id" should {
-    "return an enterprise for a valid enterprise id" in {
-      val id = "12345"
-      val body = "{\"Row\":[{\"key\":\"NTQzMjF+MjAxODAy\",\"Cell\":[{\"column\":\"ZDplbnRfbmFtZQ==\",\"timestamp\":1519809867579,\"$\":\"VGVzY28=\"},{\"column\":\"ZDplbnRyZWY=\",\"timestamp\":1519809865127,\"$\":\"MTIzNDU=\"}]}]}"
-      mockEndpoint(enterpriseTable, Some(firstPeriod), id, None, body)
-      val resp = fakeRequest(s"/$version/periods/$firstPeriod/enterprises/$id")
-      val json = contentAsJson(resp)
-      val ent = json.validate[EnterpriseUnit]
-      status(resp) mustBe OK
-      contentType(resp) mustBe Some("application/json")
-      ent.isInstanceOf[JsSuccess[EnterpriseUnit]] mustBe true
-    }
-  }
+  //  "/v1/periods/:period/enterprises/:id" should {
+  //    "return an enterprise for a valid enterprise id" in {
+  //      val id = "12345"
+  //      val body = "{\"Row\":[{\"key\":\"NTQzMjF+MjAxODAy\",\"Cell\":[{\"column\":\"ZDplbnRfbmFtZQ==\",\"timestamp\":1519809867579,\"$\":\"VGVzY28=\"},{\"column\":\"ZDplbnRyZWY=\",\"timestamp\":1519809865127,\"$\":\"MTIzNDU=\"}]}]}"
+  //      mockEndpoint(enterpriseTable, Some(firstPeriod), id, None, body)
+  //      val resp = fakeRequest(s"/$version/periods/$firstPeriod/enterprises/$id")
+  //      val json = contentAsJson(resp)
+  //      val ent = json.validate[EnterpriseUnit]
+  //      status(resp) mustBe OK
+  //      contentType(resp) mustBe Some("application/json")
+  //      ent.isInstanceOf[JsSuccess[EnterpriseUnit]] mustBe true
+  //    }
+  //  }
 
   "/v1/units/:unit" should {
     "return a unit for a valid id (enterprise)" in {
