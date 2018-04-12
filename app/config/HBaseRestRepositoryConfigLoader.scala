@@ -1,7 +1,6 @@
 package config
 
 import com.typesafe.config.Config
-import com.typesafe.sslconfig.util.ConfigLoader
 import repository.hbase.HBaseRestRepositoryConfig
 
 /*

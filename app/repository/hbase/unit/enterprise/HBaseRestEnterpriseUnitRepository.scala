@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 case class HBaseRestEnterpriseUnitRepositoryConfig(tableName: String)
 
 class HBaseRestEnterpriseUnitRepository @Inject() (
-  restRepository: RestRepository,
+    restRepository: RestRepository,
     config: HBaseRestEnterpriseUnitRepositoryConfig,
     rowMapper: RowMapper[Enterprise]
 ) extends EnterpriseUnitRepository with LazyLogging {
