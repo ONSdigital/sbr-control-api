@@ -76,5 +76,18 @@ class LocalUnitControllerSpec extends FreeSpec with Matchers with MockFactory wi
         status(response) shouldBe INTERNAL_SERVER_ERROR
       }
     }
+
+    /*
+     * This just tests the action.
+     * See LocalUnitRoutingSpec for tests that requests are routed correctly between the available actions.
+     */
+    "containing an invalid argument" - {
+      "receives a BAD REQUEST response" in new Fixture {
+        val action = controller.badRequest(TargetErn.value, Period.asString(TargetPeriod), TargetLurn.value)
+        val response = action.apply(FakeRequest())
+
+        status(response) shouldBe BAD_REQUEST
+      }
+    }
   }
 }

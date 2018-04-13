@@ -44,4 +44,8 @@ class LocalUnitController @Inject() (repository: LocalUnitRepository) extends Co
 
   private def resultOnSuccess(optLocalUnit: Option[LocalUnit]): Result =
     optLocalUnit.fold[Result](NotFound)(localUnit => Ok(toJson(localUnit)))
+
+  def badRequest(ernStr: String, periodStr: String, lurnStr: String) = Action {
+    BadRequest
+  }
 }

@@ -3,7 +3,7 @@ import java.time.Month.MARCH
 import fixture.ServerAcceptanceSpec
 import it.fixture.ReadsLocalUnit.localUnitReads
 import org.scalatest.OptionValues
-import play.api.http.Status.{ NOT_FOUND, OK }
+import play.api.http.Status.{ BAD_REQUEST, NOT_FOUND, OK }
 import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.LocalUnitColumns._
 import repository.hbase.LocalUnitRowKey
@@ -73,6 +73,18 @@ class LocalUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
 
       Then(s"a NOT FOUND response is returned")
       response.status shouldBe NOT_FOUND
+    }
+  }
+
+  feature("validate request parameters") {
+    scenario(s"rejecting an Enterprise reference (ERN) that is not ten digits long") { wsClient =>
+      Given(s"that an ERN is represented by a ten digit number")
+
+      When(s"the user requests a Local Unit having an ERN that is not ten digits long")
+      val response = await(wsClient.url(s"/v1/enterprises/123456789/periods/${Period.asString(TargetPeriod)}/localunits/${TargetLurn.value}").get())
+
+      Then(s"a BAD REQUEST response is returned")
+      response.status shouldBe BAD_REQUEST
     }
   }
 }

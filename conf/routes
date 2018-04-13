@@ -13,7 +13,8 @@ GET     /v1/enterprises/:id                            controllers.v1.SearchCont
 GET     /v1/periods/:period/enterprises/:ern            controllers.v1.EnterpriseUnitController.retrieveEnterpriseUnit(ern, period)
 
 # Local Units
-GET     /v1/enterprises/:ern/periods/:period/localunits/:lurn    controllers.v1.LocalUnitController.retrieveLocalUnit(ern, period, lurn)
+GET     /v1/enterprises/$ern<\d{10}>/periods/:period/localunits/:lurn    controllers.v1.LocalUnitController.retrieveLocalUnit(ern, period, lurn)
+GET     /v1/enterprises/:ern/periods/:period/localunits/:lurn            controllers.v1.LocalUnitController.badRequest(ern, period, lurn)
 
 # Other Routes
 
