@@ -2,6 +2,7 @@ package repository.hbase
 
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
+import play.api.http.HeaderNames.ACCEPT
 import play.api.http.MimeTypes.JSON
 import play.api.http.Status.{ NOT_FOUND, OK, UNAUTHORIZED }
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -12,8 +13,8 @@ import repository.RestRepository
 import repository.RestRepository.{ ErrorMessage, Row }
 import utils.TrySupport
 
-import scala.concurrent.{ Future, TimeoutException }
 import scala.concurrent.duration._
+import scala.concurrent.{ Future, TimeoutException }
 import scala.util.Try
 
 case class HBaseRestRepositoryConfig(protocolWithHostname: String, port: String,
@@ -41,7 +42,7 @@ class HBaseRestRepository @Inject() (
   private def requestFor(url: String): WSRequest =
     wsClient.
       url(url).
-      withHeaders("Accept" -> JSON).
+      withHeaders(ACCEPT -> JSON).
       withAuth(config.username, config.password, scheme = BASIC).
       withRequestTimeout(config.timeout.milliseconds)
 
@@ -94,7 +95,7 @@ class HBaseRestRepository @Inject() (
     override def isDefinedAt(cause: Throwable): Boolean = true
 
     override def apply(cause: Throwable): Either[ErrorMessage, Option[Row]] = {
-      logger.info(s"Translating HBase request failure [${cause.getMessage}].")
+      logger.info(s"Translating HBase request failure [$cause].")
       cause match {
         case t: TimeoutException => Left(s"Timeout.  ${t.getMessage}")
         case t: Throwable => Left(t.getMessage)
