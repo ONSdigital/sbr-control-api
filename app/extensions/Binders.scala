@@ -3,8 +3,6 @@ package extensions
 import play.api.mvc._
 
 /**
- * Created by coolit on 28/02/2018.
- *
  * This is for using Options in the routes file in Play version 2.1 and above
  * https://stackoverflow.com/questions/14980952/routes-with-optional-parameter-play-2-1-scala
  */

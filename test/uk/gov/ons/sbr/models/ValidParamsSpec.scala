@@ -1,12 +1,8 @@
-package unit
+package uk.gov.ons.sbr.models
 
-import resource.TestUtils
-import uk.gov.ons.sbr.models._
+import support.TestUtils
 
-/**
- * Created by coolit on 16/03/2018.
- */
-class ParamsModelTestSpec extends TestUtils {
+class ValidParamsSpec extends TestUtils {
 
   private val validId = "12345678"
   private val invalidId = "1"

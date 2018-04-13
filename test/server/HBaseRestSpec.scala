@@ -1,7 +1,6 @@
 package server
 
 import play.api.test.Helpers._
-import resource.TestUtils
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import com.github.tomakehurst.wiremock.WireMockServer
@@ -9,12 +8,10 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import play.api.libs.json.{ JsArray, JsSuccess }
+import support.TestUtils
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
 
-/**
- * Created by coolit on 13/02/2018.
- */
-class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppPerSuite {
+class HBaseRestSpec extends TestUtils with BeforeAndAfterEach with GuiceOneAppPerSuite {
 
   // TODO:
   // - test each type of endpoint
@@ -28,7 +25,6 @@ class HBaseRestTests extends TestUtils with BeforeAndAfterEach with GuiceOneAppP
   private val columnFamilyEnterprise = "d"
   private val columnFamilyLinks = "l"
   private val firstPeriod = "201706"
-  private val secondPeriod = "201708"
 
   // We don't use the normal HBase REST port as it can make testing annoying, this is set as a Java Option
   // in the build.sbt

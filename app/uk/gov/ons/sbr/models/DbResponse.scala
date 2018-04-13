@@ -3,11 +3,8 @@ package uk.gov.ons.sbr.models
 import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
 
 /**
- * Created by coolit on 08/03/2018.
- *
  * TODO: a generic case class for DbResult[T] could possibly be used
  */
-
 sealed trait DbResponse
 sealed trait DbErrorMsg extends DbResponse {
   val msg: String

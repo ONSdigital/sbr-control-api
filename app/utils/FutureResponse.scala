@@ -5,9 +5,6 @@ import scala.util.Try
 
 import play.api.mvc.Result
 
-/**
- * Created by haqa on 11/08/2017.
- */
 object FutureResponse {
 
   implicit class futureSuccess(val res: Result) {

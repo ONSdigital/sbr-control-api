@@ -4,9 +4,6 @@ import com.typesafe.config.Config
 import org.apache.hadoop.hbase.TableName
 import play.api.Configuration
 
-/**
- * Created by haqa on 28/07/2017.
- */
 trait Properties {
 
   implicit val configuration: Configuration

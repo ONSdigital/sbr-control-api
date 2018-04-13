@@ -24,9 +24,6 @@ import utils.HBaseRestUtils
 //   using a Future within a case class, this may not be the best way to do it
 // - there are quite a few repeated .split("~").last, this could be put in a function
 // - add logs for errors when hitting hbase REST
-/**
- * Created by coolit on 05/02/2018.
- */
 class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configuration) extends DataAccess with Properties with LazyLogging {
 
   private val utils = new HBaseRestUtils(ws, configuration)

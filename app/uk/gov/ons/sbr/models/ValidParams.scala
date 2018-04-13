@@ -2,10 +2,6 @@ package uk.gov.ons.sbr.models
 
 import utils.Validation._
 
-/**
- * Created by coolit on 19/02/2018.
- */
-
 sealed trait ValidParams
 
 case class UnitLinksParams(id: String) extends ValidParams

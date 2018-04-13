@@ -1,12 +1,9 @@
-package unit
+package utils
 
-import resource.TestUtils
+import support.TestUtils
 import utils.Validation._
 
-/**
- * Created by coolit on 16/03/2018.
- */
-class ValidationTestSpec extends TestUtils {
+class ValidationSpec extends TestUtils {
 
   "validId" should {
     "return true for a valid id (integer)" in {

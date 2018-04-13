@@ -14,9 +14,6 @@ import scala.concurrent.duration._
 
 import config.Properties
 
-/**
- * Created by coolit on 09/03/2018.
- */
 @Singleton
 class HBaseRestUtils @Inject() (ws: WSClient, val configuration: Configuration) extends Properties {
 
