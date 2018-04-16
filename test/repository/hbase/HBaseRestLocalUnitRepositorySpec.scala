@@ -40,5 +40,13 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
         result.value shouldBe TargetLocalUnit
       }
     }
+
+    "returns None when a local unit with the target Enterprise reference (ERN), period, and Local Unit reference (LURN) cannot be found" in new Fixture {
+      (restRepository.get _).expects(TargetTable, TargetRowKey, DefaultColumnGroup).returning(Future.successful(Seq.empty))
+
+      whenReady(repository.retrieveLocalUnit(TargetErn, TargetPeriod, TargetLurn)) { result =>
+        result shouldBe None
+      }
+    }
   }
 }

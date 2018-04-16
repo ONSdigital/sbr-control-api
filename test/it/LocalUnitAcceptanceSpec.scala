@@ -3,7 +3,7 @@ import java.time.Month.MARCH
 import fixture.ServerAcceptanceSpec
 import it.fixture.ReadsLocalUnit.localUnitReads
 import org.scalatest.OptionValues
-import play.api.http.Status.OK
+import play.api.http.Status.{ NOT_FOUND, OK }
 import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.LocalUnitColumns._
 import repository.hbase.LocalUnitRowKey
@@ -40,7 +40,7 @@ class LocalUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
   info("I want to retrieve a local unit for an enterprise and a period in time")
   info("So that I can view the local unit details via the user interface")
 
-  feature("retrieve a Local Unit") {
+  feature("retrieve an existing Local Unit") {
     scenario("by exact Enterprise reference (ERN), period, and Local Unit reference (LURN)") { wsClient =>
       Given(s"a local unit exists with $TargetErn, $TargetPeriod, and $TargetLurn")
       stubHBaseFor(aLocalUnitRequest(withErn = TargetErn, withPeriod = TargetPeriod, withLurn = TargetLurn).willReturn(
@@ -58,6 +58,21 @@ class LocalUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
           sic07 = "some-sic07", employees = 99, enterprise = EnterpriseLink(TargetErn, entref = Some("some-entref")),
           address = Address(line1 = "some-address1", line2 = Some("some-address2"), line3 = None, line4 = None,
             line5 = Some("some-address5"), postcode = "some-postcode"))
+    }
+  }
+
+  feature("retrieve a non-existent Local Unit") {
+    scenario(s"by exact Enterprise reference (ERN), period, and Local Unit reference (LURN)") { wsClient =>
+      Given(s"a local unit does not exist with $TargetErn, $TargetPeriod, and $TargetLurn")
+      stubHBaseFor(aLocalUnitRequest(withErn = TargetErn, withPeriod = TargetPeriod, withLurn = TargetLurn).willReturn(
+        anOkResponse().withBody(NoMatchFoundResponse)
+      ))
+
+      When(s"a local unit with $TargetErn, $TargetPeriod, and $TargetLurn is requested")
+      val response = await(wsClient.url(s"/v1/enterprises/${TargetErn.value}/periods/${Period.asString(TargetPeriod)}/localunits/${TargetLurn.value}").get())
+
+      Then(s"a NOT FOUND response is returned")
+      response.status shouldBe NOT_FOUND
     }
   }
 }
