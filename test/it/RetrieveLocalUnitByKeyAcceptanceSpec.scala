@@ -3,18 +3,17 @@ import java.time.Month.MARCH
 import fixture.ServerAcceptanceSpec
 import it.fixture.ReadsLocalUnit.localUnitReads
 import org.scalatest.OptionValues
-import play.api.http.Status.{ BAD_REQUEST, NOT_FOUND, OK }
+import play.api.http.HeaderNames.CONTENT_TYPE
+import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK}
 import play.mvc.Http.MimeTypes.JSON
-
 import repository.hbase.localunit.LocalUnitColumns._
+import repository.hbase.localunit.LocalUnitQuery
 import support.WithWireMockHBase
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
-import uk.gov.ons.sbr.models.localunit.{ Address, LocalUnit, Lurn }
+import uk.gov.ons.sbr.models.enterprise.{EnterpriseLink, Ern}
+import uk.gov.ons.sbr.models.localunit.{Address, LocalUnit, Lurn}
 
-import repository.hbase.localunit.LocalUnitRowKey
-
-class LocalUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
+class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
   private val TargetErn = Ern("1000000012")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
   private val TargetLurn = Lurn("900000011")
@@ -22,7 +21,7 @@ class LocalUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
   private val LocalUnitSingleMatchHBaseResponseBody =
     s"""{"Row": ${
       List(
-        aRowWith(key = s"${LocalUnitRowKey(TargetErn, TargetPeriod, TargetLurn)}", columns =
+        aRowWith(key = s"${LocalUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetLurn)}", columns =
           aColumnWith(name = lurn, value = TargetLurn.value),
           aColumnWith(name = luref, value = "some-luref"),
           aColumnWith(name = ern, value = TargetErn.value),
@@ -54,7 +53,7 @@ class LocalUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
 
       Then(s"the details of the unique local unit identified by $TargetErn, $TargetPeriod, and $TargetLurn are returned")
       response.status shouldBe OK
-      response.header("Content-Type").value shouldBe JSON
+      response.header(CONTENT_TYPE).value shouldBe JSON
       response.json.as[LocalUnit] shouldBe
         LocalUnit(TargetLurn, luref = Some("some-luref"), name = "some-name", tradingStyle = Some("some-tradingstyle"),
           sic07 = "some-sic07", employees = 99, enterprise = EnterpriseLink(TargetErn, entref = Some("some-entref")),
