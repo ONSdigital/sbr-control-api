@@ -15,7 +15,7 @@ import org.scalatest.{ FreeSpec, Matchers, OptionValues }
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
 
-import repository.hbase.unit.enterprise.EnterpriseUnitRepository
+import repository.EnterpriseUnitRepository
 import support.sample.SampleEnterpriseUnit
 
 class EnterpriseUnitControllerSpec extends FreeSpec with Matchers with MockFactory with OptionValues {

@@ -1,7 +1,8 @@
-package repository.hbase.unit.enterprise
+package repository.hbase.enterprise
 
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
+
 import repository.hbase.HBase.RowKeyDelimiter
 
 object EnterpriseUnitRowKey {

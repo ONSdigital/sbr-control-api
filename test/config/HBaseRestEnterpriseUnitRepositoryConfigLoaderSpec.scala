@@ -3,9 +3,9 @@ package config
 import org.scalatest.{ FreeSpec, Matchers }
 import com.typesafe.config.{ Config, ConfigFactory }
 
-import repository.hbase.unit.enterprise.HBaseRestEnterpriseUnitRepositoryConfig
+import repository.hbase.enterprise.HBaseRestEnterpriseUnitRepositoryConfig
 
-class HBaseRestEnterpriseUnitRepositoryConigLoaderSpec extends FreeSpec with Matchers {
+class HBaseRestEnterpriseUnitRepositoryConfigLoaderSpec extends FreeSpec with Matchers {
 
   private trait Fixture {
     val SampleConfiguration: String =

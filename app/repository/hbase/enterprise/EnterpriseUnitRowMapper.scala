@@ -1,4 +1,4 @@
-package repository.hbase.unit.enterprise
+package repository.hbase.enterprise
 
 import scala.util.{ Failure, Success, Try }
 
@@ -6,7 +6,7 @@ import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
 
 import repository.RestRepository.Row
 import repository.RowMapper
-import repository.hbase.unit.enterprise.EnterpriseUnitColumns._
+import repository.hbase.enterprise.EnterpriseUnitColumns._
 
 object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
 
@@ -19,13 +19,13 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
       legalStatus <- variables.get(legalStatus)
 
       employeesStr = variables.get(employees)
-      employeeOptTry = employeesStr.map(x => Try(x.toInt))
-      if employeeOptTry.fold(true)(_.isSuccess)
+      employeeOptTry = asInt(employeesStr)
+      if invalidInt(employeeOptTry)
       employeeOptInt = parseTry(employeeOptTry)
 
       jobsStr = variables.get(jobs)
-      jobsOptTry = jobsStr.map(x => Try(x.toInt))
-      if jobsOptTry.fold(true)(_.isSuccess)
+      jobsOptTry = asInt(jobsStr)
+      if invalidInt(jobsOptTry)
       jobsOptInt = parseTry(jobsOptTry)
 
     } yield Enterprise(Ern(ern), entref, name, postcode, legalStatus, employeeOptInt, jobsOptInt)
@@ -35,5 +35,9 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
       case Success(n) => Some(n)
       case Failure(_) => throw new AssertionError()
     }
+
+  private def asInt(fieldAsStr: Option[String]) = fieldAsStr.map(x => Try(x.toInt))
+
+  private def invalidInt(fieldOptTry: Option[Try[Int]]) = fieldOptTry.fold(true)(_.isSuccess)
 
 }

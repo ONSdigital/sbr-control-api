@@ -9,8 +9,8 @@ import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
 
 import fixture.ServerAcceptanceSpec
 import it.fixture.ReadsEnterpriseUnit.enterpriseReads
-import repository.hbase.unit.enterprise.EnterpriseUnitColumns._
-import repository.hbase.unit.enterprise.EnterpriseUnitRowKey
+import repository.hbase.enterprise.EnterpriseUnitColumns._
+import repository.hbase.enterprise.EnterpriseUnitRowKey
 import support.WithWireMockHBase
 import support.sample.SampleEnterpriseUnit
 

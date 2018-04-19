@@ -1,12 +1,13 @@
-package repository.hbase
+package repository.hbase.localunit
 
-import repository.RowMapper
-import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
-import uk.gov.ons.sbr.models.localunit.{ Address, LocalUnit, Lurn }
 import scala.util.Try
 
-import LocalUnitColumns._
+import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
+import uk.gov.ons.sbr.models.localunit.{ Address, LocalUnit, Lurn }
+
 import repository.RestRepository.Row
+import repository.RowMapper
+import repository.hbase.localunit.LocalUnitColumns._
 
 /*
  * The following fields are optional:

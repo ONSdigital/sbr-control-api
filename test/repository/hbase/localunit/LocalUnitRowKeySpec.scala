@@ -1,8 +1,9 @@
-package repository.hbase
+package repository.hbase.localunit
 
 import java.time.Month.MARCH
 
 import org.scalatest.{ FreeSpec, Matchers }
+
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.localunit.Lurn

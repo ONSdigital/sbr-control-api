@@ -2,8 +2,7 @@ package repository.hbase.enterprise
 
 import org.scalatest.{ FreeSpec, Matchers }
 
-import repository.hbase.unit.enterprise.EnterpriseUnitColumns._
-import repository.hbase.unit.enterprise.EnterpriseUnitRowMapper
+import EnterpriseUnitColumns._
 import support.sample.SampleEnterpriseUnit
 
 class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
