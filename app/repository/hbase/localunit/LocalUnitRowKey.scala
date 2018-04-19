@@ -1,9 +1,10 @@
-package repository.hbase
+package repository.hbase.localunit
 
-import repository.hbase.HBase.RowKeyDelimiter
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.localunit.Lurn
+
+import repository.hbase.HBase.RowKeyDelimiter
 
 object LocalUnitRowKey {
   def apply(ern: Ern, period: Period, lurn: Lurn): String = {

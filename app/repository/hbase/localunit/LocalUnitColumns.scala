@@ -1,4 +1,4 @@
-package repository.hbase
+package repository.hbase.localunit
 
 object LocalUnitColumns {
   val lurn = "lurn"

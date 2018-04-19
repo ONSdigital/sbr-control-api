@@ -8,9 +8,9 @@ import io.swagger.annotations._
 
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
-
-import repository.hbase.unit.enterprise.EnterpriseUnitRepository
 import scala.concurrent.ExecutionContext.Implicits.global
+
+import repository.EnterpriseUnitRepository
 
 @Api("Search")
 @Singleton
@@ -32,9 +32,9 @@ class EnterpriseUnitController @Inject() (repository: EnterpriseUnitRepository) 
     @ApiParam(value = "Period (unit load date)", example = "201803", required = true) periodStr: String
   ): Action[AnyContent] = Action.async {
     repository.retrieveEnterpriseUnit(Ern(ernStr), Period.fromString(periodStr)).map {
-      optResp =>
-        optResp.fold[Result](NotFound) { resp =>
-          Ok(Json.toJson(resp))
+      optEnterprise =>
+        optEnterprise.fold[Result](NotFound) { enterprise =>
+          Ok(Json.toJson(enterprise))
         }
     }
   }
