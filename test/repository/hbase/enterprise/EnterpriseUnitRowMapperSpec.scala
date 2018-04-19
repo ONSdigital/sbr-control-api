@@ -49,23 +49,23 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
       }
     }
 
-    "a non-numeric value is for employees" in new Fixture {
+    "a non-numeric value is found for employees" in new Fixture {
       EnterpriseUnitRowMapper.fromRow(allVariables.updated(employees, "invalid_int")) shouldBe None
     }
 
-    "a non-numeric value is for jobs" in new Fixture {
+    "a non-numeric value is found for jobs" in new Fixture {
       EnterpriseUnitRowMapper.fromRow(allVariables.updated(jobs, "invalid_int")) shouldBe None
     }
 
-    "a non-integeral value as employees" in new Fixture {
+    "a non-integeral value is found for employees" in new Fixture {
       EnterpriseUnitRowMapper.fromRow(allVariables.updated(employees, "12.90")) shouldBe None
     }
 
-    "a non-integral value as jobs" in new Fixture {
+    "a non-integral value is found for jobs" in new Fixture {
       EnterpriseUnitRowMapper.fromRow(allVariables.updated(jobs, "456.90")) shouldBe None
     }
 
-    "a non-integral value as both employees and jobs" in new Fixture {
+    "a non-integral value is found for employees and jobs" in new Fixture {
       EnterpriseUnitRowMapper.fromRow(allVariables.updated(employees, "12.90").updated(jobs, "90.89")) shouldBe None
     }
 

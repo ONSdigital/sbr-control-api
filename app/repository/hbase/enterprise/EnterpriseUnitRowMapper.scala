@@ -1,9 +1,10 @@
 package repository.hbase.enterprise
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.Try
 
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
+import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern}
 
+import utils.TrySupport
 import repository.RestRepository.Row
 import repository.RowMapper
 import repository.hbase.enterprise.EnterpriseUnitColumns._
@@ -31,12 +32,11 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
     } yield Enterprise(Ern(ern), entref, name, postcode, legalStatus, employeeOptInt, jobsOptInt)
 
   private def parseTry(valueOptTry: Option[Try[Int]]) =
-    valueOptTry.fold[Option[Int]](None) {
-      case Success(n) => Some(n)
-      case Failure(_) => throw new AssertionError()
+    valueOptTry.fold[Option[Int]](None) { fieldToInt =>
+      TrySupport.fold(fieldToInt)(failure => throw new AssertionError(failure.getMessage), integral => Some(integral))
     }
 
-  private def asInt(fieldAsStr: Option[String]) = fieldAsStr.map(x => Try(x.toInt))
+  private def asInt(fieldAsStr: Option[String]): Option[Try[Int]] = fieldAsStr.map(x => Try(x.toInt))
 
   private def invalidInt(fieldOptTry: Option[Try[Int]]) = fieldOptTry.fold(true)(_.isSuccess)
 
