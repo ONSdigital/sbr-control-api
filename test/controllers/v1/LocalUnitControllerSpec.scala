@@ -3,7 +3,7 @@ package controllers.v1
 import java.time.Month.FEBRUARY
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{FreeSpec, Matchers, OptionValues}
+import org.scalatest.{ FreeSpec, Matchers, OptionValues }
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -13,7 +13,7 @@ import repository.LocalUnitRepository
 import support.sample.SampleLocalUnit
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
+import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 import scala.concurrent.Future
 
 class LocalUnitControllerSpec extends FreeSpec with Matchers with MockFactory with OptionValues {

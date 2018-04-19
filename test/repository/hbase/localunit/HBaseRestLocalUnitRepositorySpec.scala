@@ -53,9 +53,7 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
 
     "signals a failure when a valid Local Unit cannot be constructed from a successful HBase REST response" in new Fixture {
       (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnGroup).returning(Future.successful(Right(Some(ARow))))
-      (rowMapper.fromRow
-
-        _).expects(ARow).returning(None)
+      (rowMapper.fromRow _).expects(ARow).returning(None)
 
       whenReady(repository.retrieveLocalUnit(TargetErn, TargetPeriod, TargetLurn)) { result =>
         result.left.value shouldBe "Unable to construct a Local Unit from Row data"

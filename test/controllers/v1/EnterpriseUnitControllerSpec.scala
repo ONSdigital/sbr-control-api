@@ -6,13 +6,13 @@ import scala.concurrent.Future
 
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentType, status, _}
+import play.api.test.Helpers.{ contentType, status, _ }
 import play.mvc.Http.MimeTypes.JSON
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{FreeSpec, Matchers, OptionValues}
+import org.scalatest.{ FreeSpec, Matchers, OptionValues }
 
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern}
+import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
 
 import repository.EnterpriseUnitRepository
 import support.sample.SampleEnterpriseUnit
