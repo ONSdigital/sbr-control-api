@@ -10,24 +10,33 @@ class LocalUnitSpec extends FreeSpec with Matchers {
   private trait Fixture extends SampleLocalUnit {
     def expectedJsonStrOf(localUnit: LocalUnit): String =
       s"""
-         |{${withValues(
-           string("lurn", localUnit.lurn.value),
-           optionalString("luref", localUnit.luref),
-           string("name", localUnit.name),
-           optionalString("tradingStyle", localUnit.tradingStyle),
-           string("sic07", localUnit.sic07),
-           int("employees", localUnit.employees))},
-         | "enterprise": {${withValues(
-             string("ern", localUnit.enterprise.ern.value),
-             optionalString("entref", localUnit.enterprise.entref))}
+         |{${
+        withValues(
+          string("lurn", localUnit.lurn.value),
+          optionalString("luref", localUnit.luref),
+          string("name", localUnit.name),
+          optionalString("tradingStyle", localUnit.tradingStyle),
+          string("sic07", localUnit.sic07),
+          int("employees", localUnit.employees)
+        )
+      },
+         | "enterprise": {${
+        withValues(
+          string("ern", localUnit.enterprise.ern.value),
+          optionalString("entref", localUnit.enterprise.entref)
+        )
+      }
          | },
-         | "address": {${withValues(
-             string("line1", localUnit.address.line1),
-             optionalString("line2", localUnit.address.line2),
-             optionalString("line3", localUnit.address.line3),
-             optionalString("line4", localUnit.address.line4),
-             optionalString("line5", localUnit.address.line5),
-             string("postcode", localUnit.address.postcode))}
+         | "address": {${
+        withValues(
+          string("line1", localUnit.address.line1),
+          optionalString("line2", localUnit.address.line2),
+          optionalString("line3", localUnit.address.line3),
+          optionalString("line4", localUnit.address.line4),
+          optionalString("line5", localUnit.address.line5),
+          string("postcode", localUnit.address.postcode)
+        )
+      }
          | }
          |}""".stripMargin
   }

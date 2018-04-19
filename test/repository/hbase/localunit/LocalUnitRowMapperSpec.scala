@@ -1,9 +1,10 @@
-package repository.hbase
+package repository.hbase.localunit
 
 import org.scalatest.{ FreeSpec, Matchers }
-import LocalUnitColumns._
+
 import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
 import uk.gov.ons.sbr.models.localunit.{ Address, LocalUnit, Lurn }
+import repository.hbase.localunit.LocalUnitColumns._
 
 class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
 
@@ -28,7 +29,7 @@ class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
       address3 -> address3Value, address4 -> address4Value, address5 -> address5Value, postcode -> postcodeValue,
       sic07 -> sic07Value, employees -> employeesValue)
     private val optionalColumns = Seq(luref, entref, tradingstyle, address2, address3, address4, address5)
-    val mandatoryVariables = allVariables -- optionalColumns
+    val mandatoryVariables: Map[String, String] = allVariables -- optionalColumns
   }
 
   "A LocalUnit row mapper" - {

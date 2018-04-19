@@ -2,7 +2,7 @@ package config
 
 import com.typesafe.config.Config
 
-import repository.hbase.localunit.HBaseRestLocalUnitRepositoryConfig
+import repository.hbase.enterprise.HBaseRestEnterpriseUnitRepositoryConfig
 
 /*
  * We want a misconfigured server to "fail fast".
@@ -10,9 +10,9 @@ import repository.hbase.localunit.HBaseRestLocalUnitRepositoryConfig
  * If any required key is missing / any value cannot be successfully parsed, an exception should be thrown
  * which will fail the startup of the service (at deployment time).
  */
-object HBaseRestLocalUnitRepositoryConfigLoader extends HBaseRestConfigLoader[HBaseRestLocalUnitRepositoryConfig] {
-  override def load(rootConfig: Config, path: String): HBaseRestLocalUnitRepositoryConfig = {
+object HBaseRestEnterpriseUnitRepositoryConfigLoader extends HBaseRestConfigLoader[HBaseRestEnterpriseUnitRepositoryConfig] {
+  override def load(rootConfig: Config, path: String): HBaseRestEnterpriseUnitRepositoryConfig = {
     val config = rootConfig.getConfig(path)
-    HBaseRestLocalUnitRepositoryConfig(config.getString("localunit.table.name"))
+    HBaseRestEnterpriseUnitRepositoryConfig(config.getString("enterprise.table.name"))
   }
 }

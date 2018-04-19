@@ -76,20 +76,6 @@ class HBaseRestSpec extends TestUtils with BeforeAndAfterEach with GuiceOneAppPe
     }
   }
 
-  "/v1/periods/:period/enterprises/:id" should {
-    "return an enterprise for a valid enterprise id" in {
-      val id = "12345"
-      val body = "{\"Row\":[{\"key\":\"NTQzMjF+MjAxODAy\",\"Cell\":[{\"column\":\"ZDplbnRfbmFtZQ==\",\"timestamp\":1519809867579,\"$\":\"VGVzY28=\"},{\"column\":\"ZDplbnRyZWY=\",\"timestamp\":1519809865127,\"$\":\"MTIzNDU=\"}]}]}"
-      mockEndpoint(enterpriseTable, Some(firstPeriod), id, None, body)
-      val resp = fakeRequest(s"/$version/periods/$firstPeriod/enterprises/$id")
-      val json = contentAsJson(resp)
-      val ent = json.validate[EnterpriseUnit]
-      status(resp) mustBe OK
-      contentType(resp) mustBe Some("application/json")
-      ent.isInstanceOf[JsSuccess[EnterpriseUnit]] mustBe true
-    }
-  }
-
   "/v1/units/:unit" should {
     "return a unit for a valid id (enterprise)" in {
       val id = "12345"
@@ -104,21 +90,6 @@ class HBaseRestSpec extends TestUtils with BeforeAndAfterEach with GuiceOneAppPe
       unit.isInstanceOf[JsSuccess[UnitLinks]] mustBe true
     }
   }
-
-  //    "return multiple units for a valid conflicting id (UBRN/VAT)" in {
-  //      // UBRN and VAT can have conflicting ID's so a request for a conflicting ID can
-  //      // return multiple results
-  //      val id = "976351836291"
-  //      val body = "{\"Row\":[{\"key\":\"MjAxNzA2fjk5MDAxNTYxMTV+RU5U\",\"Cell\":[{\"column\":\"ZDpjXzAxNzUyNTY0\",\"timestamp\":1517844803247,\"$\":\"Q0g=\"},{\"column\":\"ZDpjXzA0OTg4NTI3\",\"timestamp\":1517844803247,\"$\":\"Q0g=\"},{\"column\":\"ZDpjXzEwMjA1NDE1\",\"timestamp\":1517844764481,\"$\":\"TEVV\"},{\"column\":\"ZDpjXzI3Mzg3Njg=\",\"timestamp\":1517844790326,\"$\":\"UEFZRQ==\"},{\"column\":\"ZDpjXzQwMTM0NzI2MzI4OQ==\",\"timestamp\":1517844777427,\"$\":\"VkFU\"},{\"column\":\"ZDpjXzUzNzc3MzI=\",\"timestamp\":1517844790326,\"$\":\"UEFZRQ==\"},{\"column\":\"ZDpjXzg1OTc4NjM2NzYzMQ==\",\"timestamp\":1517844777427,\"$\":\"VkFU\"},{\"column\":\"ZDpjXzk1MzczODIx\",\"timestamp\":1517844764481,\"$\":\"TEVV\"}]}]}"
-  //      mockEndpoint(unitLinksTable, firstPeriod, id, Some("*"), body)
-  //      val resp = fakeRequest(s"/$version/periods/$firstPeriod/units/$id")
-  //      val json = contentAsJson(resp).as[JsArray]
-  //      val unit = json.value.map(x => x.validate[UnitLinks])
-  //      json.value.size mustBe 2
-  //      status(resp) mustBe OK
-  //      unit.isInstanceOf[Seq[JsSuccess[UnitLinks]]] mustBe true
-  //    }
-  //
 
   "/v1/periods/:period/types/:type/units/:id" should {
     "return a unit for a valid id (PAYE)" in {

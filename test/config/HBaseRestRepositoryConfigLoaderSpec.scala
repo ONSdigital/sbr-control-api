@@ -1,6 +1,6 @@
 package config
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{ ConfigException, ConfigFactory }
 import org.scalatest.{ FreeSpec, Matchers }
 import repository.hbase.HBaseRestRepositoryConfig
 
@@ -31,6 +31,27 @@ class HBaseRestRepositoryConfigLoaderSpec extends FreeSpec with Matchers {
         password = "example-password",
         timeout = 6000L
       )
+    }
+
+    "cannot be loaded" - {
+      "when a required key is missing" in new Fixture {
+        val mandatoryKeys = Seq("username", "password", "timeout", "namespace", "host", "port")
+        mandatoryKeys.foreach { key =>
+          withClue(s"with missing key $key") {
+            val config = ConfigFactory.parseString(SampleConfiguration.replaceFirst(key, "missing"))
+            a[ConfigException] should be thrownBy {
+              HBaseRestRepositoryConfigLoader.load(config)
+            }
+          }
+        }
+      }
+
+      "when timeout is non-numeric" in new Fixture {
+        override val config = ConfigFactory.parseString(SampleConfiguration.replaceFirst("timeout = 6000", """timeout="foo""""))
+        a[ConfigException] should be thrownBy {
+          HBaseRestRepositoryConfigLoader.load(config)
+        }
+      }
     }
   }
 }

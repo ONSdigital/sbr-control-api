@@ -1,35 +1,46 @@
 package repository.hbase
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ Matchers, Outcome }
+import org.scalatest.concurrent.{ PatienceConfiguration, ScalaFutures }
+import org.scalatest.time.{ Millis, Span }
+import org.scalatest.{ EitherValues, Matchers, OneInstancePerTest, Outcome }
 import play.api.http.Port
-import play.api.http.Status.NOT_FOUND
-import play.api.libs.json.{ JsSuccess, Json, Reads }
+import play.api.http.Status.{ BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, UNAUTHORIZED }
+import play.api.libs.json.{ JsError, JsSuccess, Json, Reads }
 import play.api.test.WsTestClient
 import repository.RestRepository.Row
 import support.WithWireMockHBase
 
-class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec with WithWireMockHBase with Matchers with ScalaFutures with MockFactory {
+class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec with WithWireMockHBase with Matchers with ScalaFutures with PatienceConfiguration with EitherValues with MockFactory with OneInstancePerTest {
 
   private val DummyJsonResponseStr = """{"some":"json"}"""
+  private val Table = "table"
+  private val RowKey = "rowKey"
   private val ColumnGroup = "cg"
 
+  // test timeout must exceed the configured HBaseRest timeout to properly test client-side timeout handling
+  override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(1500, Millis)), interval = scaled(Span(50, Millis)))
+
   protected case class FixtureParam(
-    config: HBaseRestRepositoryConfig,
-    auth: Authorization,
-    repository: HBaseRestRepository,
-    responseReaderMaker: HBaseResponseReaderMaker,
-    readsRows: Reads[Seq[Row]]
-  )
+      config: HBaseRestRepositoryConfig,
+      auth: Authorization,
+      repository: HBaseRestRepository,
+      responseReaderMaker: HBaseResponseReaderMaker,
+      readsRows: Reads[Seq[Row]]
+  ) {
+    val targetUrl = s"/${config.namespace}:$Table/$RowKey/$ColumnGroup"
+  }
 
   override protected def withFixture(test: OneArgTest): Outcome = {
     val config = HBaseRestRepositoryConfig(protocolWithHostname = "http://localhost", port = wireMockPort.toString,
-      "namespace", "username", "password", timeout = 2000L)
+      "namespace", "username", "password", timeout = 1000L)
     val auth = Authorization(config.username, config.password)
     val responseReaderMaker = mock[HBaseResponseReaderMaker]
     val readsRows = mock[Reads[Seq[Row]]]
+
+    // OneInstancePerTest is required for this common expectation to work across all of the individual tests
+    (responseReaderMaker.forColumnGroup _).expects(ColumnGroup).returning(readsRows)
 
     WsTestClient.withClient { wsClient =>
       withFixture(test.toNoArgTest(FixtureParam(
@@ -39,33 +50,116 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
   }
 
   "A HBase REST Repository" - {
-    /*
-     * This also covers the NOT FOUND case when running against Cloudera, which returns an "empty row" to
-     * signal not found rather than a 404.
-     */
-    "can process a success response" in { fixture =>
-      val targetUrl = s"/${fixture.config.namespace}:table/rowKey/$ColumnGroup"
+    "can process a valid success response containing a single row" in { fixture =>
       val expectedRow = Map("key1" -> "value1")
-      stubHBaseFor(getHbaseJson(targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
-      (fixture.responseReaderMaker.forColumnGroup _).expects(ColumnGroup).returning(fixture.readsRows)
+      stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
       (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq(expectedRow)))
 
-      whenReady(fixture.repository.get("table", "rowKey", ColumnGroup)) { result =>
-        result shouldBe Seq(expectedRow)
+      whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+        result.right.value shouldBe Some(expectedRow)
+      }
+    }
+
+    /*
+     * This is the NOT FOUND case when running against Cloudera, which returns an "empty row" (rather than a 404).
+     */
+    "can process a valid success response containing no rows" in { fixture =>
+      stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
+      (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq.empty))
+
+      whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+        result.right.value shouldBe None
       }
     }
 
     /*
      * Currently only applicable for developers testing directly against a recent version of HBase.
-     * Our current version of Cloudera instead returns OK with a representation of an "empty row".
+     * This contrasts with the behaviour of Cloudera, which instead returns OK with a representation of an "empty row".
      */
     "can process a NOT FOUND response" in { fixture =>
-      val targetUrl = s"/${fixture.config.namespace}:table/rowKey/$ColumnGroup"
-      stubHBaseFor(getHbaseJson(targetUrl, fixture.auth).willReturn(WireMock.aResponse().withStatus(NOT_FOUND)))
-      (fixture.responseReaderMaker.forColumnGroup _).expects(ColumnGroup).returning(fixture.readsRows)
+      stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(NOT_FOUND)))
 
-      whenReady(fixture.repository.get("table", "rowKey", ColumnGroup)) { result =>
-        result shouldBe Seq.empty
+      whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+        result.right.value shouldBe None
+      }
+    }
+
+    "fails" - {
+      "when at most one result is expected but multiple results are returned" in { fixture =>
+        val multipleRows = Seq(Map("key" -> "value1"), Map("key" -> "value2"))
+        stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
+        (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(multipleRows))
+
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+          result.left.value shouldBe "At most one result was expected but found [2]"
+        }
+      }
+
+      "when the configured user credentials are not accepted" in { fixture =>
+        stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(UNAUTHORIZED)))
+
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+          result.left.value shouldBe "Unauthorized (401) - check HBase REST configuration"
+        }
+      }
+
+      "when the response is a client error" in { fixture =>
+        stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(BAD_REQUEST)))
+
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+          result.left.value shouldBe "Bad Request (400)"
+        }
+      }
+
+      "when the response is a server error" in { fixture =>
+        stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(SERVICE_UNAVAILABLE)))
+
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+          result.left.value shouldBe "Service Unavailable (503)"
+        }
+      }
+
+      "when an OK response is returned containing a non-JSON body" in { fixture =>
+        stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody("this-is-not-json")))
+
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+          result.left.value should startWith("Unable to create JsValue from HBase response")
+        }
+      }
+
+      "when an OK response contains a JSON body that cannot be parsed" in { fixture =>
+        stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
+        (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsError("parse failure"))
+
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+          result.left.value should startWith("Unable to parse HBase REST json response")
+        }
+      }
+
+      /*
+       * Test patienceConfig must exceed the fixedDelay for this to work...
+       */
+      "when the server takes longer to respond than the configured client-side timeout" in { fixture =>
+        stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr).
+          withFixedDelay((fixture.config.timeout + 100).toInt)))
+
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+          result.left.value should startWith("Timeout.")
+        }
+      }
+
+      /*
+       * To mimic this, we attempt to connect to a different port than that on which WireMock is listening.
+       */
+      "when a connection to HBase cannot be established" in { fixture =>
+        WsTestClient.withClient { wsClient =>
+          val config = fixture.config.copy(port = (fixture.config.port.toInt + 1).toString)
+          val repository = new HBaseRestRepository(config, wsClient, fixture.responseReaderMaker)
+
+          whenReady(repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+            result.left.value should startWith("Connection refused")
+          }
+        }
       }
     }
   }

@@ -1,11 +1,13 @@
-package repository.hbase
+package repository.hbase.localunit
 
-import repository.RowMapper
+import scala.util.Try
+
 import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
 import uk.gov.ons.sbr.models.localunit.{ Address, LocalUnit, Lurn }
 
-import scala.util.Try
-import LocalUnitColumns._
+import repository.RestRepository.Row
+import repository.RowMapper
+import repository.hbase.localunit.LocalUnitColumns._
 
 /*
  * The following fields are optional:
@@ -22,7 +24,7 @@ import LocalUnitColumns._
  */
 object LocalUnitRowMapper extends RowMapper[LocalUnit] {
 
-  override def fromRow(variables: Map[String, String]): Option[LocalUnit] =
+  override def fromRow(variables: Row): Option[LocalUnit] =
     for {
       lurn <- variables.get(lurn)
       optLuref = variables.get(luref)
@@ -35,13 +37,13 @@ object LocalUnitRowMapper extends RowMapper[LocalUnit] {
       address <- toAddress(variables)
     } yield LocalUnit(Lurn(lurn), optLuref, name, optTradingStyle, sic07, employeesInt, enterpriseLink, address)
 
-  private def toEnterpriseLink(variables: Map[String, String]): Option[EnterpriseLink] =
+  private def toEnterpriseLink(variables: Row): Option[EnterpriseLink] =
     for {
       ern <- variables.get(ern)
       optEntref = variables.get(entref)
     } yield EnterpriseLink(Ern(ern), optEntref)
 
-  private def toAddress(variables: Map[String, String]): Option[Address] =
+  private def toAddress(variables: Row): Option[Address] =
     for {
       line1 <- variables.get(address1)
       optLine2 = variables.get(address2)

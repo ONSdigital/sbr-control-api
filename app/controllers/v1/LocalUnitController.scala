@@ -22,17 +22,26 @@ class LocalUnitController @Inject() (repository: LocalUnitRepository) extends Co
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 404, message = "A Local Unit could not be found with the specified ERN, LURN and Period")
+    new ApiResponse(code = 404, message = "A Local Unit could not be found with the specified ERN, LURN and Period"),
+    new ApiResponse(code = 500, message = "The attempt to retrieve a Local Unit could not complete due to some failure"),
+    new ApiResponse(code = 504, message = "A response was not received from the database within the required time interval")
   ))
   def retrieveLocalUnit(
     @ApiParam(value = "Enterprise Reference Number (ERN)", example = "1000000012", required = true) ernStr: String,
     @ApiParam(value = "Period (unit load date)", example = "201803", required = true) periodStr: String,
     @ApiParam(value = "Local Unit Reference Number (LURN)", example = "900000011", required = true) lurnStr: String
   ) = Action.async {
-    repository.retrieveLocalUnit(Ern(ernStr), Period.fromString(periodStr), Lurn(lurnStr)).map { optLocalUnit =>
-      optLocalUnit.fold[Result](NotFound) { localUnit =>
-        Ok(toJson(localUnit))
-      }
+    repository.retrieveLocalUnit(Ern(ernStr), Period.fromString(periodStr), Lurn(lurnStr)).map { errorOrLocalUnit =>
+      errorOrLocalUnit.fold(resultOnFailure, resultOnSuccess)
     }
   }
+
+  private def resultOnFailure(errorMessage: String): Result =
+    errorMessage match {
+      case _ if errorMessage.startsWith("Timeout") => GatewayTimeout
+      case _ => InternalServerError
+    }
+
+  private def resultOnSuccess(optLocalUnit: Option[LocalUnit]): Result =
+    optLocalUnit.fold[Result](NotFound)(localUnit => Ok(toJson(localUnit)))
 }
