@@ -1,4 +1,5 @@
-package repository.hbase.unit.enterprise
+package repository.hbase.enterprise
+
 import javax.inject.Inject
 
 import scala.concurrent.Future
@@ -9,8 +10,8 @@ import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
 
 import repository.hbase.HBase.DefaultColumnGroup
-import repository.{ RestRepository, RowMapper }
-import scala.concurrent.ExecutionContext.Implicits.global
+import repository.{ EnterpriseUnitRepository, RestRepository, RowMapper }
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 case class HBaseRestEnterpriseUnitRepositoryConfig(tableName: String)
 

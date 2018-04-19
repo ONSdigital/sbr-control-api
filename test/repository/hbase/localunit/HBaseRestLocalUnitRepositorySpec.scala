@@ -1,32 +1,34 @@
-package repository.hbase
+package repository.hbase.localunit
 
 import java.time.Month.JANUARY
+
+import scala.concurrent.Future
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ EitherValues, FreeSpec, Matchers }
-import repository.hbase.HBase.DefaultColumnGroup
-import repository.{ RestRepository, RowMapper }
-import support.sample.SampleLocalUnit
+
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 
-import scala.concurrent.Future
+import repository.hbase.HBase.DefaultColumnGroup
+import repository.{ RestRepository, RowMapper }
+import support.sample.SampleLocalUnit
 
 class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockFactory with ScalaFutures with EitherValues {
 
   private trait Fixture extends SampleLocalUnit {
     val TargetErn = Ern("1000000013")
-    val TargetPeriod = Period.fromYearMonth(2018, JANUARY)
+    val TargetPeriod: Period = Period.fromYearMonth(2018, JANUARY)
     val TargetLurn = Lurn("900000015")
-    val TargetLocalUnit = aLocalUnit(TargetErn, TargetLurn)
+    val TargetLocalUnit: LocalUnit = aLocalUnit(TargetErn, TargetLurn)
     val TargetRowKey = LocalUnitRowKey(TargetErn, TargetPeriod, TargetLurn)
     val ARow = Map("name" -> "value")
     val TargetTable = "local_unit"
 
-    val restRepository = mock[RestRepository]
-    val rowMapper = mock[RowMapper[LocalUnit]]
+    val restRepository: RestRepository = mock[RestRepository]
+    val rowMapper: RowMapper[LocalUnit] = mock[RowMapper[LocalUnit]]
     val config = HBaseRestLocalUnitRepositoryConfig(TargetTable)
     val repository = new HBaseRestLocalUnitRepository(config, restRepository, rowMapper)
   }

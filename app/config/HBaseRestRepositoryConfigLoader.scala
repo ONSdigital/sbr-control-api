@@ -12,7 +12,7 @@ import repository.hbase.HBaseRestRepositoryConfig
  * Note that we cannot currently enforce that port is numeric, because some environments rely on this
  * being configured with a trailing path, such as "8080/hbase".
  */
-object HBaseRestRepositoryConfigLoader extends HBaseRestUnitRepositoryConfigLoader[HBaseRestRepositoryConfig] {
+object HBaseRestRepositoryConfigLoader extends HBaseRestConfigLoader[HBaseRestRepositoryConfig] {
   override def load(rootConfig: Config, path: String): HBaseRestRepositoryConfig = {
     val config = rootConfig.getConfig(path)
     HBaseRestRepositoryConfig(
