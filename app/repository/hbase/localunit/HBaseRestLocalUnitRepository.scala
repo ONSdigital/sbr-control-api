@@ -1,16 +1,19 @@
-package repository.hbase
+package repository.hbase.localunit
+
+import javax.inject.Inject
+
+import scala.concurrent.Future
 
 import com.typesafe.scalalogging.LazyLogging
-import javax.inject.Inject
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import repository.RestRepository.{ ErrorMessage, Row }
-import repository.hbase.HBase.DefaultColumnGroup
-import repository.{ LocalUnitRepository, RestRepository, RowMapper }
+
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 
-import scala.concurrent.Future
+import repository.RestRepository.{ ErrorMessage, Row }
+import repository.hbase.HBase.DefaultColumnGroup
+import repository.{ LocalUnitRepository, RestRepository, RowMapper }
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 case class HBaseRestLocalUnitRepositoryConfig(tableName: String)
 

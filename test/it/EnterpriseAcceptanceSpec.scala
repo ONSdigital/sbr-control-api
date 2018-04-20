@@ -9,8 +9,8 @@ import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
 
 import fixture.ServerAcceptanceSpec
 import it.fixture.ReadsEnterpriseUnit.enterpriseReads
-import repository.hbase.unit.enterprise.EnterpriseUnitColumns._
-import repository.hbase.unit.enterprise.EnterpriseUnitRowKey
+import repository.hbase.enterprise.EnterpriseUnitColumns._
+import repository.hbase.enterprise.EnterpriseUnitRowKey
 import support.WithWireMockHBase
 import support.sample.SampleEnterpriseUnit
 
@@ -34,20 +34,20 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
     }}"""
 
   info("As a SBR user")
-  info("I want to retrieve a enterprise unit with a specific period (by year and month) in time")
+  info("I want to retrieve an enterprise unit with a specific period (by year and month) in time")
   info("So that I can view the enterprise details via the api response")
 
   feature("retrieve an existing enterprise unit") {
     scenario("by exact Enterprise reference (ERN) and period") { wsClient =>
-      Given(s"a enterprise rowKey of $TargetErn and $TargetPeriod")
+      Given(s"an enterprise exists with $TargetErn and $TargetPeriod")
       stubHBaseFor(aEnterpriseUnitRequest(withErn = TargetErn, withPeriod = TargetPeriod).willReturn(
         anOkResponse().withBody(EnterpriseUnitSingleMatchHBaseResponseBody)
       ))
 
-      When(s"a enterprise unit with $TargetErn and $TargetPeriod is request")
+      When(s"an enterprise unit with $TargetErn and $TargetPeriod is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/enterprises/${TargetErn.value}").get())
 
-      Then(s"the response should match as follows and the details should resemble an expected enterprise with $TargetPeriod and $TargetErn")
+      Then(s"the details of the enterprise identified by $TargetPeriod and $TargetErn should be returned")
       response.status shouldBe OK
       response.header("Content-Type") shouldBe Some(JSON)
       response.json.as[Enterprise] shouldBe

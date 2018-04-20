@@ -2,7 +2,8 @@ package config
 
 import com.typesafe.config.{ ConfigException, ConfigFactory }
 import org.scalatest.{ FreeSpec, Matchers }
-import repository.hbase.HBaseRestLocalUnitRepositoryConfig
+
+import repository.hbase.localunit.HBaseRestLocalUnitRepositoryConfig
 
 class HBaseRestLocalUnitRepositoryConfigLoaderSpec extends FreeSpec with Matchers {
 

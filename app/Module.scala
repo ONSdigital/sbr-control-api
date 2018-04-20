@@ -8,8 +8,9 @@ import uk.gov.ons.sbr.models.localunit.LocalUnit
 
 import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader }
 import repository.hbase._
-import repository.hbase.unit.enterprise.{ EnterpriseUnitRepository, EnterpriseUnitRowMapper, HBaseRestEnterpriseUnitRepository, HBaseRestEnterpriseUnitRepositoryConfig }
-import repository.{ LocalUnitRepository, RestRepository, RowMapper }
+import repository.hbase.enterprise.{ EnterpriseUnitRowMapper, HBaseRestEnterpriseUnitRepository, HBaseRestEnterpriseUnitRepositoryConfig }
+import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
+import repository.{ EnterpriseUnitRepository, LocalUnitRepository, RestRepository, RowMapper }
 import services.{ DataAccess, HBaseRestDataAccess }
 
 /**

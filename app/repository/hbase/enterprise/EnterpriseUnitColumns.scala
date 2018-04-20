@@ -1,4 +1,4 @@
-package repository.hbase.unit.enterprise
+package repository.hbase.enterprise
 
 object EnterpriseUnitColumns {
   val ern = "ern"
