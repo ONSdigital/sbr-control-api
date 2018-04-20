@@ -37,14 +37,21 @@ create 'sbr_control_db:local_unit', 'd'
 Insert some Enterprise data.
 
 ```shell
-put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:entref', '1000000123'
-put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:ent_name', 'Tesco'
+put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:ern', '1000000123'
+put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:entref', 'idbr-1000000123'
+put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:name', 'Tesco'
+put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:postcode', 'AB10 5BD'
+put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:legalstatus', 'A'
+put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:paye_employees', '1'
+put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:paye_jobs', '5'
 
-put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:entref', '1000000123'
-put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:ent_name', 'Tesco'
-
-put 'sbr_control_db:enterprise' , '3210000001~201712', 'd:entref', '1000000123'
-put 'sbr_control_db:enterprise' , '3210000001~201712', 'd:ent_name', 'Tesco'
+put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:ern', '1000000123'
+put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:entref', 'idbr-1000000123'
+put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:name', 'Tesco'
+put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:postcode', 'AB10 5BD'
+put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:legalstatus', 'A'
+put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:paye_employees', '1'
+put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:paye_jobs', '5'
 ```
 
 Insert some Local Unit data.
