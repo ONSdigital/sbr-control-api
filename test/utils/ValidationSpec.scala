@@ -60,7 +60,7 @@ class ValidationSpec extends TestUtils {
   }
 
   "validCategory" should {
-    val validCategories: List[String] = List("ENT", "LEU", "VAT", "PAYE", "CH")
+    val validCategories: List[String] = List("ENT", "LEU", "VAT", "PAYE", "CH", "LOU")
 
     validCategories.foreach(category => {
       s"return true for a valid category [$category]" in {
