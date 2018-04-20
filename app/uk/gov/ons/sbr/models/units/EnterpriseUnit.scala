@@ -5,7 +5,7 @@ import play.api.libs.json.{ Json, OFormat }
 import uk.gov.ons.sbr.models.DataUnit
 
 case class EnterpriseUnit(
-  @ApiModelProperty(value = "Unit identifier", required = true, hidden = false, example = "", dataType = "java.lang.Long") id: String,
+  @ApiModelProperty(value = "Enterprise Reference Number (ERN)", example = "1000000012", dataType = "java.lang.Long", required = true) id: String,
   period: String,
   @ApiModelProperty(value = "A key value pair of all variables associated", example = "",
     dataType = "Map[String,String]") vars: Map[String, String],
