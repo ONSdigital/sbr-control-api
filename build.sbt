@@ -48,6 +48,10 @@ lazy val publishingSettings = Seq(
   releaseIgnoreUntrackedFiles := true
 )
 
+/*
+ * -Ywarn-unused-import was removed because otherwise a large number of warnings are generated for
+ *                      sbr-control-api/conf/routes which is a Play issue we can do nothing about
+ */
 lazy val commonSettings = Seq (
   scalaVersion := Versions.scala,
   scalacOptions in ThisBuild ++= Seq(
@@ -69,7 +73,6 @@ lazy val commonSettings = Seq (
     "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures
     "-Ywarn-dead-code", // Warn when dead code is identified
     "-Ywarn-unused", // Warn when local and private vals, vars, defs, and types are unused
-    "-Ywarn-unused-import", //  Warn when imports are unused (don't want IntelliJ to do it automatically)
     "-Ywarn-numeric-widen" // Warn when numerics are widened
   ),
   resolvers ++= Resolvers,

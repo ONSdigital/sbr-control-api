@@ -44,10 +44,12 @@ class HBaseRestUtils @Inject() (ws: WSClient, val configuration: Configuration) 
    * /v1/units/:id => id~*
    * /v1/periods/:period/types/:type/units/:id => id~type~period
    */
-  def createUnitLinksRowKey(id: String, period: Option[String], unitType: Option[String]): String = (period, unitType) match {
-    case (Some(p), Some(u)) => String.join(delimiter, id, u, p)
-    case (None, None) => String.join(delimiter, id, "*")
-  }
+  def createUnitLinksRowKey(id: String, period: Option[String], unitType: Option[String]): String =
+    (period, unitType) match {
+      case (Some(p), Some(u)) => String.join(delimiter, id, u, p)
+      case (None, None) => String.join(delimiter, id, "*")
+      case _ => throw new AssertionError("Expect period & unitType to be both Some or both None")
+    }
 
   def jsonToMap(json: JsValue, formKey: String => String): Map[String, String] = {
     (json \ "Cell").as[Seq[JsValue]].map { cell =>

@@ -5,7 +5,7 @@ import play.api.libs.json.{ Json, OFormat }
 import uk.gov.ons.sbr.models.DataUnit
 
 case class UnitLinks(
-  @ApiModelProperty(example = "", dataType = "String") id: String,
+  @ApiModelProperty(value = "Unit identifier", required = true, hidden = false, example = "", dataType = "String") id: String,
   period: String,
   @ApiModelProperty(value = "A map of parents of returned id [Type, Value]", example = "",
     dataType = "Map[String,String]") parents: Option[Map[String, String]],
