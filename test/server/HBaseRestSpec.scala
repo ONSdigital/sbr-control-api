@@ -20,7 +20,7 @@ class HBaseRestSpec extends TestUtils with BeforeAndAfterEach with GuiceOneAppPe
 
   private val version = "v1"
   private val nameSpace = "sbr_control_db"
-  private val unitLinksTable = "unit_links_test"
+  private val unitLinksTable = "unit_links"
   private val enterpriseTable = "enterprise"
   private val columnFamilyEnterprise = "d"
   private val columnFamilyLinks = "l"
