@@ -42,6 +42,17 @@ class EnterpriseUnitControllerSpec extends FreeSpec with Matchers with MockFacto
         contentType(response) shouldBe Some(JSON)
         contentAsJson(response) shouldBe Json.toJson(TargetEnterpriseUnit)
       }
+
+      "returns NOT_FOUND when a valid enterprise unit (ERN) and period is not found" in new Fixture {
+        (repository.retrieveEnterpriseUnit _).expects(TargetErn, TargetPeriod).returning(
+          Future.successful(None)
+        )
+
+        val request = controller.retrieveEnterpriseUnit(TargetErn.value, Period.asString(TargetPeriod))
+        val response = request.apply(FakeRequest())
+
+        status(response) shouldBe NOT_FOUND
+      }
     }
   }
 
