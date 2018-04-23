@@ -8,7 +8,7 @@ import scala.util.Try
 object Validation {
   private val minKeyLength: Int = 4
   private val periodFormat: String = "yyyyMM"
-  private val validCategories: Set[String] = Set("ENT", "LEU", "VAT", "PAYE", "CH")
+  private val validCategories: Set[String] = Set("ENT", "LEU", "VAT", "PAYE", "CH", "LOU")
 
   def validId(id: String): Boolean = id.length >= minKeyLength
 

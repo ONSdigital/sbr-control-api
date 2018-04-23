@@ -2,15 +2,14 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Searching Feature
+# Units Feature
 
 GET     /v1/units/:id                                  controllers.v1.SearchController.retrieveUnitLinks(id)
 GET     /v1/periods/:date/types/:category/units/:id    controllers.v1.SearchController.retrieveStatUnitLinks(date, category, id)
+
+# Enterprises
 GET     /v1/enterprises/:id                            controllers.v1.SearchController.retrieveEnterprise(date: Option[String], id)
-
-
-# Enterprise Units
-GET     /v1/periods/:period/enterprises/:ern            controllers.v1.EnterpriseUnitController.retrieveEnterpriseUnit(ern, period)
+GET     /v1/periods/:period/enterprises/:ern           controllers.v1.EnterpriseUnitController.retrieveEnterpriseUnit(ern, period)
 
 # Local Units
 GET     /v1/enterprises/$ern<\d{10}>/periods/:period/localunits/$lurn<\d{9}>    controllers.v1.LocalUnitController.retrieveLocalUnit(ern, period, lurn)
