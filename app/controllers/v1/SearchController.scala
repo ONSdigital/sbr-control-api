@@ -30,23 +30,21 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
 
   def validateEntParams(id: String, period: Option[String], apply: (String, Option[String]) => Either[InvalidParams, EnterpriseParams]): Either[InvalidParams, EnterpriseParams] = apply(id, period)
 
-  def handleValidatedParams(params: Either[InvalidParams, ValidParams]): Future[Result] = params match {
-    case Right(v: ValidParams) => v match {
-      case u: UnitLinksParams => dbResultMatcher(db.getUnitLinks(u.id))
-      case s: StatUnitLinksParams => dbResultMatcher(db.getStatUnitLinks(s.id, s.category, s.period))
-      case e: EnterpriseParams => dbResultMatcher(db.getEnterprise(e.id, e.period))
+  def handleValidatedParams(params: Either[InvalidParams, ValidParams]): Future[Result] =
+    params match {
+      case Left(i) => BadRequest(messagesApi(i.msg)).future
+      case Right(u: UnitLinksParams) => dbResultMatcher(db.getUnitLinks(u.id))
+      case Right(s: StatUnitLinksParams) => dbResultMatcher(db.getStatUnitLinks(s.id, s.category, s.period))
+      case Right(e: EnterpriseParams) => dbResultMatcher(db.getEnterprise(e.id, e.period))
     }
-    case Left(i: InvalidParams) => BadRequest(messagesApi(i.msg)).future
-  }
 
-  def dbResultMatcher(result: Future[DbResponse]): Future[Result] = result.map(x => x match {
-    case b: DbSuccessUnitLinks => Ok(Json.toJson(b.result))
+  def dbResultMatcher(result: Future[DbResponse]): Future[Result] = result.map {
     case a: DbSuccessEnterprise => Ok(Json.toJson(a.result))
+    case b: DbSuccessUnitLinks => Ok(Json.toJson(b.result))
     case c: DbSuccessUnitLinksList => Ok(Json.toJson(c.result))
-    case e: DbNotFound => NotFound(messagesApi("controller.not.found"))
-    case f: DbServerError => dbError(f)
-    case g: DbTimeout => dbError(g)
-  })
+    case _: DbNotFound => NotFound(messagesApi("controller.not.found"))
+    case e: DbErrorMsg => dbError(e)
+  }
 
   def dbError(failure: DbErrorMsg): Result = {
     logger.error(s"Returned Internal Server Error response with DbFailure [$failure]: ${failure.msg}")
