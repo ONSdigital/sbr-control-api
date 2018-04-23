@@ -30,9 +30,11 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
 
   private val HEADERS = Seq("Accept" -> "application/json")
 
-  def getUnitLinks(id: String): Future[DbResponse] = getStatAndUnitLinks(id, None, None)
+  def getUnitLinks(id: String): Future[DbResponse] =
+    getStatAndUnitLinks(id, None, None)
 
-  def getStatUnitLinks(id: String, category: String, period: String): Future[DbResponse] = getStatAndUnitLinks(id, Some(period), Some(category))
+  def getStatUnitLinks(id: String, category: String, period: String): Future[DbResponse] =
+    getStatAndUnitLinks(id, Some(period), Some(category))
 
   def getEnterprise(id: String, period: Option[String]): Future[DbResponse] = {
     // HBase key format: 9901566115~201706, id~period
@@ -42,7 +44,7 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
     utils.singleGETRequest(uri.toString, HEADERS).map(x => handleWsResponse(id, period, x, handleEntResponse))
   }
 
-  def getStatAndUnitLinks(id: String, period: Option[String], unitType: Option[String]): Future[DbResponse] = {
+  private def getStatAndUnitLinks(id: String, period: Option[String], unitType: Option[String]): Future[DbResponse] = {
     // HBase key format: 201706~01752564~CH, period~id~type
     // When there is no unitType, * is used to get rows of any unit type
     val rowKey = utils.createUnitLinksRowKey(id, period, unitType)
