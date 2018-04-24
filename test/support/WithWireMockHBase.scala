@@ -1,7 +1,7 @@
 package support
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.client.{MappingBuilder, ResponseDefinitionBuilder, WireMock}
+import com.github.tomakehurst.wiremock.client.{ MappingBuilder, ResponseDefinitionBuilder, WireMock }
 import org.scalatest.Suite
 import play.api.http.Status.OK
 import play.mvc.Http.MimeTypes.JSON

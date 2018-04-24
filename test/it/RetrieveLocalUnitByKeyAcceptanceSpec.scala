@@ -4,14 +4,14 @@ import fixture.ServerAcceptanceSpec
 import it.fixture.ReadsLocalUnit.localUnitReads
 import org.scalatest.OptionValues
 import play.api.http.HeaderNames.CONTENT_TYPE
-import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK}
+import play.api.http.Status.{ BAD_REQUEST, NOT_FOUND, OK }
 import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.localunit.LocalUnitColumns._
 import repository.hbase.localunit.LocalUnitQuery
 import support.WithWireMockHBase
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{EnterpriseLink, Ern}
-import uk.gov.ons.sbr.models.localunit.{Address, LocalUnit, Lurn}
+import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
+import uk.gov.ons.sbr.models.localunit.{ Address, LocalUnit, Lurn }
 
 class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
   private val TargetErn = Ern("1000000012")

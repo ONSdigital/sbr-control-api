@@ -3,7 +3,7 @@ package controllers.v1
 import java.time.Month.FEBRUARY
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{FreeSpec, Matchers, OptionValues}
+import org.scalatest.{ FreeSpec, Matchers, OptionValues }
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._

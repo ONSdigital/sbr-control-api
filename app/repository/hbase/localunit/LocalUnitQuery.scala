@@ -1,6 +1,6 @@
 package repository.hbase.localunit
 
-import repository.hbase.HBase.{RowKeyDelimiter, Wildcard}
+import repository.hbase.HBase.{ RowKeyDelimiter, Wildcard }
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.localunit.Lurn

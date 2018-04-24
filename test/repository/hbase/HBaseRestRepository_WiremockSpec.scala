@@ -12,8 +12,7 @@ import play.api.test.WsTestClient
 import repository.RestRepository.Row
 import support.WithWireMockHBase
 
-class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec with WithWireMockHBase with Matchers with
-  ScalaFutures with PatienceConfiguration with EitherValues with MockFactory with OneInstancePerTest {
+class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec with WithWireMockHBase with Matchers with ScalaFutures with PatienceConfiguration with EitherValues with MockFactory with OneInstancePerTest {
 
   private val DummyJsonResponseStr = """{"some":"json"}"""
   private val Table = "table"

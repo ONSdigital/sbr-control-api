@@ -4,13 +4,13 @@ import java.time.Month.JANUARY
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{EitherValues, FreeSpec, Matchers}
+import org.scalatest.{ EitherValues, FreeSpec, Matchers }
 import repository.hbase.HBase.DefaultColumnGroup
-import repository.{RestRepository, RowMapper}
+import repository.{ RestRepository, RowMapper }
 import support.sample.SampleLocalUnit
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
+import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 
 import scala.concurrent.Future
 
