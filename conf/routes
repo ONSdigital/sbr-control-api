@@ -7,9 +7,12 @@
 GET     /v1/units/:id                                  controllers.v1.SearchController.retrieveUnitLinks(id)
 GET     /v1/periods/:date/types/:category/units/:id    controllers.v1.SearchController.retrieveStatUnitLinks(date, category, id)
 
-# Enterprises
+# Enterprises (DEPRECATED)
 GET     /v1/enterprises/:id                            controllers.v1.SearchController.retrieveEnterprise(date: Option[String], id)
-GET     /v1/periods/:period/enterprises/:ern           controllers.v1.EnterpriseUnitController.retrieveEnterpriseUnit(ern, period)
+
+# Enterprises
+GET     /v1/periods/:period/enterprises/$ern<\d{10}>           controllers.v1.EnterpriseUnitController.retrieveEnterpriseUnit(ern, period)
+GET     /v1/periods/:period/enterprises/:ern           controllers.v1.EnterpriseUnitController.badRequest(ern, period)
 
 # Local Units
 GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}((0[1-9])|(1[0-2]))>/localunits/$lurn<\d{9}>    controllers.v1.LocalUnitController.retrieveLocalUnit(ern, period, lurn)
