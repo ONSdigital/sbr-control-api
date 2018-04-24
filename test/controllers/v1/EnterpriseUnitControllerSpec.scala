@@ -32,7 +32,7 @@ class EnterpriseUnitControllerSpec extends FreeSpec with Matchers with MockFacto
     "to retrieve an Enterprise unit by enterprise reference number (ERN) and period (Period, uuuuMM)" - {
       "returns a JSON representation of an enterprise when found" in new Fixture {
         (repository.retrieveEnterpriseUnit _).expects(TargetErn, TargetPeriod).returning(
-          Future.successful(Some(TargetEnterpriseUnit))
+          Future.successful(Right(Some(TargetEnterpriseUnit)))
         )
 
         val request = controller.retrieveEnterpriseUnit(TargetErn.value, Period.asString(TargetPeriod))
@@ -45,13 +45,34 @@ class EnterpriseUnitControllerSpec extends FreeSpec with Matchers with MockFacto
 
       "returns NOT_FOUND when a valid enterprise unit (ERN) and period is not found" in new Fixture {
         (repository.retrieveEnterpriseUnit _).expects(TargetErn, TargetPeriod).returning(
-          Future.successful(None)
+          Future.successful(Right(None))
         )
 
         val request = controller.retrieveEnterpriseUnit(TargetErn.value, Period.asString(TargetPeriod))
         val response = request.apply(FakeRequest())
 
         status(response) shouldBe NOT_FOUND
+      }
+
+      "returns GatewayTimeout when the retrieval time exceeds the configured time out" in new Fixture {
+        (repository.retrieveEnterpriseUnit _).expects(TargetErn, TargetPeriod).returning(
+          Future.successful(Left("Timeout."))
+        )
+        val request = controller.retrieveEnterpriseUnit(TargetErn.value, Period.asString(TargetPeriod))
+        val response = request.apply(FakeRequest())
+
+        status(response) shouldBe GATEWAY_TIMEOUT
+      }
+
+      "returns InternalServerError when an unexpected error occurs during transaction" in new Fixture {
+        (repository.retrieveEnterpriseUnit _).expects(TargetErn, TargetPeriod).returning(
+          Future.successful(Left("Retrieval failed"))
+        )
+
+        val request = controller.retrieveEnterpriseUnit(TargetErn.value, Period.asString(TargetPeriod))
+        val response = request.apply(FakeRequest())
+
+        status(response) shouldBe INTERNAL_SERVER_ERROR
       }
     }
   }
