@@ -32,9 +32,9 @@ class EnterpriseUnitController @Inject() (repository: EnterpriseUnitRepository) 
     new ApiResponse(code = 504, message = "A response was not received from the database within the required time interval")
   ))
   def retrieveEnterpriseUnit(
-      @ApiParam(value = "Enterprise Reference Number (ERN)", example = "1000000012", required = true) ernStr: String,
-      @ApiParam(value = "Period (unit load date)", example = "201803", required = true) periodStr: String
-    ): Action[AnyContent] = Action.async {
+    @ApiParam(value = "Enterprise Reference Number (ERN)", example = "1000000012", required = true) ernStr: String,
+    @ApiParam(value = "Period (unit load date)", example = "201803", required = true) periodStr: String
+  ): Action[AnyContent] = Action.async {
     repository.retrieveEnterpriseUnit(Ern(ernStr), Period.fromString(periodStr)).map { errorOrOptEnterprise =>
       errorOrOptEnterprise.fold(resultOnFailure, resultOnSuccess[Enterprise])
     }
