@@ -1,14 +1,17 @@
 package controllers.v1
 
-import io.swagger.annotations._
 import javax.inject.{ Inject, Singleton }
+
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.json.Json.toJson
-import play.api.mvc.{ Action, Controller, Result }
-import repository.LocalUnitRepository
+import play.api.mvc.{ Action, AnyContent, Controller }
+import io.swagger.annotations._
+
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
+
+import controllers.v1.ControllerUtils._
+import repository.LocalUnitRepository
 
 /*
  * Note that we are relying on regex patterns in the routes definitions to apply argument validation.
@@ -36,20 +39,11 @@ class LocalUnitController @Inject() (repository: LocalUnitRepository) extends Co
     @ApiParam(value = "Enterprise Reference Number (ERN) - a ten digit number", example = "1000000012", required = true) ernStr: String,
     @ApiParam(value = "Period (unit load date) - in YYYYMM format", example = "201803", required = true) periodStr: String,
     @ApiParam(value = "Local Unit Reference Number (LURN) - a nine digit number", example = "900000011", required = true) lurnStr: String
-  ) = Action.async {
+  ): Action[AnyContent] = Action.async {
     repository.retrieveLocalUnit(Ern(ernStr), Period.fromString(periodStr), Lurn(lurnStr)).map { errorOrLocalUnit =>
-      errorOrLocalUnit.fold(resultOnFailure, resultOnSuccess)
+      errorOrLocalUnit.fold(resultOnFailure, resultOnSuccess[LocalUnit])
     }
   }
-
-  private def resultOnFailure(errorMessage: String): Result =
-    errorMessage match {
-      case _ if errorMessage.startsWith("Timeout") => GatewayTimeout
-      case _ => InternalServerError
-    }
-
-  private def resultOnSuccess(optLocalUnit: Option[LocalUnit]): Result =
-    optLocalUnit.fold[Result](NotFound)(localUnit => Ok(toJson(localUnit)))
 
   def badRequest(ernStr: String, periodStr: String, lurnStr: String) = Action {
     BadRequest
