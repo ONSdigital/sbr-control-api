@@ -147,20 +147,6 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
           result.left.value should startWith("Timeout.")
         }
       }
-
-      /*
-       * To mimic this, we attempt to connect to a different port than that on which WireMock is listening.
-       */
-      "when a connection to HBase cannot be established" in { fixture =>
-        WsTestClient.withClient { wsClient =>
-          val config = fixture.config.copy(port = (fixture.config.port.toInt + 1).toString)
-          val repository = new HBaseRestRepository(config, wsClient, fixture.responseReaderMaker)
-
-          whenReady(repository.findRow(Table, RowKey, ColumnGroup)) { result =>
-            result.left.value should startWith("Connection refused")
-          }
-        }
-      }
     }
   }
 }
