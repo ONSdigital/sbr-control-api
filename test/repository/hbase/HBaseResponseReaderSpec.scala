@@ -11,7 +11,7 @@ class HBaseResponseReaderSpec extends FreeSpec with Matchers {
     val ColumnGroup = "cg"
 
     def parse(hBaseResponseJsonStr: String): Seq[Row] =
-      Json.parse(hBaseResponseJsonStr).as[Seq[Row]](HBaseResponseReader.forColumnGroup(ColumnGroup))
+      Json.parse(hBaseResponseJsonStr).as[Seq[Row]](HBaseResponseReader.forColumnFamily(ColumnGroup))
   }
 
   "A HBase REST response reader" - {

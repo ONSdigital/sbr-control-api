@@ -2,7 +2,7 @@ package controllers.v1
 
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.Writes
-import play.api.mvc.{Result, Results}
+import play.api.mvc.{ Result, Results }
 
 object ControllerResultProcessor extends Results {
 

@@ -1,8 +1,8 @@
 package controllers.v1.api
 
 import uk.gov.ons.sbr.models.localunit.LocalUnit
-import play.api.mvc.{Action, AnyContent}
-import io.swagger.annotations.{ApiOperation, ApiParam, ApiResponse, ApiResponses}
+import play.api.mvc.{ Action, AnyContent }
+import io.swagger.annotations.{ ApiOperation, ApiParam, ApiResponse, ApiResponses }
 
 trait LocalUnitApi {
   @ApiOperation(

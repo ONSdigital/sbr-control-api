@@ -1,10 +1,9 @@
 package controllers.v1.api
 
-import play.api.mvc.{Action, AnyContent}
-import io.swagger.annotations.{ApiOperation, ApiParam, ApiResponse, ApiResponses}
+import play.api.mvc.{ Action, AnyContent }
+import io.swagger.annotations.{ ApiOperation, ApiParam, ApiResponse, ApiResponses }
 
 import uk.gov.ons.sbr.models.enterprise.Enterprise
-
 
 trait EnterpriseUnitApi {
 

@@ -40,7 +40,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
     val readsRows = mock[Reads[Seq[Row]]]
 
     // OneInstancePerTest is required for this common expectation to work across all of the individual tests
-    (responseReaderMaker.forColumnGroup _).expects(ColumnGroup).returning(readsRows)
+    (responseReaderMaker.forColumnFamily _).expects(ColumnGroup).returning(readsRows)
 
     WsTestClient.withClient { wsClient =>
       withFixture(test.toNoArgTest(FixtureParam(

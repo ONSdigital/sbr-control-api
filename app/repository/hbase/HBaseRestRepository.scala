@@ -37,12 +37,12 @@ class HBaseRestRepository @Inject() (
    * findRows.  This would however require a private higher-order function to which both findRow & findRows could
    * delegate, and ultimately seemed less readable.
    */
-  override def findRow(table: String, rowKey: String, columnGroup: String): Future[Either[ErrorMessage, Option[Row]]] =
-    findRows(table, rowKey, columnGroup).map(verifyAtMostOneRow)
+  override def findRow(table: String, rowKey: String, columnFamily: String): Future[Either[ErrorMessage, Option[Row]]] =
+    findRows(table, rowKey, columnFamily).map(verifyAtMostOneRow)
 
-  override def findRows(table: String, query: String, columnGroup: String): Future[Either[ErrorMessage, Seq[Row]]] = {
-    val withRowReader = responseReaderMaker.forColumnGroup(columnGroup)
-    val url = HBase.rowKeyUrl(config.protocolWithHostname, config.port, config.namespace, table, query, columnGroup)
+  override def findRows(table: String, query: String, columnFamily: String): Future[Either[ErrorMessage, Seq[Row]]] = {
+    val withRowReader = responseReaderMaker.forColumnFamily(columnFamily)
+    val url = HBase.rowKeyUrl(config.protocolWithHostname, config.port, config.namespace, table, query, columnFamily)
     logger.info(s"Requesting [$url] from HBase REST.")
     requestFor(url).get().map {
       (fromResponseToErrorOrJson _).andThen(convertToErrorOrRows(withRowReader))
