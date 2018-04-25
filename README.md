@@ -9,10 +9,10 @@ sbr-control-api is a Play Framework application written predominantly in Scala. 
 
 | method | endpoint                                              | example                                                        |
 |--------|-------------------------------------------------------|----------------------------------------------------------------|
-| GET    | /v1/units/:id                                         | /v1/units/12345                                                |
-| GET    | /v1/periods/:period/types/:unitType/units/:id         | /v1/periods/201802/types/ENT/units/12345                       |
-| GET    | /v1/enterprises/:id                                   | /v1/enterprises/12345                                          |
-| GET    | /v1/periods/:period/enterprises/:id                   | /v1/periods/201802/enterprises/12345                           |
+| GET    | /v1/units/:id                                         | /v1/units/1234567890                                           |
+| GET    | /v1/periods/:period/types/:unitType/units/:id         | /v1/periods/201802/types/ENT/units/1234567890                  |
+| GET    | /v1/enterprises/:id                                   | /v1/enterprises/1234567890                                     |
+| GET    | /v1/periods/:period/enterprises/:id                   | /v1/periods/201802/enterprises/1234567890                      |
 | GET    | /v1/enterprises/:ern/periods/:period/localunits/:lurn | /v1/enterprises/1234567890/periods/201802/localunits/123456789 |
 | GET    | /v1/enterprises/:ern/periods/:period/localunits       | /v1/enterprises/1234567890/periods/201802/localunits           |                           |
 
