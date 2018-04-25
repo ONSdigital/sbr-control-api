@@ -9,4 +9,5 @@ import scala.concurrent.Future
 
 trait LocalUnitRepository {
   def retrieveLocalUnit(ern: Ern, period: Period, lurn: Lurn): Future[Either[ErrorMessage, Option[LocalUnit]]]
+  def findLocalUnitsForEnterprise(ern: Ern, period: Period): Future[Either[ErrorMessage, Seq[LocalUnit]]]
 }
