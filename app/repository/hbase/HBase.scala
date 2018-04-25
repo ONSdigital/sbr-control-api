@@ -2,6 +2,7 @@ package repository.hbase
 
 object HBase {
   val RowKeyDelimiter = "~"
+  val Wildcard = "*"
   val DefaultColumnGroup = "d"
 
   def rowKeyUrl(protocolWithHostname: String, port: String, namespace: String, table: String, rowKey: String, columnGroup: String): String =

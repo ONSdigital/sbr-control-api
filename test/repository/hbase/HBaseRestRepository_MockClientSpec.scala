@@ -35,7 +35,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
       (wsRequest.withRequestTimeout _).expects(3321L.milliseconds).returning(wsRequest)
       (wsRequest.get _).expects().returning(Future.successful(stub[WSResponse]))
 
-      restRepository.findRow("table", "rowKey", "columnGroup")
+      restRepository.findRows("table", "rowKey", "columnGroup")
     }
 
     "targets the specified host and port when making a request" in new Fixture {
@@ -43,7 +43,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
       (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
       (wsRequest.get _).expects().returning(Future.successful(stub[WSResponse]))
 
-      restRepository.findRow("table", "rowKey", "columnGroup")
+      restRepository.findRows("table", "rowKey", "columnGroup")
     }
 
     /*
@@ -55,7 +55,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
       (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
       (wsRequest.get _).expects().returning(Future.failed(new Exception("Connection failed")))
 
-      whenReady(restRepository.findRow("table", "rowKey", "columnGroup")) { result =>
+      whenReady(restRepository.findRows("table", "rowKey", "columnGroup")) { result =>
         result.left.value shouldBe "Connection failed"
       }
     }
