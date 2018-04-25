@@ -2,9 +2,9 @@ package controllers.v1
 
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.Writes
-import play.api.mvc.{ Result, Results }
+import play.api.mvc.{Result, Results}
 
-object ControllerUtils extends Results {
+object ControllerResultProcessor extends Results {
 
   def resultOnFailure(errorMessage: String): Result =
     errorMessage match {
@@ -12,7 +12,7 @@ object ControllerUtils extends Results {
       case _ => InternalServerError
     }
 
-  def resultOnSuccess[T](optUnit: Option[T])(implicit writes: Writes[T]): Result =
+  def resultOnSuccessWithAtMostOneUnit[T](optUnit: Option[T])(implicit writes: Writes[T]): Result =
     optUnit.fold[Result](NotFound)(unit => Ok(toJson(unit)))
 
 }
