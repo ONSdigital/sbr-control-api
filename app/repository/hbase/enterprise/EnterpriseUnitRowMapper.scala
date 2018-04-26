@@ -2,7 +2,7 @@ package repository.hbase.enterprise
 
 import scala.util.Try
 
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
+import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern}
 
 import utils.TrySupport
 import repository.RestRepository.Row
@@ -37,8 +37,10 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
       TrySupport.fold(tryToInt)(failure => throw failure, integralVal => Some(integralVal))
     }
 
-  private def asInt(fieldAsStr: Option[String]): Option[Try[Int]] = fieldAsStr.map(x => Try(x.toInt))
+  private def asInt(fieldAsStr: Option[String]): Option[Try[Int]] =
+    fieldAsStr.map(x => Try(x.toInt))
 
-  private def invalidInt(fieldOptTry: Option[Try[Int]]) = fieldOptTry.fold(true)(_.isSuccess)
+  private def invalidInt(fieldOptTry: Option[Try[Int]]) =
+    fieldOptTry.fold(true)(_.isSuccess)
 
 }

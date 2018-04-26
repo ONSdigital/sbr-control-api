@@ -14,6 +14,11 @@ import controllers.v1.ControllerResultProcessor._
 import controllers.v1.api.EnterpriseUnitApi
 import repository.EnterpriseUnitRepository
 
+/*
+ * Note that we are relying on regex patterns in the routes definitions to apply argument validation.
+ * Only requests with valid arguments should be routed to the retrieve... actions.
+ * All other requests should be routed to the badRequest action.
+ */
 @Api("Search")
 @Singleton
 class EnterpriseUnitController @Inject() (repository: EnterpriseUnitRepository) extends Controller with EnterpriseUnitApi {

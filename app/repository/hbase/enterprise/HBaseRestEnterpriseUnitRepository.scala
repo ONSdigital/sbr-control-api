@@ -31,7 +31,7 @@ class HBaseRestEnterpriseUnitRepository @Inject() (
     logger.debug(s"Enterprise Unit response is [$errorOrRow]")
     errorOrRow.right.flatMap { optRow =>
       optRow.map(fromRow).fold[Either[ErrorMessage, Option[Enterprise]]](Right(None)) { errorOrEnterprise =>
-        logger.debug(s"From row to Local Unit conversion result is [$errorOrEnterprise].")
+        logger.debug(s"From row to Enterprise Unit conversion result is [$errorOrEnterprise].")
         errorOrEnterprise.right.map(Some(_))
       }
     }

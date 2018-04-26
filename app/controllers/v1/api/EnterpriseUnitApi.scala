@@ -16,9 +16,9 @@ trait EnterpriseUnitApi {
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 400, message = "One or more argument does not comply with the expected format"),
-    new ApiResponse(code = 404, message = "A Enterprise Unit could not be found with the specified ERN and Period"),
-    new ApiResponse(code = 500, message = "The attempt to retrieve a Local Unit could not complete due to some failure"),
+    new ApiResponse(code = 400, message = "One or more argument do not comply with the expected format"),
+    new ApiResponse(code = 404, message = "An Enterprise Unit could not be found with the specified ERN and Period"),
+    new ApiResponse(code = 500, message = "The attempt to retrieve a Enterprise Unit failed due to an internal server error"),
     new ApiResponse(code = 504, message = "A response was not received from the database within the required time interval")
   ))
   def retrieveEnterpriseUnit(
