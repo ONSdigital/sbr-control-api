@@ -2,7 +2,7 @@ package repository.hbase.enterprise
 
 import scala.util.Try
 
-import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern}
+import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
 
 import utils.TrySupport
 import repository.RestRepository.Row

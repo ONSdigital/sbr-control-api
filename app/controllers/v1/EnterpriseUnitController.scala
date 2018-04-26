@@ -29,4 +29,8 @@ class EnterpriseUnitController @Inject() (repository: EnterpriseUnitRepository) 
     }
   }
 
+  def badRequest(ernStr: String, periodStr: String) = Action {
+    BadRequest
+  }
+
 }

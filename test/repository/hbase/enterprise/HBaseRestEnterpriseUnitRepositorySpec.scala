@@ -14,6 +14,7 @@ import uk.gov.ons.sbr.models.enterprise.Enterprise
 import repository.RestRepository.Row
 import repository.hbase.HBase.DefaultColumnFamily
 import repository.{ RestRepository, RowMapper }
+import repository.{ RestRepository, RowMapper }
 import support.sample.SampleEnterpriseUnit
 
 class HBaseRestEnterpriseUnitRepositorySpec extends FreeSpec with Matchers with MockFactory with ScalaFutures with EitherValues {

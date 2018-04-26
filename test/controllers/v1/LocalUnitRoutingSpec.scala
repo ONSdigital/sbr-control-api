@@ -1,13 +1,13 @@
 package controllers.v1
 
-import org.scalatest.matchers.{ BeMatcher, MatchResult }
-import org.scalatest.{ FreeSpec, Matchers }
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.HttpVerbs.GET
-import play.api.http.Status.{ BAD_REQUEST, INSUFFICIENT_STORAGE, INTERNAL_SERVER_ERROR }
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+
+import controllers.v1.fixture.HttpServerErrorStatusCode
 
 /*
  * We are relying on the router to perform argument validation for us (via regex constraints).
@@ -32,24 +32,10 @@ class LocalUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPerSui
    */
   override def fakeApplication() = new GuiceApplicationBuilder().configure(Map("db.hbase-rest.timeout" -> "100")).build()
 
-  private trait Fixture {
+  private trait Fixture extends HttpServerErrorStatusCode {
     val ValidErn = "1000000012"
     val ValidPeriod = "201802"
     val ValidLurn = "900000011"
-
-    /*
-     * A matcher for HTTP status codes in the range: Server Error 5xx
-     */
-    class HttpServerErrorStatusCodeMatcher extends BeMatcher[Int] {
-      override def apply(left: Int): MatchResult =
-        MatchResult(
-          left >= INTERNAL_SERVER_ERROR && left <= INSUFFICIENT_STORAGE,
-          s"$left was not a HTTP server error status code",
-          s"$left was a HTTP server error status code"
-        )
-    }
-
-    val aServerError = new HttpServerErrorStatusCodeMatcher
   }
 
   "A request to retrieve a Local Unit by Enterprise reference (ERN), period, and Local Unit reference (LURN)" - {

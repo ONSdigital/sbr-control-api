@@ -11,9 +11,9 @@ import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 
+import controllers.v1.ControllerResultProcessor._
 import controllers.v1.api.LocalUnitApi
 import repository.LocalUnitRepository
-import controllers.v1.ControllerResultProcessor._
 
 /*
  * Note that we are relying on regex patterns in the routes definitions to apply argument validation.
