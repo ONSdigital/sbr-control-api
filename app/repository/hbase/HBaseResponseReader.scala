@@ -16,19 +16,19 @@ object HBaseResponseReader extends HBaseResponseReaderMaker {
   private implicit val readsEncodedRow = Json.reads[EncodedRow]
   private implicit val readsEncodedResult = Json.reads[EncodedResult]
 
-  override def forColumnGroup(columnGroup: String): Reads[Seq[Row]] =
+  override def forColumnFamily(columnFamily: String): Reads[Seq[Row]] =
     new Reads[Seq[Row]] {
       override def reads(json: JsValue): JsResult[Seq[Row]] =
-        json.validate[EncodedResult].map(_.Row.map(decodeRow(columnGroup)))
+        json.validate[EncodedResult].map(_.Row.map(decodeRow(columnFamily)))
     }
 
-  private def decodeRow(columnGroup: String)(encodedRow: EncodedRow): Row =
+  private def decodeRow(columnFamily: String)(encodedRow: EncodedRow): Row =
     encodedRow.Cell.map(decodeColumn).toMap.map {
-      case (columnName, columnValue) => removeColumnGroupFromColumnName(columnGroup, columnName) -> columnValue
+      case (columnName, columnValue) => removeColumnFamilyFromColumnName(columnFamily, columnName) -> columnValue
     }
 
-  private def removeColumnGroupFromColumnName(columnGroup: String, columnName: String): String = {
-    val prefix = columnGroup + ":"
+  private def removeColumnFamilyFromColumnName(columnFamily: String, columnName: String): String = {
+    val prefix = columnFamily + ":"
     columnName.replaceFirst(prefix, "")
   }
 

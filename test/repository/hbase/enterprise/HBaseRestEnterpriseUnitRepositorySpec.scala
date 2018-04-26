@@ -6,13 +6,14 @@ import scala.concurrent.Future
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ EitherValues, FreeSpec, Matchers }
+import org.scalatest.{EitherValues, FreeSpec, Matchers}
 
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 
 import repository.RestRepository.Row
-import repository.hbase.HBase.DefaultColumnGroup
+import repository.hbase.HBase.DefaultColumnFamily
+import repository.{RestRepository, RowMapper}
 import repository.{ RestRepository, RowMapper }
 import support.sample.SampleEnterpriseUnit
 
@@ -36,7 +37,7 @@ class HBaseRestEnterpriseUnitRepositorySpec extends FreeSpec with Matchers with 
 
   "A Enterprise Unit Repository" - {
     "can retrieve an enterprise unit by Enterprise Reference Number (ERN) and a period (yyyyMM) when a Enterprise exists" in new Fixture {
-      (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnGroup).returning(Future.successful(Right(Some(ARow))))
+      (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(ARow))))
       (rowMapper.fromRow _).expects(ARow).returning(Some(TargetEnterpriseUnit))
 
       whenReady(repository.retrieveEnterpriseUnit(TargetErn, TargetPeriod)) { result =>
@@ -45,7 +46,7 @@ class HBaseRestEnterpriseUnitRepositorySpec extends FreeSpec with Matchers with 
     }
 
     "returns none when an enterprise unit by Enterprise Reference Number (ERN) and a period (yyyyMM) cannot be found" in new Fixture {
-      (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnGroup).returning(Future.successful(Right(None)))
+      (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(None)))
 
       whenReady(repository.retrieveEnterpriseUnit(TargetErn, TargetPeriod)) { result =>
         result.right.value shouldBe None
@@ -53,7 +54,7 @@ class HBaseRestEnterpriseUnitRepositorySpec extends FreeSpec with Matchers with 
     }
 
     "prompts a failure when a valid Enterprise Unit cannot be constructed from a successful HBase response" in new Fixture {
-      (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnGroup).returning(Future.successful(Right(Some(ARow))))
+      (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(ARow))))
       (rowMapper.fromRow _).expects(ARow).returning(None)
 
       whenReady(repository.retrieveEnterpriseUnit(TargetErn, TargetPeriod)) { result =>
@@ -62,7 +63,7 @@ class HBaseRestEnterpriseUnitRepositorySpec extends FreeSpec with Matchers with 
     }
 
     "prompts an encountered failure in the underlying repository layer" in new Fixture {
-      (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnGroup).returning(Future.successful(Left(TargetExpectedFailureMessage)))
+      (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Left(TargetExpectedFailureMessage)))
 
       whenReady(repository.retrieveEnterpriseUnit(TargetErn, TargetPeriod)) { result =>
         result.left.value shouldBe TargetExpectedFailureMessage

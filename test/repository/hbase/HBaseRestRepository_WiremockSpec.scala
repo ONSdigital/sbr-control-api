@@ -17,7 +17,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
   private val DummyJsonResponseStr = """{"some":"json"}"""
   private val Table = "table"
   private val RowKey = "rowKey"
-  private val ColumnGroup = "cg"
+  private val ColumnFamily = "cg"
 
   // test timeout must exceed the configured HBaseRest timeout to properly test client-side timeout handling
   override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(1500, Millis)), interval = scaled(Span(50, Millis)))
@@ -29,7 +29,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
       responseReaderMaker: HBaseResponseReaderMaker,
       readsRows: Reads[Seq[Row]]
   ) {
-    val targetUrl = s"/${config.namespace}:$Table/$RowKey/$ColumnGroup"
+    val targetUrl = s"/${config.namespace}:$Table/$RowKey/$ColumnFamily"
   }
 
   override protected def withFixture(test: OneArgTest): Outcome = {
@@ -40,7 +40,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
     val readsRows = mock[Reads[Seq[Row]]]
 
     // OneInstancePerTest is required for this common expectation to work across all of the individual tests
-    (responseReaderMaker.forColumnGroup _).expects(ColumnGroup).returning(readsRows)
+    (responseReaderMaker.forColumnFamily _).expects(ColumnFamily).returning(readsRows)
 
     WsTestClient.withClient { wsClient =>
       withFixture(test.toNoArgTest(FixtureParam(
@@ -50,55 +50,72 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
   }
 
   "A HBase REST Repository" - {
-    "can process a valid success response containing a single row" in { fixture =>
-      val expectedRow = Map("key1" -> "value1")
-      stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
-      (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq(expectedRow)))
+    "when expecting to find at most one row" - {
+      "can process a valid success response containing a single row" in { fixture =>
+        val expectedRow = Map("key1" -> "value1")
+        stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
+        (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq(expectedRow)))
 
-      whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
-        result.right.value shouldBe Some(expectedRow)
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnFamily)) { result =>
+          result.right.value shouldBe Some(expectedRow)
+        }
+      }
+
+      /*
+       * This is the NOT FOUND case when running against Cloudera, which returns an "empty row" (rather than a 404).
+       */
+      "can process a valid success response containing no rows" in { fixture =>
+        stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
+        (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq.empty))
+
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnFamily)) { result =>
+          result.right.value shouldBe None
+        }
+      }
+
+      /*
+       * Currently only applicable for developers testing directly against a recent version of HBase.
+       * This contrasts with the behaviour of Cloudera, which instead returns OK with a representation of an "empty row".
+       */
+      "can process a NOT FOUND response" in { fixture =>
+        stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(NOT_FOUND)))
+
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnFamily)) { result =>
+          result.right.value shouldBe None
+        }
+      }
+
+      "fails" - {
+        "when multiple results are found" in { fixture =>
+          val multipleRows = Seq(Map("key" -> "value1"), Map("key" -> "value2"))
+          stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
+          (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(multipleRows))
+
+          whenReady(fixture.repository.findRow(Table, RowKey, ColumnFamily)) { result =>
+            result.left.value shouldBe "At most one result was expected but found [2]"
+          }
+        }
       }
     }
 
-    /*
-     * This is the NOT FOUND case when running against Cloudera, which returns an "empty row" (rather than a 404).
-     */
-    "can process a valid success response containing no rows" in { fixture =>
-      stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
-      (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq.empty))
+    "when expecting to find zero to many rows" - {
+      "can process a valid success response containing multiple rows" in { fixture =>
+        val row1 = Map("key1" -> "value1")
+        val row2 = Map("key2" -> "value2")
+        stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
+        (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq(row1, row2)))
 
-      whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
-        result.right.value shouldBe None
-      }
-    }
-
-    /*
-     * Currently only applicable for developers testing directly against a recent version of HBase.
-     * This contrasts with the behaviour of Cloudera, which instead returns OK with a representation of an "empty row".
-     */
-    "can process a NOT FOUND response" in { fixture =>
-      stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(NOT_FOUND)))
-
-      whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
-        result.right.value shouldBe None
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
+          result.right.value should contain theSameElementsAs Seq(row1, row2)
+        }
       }
     }
 
     "fails" - {
-      "when at most one result is expected but multiple results are returned" in { fixture =>
-        val multipleRows = Seq(Map("key" -> "value1"), Map("key" -> "value2"))
-        stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
-        (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(multipleRows))
-
-        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
-          result.left.value shouldBe "At most one result was expected but found [2]"
-        }
-      }
-
       "when the configured user credentials are not accepted" in { fixture =>
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(UNAUTHORIZED)))
 
-        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.left.value shouldBe "Unauthorized (401) - check HBase REST configuration"
         }
       }
@@ -106,7 +123,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
       "when the response is a client error" in { fixture =>
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(BAD_REQUEST)))
 
-        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.left.value shouldBe "Bad Request (400)"
         }
       }
@@ -114,7 +131,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
       "when the response is a server error" in { fixture =>
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(SERVICE_UNAVAILABLE)))
 
-        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.left.value shouldBe "Service Unavailable (503)"
         }
       }
@@ -122,7 +139,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
       "when an OK response is returned containing a non-JSON body" in { fixture =>
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody("this-is-not-json")))
 
-        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.left.value should startWith("Unable to create JsValue from HBase response")
         }
       }
@@ -131,7 +148,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
         (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsError("parse failure"))
 
-        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.left.value should startWith("Unable to parse HBase REST json response")
         }
       }
@@ -143,7 +160,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr).
           withFixedDelay((fixture.config.timeout + 100).toInt)))
 
-        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.left.value should startWith("Timeout.")
         }
       }

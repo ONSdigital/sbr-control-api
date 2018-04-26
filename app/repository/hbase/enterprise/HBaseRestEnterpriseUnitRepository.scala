@@ -8,11 +8,11 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import com.typesafe.scalalogging.LazyLogging
 
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
+import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern}
 
-import repository.RestRepository.{ ErrorMessage, Row }
-import repository.hbase.HBase.DefaultColumnGroup
-import repository.{ EnterpriseUnitRepository, RestRepository, RowMapper }
+import repository.RestRepository.{ErrorMessage, Row}
+import repository.hbase.HBase.DefaultColumnFamily
+import repository.{EnterpriseUnitRepository, RestRepository, RowMapper}
 
 case class HBaseRestEnterpriseUnitRepositoryConfig(tableName: String)
 
@@ -24,14 +24,14 @@ class HBaseRestEnterpriseUnitRepository @Inject() (
 
   override def retrieveEnterpriseUnit(ern: Ern, period: Period): Future[Either[ErrorMessage, Option[Enterprise]]] = {
     logger.info(s"Retrieving Enterprise with [$ern] for [$period].")
-    restRepository.findRow(config.tableName, EnterpriseUnitRowKey(ern, period), DefaultColumnGroup).map(fromErrorOrRow)
+    restRepository.findRow(config.tableName, EnterpriseUnitRowKey(ern, period), DefaultColumnFamily).map(fromErrorOrRow)
   }
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[Enterprise]] = {
     logger.debug(s"Enterprise Unit response is [$errorOrRow]")
     errorOrRow.right.flatMap { optRow =>
       optRow.map(fromRow).fold[Either[ErrorMessage, Option[Enterprise]]](Right(None)) { errorOrEnterprise =>
-        logger.debug(s"From row to Local Unit conversion result is [$errorOrEnterprise].")
+        logger.debug(s"From row to Enterprise Unit conversion result is [$errorOrEnterprise].")
         errorOrEnterprise.right.map(Some(_))
       }
     }

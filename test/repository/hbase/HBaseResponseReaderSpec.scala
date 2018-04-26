@@ -8,10 +8,10 @@ import support.HBaseResponseFixture
 class HBaseResponseReaderSpec extends FreeSpec with Matchers {
 
   private trait Fixture extends HBaseResponseFixture {
-    val ColumnGroup = "cg"
+    val ColumnFamily = "cg"
 
     def parse(hBaseResponseJsonStr: String): Seq[Row] =
-      Json.parse(hBaseResponseJsonStr).as[Seq[Row]](HBaseResponseReader.forColumnGroup(ColumnGroup))
+      Json.parse(hBaseResponseJsonStr).as[Seq[Row]](HBaseResponseReader.forColumnFamily(ColumnFamily))
   }
 
   "A HBase REST response reader" - {
@@ -24,10 +24,10 @@ class HBaseResponseReaderSpec extends FreeSpec with Matchers {
         s"""|{"Row":[
             |  {"key":"${hbaseEncode("some-key")}",
             |   "Cell":[
-            |     {"column":"${hbaseEncode(s"$ColumnGroup:col1-name")}",
+            |     {"column":"${hbaseEncode(s"$ColumnFamily:col1-name")}",
             |      "timestamp":1520333985745,
             |      "$$":"${hbaseEncode("col1-value")}"},
-            |     {"column":"${hbaseEncode(s"$ColumnGroup:col2-name")}",
+            |     {"column":"${hbaseEncode(s"$ColumnFamily:col2-name")}",
             |      "timestamp":1520333985745,
             |      "$$":"${hbaseEncode("col2-value")}"}
             |   ]}
@@ -44,19 +44,19 @@ class HBaseResponseReaderSpec extends FreeSpec with Matchers {
         s"""|{"Row":[
             |  {"key":"${hbaseEncode("row1-key")}",
             |   "Cell":[
-            |     {"column":"${hbaseEncode(s"$ColumnGroup:row1-col1-name")}",
+            |     {"column":"${hbaseEncode(s"$ColumnFamily:row1-col1-name")}",
             |      "timestamp":1520333985745,
             |      "$$":"${hbaseEncode("row1-col1-value")}"},
-            |     {"column":"${hbaseEncode(s"$ColumnGroup:row1-col2-name")}",
+            |     {"column":"${hbaseEncode(s"$ColumnFamily:row1-col2-name")}",
             |      "timestamp":1520333985745,
             |      "$$":"${hbaseEncode("row1-col2-value")}"}
             |   ]},
             |  {"key":"${hbaseEncode("row2-key")}",
             |   "Cell":[
-            |     {"column":"${hbaseEncode(s"$ColumnGroup:row2-col1-name")}",
+            |     {"column":"${hbaseEncode(s"$ColumnFamily:row2-col1-name")}",
             |      "timestamp":1520333985745,
             |      "$$":"${hbaseEncode("row2-col1-value")}"},
-            |     {"column":"${hbaseEncode(s"$ColumnGroup:row2-col2-name")}",
+            |     {"column":"${hbaseEncode(s"$ColumnFamily:row2-col2-name")}",
             |      "timestamp":1520333985745,
             |      "$$":"${hbaseEncode("row2-col2-value")}"}
             |   ]}

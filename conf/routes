@@ -16,7 +16,9 @@ GET     /v1/periods/:period/enterprises/:ern                                    
 
 # Local Units
 GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}((0[1-9])|(1[0-2]))>/localunits/$lurn<\d{9}>    controllers.v1.LocalUnitController.retrieveLocalUnit(ern, period, lurn)
-GET     /v1/enterprises/:ern/periods/:period/localunits/:lurn                                             controllers.v1.LocalUnitController.badRequest(ern, period, lurn)
+GET     /v1/enterprises/:ern/periods/:period/localunits/:lurn                                             controllers.v1.LocalUnitController.badRequest(ern, period, lurn: Option[String])
+GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}((0[1-9])|(1[0-2]))>/localunits                 controllers.v1.LocalUnitController.retrieveAllLocalUnitsForEnterprise(ern, period)
+GET     /v1/enterprises/:ern/periods/:period/localunits                                                   controllers.v1.LocalUnitController.badRequest(ern, period, None: Option[String])
 
 # Other Routes
 
