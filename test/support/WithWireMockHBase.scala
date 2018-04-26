@@ -29,7 +29,7 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
 
   private def createUrlAndThenGetHBaseJson(tableName: String, rowKey: String): MappingBuilder =
     getHBaseJson(
-      "/" + rowKeyUrl(namespace = Namespace, table = tableName, rowKey, columnGroup = ColumnFamily),
+      "/" + rowKeyUrl(namespace = Namespace, table = tableName, rowKey, columnFamily = ColumnFamily),
       Authorization("", "")
     )
 

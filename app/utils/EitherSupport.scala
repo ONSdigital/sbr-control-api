@@ -2,15 +2,15 @@ package utils
 
 object EitherSupport {
   /**
-    * Collapses a sequence of Eithers into a single Either that represents either the first Left encountered,
-    * or a sequence of all the Right values.
-    *
-    * @param eithers zero to many Either[A, B] instances
-    * @tparam A the type of the Left
-    * @tparam B the type of the Right
-    * @return either a Left containing the first Left value in eithers; or a Right containing a sequence of all the
-    *         Right values in eithers
-    */
+   * Collapses a sequence of Eithers into a single Either that represents either the first Left encountered,
+   * or a sequence of all the Right values.
+   *
+   * @param eithers zero to many Either[A, B] instances
+   * @tparam A the type of the Left
+   * @tparam B the type of the Right
+   * @return either a Left containing the first Left value in eithers; or a Right containing a sequence of all the
+   *         Right values in eithers
+   */
   /*
    * Additional Notes:
    * - sequence is a common functional idiom that can be implemented generically with Applicative / Traversable Functors.

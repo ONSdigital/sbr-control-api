@@ -1,14 +1,19 @@
 package controllers.v1
 
-import io.swagger.annotations.Api
 import javax.inject.{ Inject, Singleton }
+
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json.toJson
 import play.api.mvc.{ Action, AnyContent, Controller, Result }
-import repository.LocalUnitRepository
+import io.swagger.annotations.Api
+
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
+
+import controllers.v1.api.LocalUnitApi
+import repository.LocalUnitRepository
+import controllers.v1.ControllerResultProcessor._
 
 /*
  * Note that we are relying on regex patterns in the routes definitions to apply argument validation.
@@ -20,7 +25,7 @@ import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 class LocalUnitController @Inject() (repository: LocalUnitRepository) extends Controller with LocalUnitApi {
   override def retrieveLocalUnit(ernStr: String, periodStr: String, lurnStr: String): Action[AnyContent] = Action.async {
     repository.retrieveLocalUnit(Ern(ernStr), Period.fromString(periodStr), Lurn(lurnStr)).map { errorOrLocalUnit =>
-      errorOrLocalUnit.fold(resultOnFailure, resultOnSuccessWithAtMostOneUnit)
+      errorOrLocalUnit.fold(resultOnFailure, resultOnSuccessWithAtMostOneUnit[LocalUnit])
     }
   }
 
@@ -29,15 +34,6 @@ class LocalUnitController @Inject() (repository: LocalUnitRepository) extends Co
       errorOrLocalUnits.fold(resultOnFailure, resultOnSuccessWithMaybeManyUnits)
     }
   }
-
-  private def resultOnFailure(errorMessage: String): Result =
-    errorMessage match {
-      case _ if errorMessage.startsWith("Timeout") => GatewayTimeout
-      case _ => InternalServerError
-    }
-
-  private def resultOnSuccessWithAtMostOneUnit(optLocalUnit: Option[LocalUnit]): Result =
-    optLocalUnit.fold[Result](NotFound)(localUnit => Ok(toJson(localUnit)))
 
   private def resultOnSuccessWithMaybeManyUnits(localUnits: Seq[LocalUnit]): Result =
     if (localUnits.isEmpty) NotFound

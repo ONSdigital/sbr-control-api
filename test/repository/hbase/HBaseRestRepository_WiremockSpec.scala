@@ -17,7 +17,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
   private val DummyJsonResponseStr = """{"some":"json"}"""
   private val Table = "table"
   private val RowKey = "rowKey"
-  private val ColumnGroup = "cg"
+  private val ColumnFamily = "cg"
 
   // test timeout must exceed the configured HBaseRest timeout to properly test client-side timeout handling
   override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(1500, Millis)), interval = scaled(Span(50, Millis)))
@@ -29,7 +29,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
       responseReaderMaker: HBaseResponseReaderMaker,
       readsRows: Reads[Seq[Row]]
   ) {
-    val targetUrl = s"/${config.namespace}:$Table/$RowKey/$ColumnGroup"
+    val targetUrl = s"/${config.namespace}:$Table/$RowKey/$ColumnFamily"
   }
 
   override protected def withFixture(test: OneArgTest): Outcome = {
@@ -40,7 +40,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
     val readsRows = mock[Reads[Seq[Row]]]
 
     // OneInstancePerTest is required for this common expectation to work across all of the individual tests
-    (responseReaderMaker.forColumnGroup _).expects(ColumnGroup).returning(readsRows)
+    (responseReaderMaker.forColumnFamily _).expects(ColumnFamily).returning(readsRows)
 
     WsTestClient.withClient { wsClient =>
       withFixture(test.toNoArgTest(FixtureParam(
@@ -56,7 +56,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
         (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq(expectedRow)))
 
-        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnFamily)) { result =>
           result.right.value shouldBe Some(expectedRow)
         }
       }
@@ -68,7 +68,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
         (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq.empty))
 
-        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnFamily)) { result =>
           result.right.value shouldBe None
         }
       }
@@ -80,7 +80,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
       "can process a NOT FOUND response" in { fixture =>
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(NOT_FOUND)))
 
-        whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRow(Table, RowKey, ColumnFamily)) { result =>
           result.right.value shouldBe None
         }
       }
@@ -91,7 +91,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
           stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
           (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(multipleRows))
 
-          whenReady(fixture.repository.findRow(Table, RowKey, ColumnGroup)) { result =>
+          whenReady(fixture.repository.findRow(Table, RowKey, ColumnFamily)) { result =>
             result.left.value shouldBe "At most one result was expected but found [2]"
           }
         }
@@ -105,7 +105,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
         (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq(row1, row2)))
 
-        whenReady(fixture.repository.findRows(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.right.value should contain theSameElementsAs Seq(row1, row2)
         }
       }
@@ -115,7 +115,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
       "when the configured user credentials are not accepted" in { fixture =>
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(UNAUTHORIZED)))
 
-        whenReady(fixture.repository.findRows(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.left.value shouldBe "Unauthorized (401) - check HBase REST configuration"
         }
       }
@@ -123,7 +123,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
       "when the response is a client error" in { fixture =>
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(BAD_REQUEST)))
 
-        whenReady(fixture.repository.findRows(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.left.value shouldBe "Bad Request (400)"
         }
       }
@@ -131,7 +131,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
       "when the response is a server error" in { fixture =>
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(aResponse().withStatus(SERVICE_UNAVAILABLE)))
 
-        whenReady(fixture.repository.findRows(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.left.value shouldBe "Service Unavailable (503)"
         }
       }
@@ -139,7 +139,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
       "when an OK response is returned containing a non-JSON body" in { fixture =>
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody("this-is-not-json")))
 
-        whenReady(fixture.repository.findRows(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.left.value should startWith("Unable to create JsValue from HBase response")
         }
       }
@@ -148,7 +148,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
         (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsError("parse failure"))
 
-        whenReady(fixture.repository.findRows(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.left.value should startWith("Unable to parse HBase REST json response")
         }
       }
@@ -160,7 +160,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr).
           withFixedDelay((fixture.config.timeout + 100).toInt)))
 
-        whenReady(fixture.repository.findRows(Table, RowKey, ColumnGroup)) { result =>
+        whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
           result.left.value should startWith("Timeout.")
         }
       }
