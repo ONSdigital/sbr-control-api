@@ -8,11 +8,11 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import com.typesafe.scalalogging.LazyLogging
 
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern}
+import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
 
-import repository.RestRepository.{ErrorMessage, Row}
+import repository.RestRepository.{ ErrorMessage, Row }
 import repository.hbase.HBase.DefaultColumnFamily
-import repository.{EnterpriseUnitRepository, RestRepository, RowMapper}
+import repository.{ EnterpriseUnitRepository, RestRepository, RowMapper }
 
 case class HBaseRestEnterpriseUnitRepositoryConfig(tableName: String)
 

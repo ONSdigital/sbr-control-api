@@ -1,17 +1,16 @@
 package controllers.v1
 
-import javax.inject.Inject
+import javax.inject.{ Inject, Singleton }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import play.api.mvc.{Action, AnyContent, Controller}
-import io.swagger.annotations._
+import play.api.mvc.{ Action, AnyContent, Controller }
+import io.swagger.annotations.Api
 
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern}
+import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
 
 import controllers.v1.ControllerResultProcessor._
-import controllers.v1.ControllerUtils._
 import controllers.v1.api.EnterpriseUnitApi
 import repository.EnterpriseUnitRepository
 

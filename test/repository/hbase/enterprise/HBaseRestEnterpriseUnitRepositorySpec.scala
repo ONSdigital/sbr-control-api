@@ -6,14 +6,14 @@ import scala.concurrent.Future
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{EitherValues, FreeSpec, Matchers}
+import org.scalatest.{ EitherValues, FreeSpec, Matchers }
 
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 
 import repository.RestRepository.Row
 import repository.hbase.HBase.DefaultColumnFamily
-import repository.{RestRepository, RowMapper}
+import repository.{ RestRepository, RowMapper }
 import repository.{ RestRepository, RowMapper }
 import support.sample.SampleEnterpriseUnit
 

@@ -1,26 +1,18 @@
 package controllers.v1
 
-import javax.inject.Inject
-
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.json.Json.toJson
-import play.api.mvc.{Action, AnyContent, Controller, Result}
 import javax.inject.{ Inject, Singleton }
 
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.mvc.{ Action, AnyContent, Controller }
-import io.swagger.annotations._
+import play.api.libs.json.Json.toJson
+import play.api.mvc.{ Action, AnyContent, Controller, Result }
+import io.swagger.annotations.Api
 
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
+import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 
 import controllers.v1.ControllerResultProcessor._
 import controllers.v1.api.LocalUnitApi
-import repository.LocalUnitRepository
-
-
-import controllers.v1.ControllerUtils._
 import repository.LocalUnitRepository
 
 /*
