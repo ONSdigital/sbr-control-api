@@ -9,7 +9,7 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration._
 import play.api.libs.json.{ JsArray, JsSuccess }
 import support.TestUtils
-import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinks }
+import uk.gov.ons.sbr.models.units.{ EnterpriseUnit, UnitLinksUnit }
 
 class HBaseRestSpec extends TestUtils with BeforeAndAfterEach with GuiceOneAppPerSuite {
 
@@ -83,11 +83,11 @@ class HBaseRestSpec extends TestUtils with BeforeAndAfterEach with GuiceOneAppPe
       mockEndpoint(unitLinksTable, None, id, Some("*"), body)
       val resp = fakeRequest(s"/$version/units/$id")
       val json = contentAsJson(resp).as[JsArray]
-      val unit = json(0).validate[UnitLinks]
+      val unit = json(0).validate[UnitLinksUnit]
       status(resp) mustBe OK
       contentType(resp) mustBe Some("application/json")
       json.value.size mustBe 1
-      unit.isInstanceOf[JsSuccess[UnitLinks]] mustBe true
+      unit.isInstanceOf[JsSuccess[UnitLinksUnit]] mustBe true
     }
   }
 
@@ -101,10 +101,10 @@ class HBaseRestSpec extends TestUtils with BeforeAndAfterEach with GuiceOneAppPe
       // We don't need to convert the JSON response to an array as only a single JSON object is returned
       // as by specifying the unit type there can not be multiple responses for one id.
       val json = contentAsJson(resp)
-      val unit = json.validate[UnitLinks]
+      val unit = json.validate[UnitLinksUnit]
       status(resp) mustBe OK
       contentType(resp) mustBe Some("application/json")
-      unit.isInstanceOf[JsSuccess[UnitLinks]] mustBe true
+      unit.isInstanceOf[JsSuccess[UnitLinksUnit]] mustBe true
     }
   }
 }

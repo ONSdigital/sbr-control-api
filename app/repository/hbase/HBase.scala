@@ -5,6 +5,9 @@ object HBase {
   val Wildcard = "*"
   val DefaultColumnFamily = "d"
 
+  val unitChildPrefix = "c_"
+  val unitParentPrefix = "p_"
+
   def rowKeyUrl(protocolWithHostname: String, port: String, namespace: String, table: String, rowKey: String, columnFamily: String): String =
     s"$protocolWithHostname:$port/${rowKeyUrl(namespace, table, rowKey, columnFamily)}"
 
