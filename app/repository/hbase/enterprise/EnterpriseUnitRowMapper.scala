@@ -13,18 +13,18 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
 
   override def fromRow(variables: Row): Option[Enterprise] =
     for {
-      ern <- variables.get(ern)
-      entref <- variables.get(entref)
-      name <- variables.get(name)
-      postcode <- variables.get(postcode)
-      legalStatus <- variables.get(legalStatus)
+      ern <- variables.fields.get(ern)
+      entref <- variables.fields.get(entref)
+      name <- variables.fields.get(name)
+      postcode <- variables.fields.get(postcode)
+      legalStatus <- variables.fields.get(legalStatus)
 
-      employeesStr = variables.get(employees)
+      employeesStr = variables.fields.get(employees)
       employeeOptTry = asInt(employeesStr)
       if invalidInt(employeeOptTry)
       employeeOptInt = parseTry(employeeOptTry)
 
-      jobsStr = variables.get(jobs)
+      jobsStr = variables.fields.get(jobs)
       jobsOptTry = asInt(jobsStr)
       if invalidInt(jobsOptTry)
       jobsOptInt = parseTry(jobsOptTry)

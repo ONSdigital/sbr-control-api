@@ -12,7 +12,7 @@ import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 import utils.EitherSupport
 
 import repository.RestRepository.{ ErrorMessage, Row }
-import repository.hbase.HBase.DefaultColumnFamily
+import repository.hbase.HBase.UnitColumnFamily
 import repository.{ LocalUnitRepository, RestRepository, RowMapper }
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
@@ -26,12 +26,12 @@ class HBaseRestLocalUnitRepository @Inject() (
 
   override def retrieveLocalUnit(ern: Ern, period: Period, lurn: Lurn): Future[Either[ErrorMessage, Option[LocalUnit]]] = {
     logger.info(s"Retrieving Local Unit with [$ern] [$lurn] for [$period].")
-    restRepository.findRow(config.tableName, LocalUnitQuery.byRowKey(ern, period, lurn), DefaultColumnFamily).map(fromErrorOrRow)
+    restRepository.findRow(config.tableName, LocalUnitQuery.byRowKey(ern, period, lurn), UnitColumnFamily).map(fromErrorOrRow)
   }
 
   override def findLocalUnitsForEnterprise(ern: Ern, period: Period): Future[Either[ErrorMessage, Seq[LocalUnit]]] = {
     logger.info(s"Finding Local Units with [$ern] for [$period].")
-    restRepository.findRows(config.tableName, LocalUnitQuery.forAllWith(ern, period), DefaultColumnFamily).map(fromErrorOrRows)
+    restRepository.findRows(config.tableName, LocalUnitQuery.forAllWith(ern, period), UnitColumnFamily).map(fromErrorOrRows)
   }
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[LocalUnit]] = {

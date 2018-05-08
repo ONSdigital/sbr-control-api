@@ -3,7 +3,8 @@ package repository.hbase
 object HBase {
   val RowKeyDelimiter = "~"
   val Wildcard = "*"
-  val DefaultColumnFamily = "d"
+  val UnitColumnFamily = "d"
+  val LinksColumnFamily = "l"
 
   val unitChildPrefix = "c_"
   val unitParentPrefix = "p_"

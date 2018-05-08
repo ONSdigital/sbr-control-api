@@ -28,5 +28,5 @@ trait HBaseResponseFixture {
 
   def aChildIdWithPrefix(id: String) = unitChildPrefix + id
 
-  def aParentUnitTypeWithPrefix(unitType: UnitType) = unitParentPrefix + unitType.toString
+  def aParentUnitTypeWithPrefix(unitType: UnitType) = unitParentPrefix + UnitType.toAcronym(unitType)
 }

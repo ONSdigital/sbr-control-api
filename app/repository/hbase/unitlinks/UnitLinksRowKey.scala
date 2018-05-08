@@ -10,5 +10,5 @@ object UnitLinksRowKey {
     Seq(id, Wildcard).mkString(RowKeyDelimiter)
 
   def apply(id: String, unitType: UnitType, period: Period): String =
-    Seq(id, unitType.toString, Period.asString(period)).mkString(RowKeyDelimiter)
+    Seq(id, UnitType.toAcronym(unitType), Period.asString(period)).mkString(RowKeyDelimiter)
 }
