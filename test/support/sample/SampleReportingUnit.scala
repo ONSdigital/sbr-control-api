@@ -1,26 +1,13 @@
 package support.sample
 
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
+import uk.gov.ons.sbr.models.enterprise.Ern
+import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnit, Rurn }
 
 trait SampleReportingUnit {
+  val SampleMandatoryValuesReportingUnit = ReportingUnit(Rurn("900000012"), ruref = None)
 
-  val SampleEnterpriseId = Ern("1000000012")
-  val SampleNumberOfEmployees = 100
-  val SampleJobs = 15
-  val SampleEnterpriseReference = "someEnterpriseRef"
-  val SampleEnterpriseName = "Company Name Plc"
-  val SamplePostcode = "NP0 XXX"
-  val SampleLegalStatus = "some-LegalUnit"
+  val SampleAllValuesReportingUnit = SampleMandatoryValuesReportingUnit.copy(ruref = Some("luref-value"))
 
-  val SampleEnterpriseWithAllFields: Enterprise =
-    Enterprise(SampleEnterpriseId, entref = SampleEnterpriseReference, name = SampleEnterpriseName, postcode = SamplePostcode,
-      legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees), jobs = Some(SampleJobs))
-
-  val SampleEnterpriseWithNoOptionalFields: Enterprise =
-    Enterprise(SampleEnterpriseId, entref = SampleEnterpriseReference, name = SampleEnterpriseName, postcode = SamplePostcode,
-      legalStatus = SampleLegalStatus, employees = None, jobs = None)
-
-  def aEnterpriseSample(ern: Ern, template: Enterprise = SampleEnterpriseWithAllFields): Enterprise =
-    template.copy(ern = ern)
-
+  def aReportingUnit(ern: Ern, rurn: Rurn, template: ReportingUnit = SampleAllValuesReportingUnit): ReportingUnit =
+    template.copy(rurn = rurn)
 }
