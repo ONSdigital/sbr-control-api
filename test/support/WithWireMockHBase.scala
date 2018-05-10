@@ -8,9 +8,11 @@ import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.HBase.rowKeyUrl
 import repository.hbase.enterprise.EnterpriseUnitRowKey
 import repository.hbase.localunit.LocalUnitQuery
+import repository.hbase.reportingunit.ReportingUnitQuery
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.localunit.Lurn
+import uk.gov.ons.sbr.models.reportingunit.Rurn
 
 trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBaseResponseFixture { this: Suite =>
   override val wireMockPort = 8075
@@ -23,6 +25,9 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
 
   def aLocalUnitRequest(withErn: Ern, withPeriod: Period, withLurn: Lurn): MappingBuilder =
     aLocalUnitQuery(query = LocalUnitQuery.byRowKey(withErn, withPeriod, withLurn))
+
+  def aReportingUnitRequest(withErn: Ern, withPeriod: Period, withRurn: Rurn): MappingBuilder =
+    aLocalUnitQuery(query = ReportingUnitQuery.byRowKey(withErn, withPeriod, withRurn))
 
   private def aLocalUnitQuery(query: String): MappingBuilder =
     createUrlAndThenGetHBaseJson(tableName = "local_unit", query)
