@@ -2,14 +2,13 @@ import java.time.Clock
 
 import play.api.{ Configuration, Environment }
 import com.google.inject.{ AbstractModule, TypeLiteral }
-
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 import uk.gov.ons.sbr.models.localunit.LocalUnit
-
-import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader }
+import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestReportingUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader }
 import repository.hbase._
 import repository.hbase.enterprise.{ EnterpriseUnitRowMapper, HBaseRestEnterpriseUnitRepository, HBaseRestEnterpriseUnitRepositoryConfig }
 import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
+import repository.hbase.reportingunit.HBaseRestReportingUnitRepositoryConfig
 import repository.{ EnterpriseUnitRepository, LocalUnitRepository, RestRepository, RowMapper }
 import services.{ DataAccess, HBaseRestDataAccess }
 
@@ -29,9 +28,12 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     val hBaseRestConfig = HBaseRestRepositoryConfigLoader.load(underlyingConfig)
     val hBaseRestLocalUnitConfig = HBaseRestLocalUnitRepositoryConfigLoader.load(underlyingConfig)
     val hbaseRestEnterpriseUnitConfig = HBaseRestEnterpriseUnitRepositoryConfigLoader.load(underlyingConfig)
+    val hbaseRestReportingUnitConfig = HBaseRestReportingUnitRepositoryConfigLoader.load(underlyingConfig)
+
     bind(classOf[HBaseRestRepositoryConfig]).toInstance(hBaseRestConfig)
     bind(classOf[HBaseRestLocalUnitRepositoryConfig]).toInstance(hBaseRestLocalUnitConfig)
     bind(classOf[HBaseRestEnterpriseUnitRepositoryConfig]).toInstance(hbaseRestEnterpriseUnitConfig)
+    bind(classOf[HBaseRestReportingUnitRepositoryConfig]).toInstance(hbaseRestReportingUnitConfig)
 
     bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
     bind(classOf[RestRepository]).to(classOf[HBaseRestRepository])
