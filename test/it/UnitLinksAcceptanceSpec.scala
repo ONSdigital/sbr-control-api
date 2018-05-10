@@ -1,17 +1,16 @@
 import java.time.Month.MARCH
 
 import play.api.http.HeaderNames.CONTENT_TYPE
-import it.fixture.ReadsUnitLinks._
 import play.api.http.Status.OK
 import play.mvc.Http.MimeTypes.JSON
 
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.legalunit.Leu
-import uk.gov.ons.sbr.models.unitlinks.UnitType
-import uk.gov.ons.sbr.models.unitlinks.UnitLinks
+import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
 
 import fixture.ServerAcceptanceSpec
+import it.fixture.ReadsUnitLinks._
 import repository.hbase.unitlinks.UnitLinksRowKey
 import support.WithWireMockHBase
 
@@ -25,8 +24,10 @@ class UnitLinksAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
   private val VatId = "401347263289"
   private val CHId = "01752564"
   private val EntParentUnitType = UnitType.Enterprise
-  private val CHChildUnitTypeAsString = UnitType.toAcronym(UnitType.CompaniesHouse)
-  private val VATChildUnitTypeAsString = UnitType.toAcronym(UnitType.ValueAddedTax)
+  private val vatUnitType = UnitType.CompaniesHouse
+  private val chUnitType = UnitType.CompaniesHouse
+  private val CHChildUnitTypeAsString = UnitType.toAcronym(chUnitType)
+  private val VATChildUnitTypeAsString = UnitType.toAcronym(vatUnitType)
 
   private val UnitLinksSingleMatchHBaseResponseBody =
     s"""{ "Row": ${
@@ -56,9 +57,9 @@ class UnitLinksAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
       response.status shouldBe OK
       response.header(CONTENT_TYPE) shouldBe Some(JSON)
       response.json.as[UnitLinks] shouldBe
-        UnitLinks(id = TargetLeu.value, period = TargetPeriod,
-          parents = Some(Map(UnitType.toAcronym(EntParentUnitType) -> ErnParent.value)),
-          children = Some(Map(VatId -> VATChildUnitTypeAsString, CHId -> CHChildUnitTypeAsString)),
+        UnitLinks(id = UnitId(TargetLeu.value), period = TargetPeriod,
+          parents = Some(Map(EntParentUnitType -> UnitId(ErnParent.value))),
+          children = Some(Map(UnitId(VatId) -> vatUnitType, UnitId(CHId) -> chUnitType)),
           unitType = TargetLegalUnitType)
     }
   }

@@ -1,6 +1,8 @@
 package uk.gov.ons.sbr.models.unitlinks
 
-import play.api.libs.json.{ JsString, JsValue, Writes }
+import scala.util.Try
+
+import play.api.libs.json._
 
 sealed trait UnitType
 
@@ -24,6 +26,9 @@ object UnitType {
     val LocalUnit = "LOU"
     val ReportingUnit = "REU"
   }
+
+  def fromString(unitTypeStr: String): Try[UnitType] =
+    Try(fromAcronym(unitTypeStr))
 
   def toAcronym(unitType: UnitType): String =
     unitType match {
