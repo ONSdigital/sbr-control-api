@@ -21,10 +21,10 @@ GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}((0[1-9])|(1[0-2]))>/l
 GET     /v1/enterprises/:ern/periods/:period/localunits                                                   controllers.v1.LocalUnitController.badRequest(ern, period, None: Option[String])
 
 # Reporting Units
-GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}((0[1-9])|(1[0-2]))>/reportingunits/$rurn<\d{9}>    controllers.v1.ReportingUnitController.retrieveReportingUnit(ern, period, rurn)
-GET     /v1/enterprises/:ern/periods/:period/reportingunits/:rurn                                             controllers.v1.ReportingUnitController.badRequest(ern, period, rurn: Option[String])
-GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}((0[1-9])|(1[0-2]))>/reportingunits                 controllers.v1.ReportingUnitController.retrieveAllReportingUnitsForEnterprise(ern, period)
-GET     /v1/enterprises/:ern/periods/:period/reportingunits                                                   controllers.v1.ReportingUnitController.badRequest(ern, period, None: Option[String])
+GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}((0[1-9])|(1[0-2]))>/reportingunits/$rurn<\d{11}>    controllers.v1.ReportingUnitController.retrieveReportingUnit(ern, period, rurn)
+GET     /v1/enterprises/:ern/periods/:period/reportingunits/:rurn                                              controllers.v1.ReportingUnitController.badRequest(ern, period, rurn: Option[String])
+GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}((0[1-9])|(1[0-2]))>/reportingunits                  controllers.v1.ReportingUnitController.retrieveAllReportingUnitsForEnterprise(ern, period)
+GET     /v1/enterprises/:ern/periods/:period/reportingunits                                                    controllers.v1.ReportingUnitController.badRequest(ern, period, None: Option[String])
 
 # Other Routes
 
