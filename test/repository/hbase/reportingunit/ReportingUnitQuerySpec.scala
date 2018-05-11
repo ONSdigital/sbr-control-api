@@ -12,7 +12,7 @@ class ReportingUnitQuerySpec extends FreeSpec with Matchers {
   "A Reporting Unit query" - {
     "should contain the exact Reporting Unit reference number (RURN)" - {
       "when requesting the reporting unit with a specific row key" in {
-        ReportingUnitQuery.byRowKey(Ern("1000000014"), Period.fromYearMonth(2018, MARCH), Rurn("900000013")) shouldBe "4100000001~201803~900000013"
+        ReportingUnitQuery.byRowKey(Ern("1000000014"), Period.fromYearMonth(2018, MARCH), Rurn("33000000000")) shouldBe "4100000001~201803~33000000000"
       }
     }
 

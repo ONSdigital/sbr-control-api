@@ -27,14 +27,14 @@ class HBaseRestReportingUnitRepositorySpec extends FreeSpec with Matchers with M
   }
 
   private trait SingleResultFixture extends Fixture with SampleReportingUnit {
-    val TargetRurn = Rurn("900000016")
+    val TargetRurn = Rurn("33000000000")
     val TargetReportingUnit = aReportingUnit(TargetErn, TargetRurn)
     val TargetRowKey = ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn)
     val ARow = Map("key" -> s"rowkey-for-${TargetRurn.value}")
   }
 
   private trait MultipleResultFixture extends SingleResultFixture {
-    val AnotherReportingUnit = aReportingUnit(TargetErn, Rurn("900000020"))
+    val AnotherReportingUnit = aReportingUnit(TargetErn, Rurn("33000000000"))
     val AnotherRow = Map("key" -> s"rowkey-for-${AnotherReportingUnit.rurn.value}")
     val TargetQuery = ReportingUnitQuery.forAllWith(TargetErn, TargetPeriod)
   }
