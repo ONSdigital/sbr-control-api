@@ -1,9 +1,11 @@
 package uk.gov.ons.sbr.models
 
-import java.time.{ Month, YearMonth }
 import java.time.format.DateTimeFormatter
+import java.time.{ Month, YearMonth }
 
 import scala.util.Try
+
+import play.api.libs.json.{ JsString, JsValue, Writes }
 
 case class Period(value: YearMonth)
 
@@ -27,4 +29,10 @@ object Period {
 
   def asString(period: Period): String =
     period.value.format(formatter)
+
+  implicit val writes: Writes[Period] = new Writes[Period] {
+    override def writes(period: Period): JsValue =
+      JsString(Period.asString(period))
+  }
+
 }
