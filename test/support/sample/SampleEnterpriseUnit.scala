@@ -12,6 +12,7 @@ trait SampleEnterpriseUnit {
   val SamplePostcode = "NP0 XXX"
   val SampleLegalStatus = "some-LegalUnit"
 
+  // TODO - use update for optional fields
   val SampleEnterpriseWithAllFields: Enterprise =
     Enterprise(SampleEnterpriseId, entref = SampleEnterpriseReference, name = SampleEnterpriseName, postcode = SamplePostcode,
       legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees), jobs = Some(SampleJobs))

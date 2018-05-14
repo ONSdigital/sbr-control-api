@@ -9,12 +9,12 @@ object UnitLinksRowKey {
 
   val unitLinksRowKeyLength = 3
 
-  val unitIdIndex = 1
-  val unitTypeIndex = 2
-  val unitPeriodIndex = 3
+  val unitIdIndex = 0
+  val unitTypeIndex = 1
+  val unitPeriodIndex = 2
 
-  val split: (String) => Array[String] = (rowKey: String) =>
-    rowKey.split(RowKeyDelimiter)
+  val split: (String) => List[String] = (rowKey: String) =>
+    rowKey.split(RowKeyDelimiter).toList
 
   def apply(id: String): String =
     Seq(id, Wildcard).mkString(RowKeyDelimiter)

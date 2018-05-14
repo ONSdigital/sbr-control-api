@@ -26,10 +26,16 @@ object ReadsUnitLinks {
         testExForm.children.map(fromTestExternalChildren), testExForm.unitType)
 
     private def fromTestExternalParents(testExFormParent: Map[String, UnitId]): Map[UnitType, UnitId] =
-      testExFormParent.map { case (k, v) => UnitType.fromAcronym(k) -> v }
+      testExFormParent.map {
+        case (k, v) =>
+          UnitType.fromAcronym(k) -> v
+      }
 
     private def fromTestExternalChildren(testExFormChild: Map[String, UnitType]): Map[UnitId, UnitType] =
-      testExFormChild.map { case (k, v) => UnitId(k) -> v }
+      testExFormChild.map {
+        case (k, v) =>
+          UnitId(k) -> v
+      }
 
   }
 }

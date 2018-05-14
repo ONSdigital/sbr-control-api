@@ -2,7 +2,7 @@ package support
 
 import uk.gov.ons.sbr.models.unitlinks.UnitType
 
-import repository.hbase.HBase.{ UnitChildPrefix, UnitParentPrefix }
+import repository.hbase.unitlinks.UnitLinksColumns.{ UnitChildPrefix, UnitParentPrefix }
 
 trait HBaseResponseFixture {
   /*

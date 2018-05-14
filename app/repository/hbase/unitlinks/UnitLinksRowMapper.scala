@@ -10,8 +10,8 @@ import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
 import utils.TrySupport
 import repository.RestRepository.Row
 import repository.RowMapper
-import repository.hbase.HBase.{ ChildOrParentPrefixLength, UnitChildPrefix, UnitParentPrefix }
-import repository.hbase.unitlinks.UnitLinksRowKey.{ split, unitIdIndex, unitPeriodIndex, unitTypeIndex, unitLinksRowKeyLength }
+import repository.hbase.unitlinks.UnitLinksColumns.{ ChildOrParentPrefixLength, UnitChildPrefix, UnitParentPrefix }
+import repository.hbase.unitlinks.UnitLinksRowKey._
 
 object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
 
@@ -32,9 +32,19 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
       periodOpt = toPeriod(partitionedKey(unitPeriodIndex))
       period <- periodOpt
 
+      /**
+       * TODO control failure on id, period and unitType!!!
+       */
       (partitionedParentMap, partitionedChildrenMap) = partitionMap(rows.fields)
-      children = toFamilyMap(partitionedChildrenMap, UnitChildPrefix)(toChildField)
-      parents = toFamilyMap(partitionedParentMap, UnitParentPrefix)(toParentField)
+      /*
+       * NOTE: GUARD - to not create UnitLinks in the event the left partition is not
+       * prefixed with child unit prefix
+       */
+      if returnNoneIfAllNotPrefixedAsChild(partitionedChildrenMap)
+      children = toChildField(partitionedChildrenMap)
+      if partitionedChildrenMap.isEmpty && children.isEmpty || partitionedChildrenMap.nonEmpty && children.isDefined
+      parents = toParentField(partitionedParentMap)
+      if partitionedParentMap.isEmpty && parents.isEmpty || partitionedParentMap.nonEmpty && parents.isDefined
 
       /*
        * NOTE: GUARD - to not create UnitLinks in the event children and parents is None.
@@ -49,56 +59,44 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
         k.startsWith(UnitParentPrefix)
     }
 
+  def returnNoneIfAllNotPrefixedAsChild(rawMap: Map[String, String]): Boolean = !rawMap.map {
+    case (key, _) =>
+      if (key.startsWith(UnitChildPrefix)) true else {
+        logger.warn(s"Bad field with key [$key] in partitioned child map [$rawMap]")
+        false
+      }
+  }.toList.contains(false)
+
   private def toPeriod(periodStr: String): Option[Period] =
-    toUnitLinksDataType(Period.parseString, periodStr)
+    toUnitLinksDataType(periodStr)(Period.parseString)
 
   private def toUnitType(unitTypeAsStr: String): Option[UnitType] =
-    toUnitLinksDataType(UnitType.fromString, unitTypeAsStr)
+    toUnitLinksDataType(unitTypeAsStr)(UnitType.fromString)
 
-  private def toUnitLinksDataType[A](convertToDataType: String => Try[A], fieldAsStr: String): Option[A] =
+  private def toUnitLinksDataType[A](fieldAsStr: String)(convertToDataType: String => Try[A]): Option[A] =
     TrySupport.fold(convertToDataType(fieldAsStr))(failure =>
       failedUnitTypeRespAndLog(fieldAsStr)(failure), Some(_))
 
-  private def toChildField(key: String, value: String, acc: Map[UnitId, UnitType]): Option[Map[UnitId, UnitType]] =
-    toUnitType(value).map(unitType =>
-      acc ++ Map(UnitId(key) -> unitType))
+  private def toChildField(childMap: Map[String, String]): Option[Map[UnitId, UnitType]] =
+    toFamilyMap(childMap, UnitChildPrefix) { (key: String, value: String, acc: Map[UnitId, UnitType]) =>
+      toUnitType(value).map(unitType =>
+        acc ++ Map(UnitId(key.drop(ChildOrParentPrefixLength)) -> unitType))
+    }
 
-  private def toParentField(key: String, value: String, acc: Map[UnitType, UnitId]): Option[Map[UnitType, UnitId]] =
-    toUnitType(key.drop(ChildOrParentPrefixLength)).map(unitType =>
-      acc ++ Map(unitType -> UnitId(value)))
+  private def toParentField(parentMap: Map[String, String]): Option[Map[UnitType, UnitId]] =
+    toFamilyMap(parentMap, UnitParentPrefix) { (key: String, value: String, acc: Map[UnitType, UnitId]) =>
+      toUnitType(key.drop(ChildOrParentPrefixLength)).map(unitType =>
+        acc ++ Map(unitType -> UnitId(value)))
+    }
 
   private def toFamilyMap[A, B](variables: Map[String, String], prefixFilter: String)(
     validateAndReturnUnitType: (String, String, Map[A, B]) => Option[Map[A, B]]
   ): Option[Map[A, B]] =
     checkIfEmptyOptMap(variables.foldLeft[Option[Map[A, B]]](Some(Map.empty[A, B])) {
-      case (acc, (k, v)) =>
+      case (acc, (key, value)) =>
         acc.flatMap { a =>
-          if (k.startsWith(prefixFilter)) {
-            validateAndReturnUnitType(v, k, a)
-          } else Some(a)
-        }
-    })
-
-  @deprecated("Migrated to toFamilyMap passing toChildField")
-  private def toChildren(variables: Map[String, String]): Option[Map[UnitId, UnitType]] =
-    checkIfEmptyOptMap(variables.foldLeft[Option[Map[UnitId, UnitType]]](Some(Map.empty[UnitId, UnitType])) {
-      case (acc, (k, v)) =>
-        acc.flatMap { a =>
-          if (k.startsWith(UnitChildPrefix)) {
-            toUnitType(v).map(unitType =>
-              a ++ Map(UnitId(k) -> unitType))
-          } else Some(a)
-        }
-    })
-
-  @deprecated("Migrated to toFamilyMap passing toParentField")
-  private def toParents(variables: Map[String, String]): Option[Map[UnitType, UnitId]] =
-    checkIfEmptyOptMap(variables.foldLeft[Option[Map[UnitType, UnitId]]](Some(Map.empty[UnitType, UnitId])) {
-      case (acc, (k, v)) =>
-        acc.flatMap { a =>
-          if (k.startsWith(UnitParentPrefix)) {
-            toUnitType(k.drop(ChildOrParentPrefixLength)).map(unitType =>
-              a ++ Map(unitType -> UnitId(v)))
+          if (key.startsWith(prefixFilter)) {
+            validateAndReturnUnitType(key, value, a)
           } else Some(a)
         }
     })
@@ -122,8 +120,8 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
       false
     } else true
 
-  private def returnNoneWhenRowKeyIsNotOfLength(partitionedKey: Array[String]): Boolean =
-    if (partitionedKey.length == unitLinksRowKeyLength) {
+  private def returnNoneWhenRowKeyIsNotOfLength(partitionedKey: List[String]): Boolean =
+    if (partitionedKey.length != unitLinksRowKeyLength) {
       logger.warn(s"Failure to produce UnitLinks, caused by rowKey [${partitionedKey.mkString}] invalid length " +
         s"[${partitionedKey.length}] when expected [$unitLinksRowKeyLength]")
       false
