@@ -21,14 +21,14 @@ trait ReportingUnitApi {
   def retrieveReportingUnit(
     @ApiParam(value = "Enterprise Reference Number (ERN) - a ten digit number", example = "1000000012", required = true) ernStr: String,
     @ApiParam(value = "Period (unit load date) - in YYYYMM format", example = "201803", required = true) periodStr: String,
-    @ApiParam(value = "Reporting Unit Reference Number (RURN) - a nine digit number", example = "900000011", required = true) rurnStr: String
+    @ApiParam(value = "Reporting Unit Reference Number (RURN) - an eleven digit number", example = "33000000000", required = true) rurnStr: String
   ): Action[AnyContent]
 
   /*
    * Note that it is unusual for a RESTful service to return 404 for a "collection" resource; the typical response
    * ia a 200 with "empty collection" representation.
    * A 404 is justified here by the expectation in our data model that any existing enterprise / period combination
-   * should have at least one local unit.  The 404 therefore indicates that there is no such collection resource for
+   * should have at least one reporting unit.  The 404 therefore indicates that there is no such collection resource for
    * an unknown enterprise / period - which is semantically different from a resource existing that is empty.
    */
   @ApiOperation(

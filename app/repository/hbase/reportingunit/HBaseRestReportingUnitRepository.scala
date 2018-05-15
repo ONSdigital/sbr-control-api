@@ -48,7 +48,7 @@ class HBaseRestReportingUnitRepository @Inject() (
     logger.debug(s"Reporting Unit response is [$errorOrRows].")
     errorOrRows.right.flatMap { rows =>
       val errorOrReportingUnits = EitherSupport.sequence(rows.map(fromRow))
-      logger.debug(s"From rows to Local Units conversion result is [$errorOrReportingUnits].")
+      logger.debug(s"From rows to Reporting Units conversion result is [$errorOrReportingUnits].")
       errorOrReportingUnits
     }
   }
