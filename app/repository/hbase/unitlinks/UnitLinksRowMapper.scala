@@ -32,9 +32,6 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
       periodOpt = toPeriod(partitionedKey(unitPeriodIndex))
       period <- periodOpt
 
-      /**
-       * TODO control failure on id, period and unitType!!!
-       */
       (partitionedParentMap, partitionedChildrenMap) = partitionMap(rows.fields)
       /*
        * NOTE: GUARD - to not create UnitLinks in the event the left partition is not
@@ -59,10 +56,10 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
         k.startsWith(UnitParentPrefix)
     }
 
-  def returnNoneIfAllNotPrefixedAsChild(rawMap: Map[String, String]): Boolean = !rawMap.map {
+  private def returnNoneIfAllNotPrefixedAsChild(rawMap: Map[String, String]): Boolean = !rawMap.map {
     case (key, _) =>
       if (key.startsWith(UnitChildPrefix)) true else {
-        logger.warn(s"Bad field with key [$key] in partitioned child map [$rawMap]")
+        logger.warn(s"Bad field with key [$key] in partitioned (expected) children map [$rawMap]")
         false
       }
   }.toList.contains(false)

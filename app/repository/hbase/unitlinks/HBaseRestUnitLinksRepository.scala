@@ -6,13 +6,12 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.unitlinks.{ UnitLinks, UnitType }
+import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
 
 import repository.RestRepository.{ ErrorMessage, Row }
 import repository.hbase.HBase.LinksColumnFamily
 import repository.hbase.enterprise.HBaseRestEnterpriseUnitRepositoryConfig
 import repository.{ RestRepository, RowMapper, UnitLinksRepository }
-
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 case class HBaseRestUnitLinksRepositoryConfig(tableName: String)
@@ -23,7 +22,7 @@ class HBaseRestUnitLinksRepository @Inject() (
     rowMapper: RowMapper[UnitLinks]
 ) extends UnitLinksRepository with LazyLogging {
 
-  override def retrieveUnitLinks(id: String, unitType: UnitType, period: Period): Future[Either[ErrorMessage, Option[UnitLinks]]] = {
+  override def retrieveUnitLinks(id: UnitId, unitType: UnitType, period: Period): Future[Either[ErrorMessage, Option[UnitLinks]]] = {
     logger.info(s"Retrieving UnitLinks with [$id] of [$unitType] for [$period]")
     restRepository.findRow(config.tableName, UnitLinksRowKey(id, unitType, period), LinksColumnFamily).map(fromErrorOrRow)
   }

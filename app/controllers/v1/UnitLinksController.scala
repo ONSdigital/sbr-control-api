@@ -1,15 +1,22 @@
 package controllers.v1
 
-import scala.concurrent.Future
+import javax.inject.Inject
 
 import play.api.mvc.{ Action, AnyContent, Controller }
 
-class UnitLinksController extends Controller {
+import uk.gov.ons.sbr.models.Period
+import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
 
-  def retrieveUnitLinks(id: String): Action[AnyContent] =
-    retrieveUnitLinksWithPeriod(id, None)
+import controllers.v1.ControllerResultProcessor._
+import repository.UnitLinksRepository
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
-  def retrieveUnitLinksWithPeriod(id: String, periodOptStr: Option[String]): Action[AnyContent] = Action.async {
-    Future.successful(Ok("Hello SBR"))
+class UnitLinksController @Inject() (repository: UnitLinksRepository) extends Controller {
+
+  def retrieveUnitLinksWithPeriod(id: String, periodOptStr: String, unitTypeStr: String): Action[AnyContent] = Action.async {
+    repository.retrieveUnitLinks(UnitId(id), UnitType.fromAcronym(unitTypeStr), Period.fromString(periodOptStr)).map { errorOrOptUnitLinks =>
+      errorOrOptUnitLinks.fold(resultOnFailure, resultOnSuccessWithAtMostOneUnit[UnitLinks])
+    }
   }
+
 }
