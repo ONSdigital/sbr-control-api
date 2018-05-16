@@ -2,17 +2,19 @@ package repository.hbase.reportingunit
 
 import javax.inject.Inject
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import com.typesafe.scalalogging.LazyLogging
-import repository.RestRepository._
-import repository.hbase.HBase._
-import repository.{ ReportingUnitRepository, RestRepository, RowMapper }
+
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnit, Rurn }
-import utils.EitherSupport
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import utils.EitherSupport
+import repository.RestRepository._
+import repository.hbase.HBase.UnitColumnFamily
+import repository.{ ReportingUnitRepository, RestRepository, RowMapper }
 
 case class HBaseRestReportingUnitRepositoryConfig(tableName: String)
 
@@ -24,12 +26,12 @@ class HBaseRestReportingUnitRepository @Inject() (
 
   def retrieveReportingUnit(ern: Ern, period: Period, rurn: Rurn): Future[Either[ErrorMessage, Option[ReportingUnit]]] = {
     logger.info(s"Retrieving Reporting Unit with [$ern] [$rurn] for [$period].")
-    restRepository.findRow(config.tableName, ReportingUnitQuery.byRowKey(ern, period, rurn), DefaultColumnFamily).map(fromErrorOrRow)
+    restRepository.findRow(config.tableName, ReportingUnitQuery.byRowKey(ern, period, rurn), UnitColumnFamily).map(fromErrorOrRow)
   }
 
   def findReportingUnitsForEnterprise(ern: Ern, period: Period): Future[Either[ErrorMessage, Seq[ReportingUnit]]] = {
     logger.info(s"Finding Reporting Units with [$ern] for [$period].")
-    restRepository.findRows(config.tableName, ReportingUnitQuery.forAllWith(ern, period), DefaultColumnFamily).map(fromErrorOrRows)
+    restRepository.findRows(config.tableName, ReportingUnitQuery.forAllWith(ern, period), UnitColumnFamily).map(fromErrorOrRows)
   }
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[ReportingUnit]] = {

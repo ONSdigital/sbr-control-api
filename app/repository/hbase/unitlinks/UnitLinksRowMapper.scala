@@ -26,10 +26,10 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
        */
       if returnNoneWhenRowKeyIsNotOfLength(partitionedKey)
 
-      id = partitionedKey(unitIdIndex)
-      unitTypeOpt = toUnitType(partitionedKey(unitTypeIndex))
+      id = partitionedKey(UnitIdIndex)
+      unitTypeOpt = toUnitType(partitionedKey(UnitTypeIndex))
       unitType <- unitTypeOpt
-      periodOpt = toPeriod(partitionedKey(unitPeriodIndex))
+      periodOpt = toPeriod(partitionedKey(UnitPeriodIndex))
       period <- periodOpt
 
       (partitionedParentMap, partitionedChildrenMap) = partitionMap(rows.fields)
@@ -118,9 +118,9 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
     } else true
 
   private def returnNoneWhenRowKeyIsNotOfLength(partitionedKey: List[String]): Boolean =
-    if (partitionedKey.length != unitLinksRowKeyLength) {
+    if (partitionedKey.length != UnitLinksRowKeyLength) {
       logger.warn(s"Failure to produce UnitLinks, caused by rowKey [${partitionedKey.mkString}] invalid length " +
-        s"[${partitionedKey.length}] when expected [$unitLinksRowKeyLength]")
+        s"[${partitionedKey.length}] when expected [$UnitLinksRowKeyLength]")
       false
     } else true
 

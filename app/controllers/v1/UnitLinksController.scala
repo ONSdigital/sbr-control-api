@@ -11,10 +11,12 @@ import controllers.v1.ControllerResultProcessor._
 import repository.UnitLinksRepository
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
-class UnitLinksController @Inject() (repository: UnitLinksRepository) extends Controller {
+import controllers.v1.api.UnitLinksApi
 
-  def retrieveUnitLinksWithPeriod(id: String, periodOptStr: String, unitTypeStr: String): Action[AnyContent] = Action.async {
-    repository.retrieveUnitLinks(UnitId(id), UnitType.fromAcronym(unitTypeStr), Period.fromString(periodOptStr)).map { errorOrOptUnitLinks =>
+class UnitLinksController @Inject() (repository: UnitLinksRepository) extends Controller with UnitLinksApi {
+
+  def retrieveUnitLinksWithPeriod(unitIdStr: String, periodStr: String, unitTypeStr: String): Action[AnyContent] = Action.async {
+    repository.retrieveUnitLinks(UnitId(unitIdStr), UnitType.fromAcronym(unitTypeStr), Period.fromString(periodStr)).map { errorOrOptUnitLinks =>
       errorOrOptUnitLinks.fold(resultOnFailure, resultOnSuccessWithAtMostOneUnit[UnitLinks])
     }
   }

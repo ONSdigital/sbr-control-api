@@ -7,11 +7,11 @@ import repository.hbase.HBase.{ RowKeyDelimiter, Wildcard }
 
 object UnitLinksRowKey {
 
-  val unitLinksRowKeyLength = 3
+  val UnitLinksRowKeyLength = 3
 
-  val unitIdIndex = 0
-  val unitTypeIndex = 1
-  val unitPeriodIndex = 2
+  val UnitIdIndex = 0
+  val UnitTypeIndex = 1
+  val UnitPeriodIndex = 2
 
   val split: (String) => List[String] = (rowKey: String) =>
     rowKey.split(RowKeyDelimiter).toList

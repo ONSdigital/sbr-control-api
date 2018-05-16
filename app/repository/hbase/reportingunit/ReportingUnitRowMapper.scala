@@ -9,7 +9,7 @@ object ReportingUnitRowMapper extends RowMapper[ReportingUnit] {
 
   override def fromRow(variables: Row): Option[ReportingUnit] =
     for {
-      rurn <- variables.get(rurn)
-      optRuref = variables.get(ruref)
+      rurn <- variables.fields.get(rurn)
+      optRuref = variables.fields.get(ruref)
     } yield ReportingUnit(Rurn(rurn), optRuref)
 }
