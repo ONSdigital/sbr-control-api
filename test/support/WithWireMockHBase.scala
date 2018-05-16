@@ -2,12 +2,14 @@ package support
 
 import play.api.http.Status.OK
 import play.mvc.Http.MimeTypes.JSON
+
 import org.scalatest.Suite
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.client.{ MappingBuilder, ResponseDefinitionBuilder, WireMock }
 
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
+import uk.gov.ons.sbr.models.legalunit.UBRN
 import uk.gov.ons.sbr.models.localunit.Lurn
 import uk.gov.ons.sbr.models.reportingunit.Rurn
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
@@ -15,6 +17,7 @@ import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
 import repository.hbase.HBase.rowKeyUrl
 import repository.hbase.enterprise.EnterpriseUnitRowKey
 import repository.hbase.localunit.LocalUnitQuery
+import repository.hbase.legalunit.LegalUnitQuery
 import repository.hbase.reportingunit.ReportingUnitQuery
 import repository.hbase.unitlinks.UnitLinksProperties.UnitLinksColumnFamily
 import repository.hbase.unitlinks.UnitLinksRowKey
@@ -48,6 +51,15 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
       "/" + rowKeyUrl(namespace = Namespace, table = tableName, rowKey, columnFamily = columnFamily),
       Authorization("", "")
     )
+
+  def anAllLegalUnitsForEnterpriseRequest(withErn: Ern, withPeriod: Period): MappingBuilder =
+    aLegalUnitQuery(LegalUnitQuery.forAllWith(withErn, withPeriod))
+
+  def aLegalUnitRequest(withErn: Ern, withPeriod: Period, withUBRN: UBRN): MappingBuilder =
+    aLegalUnitQuery(query = LegalUnitQuery.byRowKey(withErn, withPeriod, withUBRN))
+
+  private def aLegalUnitQuery(query: String): MappingBuilder =
+    createUrlAndThenGetHBaseJson(tableName = "legal_unit", query)
 
   def aEnterpriseUnitRequest(withErn: Ern, withPeriod: Period): MappingBuilder = {
     val rowKey = EnterpriseUnitRowKey(withErn, withPeriod)
