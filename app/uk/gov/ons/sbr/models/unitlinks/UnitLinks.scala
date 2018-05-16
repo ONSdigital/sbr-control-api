@@ -30,7 +30,7 @@ object UnitLinks {
 
     private def toExternalForm(ul: UnitLinks): ExternalForm =
       ExternalForm(
-        ul.id, ul.period, ul.parents.map(x => toExtOptParentsMap(x)), ul.children.map(x => toExtOptChildrenMap(x)),
+        ul.id, ul.period, ul.parents.map(toExtOptParentsMap), ul.children.map(toExtOptChildrenMap),
         ul.unitType
       )
 

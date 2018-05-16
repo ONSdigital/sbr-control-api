@@ -1,7 +1,7 @@
 import java.time.Month.MARCH
 
 import play.api.http.ContentTypes.JSON
-import play.api.http.Status.OK
+import play.api.http.Status.{ OK, NOT_FOUND, BAD_REQUEST }
 import org.scalatest.OptionValues
 
 import uk.gov.ons.sbr.models.Period
@@ -53,6 +53,34 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
       response.json.as[Enterprise] shouldBe
         Enterprise(ern = TargetErn, entref = SampleEnterpriseReference, name = SampleEnterpriseName, postcode = SamplePostcode,
           legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees), jobs = Some(SampleJobs))
+    }
+  }
+
+  feature("respond to a non-existent Enterprise Unit request") {
+    scenario("by an exact Enterprise reference (ERN) and period") { wsClient =>
+      Given(s"an does not exist with $TargetErn and $TargetPeriod")
+      stubHBaseFor(aEnterpriseUnitRequest(withErn = TargetErn, withPeriod = TargetPeriod).willReturn(
+        anOkResponse().withBody(NoMatchFoundResponse)
+      ))
+
+      When(s"an enterprise unit with $TargetErn and $TargetPeriod is requested")
+      val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/enterprises/${TargetErn.value}").get())
+
+      Then("a NOT_FOUND response status to given back with no details are returned")
+      response.status shouldBe NOT_FOUND
+    }
+  }
+
+  feature("responds to a invalid request due to validation route validation") {
+    scenario("rejects request due to Enterprise reference number (ERN) is too short") { wsClient =>
+      Given(s"that an ERN is represented by a ten digit number")
+
+      When(s"the user requests a Local Unit having an ERN that is not ten digits long")
+      val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/enterprises/123456789}").get())
+
+      Then(s"a BAD REQUEST response is returned")
+      response.status shouldBe BAD_REQUEST
+
     }
   }
 

@@ -91,20 +91,4 @@ class HBaseRestSpec extends TestUtils with BeforeAndAfterEach with GuiceOneAppPe
     }
   }
 
-  "/v1/periods/:period/types/:type/units/:id" should {
-    "return a unit for a valid id (PAYE)" in {
-      val id = "12345"
-      val unitType = "ENT"
-      val body = "{\"Row\":[{\"key\":\"MTIzNDV+RU5UfjIwMTgwMg==\",\"Cell\":[{\"column\":\"bDpjXzE5MjgzNzQ2NTk5OQ==\",\"timestamp\":1519823591909,\"$\":\"TEVV\"},{\"column\":\"bDpjXzIzODQ3NTYz\",\"timestamp\":1519823596475,\"$\":\"Q0g=\"},{\"column\":\"bDpjXzM4NTc2Mzk1\",\"timestamp\":1519823601150,\"$\":\"UEFZRQ==\"},{\"column\":\"bDpjXzQxMDM3NDky\",\"timestamp\":1519823605519,\"$\":\"VkFU\"}]}]}"
-      mockEndpoint(unitLinksTable, Some(firstPeriod), id, Some(unitType), body)
-      val resp = fakeRequest(s"/$version/periods/$firstPeriod/types/$unitType/units/$id")
-      // We don't need to convert the JSON response to an array as only a single JSON object is returned
-      // as by specifying the unit type there can not be multiple responses for one id.
-      val json = contentAsJson(resp)
-      val unit = json.validate[UnitLinksUnit]
-      status(resp) mustBe OK
-      contentType(resp) mustBe Some("application/json")
-      unit.isInstanceOf[JsSuccess[UnitLinksUnit]] mustBe true
-    }
-  }
 }

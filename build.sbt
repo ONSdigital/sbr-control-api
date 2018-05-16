@@ -94,7 +94,7 @@ lazy val api = (project in file("."))
     organization := "uk.gov.ons",
     moduleName := s"${Constant.appName}",
     name := s"${organizationName.value}-${Constant.team}-${moduleName.value}",
-    version := Versions.appVersion,
+    version := (version in ThisBuild).value,
     buildInfoPackage := "controllers",
     // gives us last compile time and tagging info
     buildInfoKeys := Seq[BuildInfoKey](

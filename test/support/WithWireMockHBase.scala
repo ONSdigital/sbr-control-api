@@ -9,7 +9,7 @@ import com.github.tomakehurst.wiremock.client.{ MappingBuilder, ResponseDefiniti
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.localunit.Lurn
-import uk.gov.ons.sbr.models.unitlinks.UnitType
+import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
 
 import repository.hbase.HBase.{ LinksColumnFamily, UnitColumnFamily, rowKeyUrl }
 import repository.hbase.enterprise.EnterpriseUnitRowKey
@@ -41,10 +41,10 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
     createUrlAndThenGetHBaseJson(tableName = "enterprise", rowKey)
   }
 
-  def aUnitLinksPrefixRequest(withStatUnit: String) =
+  def aUnitLinksPrefixRequest(withStatUnit: UnitId) =
     aUnitLinksQuery(query = UnitLinksRowKey(withStatUnit))
 
-  def aUnitLinksExactRowKeyRequest(withStatUnit: String, withUnitType: UnitType, withPeriod: Period): MappingBuilder =
+  def aUnitLinksExactRowKeyRequest(withStatUnit: UnitId, withUnitType: UnitType, withPeriod: Period): MappingBuilder =
     aUnitLinksQuery(query = UnitLinksRowKey(withStatUnit, withUnitType, withPeriod))
 
   def aUnitLinksQuery(query: String): MappingBuilder =

@@ -13,9 +13,19 @@ object JsonString {
   def optionalInt(name: String, optValue: Option[Int]): Option[String] =
     optValue.flatMap(int(name, _))
 
+  def optionalMap[A, B](name: String, optValue: Option[Map[A, B]])(convertKey: A => String, convertValue: B => String): Option[String] = {
+    optValue.map(map => withObject(name = name, map.toSeq.map {
+      case (key, value) =>
+        string(convertKey(key), convertValue(value))
+    }: _*))
+  }
+
   def withValues(values: Option[String]*): String =
     values.flatten.mkString(",")
 
   def withObject(values: Option[String]*): String =
     values.flatten.mkString("{", ",", "}")
+
+  def withObject(name: String, values: Option[String]*): String =
+    s""""$name":${withObject(values: _*)}"""
 }

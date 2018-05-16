@@ -16,9 +16,9 @@ object UnitLinksRowKey {
   val split: (String) => List[String] = (rowKey: String) =>
     rowKey.split(RowKeyDelimiter).toList
 
-  def apply(id: String): String =
-    Seq(id, Wildcard).mkString(RowKeyDelimiter)
+  def apply(id: UnitId): String =
+    Seq(id.value, Wildcard).mkString(RowKeyDelimiter)
 
   def apply(id: UnitId, unitType: UnitType, period: Period): String =
-    Seq(id, UnitType.toAcronym(unitType), Period.asString(period)).mkString(RowKeyDelimiter)
+    Seq(id.value, UnitType.toAcronym(unitType), Period.asString(period)).mkString(RowKeyDelimiter)
 }

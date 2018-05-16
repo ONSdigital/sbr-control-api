@@ -5,12 +5,14 @@ import com.google.inject.{ AbstractModule, TypeLiteral }
 
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 import uk.gov.ons.sbr.models.localunit.LocalUnit
+import uk.gov.ons.sbr.models.unitlinks.UnitLinks
 
-import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader }
+import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, HBaseRestUnitLinksRepositoryConfigLoader }
 import repository.hbase._
 import repository.hbase.enterprise.{ EnterpriseUnitRowMapper, HBaseRestEnterpriseUnitRepository, HBaseRestEnterpriseUnitRepositoryConfig }
 import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
-import repository.{ EnterpriseUnitRepository, LocalUnitRepository, RestRepository, RowMapper }
+import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksRowMapper }
+import repository._
 import services.{ DataAccess, HBaseRestDataAccess }
 
 /**
@@ -29,17 +31,21 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     val hBaseRestConfig = HBaseRestRepositoryConfigLoader.load(underlyingConfig)
     val hBaseRestLocalUnitConfig = HBaseRestLocalUnitRepositoryConfigLoader.load(underlyingConfig)
     val hbaseRestEnterpriseUnitConfig = HBaseRestEnterpriseUnitRepositoryConfigLoader.load(underlyingConfig)
+    val hbaseRestUnitLinksConfig = HBaseRestUnitLinksRepositoryConfigLoader.load(underlyingConfig)
     bind(classOf[HBaseRestRepositoryConfig]).toInstance(hBaseRestConfig)
     bind(classOf[HBaseRestLocalUnitRepositoryConfig]).toInstance(hBaseRestLocalUnitConfig)
     bind(classOf[HBaseRestEnterpriseUnitRepositoryConfig]).toInstance(hbaseRestEnterpriseUnitConfig)
+    bind(classOf[HBaseRestUnitLinksRepositoryConfig]).toInstance(hbaseRestUnitLinksConfig)
 
     bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
     bind(classOf[RestRepository]).to(classOf[HBaseRestRepository])
     bind(classOf[LocalUnitRepository]).to(classOf[HBaseRestLocalUnitRepository])
     bind(classOf[EnterpriseUnitRepository]).to(classOf[HBaseRestEnterpriseUnitRepository])
+    bind(classOf[UnitLinksRepository]).to(classOf[HBaseRestUnitLinksRepository])
     bind(classOf[HBaseResponseReaderMaker]).toInstance(HBaseResponseReader)
     bind(new TypeLiteral[RowMapper[LocalUnit]]() {}).toInstance(LocalUnitRowMapper)
     bind(new TypeLiteral[RowMapper[Enterprise]]() {}).toInstance(EnterpriseUnitRowMapper)
+    bind(new TypeLiteral[RowMapper[UnitLinks]]() {}).toInstance(UnitLinksRowMapper)
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
   }
 }

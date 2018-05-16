@@ -3,7 +3,7 @@ package support.sample
 import java.time.Month.AUGUST
 
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
+import uk.gov.ons.sbr.models.unitlinks._
 
 trait SampleUnitLinks {
 
@@ -32,9 +32,12 @@ trait SampleUnitLinks {
   val SampleUnitLinksWithAllFields: UnitLinks =
     SampleUnitLinksWithOnlyMandatoryFields.copy(parents = Some(SampleParents), children = Some(SampleChildren))
 
+  // TODO - USE template as the default values
   def aUnitLinksSample(unitId: UnitId = SampleUnitId, parents: Option[Map[UnitType, UnitId]] = Some(SampleParents),
     children: Option[Map[UnitId, UnitType]] = Some(SampleChildren),
     template: UnitLinks = SampleUnitLinksWithOnlyMandatoryFields): UnitLinks =
     template.copy(id = unitId, parents = parents, children = children)
+
+  def unitIdAsString(unitId: UnitId): String = unitId.value
 
 }
