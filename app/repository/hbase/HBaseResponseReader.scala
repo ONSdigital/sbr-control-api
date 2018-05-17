@@ -4,12 +4,13 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.util.Base64
 
 import play.api.libs.json.{ JsResult, JsValue, Json, Reads }
-import repository.RestRepository.Row
+
+import repository.RestRepository.{ Row, RowKey }
 
 object HBaseResponseReader extends HBaseResponseReaderMaker {
 
   private case class EncodedResult(Row: Seq[EncodedRow])
-  private case class EncodedRow(Cell: Seq[EncodedColumn])
+  private case class EncodedRow(key: RowKey, Cell: Seq[EncodedColumn])
   private case class EncodedColumn(column: String, `$`: String)
 
   private implicit val readsEncodedColumn = Json.reads[EncodedColumn]
@@ -22,10 +23,13 @@ object HBaseResponseReader extends HBaseResponseReaderMaker {
         json.validate[EncodedResult].map(_.Row.map(decodeRow(columnFamily)))
     }
 
-  private def decodeRow(columnFamily: String)(encodedRow: EncodedRow): Row =
-    encodedRow.Cell.map(decodeColumn).toMap.map {
-      case (columnName, columnValue) => removeColumnFamilyFromColumnName(columnFamily, columnName) -> columnValue
-    }
+  private def decodeRow(columnFamily: String)(encodedRow: EncodedRow) =
+    Row(
+      rowKey = decode(encodedRow.key),
+      fields = encodedRow.Cell.map(decodeColumn).toMap.map {
+        case (columnName, columnValue) => removeColumnFamilyFromColumnName(columnFamily, columnName) -> columnValue
+      }
+    )
 
   private def removeColumnFamilyFromColumnName(columnFamily: String, columnName: String): String = {
     val prefix = columnFamily + ":"

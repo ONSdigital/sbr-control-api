@@ -11,7 +11,7 @@ import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
 
 import repository.RestRepository.{ ErrorMessage, Row }
-import repository.hbase.HBase.DefaultColumnFamily
+import repository.hbase.HBase.UnitColumnFamily
 import repository.{ EnterpriseUnitRepository, RestRepository, RowMapper }
 
 case class HBaseRestEnterpriseUnitRepositoryConfig(tableName: String)
@@ -24,7 +24,7 @@ class HBaseRestEnterpriseUnitRepository @Inject() (
 
   override def retrieveEnterpriseUnit(ern: Ern, period: Period): Future[Either[ErrorMessage, Option[Enterprise]]] = {
     logger.info(s"Retrieving Enterprise with [$ern] for [$period].")
-    restRepository.findRow(config.tableName, EnterpriseUnitRowKey(ern, period), DefaultColumnFamily).map(fromErrorOrRow)
+    restRepository.findRow(config.tableName, EnterpriseUnitRowKey(ern, period), UnitColumnFamily).map(fromErrorOrRow)
   }
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[Enterprise]] = {

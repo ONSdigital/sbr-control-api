@@ -34,18 +34,6 @@ class RouteSpec extends TestUtils {
     }
   }
 
-  "SearchController" should {
-    "return 400 short key length when searching with UnitType" in {
-      val search = fakeRequest("/v1/periods/201706/types/ENT/units/1")
-      status(search) mustBe BAD_REQUEST
-    }
-
-    "return 400 with invalid date when search with date, id and UnitType" in {
-      val dateSearch = fakeRequest("/v1/periods/20177/types/ENT/units/124")
-      status(dateSearch) mustBe BAD_REQUEST
-    }
-  }
-
   "HealthController" should {
     "display short health report as json" in {
       val health = fakeRequest("/health")

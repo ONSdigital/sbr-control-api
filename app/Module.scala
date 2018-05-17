@@ -4,11 +4,12 @@ import play.api.{ Configuration, Environment }
 import com.google.inject.{ AbstractModule, TypeLiteral }
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 import uk.gov.ons.sbr.models.localunit.LocalUnit
-import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestReportingUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader }
+import uk.gov.ons.sbr.models.unitlinks.UnitLinks
+import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, HBaseRestReportingUnitRepositoryConfigLoader, HBaseRestUnitLinksRepositoryConfigLoader }
 import repository.hbase._
 import repository.hbase.enterprise.{ EnterpriseUnitRowMapper, HBaseRestEnterpriseUnitRepository, HBaseRestEnterpriseUnitRepositoryConfig }
 import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
-import repository.hbase.reportingunit.{ HBaseRestReportingUnitRepository, HBaseRestReportingUnitRepositoryConfig, ReportingUnitRowMapper }
+import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksRowMapper, ReportingUnitRowMapper }
 import repository._
 import services.{ DataAccess, HBaseRestDataAccess }
 import uk.gov.ons.sbr.models.reportingunit.ReportingUnit
@@ -29,11 +30,12 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     val hBaseRestConfig = HBaseRestRepositoryConfigLoader.load(underlyingConfig)
     val hBaseRestLocalUnitConfig = HBaseRestLocalUnitRepositoryConfigLoader.load(underlyingConfig)
     val hbaseRestEnterpriseUnitConfig = HBaseRestEnterpriseUnitRepositoryConfigLoader.load(underlyingConfig)
+    val hbaseRestUnitLinksConfig = HBaseRestUnitLinksRepositoryConfigLoader.load(underlyingConfig)
     val hbaseRestReportingUnitConfig = HBaseRestReportingUnitRepositoryConfigLoader.load(underlyingConfig)
-
     bind(classOf[HBaseRestRepositoryConfig]).toInstance(hBaseRestConfig)
     bind(classOf[HBaseRestLocalUnitRepositoryConfig]).toInstance(hBaseRestLocalUnitConfig)
     bind(classOf[HBaseRestEnterpriseUnitRepositoryConfig]).toInstance(hbaseRestEnterpriseUnitConfig)
+    bind(classOf[HBaseRestUnitLinksRepositoryConfig]).toInstance(hbaseRestUnitLinksConfig)
     bind(classOf[HBaseRestReportingUnitRepositoryConfig]).toInstance(hbaseRestReportingUnitConfig)
 
     bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
@@ -41,10 +43,12 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     bind(classOf[LocalUnitRepository]).to(classOf[HBaseRestLocalUnitRepository])
     bind(classOf[ReportingUnitRepository]).to(classOf[HBaseRestReportingUnitRepository])
     bind(classOf[EnterpriseUnitRepository]).to(classOf[HBaseRestEnterpriseUnitRepository])
+    bind(classOf[UnitLinksRepository]).to(classOf[HBaseRestUnitLinksRepository])
     bind(classOf[HBaseResponseReaderMaker]).toInstance(HBaseResponseReader)
     bind(new TypeLiteral[RowMapper[ReportingUnit]]() {}).toInstance(ReportingUnitRowMapper)
     bind(new TypeLiteral[RowMapper[LocalUnit]]() {}).toInstance(LocalUnitRowMapper)
     bind(new TypeLiteral[RowMapper[Enterprise]]() {}).toInstance(EnterpriseUnitRowMapper)
+    bind(new TypeLiteral[RowMapper[UnitLinks]]() {}).toInstance(UnitLinksRowMapper)
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
   }
 }

@@ -1,5 +1,9 @@
 package support
 
+import uk.gov.ons.sbr.models.unitlinks.UnitType
+
+import repository.hbase.unitlinks.UnitLinksColumns.{ UnitChildPrefix, UnitParentPrefix }
+
 trait HBaseResponseFixture {
   /*
    * Cloudera currently returns a 200 OK Response containing an "empty row".
@@ -21,4 +25,8 @@ trait HBaseResponseFixture {
         | "timestamp": $timestamp,
         | "$$": "${hbaseEncode(value)}"
         |}""".stripMargin
+
+  def aChildIdWithPrefix(id: String) = UnitChildPrefix + id
+
+  def aParentUnitTypeWithPrefix(unitType: UnitType) = UnitParentPrefix + UnitType.toAcronym(unitType)
 }

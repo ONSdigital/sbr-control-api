@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import config.Properties
 import uk.gov.ons.sbr.models._
-import uk.gov.ons.sbr.models.units.{ Child, EnterpriseUnit, LEU, UnitLinks }
+import uk.gov.ons.sbr.models.units.{ Child, EnterpriseUnit, LEU, UnitLinksUnit }
 import utils.HBaseRestUtils
 
 // TODO:
@@ -142,13 +142,13 @@ class HBaseRestDataAccess @Inject() (ws: WSClient, val configuration: Configurat
   /**
    * Given a Seq[JsValue], traverse the sequence and create UnitLinks for each item.
    */
-  def transformUnitJson(id: String, seqJSON: Seq[JsValue]): List[UnitLinks] = {
+  def transformUnitJson(id: String, seqJSON: Seq[JsValue]): List[UnitLinksUnit] = {
     val period = utils.decodeBase64((seqJSON.last \ "key").as[String]).split(delimiter).last
     // We only want the most recent period
     val filteredJSON = seqJSON.filter(x => utils.decodeBase64((x \ "key").as[String]).split(delimiter).last == period)
     filteredJSON.map(x => {
       val unitType = utils.decodeBase64((x \ "key").as[String]).split(delimiter).tail.head
-      UnitLinks(
+      UnitLinksUnit(
         id,
         period,
         utils.extractParents(unitType, utils.jsonToMap(x, utils.formUnitKey)),

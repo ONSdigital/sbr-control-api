@@ -9,6 +9,7 @@ class HBaseResponseReaderSpec extends FreeSpec with Matchers {
 
   private trait Fixture extends HBaseResponseFixture {
     val ColumnFamily = "cg"
+    val UnusedRowKey = "some-key"
 
     def parse(hBaseResponseJsonStr: String): Seq[Row] =
       Json.parse(hBaseResponseJsonStr).as[Seq[Row]](HBaseResponseReader.forColumnFamily(ColumnFamily))
@@ -33,10 +34,10 @@ class HBaseResponseReaderSpec extends FreeSpec with Matchers {
             |   ]}
             |]}""".stripMargin
 
-      parse(responseJsonStr) shouldBe Seq(Map(
+      parse(responseJsonStr) shouldBe Seq(Row(rowKey = UnusedRowKey, fields = Map(
         "col1-name" -> "col1-value",
         "col2-name" -> "col2-value"
-      ))
+      )))
     }
 
     "can successfully parse a valid response containing multiple rows" in new Fixture {
@@ -63,8 +64,8 @@ class HBaseResponseReaderSpec extends FreeSpec with Matchers {
             |]}""".stripMargin
 
       parse(responseJsonStr) shouldBe Seq(
-        Map("row1-col1-name" -> "row1-col1-value", "row1-col2-name" -> "row1-col2-value"),
-        Map("row2-col1-name" -> "row2-col1-value", "row2-col2-name" -> "row2-col2-value")
+        Row(rowKey = "row1-key", fields = Map("row1-col1-name" -> "row1-col1-value", "row1-col2-name" -> "row1-col2-value")),
+        Row(rowKey = "row2-key", fields = Map("row2-col1-name" -> "row2-col1-value", "row2-col2-name" -> "row2-col2-value"))
       )
     }
   }

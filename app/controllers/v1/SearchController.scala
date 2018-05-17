@@ -82,7 +82,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, response = classOf[UnitLinks], responseContainer = "JsValue", message = "Ok -> Retrieved Links for given id."),
+    new ApiResponse(code = 200, response = classOf[UnitLinksUnit], responseContainer = "JsValue", message = "Ok -> Retrieved Links for given id."),
     new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
     new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
     new ApiResponse(code = 500, responseContainer = "JsValue",
@@ -103,7 +103,7 @@ class SearchController @Inject() (db: DataAccess, playConfig: Configuration, lan
     httpMethod = "GET"
   )
   @ApiResponses(Array(
-    new ApiResponse(code = 200, response = classOf[UnitLinks], responseContainer = "JsValue", message = "Ok -> Retrieved Enterprise for given id."),
+    new ApiResponse(code = 200, response = classOf[UnitLinksUnit], responseContainer = "JsValue", message = "Ok -> Retrieved Enterprise for given id."),
     new ApiResponse(code = 400, responseContainer = "JsValue", message = "BadRequest -> Id or other is invalid."),
     new ApiResponse(code = 404, responseContainer = "JsValue", message = "NotFound -> Given attributes could not be matched."),
     new ApiResponse(code = 500, responseContainer = "JsValue",
