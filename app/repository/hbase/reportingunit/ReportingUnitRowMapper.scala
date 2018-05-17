@@ -6,6 +6,8 @@ import repository.hbase.reportingunit.ReportingUnitColumns._
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnit, Rurn }
 
+import scala.util.Try
+
 object ReportingUnitRowMapper extends RowMapper[ReportingUnit] {
 
   override def fromRow(variables: Row): Option[ReportingUnit] =
@@ -25,10 +27,14 @@ object ReportingUnitRowMapper extends RowMapper[ReportingUnit] {
       postcode <- variables.get(postcode)
       sic07 <- variables.get(sic07)
       employees <- variables.get(employees)
+      employeesInt <- Try(employees.toInt).toOption
       employment <- variables.get(employment)
+      employmentInt <- Try(employment.toInt).toOption
       turnover <- variables.get(turnover)
+      turnoverInt <- Try(turnover.toInt).toOption
       prn <- variables.get(prn)
+      prnFloat <- Try(prn.toFloat).toOption
     } yield ReportingUnit(Rurn(rurn), optRuref, Ern(ern), optEntref, name, optTradingStyle, optLegalStatus,
-      address1, optAddress2, optAddress3, optAddress4, optAddress5, postcode, sic07, employees, employment,
-      turnover, prn)
+      address1, optAddress2, optAddress3, optAddress4, optAddress5, postcode, sic07, employeesInt, employmentInt,
+      turnoverInt, prnFloat)
 }

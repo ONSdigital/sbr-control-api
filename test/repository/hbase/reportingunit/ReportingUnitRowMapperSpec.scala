@@ -21,10 +21,10 @@ class ReportingUnitRowMapperSpec extends FreeSpec with Matchers with SampleRepor
     val address5Value = "ey"
     val postCodeValue = "qr"
     val sic07Value = "qg"
-    val employeesValue = "ag"
-    val employmentValue = "qg"
-    val turnoverValue = "qg"
-    val prnValue = "qg"
+    val employeesValue = "1"
+    val employmentValue = "2"
+    val turnoverValue = "3"
+    val prnValue = "0.2"
     val tradingStyleValue = "as"
     val legalStatusValue = "aa"
 
@@ -44,8 +44,8 @@ class ReportingUnitRowMapperSpec extends FreeSpec with Matchers with SampleRepor
         name = nameValue, tradingStyle = Some(tradingStyleValue), legalStatus = Some(legalStatusValue),
         address1 = address1Value, address2 = Some(address2Value), address3 = Some(address3Value),
         address4 = Some(address4Value), address5 = Some(address5Value), postcode = postCodeValue,
-        sic07 = sic07Value, employees = employeesValue, employment = employmentValue, turnover = turnoverValue,
-        prn = prnValue
+        sic07 = sic07Value, employees = employeesValue.toInt, employment = employmentValue.toInt,
+        turnover = turnoverValue.toInt, prn = prnValue.toFloat
       ))
     }
 
@@ -55,8 +55,8 @@ class ReportingUnitRowMapperSpec extends FreeSpec with Matchers with SampleRepor
         name = nameValue, tradingStyle = None, legalStatus = None,
         address1 = address1Value, address2 = None, address3 = None,
         address4 = None, address5 = None, postcode = postCodeValue,
-        sic07 = sic07Value, employees = employeesValue, employment = employmentValue, turnover = turnoverValue,
-        prn = prnValue
+        sic07 = sic07Value, employees = employeesValue.toInt, employment = employmentValue.toInt,
+        turnover = turnoverValue.toInt, prn = prnValue.toFloat
       ))
     }
 

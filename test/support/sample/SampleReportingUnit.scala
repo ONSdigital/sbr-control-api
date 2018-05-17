@@ -20,10 +20,10 @@ trait SampleReportingUnit {
     address5 = Some("UK"),
     postcode = "NP10 8XG",
     sic07 = "10000",
-    employees = "1300",
-    employment = "100",
-    turnover = "100000",
-    prn = "0.2"
+    employees = 100,
+    employment = 500,
+    turnover = 623481,
+    prn = 1F
   )
 
   val SampleAllValuesReportingUnit1 = ReportingUnit(
@@ -41,10 +41,10 @@ trait SampleReportingUnit {
     address5 = Some("UK"),
     postcode = "NP10 8XY",
     sic07 = "20000",
-    employees = "2300",
-    employment = "500",
-    turnover = "600000",
-    prn = "0.4"
+    employees = 8462,
+    employment = 193,
+    turnover = 856288,
+    prn = 1F
   )
 
   def withOnlyMandatoryFields(ru: ReportingUnit): ReportingUnit = ru.copy(ruref = None, entref = None,

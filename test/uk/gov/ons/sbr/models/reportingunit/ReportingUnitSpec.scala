@@ -26,10 +26,10 @@ class ReportingUnitSpec extends FreeSpec with Matchers {
           optionalString("address5", reportingUnit.address5),
           string("postcode", reportingUnit.postcode),
           string("sic07", reportingUnit.sic07),
-          string("employees", reportingUnit.employees),
-          string("employment", reportingUnit.employment),
-          string("turnover", reportingUnit.turnover),
-          string("prn", reportingUnit.prn)
+          int("employees", reportingUnit.employees),
+          int("employment", reportingUnit.employment),
+          int("turnover", reportingUnit.turnover),
+          float("prn", reportingUnit.prn)
         )
       }
          |}""".stripMargin

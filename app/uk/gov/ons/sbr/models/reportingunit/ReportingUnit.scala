@@ -19,10 +19,10 @@ case class ReportingUnit(
   @ApiModelProperty(value = "Reporting Unit address line 5", dataType = "string", example = "UK", required = false) address5: Option[String],
   @ApiModelProperty(value = "Reporting Unit post code", dataType = "string", example = "NP10 ABC", required = true) postcode: String,
   @ApiModelProperty(value = "Reporting Unit sic07", dataType = "string", example = "10000", required = true) sic07: String,
-  @ApiModelProperty(value = "Reporting Unit employees", dataType = "string", example = "13000", required = true) employees: String,
-  @ApiModelProperty(value = "Reporting Unit employment", dataType = "string", example = "100", required = true) employment: String,
-  @ApiModelProperty(value = "Reporting Unit turnover", dataType = "string", example = "1000000", required = true) turnover: String,
-  @ApiModelProperty(value = "Reporting Unit prn", dataType = "string", example = "0.2", required = true) prn: String
+  @ApiModelProperty(value = "Reporting Unit employees", dataType = "int", example = "13000", required = true) employees: Int,
+  @ApiModelProperty(value = "Reporting Unit employment", dataType = "int", example = "100", required = true) employment: Int,
+  @ApiModelProperty(value = "Reporting Unit turnover", dataType = "int", example = "1000000", required = true) turnover: Int,
+  @ApiModelProperty(value = "Reporting Unit prn", dataType = "float", example = "0.2", required = true) prn: Float
 )
 
 object ReportingUnit {
