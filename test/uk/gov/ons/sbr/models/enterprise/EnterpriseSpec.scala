@@ -23,7 +23,7 @@ class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
           optionalInt(name = "jobs", optValue = ent.jobs)
         )
       }
-         |}""".stripMargin
+       |}""".stripMargin
   }
 
   "A enterprise" - {

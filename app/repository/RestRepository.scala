@@ -1,8 +1,8 @@
 package repository
 
-import repository.RestRepository.{ ErrorMessage, Row }
-
 import scala.concurrent.Future
+
+import repository.RestRepository.{ ErrorMessage, Row }
 
 trait RestRepository {
   def findRow(table: String, rowKey: String, columnFamily: String): Future[Either[ErrorMessage, Option[Row]]]
@@ -11,5 +11,7 @@ trait RestRepository {
 
 object RestRepository {
   type ErrorMessage = String
-  type Row = Map[String, String]
+  type RowKey = String
+
+  case class Row(rowKey: RowKey, fields: Map[String, String])
 }
