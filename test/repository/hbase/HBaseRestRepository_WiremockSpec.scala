@@ -19,7 +19,6 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
   private val RowKey = "rowKey"
   private val ColumnFamily = "cg"
   private val UnusedRowKey = ""
-  private def toRow(variables: Map[String, String]) = Row(rowKey = UnusedRowKey, fields = variables)
 
   // test timeout must exceed the configured HBaseRest timeout to properly test client-side timeout handling
   override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(1500, Millis)), interval = scaled(Span(50, Millis)))
@@ -50,6 +49,8 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
       )))
     }(new Port(wireMockPort))
   }
+
+  private def toRow(variables: Map[String, String]) = Row(rowKey = UnusedRowKey, fields = variables)
 
   "A HBase REST Repository" - {
     "when expecting to find at most one row" - {

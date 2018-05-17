@@ -7,13 +7,13 @@ import uk.gov.ons.sbr.models.unitlinks._
 
 trait SampleUnitLinks {
 
-  val CompaniesHouse = "CH"
-  val ValueAddedTax = "VAT"
-  val PayeAsYourEarnTax = "PAYE"
-  val Enterprise = "ENT"
-  val LegalUnit = "LEU"
-  val LocalUnit = "LOU"
-  val ReportingUnit = "REU"
+  val CompaniesHouse = UnitType.toAcronym(UnitType.CompaniesHouse)
+  val ValueAddedTax = UnitType.toAcronym(UnitType.ValueAddedTax)
+  val PayAsYourEarnTax = UnitType.toAcronym(UnitType.PayAsYourEarnTax)
+  val Enterprise = UnitType.toAcronym(UnitType.Enterprise)
+  val LegalUnit = UnitType.toAcronym(UnitType.LegalUnit)
+  val LocalUnit = UnitType.toAcronym(UnitType.LocalUnit)
+  val ReportingUnit = UnitType.toAcronym(UnitType.ReportingUnit)
 
   val SampleCompaniesHouseChildId = "NI034159"
   val SamplePayAsYouEarnChildId = "2738768"
@@ -23,7 +23,7 @@ trait SampleUnitLinks {
   val SamplePeriod: Period = Period.fromYearMonth(2018, AUGUST)
   val SampleUnitType: UnitType = UnitType.fromAcronym(LegalUnit)
   val SampleChildren: Map[UnitId, UnitType] =
-    Map(UnitId(SamplePayAsYouEarnChildId) -> UnitType.fromAcronym(PayeAsYourEarnTax), UnitId(SampleCompaniesHouseChildId) -> UnitType.fromAcronym(CompaniesHouse))
+    Map(UnitId(SamplePayAsYouEarnChildId) -> UnitType.fromAcronym(PayAsYourEarnTax), UnitId(SampleCompaniesHouseChildId) -> UnitType.fromAcronym(CompaniesHouse))
   val SampleParents: Map[UnitType, UnitId] = Map(UnitType.fromAcronym(Enterprise) -> UnitId(SampleEnterpriseParentId))
 
   val SampleUnitLinksWithOnlyMandatoryFields: UnitLinks =

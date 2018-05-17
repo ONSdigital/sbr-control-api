@@ -16,7 +16,7 @@ object ReadsUnitLinks {
     implicit val unitTypeReads: Reads[UnitType] = Reads.StringReads.map(UnitType.fromAcronym)
     implicit val unitIdReads: Reads[UnitId] = Reads.StringReads.map(UnitId(_))
 
-    implicit val writesExternalForm: Reads[TestExternalForm] = Json.reads[TestExternalForm]
+    implicit val readsTestExternalForm: Reads[TestExternalForm] = Json.reads[TestExternalForm]
 
     override def reads(json: JsValue): JsResult[UnitLinks] =
       json.validate[TestExternalForm].map(fromTestExternalForm)

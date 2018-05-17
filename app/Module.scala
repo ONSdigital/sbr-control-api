@@ -2,17 +2,20 @@ import java.time.Clock
 
 import play.api.{ Configuration, Environment }
 import com.google.inject.{ AbstractModule, TypeLiteral }
+
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 import uk.gov.ons.sbr.models.localunit.LocalUnit
+import uk.gov.ons.sbr.models.reportingunit.ReportingUnit
 import uk.gov.ons.sbr.models.unitlinks.UnitLinks
-import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, HBaseRestReportingUnitRepositoryConfigLoader, HBaseRestUnitLinksRepositoryConfigLoader }
+
+import config._
+import repository._
 import repository.hbase._
 import repository.hbase.enterprise.{ EnterpriseUnitRowMapper, HBaseRestEnterpriseUnitRepository, HBaseRestEnterpriseUnitRepositoryConfig }
 import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
-import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksRowMapper, ReportingUnitRowMapper }
-import repository._
+import repository.hbase.reportingunit.{ HBaseRestReportingUnitRepository, HBaseRestReportingUnitRepositoryConfig, ReportingUnitRowMapper }
+import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksRowMapper }
 import services.{ DataAccess, HBaseRestDataAccess }
-import uk.gov.ons.sbr.models.reportingunit.ReportingUnit
 
 /**
  * This class is a Guice module that tells Guice how to bind several

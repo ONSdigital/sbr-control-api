@@ -10,7 +10,7 @@ import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
 
 import repository.RestRepository.{ ErrorMessage, Row }
-import repository.hbase.HBase.LinksColumnFamily
+import repository.hbase.unitlinks.UnitLinksProperties.UnitLinksColumnFamily
 import repository.{ RestRepository, RowMapper, UnitLinksRepository }
 
 case class HBaseRestUnitLinksRepositoryConfig(tableName: String)
@@ -23,7 +23,7 @@ class HBaseRestUnitLinksRepository @Inject() (
 
   override def retrieveUnitLinks(id: UnitId, unitType: UnitType, period: Period): Future[Either[ErrorMessage, Option[UnitLinks]]] = {
     logger.info(s"Retrieving UnitLinks with [$id] of [$unitType] for [$period]")
-    restRepository.findRow(config.tableName, UnitLinksRowKey(id, unitType, period), LinksColumnFamily).map(fromErrorOrRow)
+    restRepository.findRow(config.tableName, UnitLinksRowKey(id, unitType, period), UnitLinksColumnFamily).map(fromErrorOrRow)
   }
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[UnitLinks]] = {

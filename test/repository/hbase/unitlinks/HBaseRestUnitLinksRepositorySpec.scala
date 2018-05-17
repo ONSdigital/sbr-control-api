@@ -9,7 +9,7 @@ import org.scalatest.{ EitherValues, FreeSpec, Matchers }
 import uk.gov.ons.sbr.models.unitlinks.UnitLinks
 
 import repository.RestRepository.Row
-import repository.hbase.HBase.LinksColumnFamily
+import repository.hbase.unitlinks.UnitLinksProperties.UnitLinksColumnFamily
 import repository.{ RestRepository, RowMapper }
 import support.sample.SampleUnitLinks
 
@@ -34,7 +34,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
   "A UnitLinks repository" - {
     "supports unit links retrieval when given unit id, unit type and period" - {
       "returning a target unit links when it exists" in new Fixture {
-        (restRepository.findRow _).expects(TargetTable, TargetRowKey, LinksColumnFamily).returning(Future.successful(Right(Some(toRow(Fields)))))
+        (restRepository.findRow _).expects(TargetTable, TargetRowKey, UnitLinksColumnFamily).returning(Future.successful(Right(Some(toRow(Fields)))))
         (rowMapper.fromRow _).expects(toRow(Fields)).returning(Some(TargetUnitLinks))
 
         whenReady(repository.retrieveUnitLinks(SampleUnitId, SampleUnitType, SamplePeriod)) { result =>
@@ -43,7 +43,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
       }
 
       "returning nothing when unit links does not exist" in new Fixture {
-        (restRepository.findRow _).expects(TargetTable, TargetRowKey, LinksColumnFamily).returning(Future.successful(Right(None)))
+        (restRepository.findRow _).expects(TargetTable, TargetRowKey, UnitLinksColumnFamily).returning(Future.successful(Right(None)))
 
         whenReady(repository.retrieveUnitLinks(SampleUnitId, SampleUnitType, SamplePeriod)) { result =>
           result.right.value shouldBe None
@@ -52,7 +52,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
 
       "signals a failure when a valid unit links is retrieve from HBase Rest but rowMapper fails to construct" in new Fixture {
         val fields = Map("x_UNKNOWN" -> SampleEnterpriseParentId)
-        (restRepository.findRow _).expects(TargetTable, TargetRowKey, LinksColumnFamily).returning(Future.successful(Right(Some(toRow(fields)))))
+        (restRepository.findRow _).expects(TargetTable, TargetRowKey, UnitLinksColumnFamily).returning(Future.successful(Right(Some(toRow(fields)))))
         (rowMapper.fromRow _).expects(toRow(fields)).returning(None)
 
         whenReady(repository.retrieveUnitLinks(SampleUnitId, SampleUnitType, SamplePeriod)) { result =>
@@ -61,7 +61,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
       }
 
       "signals failure when failure occurs from underlying Rest repository" in new Fixture {
-        (restRepository.findRow _).expects(TargetTable, TargetRowKey, LinksColumnFamily).returning(Future.successful(Left("A Failure Message")))
+        (restRepository.findRow _).expects(TargetTable, TargetRowKey, UnitLinksColumnFamily).returning(Future.successful(Left("A Failure Message")))
 
         whenReady(repository.retrieveUnitLinks(SampleUnitId, SampleUnitType, SamplePeriod)) { result =>
           result.left.value shouldBe "A Failure Message"

@@ -18,8 +18,8 @@ class UnitLinksSpec extends FreeSpec with Matchers {
         withValues(
           string(name = "id", value = unitLinks.id.value),
           string(name = "period", value = Period.asString(unitLinks.period)),
-          optionalMap(name = "parents", optValue = unitLinks.parents)(convertKey = UnitType.toAcronym, convertValue = unitIdAsString),
-          optionalMap(name = "children", optValue = unitLinks.children)(convertKey = unitIdAsString, convertValue = UnitType.toAcronym),
+          optionalObject(name = "parents", optValue = unitLinks.parents)(convertKey = UnitType.toAcronym, convertValue = unitIdAsString),
+          optionalObject(name = "children", optValue = unitLinks.children)(convertKey = unitIdAsString, convertValue = UnitType.toAcronym),
           string(name = "unitType", value = UnitType.toAcronym(unitLinks.unitType))
         )
       }

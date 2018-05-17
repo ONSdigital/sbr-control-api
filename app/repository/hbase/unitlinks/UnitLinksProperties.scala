@@ -1,7 +1,7 @@
 package repository.hbase.unitlinks
 
-object UnitLinksColumns {
+object UnitLinksProperties {
   val UnitChildPrefix = "c_"
   val UnitParentPrefix = "p_"
-  val ChildOrParentPrefixLength = 2
+  val UnitLinksColumnFamily = "l"
 }

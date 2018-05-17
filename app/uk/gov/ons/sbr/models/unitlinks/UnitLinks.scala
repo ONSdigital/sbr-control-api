@@ -16,13 +16,11 @@ case class UnitLinks(
 
 object UnitLinks {
 
-  implicit val unitFormat: Writes[UnitLinks] = WritesLinkedUnit
+  implicit val unitFormat: Writes[UnitLinks] = WritesUnitLinks
 
-  private object WritesLinkedUnit extends Writes[UnitLinks] {
+  private object WritesUnitLinks extends Writes[UnitLinks] {
     private case class ExternalForm(id: UnitId, period: Period, parents: Option[Map[String, UnitId]], children: Option[Map[String, UnitType]], unitType: UnitType)
 
-    private implicit val writesUnitType: Writes[UnitType] = UnitType.writes
-    private implicit val writesUnitId: Writes[UnitId] = UnitId.writes
     private implicit val writesExternalForm: Writes[ExternalForm] = Json.writes[ExternalForm]
 
     override def writes(ul: UnitLinks): JsValue =

@@ -8,7 +8,7 @@ import uk.gov.ons.sbr.models.unitlinks.UnitType
 
 import repository.RestRepository.Row
 import repository.hbase.HBase.RowKeyDelimiter
-import repository.hbase.unitlinks.UnitLinksColumns.{ UnitChildPrefix, UnitParentPrefix }
+import repository.hbase.unitlinks.UnitLinksProperties.{ UnitChildPrefix, UnitParentPrefix }
 import repository.hbase.unitlinks.UnitLinksRowKey.split
 import support.sample.SampleUnitLinks
 
@@ -25,7 +25,7 @@ class UnitLinksRowMapperSpec extends FreeSpec with Matchers with MockFactory {
     )
     val ChildrenMapStr = Map(
       UnitChildPrefix + SampleCompaniesHouseChildId -> CompaniesHouse,
-      UnitChildPrefix + SamplePayAsYouEarnChildId -> PayeAsYourEarnTax
+      UnitChildPrefix + SamplePayAsYouEarnChildId -> PayAsYourEarnTax
     )
     val FamilyMapStr = ParentsMapStr ++ ChildrenMapStr
   }

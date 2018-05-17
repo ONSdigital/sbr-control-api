@@ -17,12 +17,6 @@ class UnitLinksRowKeySpec extends FreeSpec with Matchers {
         UnitLinksRowKey(UnitId(Id), UnitType.LegalUnit, Period.fromYearMonth(2018, MARCH)) shouldBe "109085670091~LEU~201803"
       }
     }
-
-    "should contain a wildcard for the unit identifier (id)" - {
-      "when requesting a unit of unknown type" in {
-        UnitLinksRowKey(UnitId(Id)) shouldBe "109085670091~*"
-      }
-    }
   }
 
 }
