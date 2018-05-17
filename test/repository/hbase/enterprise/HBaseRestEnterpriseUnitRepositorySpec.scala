@@ -14,7 +14,6 @@ import uk.gov.ons.sbr.models.enterprise.Enterprise
 import repository.RestRepository.Row
 import repository.hbase.HBase.DefaultColumnFamily
 import repository.{ RestRepository, RowMapper }
-import repository.{ RestRepository, RowMapper }
 import support.sample.SampleEnterpriseUnit
 
 class HBaseRestEnterpriseUnitRepositorySpec extends FreeSpec with Matchers with MockFactory with ScalaFutures with EitherValues {
@@ -25,7 +24,8 @@ class HBaseRestEnterpriseUnitRepositorySpec extends FreeSpec with Matchers with 
     val TargetPeriod: Period = Period.fromYearMonth(TargetYear, SEPTEMBER)
     val TargetErn = SampleEnterpriseId
     val TargetRowKey = EnterpriseUnitRowKey(TargetErn, TargetPeriod)
-    val ARow: Row = Map("name" -> "value")
+    private val UnusedRowKey = ""
+    val ARow: Row = Row(rowKey = UnusedRowKey, fields = Map("name" -> "value"))
     val TargetEnterpriseUnit: Enterprise = aEnterpriseSample(TargetErn)
     val TargetExpectedFailureMessage = "A Failure Message"
 

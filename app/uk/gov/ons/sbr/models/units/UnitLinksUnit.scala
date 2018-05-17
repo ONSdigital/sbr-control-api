@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{ Json, OFormat }
 import uk.gov.ons.sbr.models.DataUnit
 
-case class UnitLinks(
+case class UnitLinksUnit(
   @ApiModelProperty(value = "Unit Link identifier", example = "1000000012~ENT~201802", dataType = "String", required = true) id: String,
   period: String,
   @ApiModelProperty(value = "A map of parents of returned id [Type, Value]", example = "",
@@ -13,7 +13,7 @@ case class UnitLinks(
   @ApiModelProperty(value = "Type of Unit returned", example = "") unitType: String
 ) extends DataUnit[String]
 
-object UnitLinks {
+object UnitLinksUnit {
 
-  implicit val unitFormat: OFormat[UnitLinks] = Json.format[UnitLinks]
+  implicit val unitFormat: OFormat[UnitLinksUnit] = Json.format[UnitLinksUnit]
 }
