@@ -16,7 +16,7 @@ class UnitTypeSpec extends FreeSpec with Matchers {
       }
 
       "when an Pay-as-you-earn Tax (PAYE)" in {
-        UnitType.toAcronym(UnitType.PayAsYourEarnTax) shouldBe "PAYE"
+        UnitType.toAcronym(UnitType.PayAsYouEarnTax) shouldBe "PAYE"
       }
 
       "when an Enterprise" in {
@@ -46,7 +46,7 @@ class UnitTypeSpec extends FreeSpec with Matchers {
       }
 
       "when an Pay-as-you-earn Tax (Paye) acronym" in {
-        UnitType.fromAcronym("PAYE") shouldBe UnitType.PayAsYourEarnTax
+        UnitType.fromAcronym("PAYE") shouldBe UnitType.PayAsYouEarnTax
       }
 
       "when an Enterprise acronym" in {
@@ -77,7 +77,7 @@ class UnitTypeSpec extends FreeSpec with Matchers {
         }
 
         "with a Pay-as-you-earn Tax (Paye)" in {
-          UnitType.writes.writes(UnitType.PayAsYourEarnTax) shouldBe JsString("PAYE")
+          UnitType.writes.writes(UnitType.PayAsYouEarnTax) shouldBe JsString("PAYE")
         }
 
         "with a Enterprise" in {

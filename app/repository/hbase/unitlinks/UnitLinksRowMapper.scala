@@ -95,14 +95,14 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
     children: Option[Map[UnitId, UnitType]],
     parents: Option[Map[UnitType, UnitId]]
   ): Boolean = {
-    val ifChildrenOrParentsIsEmpty = children.isEmpty && parents.isEmpty
-    if (ifChildrenOrParentsIsEmpty) {
+    val ifChildrenAndParentsIsEmpty = children.isEmpty && parents.isEmpty
+    if (ifChildrenAndParentsIsEmpty) {
       logger.warn(s"Failure to produce UnitLinks, caused by children [$children] and parents [$parents] map being None")
     }
-    !ifChildrenOrParentsIsEmpty
+    !ifChildrenAndParentsIsEmpty
   }
 
-  private def returnNoneWhenRowKeyIsNotOfLength(partitionedKey: List[String]): Boolean = {
+  private def rowKeyHasRequiredComponents(partitionedKey: List[String]): Boolean = {
     val checkPartitionedRowKeySize = partitionedKey.length == numberOfUnitLinksRowKeyComponents
     if (!checkPartitionedRowKeySize) {
       logger.warn(s"Failure to produce UnitLinks, caused by rowKey [${partitionedKey.mkString}] hase invalid segment size " +

@@ -25,7 +25,7 @@ class UnitLinksRowMapperSpec extends FreeSpec with Matchers with MockFactory {
     )
     val ChildrenMapStr = Map(
       UnitChildPrefix + SampleCompaniesHouseChildId -> CompaniesHouse,
-      UnitChildPrefix + SamplePayAsYouEarnChildId -> PayAsYourEarnTax
+      UnitChildPrefix + SamplePayAsYouEarnChildId -> PayAsYouEarnTax
     )
     val FamilyMapStr = ParentsMapStr ++ ChildrenMapStr
   }

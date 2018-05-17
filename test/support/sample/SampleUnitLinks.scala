@@ -9,7 +9,7 @@ trait SampleUnitLinks {
 
   val CompaniesHouse = UnitType.toAcronym(UnitType.CompaniesHouse)
   val ValueAddedTax = UnitType.toAcronym(UnitType.ValueAddedTax)
-  val PayAsYourEarnTax = UnitType.toAcronym(UnitType.PayAsYourEarnTax)
+  val PayAsYouEarnTax = UnitType.toAcronym(UnitType.PayAsYouEarnTax)
   val Enterprise = UnitType.toAcronym(UnitType.Enterprise)
   val LegalUnit = UnitType.toAcronym(UnitType.LegalUnit)
   val LocalUnit = UnitType.toAcronym(UnitType.LocalUnit)
@@ -23,7 +23,7 @@ trait SampleUnitLinks {
   val SamplePeriod: Period = Period.fromYearMonth(2018, AUGUST)
   val SampleUnitType: UnitType = UnitType.fromAcronym(LegalUnit)
   val SampleChildren: Map[UnitId, UnitType] =
-    Map(UnitId(SamplePayAsYouEarnChildId) -> UnitType.fromAcronym(PayAsYourEarnTax), UnitId(SampleCompaniesHouseChildId) -> UnitType.fromAcronym(CompaniesHouse))
+    Map(UnitId(SamplePayAsYouEarnChildId) -> UnitType.fromAcronym(PayAsYouEarnTax), UnitId(SampleCompaniesHouseChildId) -> UnitType.fromAcronym(CompaniesHouse))
   val SampleParents: Map[UnitType, UnitId] = Map(UnitType.fromAcronym(Enterprise) -> UnitId(SampleEnterpriseParentId))
 
   val SampleUnitLinksWithOnlyMandatoryFields: UnitLinks =

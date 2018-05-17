@@ -9,7 +9,7 @@ sealed trait UnitType
 object UnitType {
   case object CompaniesHouse extends UnitType
   case object ValueAddedTax extends UnitType
-  case object PayAsYourEarnTax extends UnitType
+  case object PayAsYouEarnTax extends UnitType
 
   case object Enterprise extends UnitType
   case object LegalUnit extends UnitType
@@ -34,7 +34,7 @@ object UnitType {
     unitType match {
       case CompaniesHouse => Acronym.CompaniesHouse
       case ValueAddedTax => Acronym.ValueAddedTax
-      case PayAsYourEarnTax => Acronym.PayeAsYourEarnTax
+      case PayAsYouEarnTax => Acronym.PayeAsYourEarnTax
 
       case Enterprise => Acronym.Enterprise
       case LegalUnit => Acronym.LegalUnit
@@ -46,7 +46,7 @@ object UnitType {
     acronym match {
       case Acronym.CompaniesHouse => CompaniesHouse
       case Acronym.ValueAddedTax => ValueAddedTax
-      case Acronym.PayeAsYourEarnTax => PayAsYourEarnTax
+      case Acronym.PayeAsYourEarnTax => PayAsYouEarnTax
 
       case Acronym.Enterprise => Enterprise
       case Acronym.LegalUnit => LegalUnit
