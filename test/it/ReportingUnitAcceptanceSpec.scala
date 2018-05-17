@@ -8,11 +8,12 @@ import repository.hbase.reportingunit.ReportingUnitColumns._
 import repository.hbase.reportingunit.ReportingUnitQuery
 import fixture.ReadsReportingUnit.reportingUnitReads
 import support.WithWireMockHBase
+import support.sample.SampleReportingUnit
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnit, Rurn }
 
-class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
+class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues with SampleReportingUnit {
 
   private val TargetErn = Ern("1000000012")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
@@ -24,7 +25,23 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
       List(
         aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn)}", columns =
           aColumnWith(name = rurn, value = TargetRurn.value),
-          aColumnWith(name = ruref, value = "some-luref"))
+          aColumnWith(name = ruref, value = SampleAllValuesReportingUnit.ruref.get),
+          aColumnWith(name = ern, value = SampleAllValuesReportingUnit.ern.value),
+          aColumnWith(name = entref, value = SampleAllValuesReportingUnit.entref.get),
+          aColumnWith(name = name, value = SampleAllValuesReportingUnit.name),
+          aColumnWith(name = tradingStyle, value = SampleAllValuesReportingUnit.tradingStyle.get),
+          aColumnWith(name = legalStatus, value = SampleAllValuesReportingUnit.legalStatus.get),
+          aColumnWith(name = address1, value = SampleAllValuesReportingUnit.address1),
+          aColumnWith(name = address2, value = SampleAllValuesReportingUnit.address2.get),
+          aColumnWith(name = address3, value = SampleAllValuesReportingUnit.address3.get),
+          aColumnWith(name = address4, value = SampleAllValuesReportingUnit.address4.get),
+          aColumnWith(name = address5, value = SampleAllValuesReportingUnit.address5.get),
+          aColumnWith(name = postcode, value = SampleAllValuesReportingUnit.postcode),
+          aColumnWith(name = sic07, value = SampleAllValuesReportingUnit.sic07),
+          aColumnWith(name = employees, value = SampleAllValuesReportingUnit.employees),
+          aColumnWith(name = employment, value = SampleAllValuesReportingUnit.employment),
+          aColumnWith(name = turnover, value = SampleAllValuesReportingUnit.turnover),
+          aColumnWith(name = prn, value = SampleAllValuesReportingUnit.prn))
       ).mkString("[", ",", "]")
     }}"""
 
@@ -33,12 +50,56 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
       List(
         aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn)}", columns =
           aColumnWith(name = rurn, value = TargetRurn.value),
-          aColumnWith(name = ruref, value = "some-luref")),
-        aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn)}", columns =
+          aColumnWith(name = ruref, value = SampleAllValuesReportingUnit.ruref.get),
+          aColumnWith(name = ern, value = SampleAllValuesReportingUnit.ern.value),
+          aColumnWith(name = entref, value = SampleAllValuesReportingUnit.entref.get),
+          aColumnWith(name = name, value = SampleAllValuesReportingUnit.name),
+          aColumnWith(name = tradingStyle, value = SampleAllValuesReportingUnit.tradingStyle.get),
+          aColumnWith(name = legalStatus, value = SampleAllValuesReportingUnit.legalStatus.get),
+          aColumnWith(name = address1, value = SampleAllValuesReportingUnit.address1),
+          aColumnWith(name = address2, value = SampleAllValuesReportingUnit.address2.get),
+          aColumnWith(name = address3, value = SampleAllValuesReportingUnit.address3.get),
+          aColumnWith(name = address4, value = SampleAllValuesReportingUnit.address4.get),
+          aColumnWith(name = address5, value = SampleAllValuesReportingUnit.address5.get),
+          aColumnWith(name = postcode, value = SampleAllValuesReportingUnit.postcode),
+          aColumnWith(name = sic07, value = SampleAllValuesReportingUnit.sic07),
+          aColumnWith(name = employees, value = SampleAllValuesReportingUnit.employees),
+          aColumnWith(name = employment, value = SampleAllValuesReportingUnit.employment),
+          aColumnWith(name = turnover, value = SampleAllValuesReportingUnit.turnover),
+          aColumnWith(name = prn, value = SampleAllValuesReportingUnit.prn)),
+        aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn1)}", columns =
           aColumnWith(name = rurn, value = TargetRurn1.value),
-          aColumnWith(name = ruref, value = "some-luref"))
+          aColumnWith(name = ruref, value = SampleAllValuesReportingUnit1.ruref.get),
+          aColumnWith(name = ern, value = SampleAllValuesReportingUnit1.ern.value),
+          aColumnWith(name = entref, value = SampleAllValuesReportingUnit1.entref.get),
+          aColumnWith(name = name, value = SampleAllValuesReportingUnit1.name),
+          aColumnWith(name = tradingStyle, value = SampleAllValuesReportingUnit1.tradingStyle.get),
+          aColumnWith(name = legalStatus, value = SampleAllValuesReportingUnit1.legalStatus.get),
+          aColumnWith(name = address1, value = SampleAllValuesReportingUnit1.address1),
+          aColumnWith(name = address2, value = SampleAllValuesReportingUnit1.address2.get),
+          aColumnWith(name = address3, value = SampleAllValuesReportingUnit1.address3.get),
+          aColumnWith(name = address4, value = SampleAllValuesReportingUnit1.address4.get),
+          aColumnWith(name = address5, value = SampleAllValuesReportingUnit1.address5.get),
+          aColumnWith(name = postcode, value = SampleAllValuesReportingUnit1.postcode),
+          aColumnWith(name = sic07, value = SampleAllValuesReportingUnit1.sic07),
+          aColumnWith(name = employees, value = SampleAllValuesReportingUnit1.employees),
+          aColumnWith(name = employment, value = SampleAllValuesReportingUnit1.employment),
+          aColumnWith(name = turnover, value = SampleAllValuesReportingUnit1.turnover),
+          aColumnWith(name = prn, value = SampleAllValuesReportingUnit1.prn))
       ).mkString("[", ",", "]")
     }}"""
+
+  //  private val ReportingUnitMultipleMatchHBaseResponseBody =
+  //    s"""{"Row": ${
+  //      List(
+  //        aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn)}", columns =
+  //          aColumnWith(name = rurn, value = TargetRurn.value),
+  //          aColumnWith(name = ruref, value = "some-luref")),
+  //        aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn)}", columns =
+  //          aColumnWith(name = rurn, value = TargetRurn1.value),
+  //          aColumnWith(name = ruref, value = "some-luref"))
+  //      ).mkString("[", ",", "]")
+  //    }}"""
 
   info("As a SBR user")
   info("I want to retrieve a reporting unit for an enterprise and a period in time")
@@ -56,8 +117,9 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
 
       Then(s"the details of the unique reporting unit identified by $TargetErn, $TargetPeriod, and $TargetRurn are returned")
       response.status shouldBe OK
+      println(s"----- abcr = ${response.json}")
       response.header("Content-Type") shouldBe Some(JSON)
-      response.json.as[ReportingUnit] shouldBe ReportingUnit(TargetRurn, Some("some-luref"))
+      response.json.as[ReportingUnit] shouldBe SampleAllValuesReportingUnit
     }
   }
 
@@ -75,7 +137,7 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
       response.status shouldBe OK
       response.header("Content-Type") shouldBe Some(JSON)
       response.json.as[Seq[ReportingUnit]] should contain theSameElementsInOrderAs
-        Seq(ReportingUnit(TargetRurn, Some("some-luref")), ReportingUnit(TargetRurn1, Some("some-luref")))
+        Seq(SampleAllValuesReportingUnit, SampleAllValuesReportingUnit1)
     }
   }
 
