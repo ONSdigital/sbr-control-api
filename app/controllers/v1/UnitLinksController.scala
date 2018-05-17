@@ -21,4 +21,8 @@ class UnitLinksController @Inject() (repository: UnitLinksRepository) extends Co
     }
   }
 
+  def badRequest(unitIdStr: String, periodStr: String, unitTypeStr: String) = Action {
+    BadRequest
+  }
+
 }
