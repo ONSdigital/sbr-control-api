@@ -17,9 +17,9 @@ object UnitLinksRowKey {
   def split(rowKey: String): List[String] = rowKey.split(RowKeyDelimiter).toList
 
   def splitRowKey(rowKey: String)(logger: Logger): Option[List[String]] = {
-    val partitionedRowKey = split(RowKeyDelimiter)
+    val partitionedRowKey = split(rowKey)
     if (partitionedRowKey.length != numberOfUnitLinksRowKeyComponents) {
-      logger.warn(s"Failure to produce UnitLinks, caused by rowKey [$rowKey] hase invalid segment size " +
+      logger.warn(s"Failure to produce UnitLinks, caused by rowKey [$rowKey] is of invalid segment size " +
         s"[${partitionedRowKey.length}] when expected [$numberOfUnitLinksRowKeyComponents]")
       None
     } else Some(partitionedRowKey)

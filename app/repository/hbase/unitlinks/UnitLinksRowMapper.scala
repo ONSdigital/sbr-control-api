@@ -17,12 +17,13 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
 
   override def fromRow(rows: Row): Option[UnitLinks] =
     for {
-      partitionedKey <- processRowKey(rows.rowKey)(logger)
+      partitionedKey <- splitRowKey(rows.rowKey)(logger)
       id = partitionedKey(unitIdIndex)
       unitTypeOpt = toUnitType(partitionedKey(unitTypeIndex))
       unitType <- unitTypeOpt
       periodOpt = toPeriod(partitionedKey(unitPeriodIndex))
       period <- periodOpt
+      t = test(partitionedKey.mkString)
 
       (partitionedParentMap, partitionedChildrenMap) = partitionMap(rows.fields)
 
@@ -43,6 +44,7 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
 
     } yield UnitLinks(UnitId(id), period, parents, children, unitType)
 
+  private def test(t: String) = print(t + " ===== "); false
   private def partitionMap(rawMap: Map[String, String]): (Map[String, String], Map[String, String]) =
     rawMap.partition { case (k, _) => k.startsWith(UnitParentPrefix) }
 
@@ -91,24 +93,12 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
     None
   }
 
-  private def returnNoneWhenBothParentAndChildIsEmpty(
-    children: Option[Map[UnitId, UnitType]],
-    parents: Option[Map[UnitType, UnitId]]
-  ): Boolean = {
+  private def returnNoneWhenBothParentAndChildIsEmpty(children: Option[Map[UnitId, UnitType]],
+    parents: Option[Map[UnitType, UnitId]]): Boolean = {
     val ifChildrenAndParentsIsEmpty = children.isEmpty && parents.isEmpty
     if (ifChildrenAndParentsIsEmpty) {
       logger.warn(s"Failure to produce UnitLinks, caused by children [$children] and parents [$parents] map being None")
     }
     !ifChildrenAndParentsIsEmpty
   }
-
-  private def rowKeyHasRequiredComponents(partitionedKey: List[String]): Boolean = {
-    val checkPartitionedRowKeySize = partitionedKey.length == numberOfUnitLinksRowKeyComponents
-    if (!checkPartitionedRowKeySize) {
-      logger.warn(s"Failure to produce UnitLinks, caused by rowKey [${partitionedKey.mkString}] hase invalid segment size " +
-        s"[${partitionedKey.length}] when expected [$numberOfUnitLinksRowKeyComponents]")
-    }
-    checkPartitionedRowKeySize
-  }
-
 }
