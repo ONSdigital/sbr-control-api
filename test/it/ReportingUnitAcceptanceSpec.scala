@@ -89,18 +89,6 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
       ).mkString("[", ",", "]")
     }}"""
 
-  //  private val ReportingUnitMultipleMatchHBaseResponseBody =
-  //    s"""{"Row": ${
-  //      List(
-  //        aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn)}", columns =
-  //          aColumnWith(name = rurn, value = TargetRurn.value),
-  //          aColumnWith(name = ruref, value = "some-luref")),
-  //        aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn)}", columns =
-  //          aColumnWith(name = rurn, value = TargetRurn1.value),
-  //          aColumnWith(name = ruref, value = "some-luref"))
-  //      ).mkString("[", ",", "]")
-  //    }}"""
-
   info("As a SBR user")
   info("I want to retrieve a reporting unit for an enterprise and a period in time")
   info("So that I can view the reporting unit details via the user interface")
@@ -117,7 +105,6 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
 
       Then(s"the details of the unique reporting unit identified by $TargetErn, $TargetPeriod, and $TargetRurn are returned")
       response.status shouldBe OK
-      println(s"----- abcr = ${response.json}")
       response.header("Content-Type") shouldBe Some(JSON)
       response.json.as[ReportingUnit] shouldBe SampleAllValuesReportingUnit
     }
