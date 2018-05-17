@@ -1,6 +1,5 @@
 import java.time.Month.MARCH
 
-import com.typesafe.scalalogging.LazyLogging
 import fixture.ServerAcceptanceSpec
 import org.scalatest.OptionValues
 import play.api.http.ContentTypes._
@@ -13,7 +12,8 @@ import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnit, Rurn }
 
-class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues with LazyLogging {
+class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
+
   private val TargetErn = Ern("1000000012")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
   private val TargetRurn = Rurn("33000000000")
@@ -99,7 +99,7 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
         anOkResponse().withBody(NoMatchFoundResponse)
       ))
 
-      When(s"the reporting units for ENterprise [$TargetErn] and period [$TargetPeriod] are requested")
+      When(s"the reporting units for Enterprise [$TargetErn] and period [$TargetPeriod] are requested")
       val response = await(wsClient.url(s"/v1/enterprises/${TargetErn.value}/periods/${Period.asString(TargetPeriod)}/reportingunits").get())
 
       Then(s"a NOT FOUND response is returned")
