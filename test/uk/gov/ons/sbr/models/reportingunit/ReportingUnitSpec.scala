@@ -29,7 +29,7 @@ class ReportingUnitSpec extends FreeSpec with Matchers {
           int("employees", reportingUnit.employees),
           int("employment", reportingUnit.employment),
           int("turnover", reportingUnit.turnover),
-          float("prn", reportingUnit.prn)
+          string("prn", reportingUnit.prn)
         )
       }
          |}""".stripMargin

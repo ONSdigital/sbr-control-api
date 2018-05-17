@@ -45,7 +45,7 @@ class ReportingUnitRowMapperSpec extends FreeSpec with Matchers with SampleRepor
         address1 = address1Value, address2 = Some(address2Value), address3 = Some(address3Value),
         address4 = Some(address4Value), address5 = Some(address5Value), postcode = postCodeValue,
         sic07 = sic07Value, employees = employeesValue.toInt, employment = employmentValue.toInt,
-        turnover = turnoverValue.toInt, prn = prnValue.toFloat
+        turnover = turnoverValue.toInt, prn = prnValue
       ))
     }
 
@@ -56,7 +56,7 @@ class ReportingUnitRowMapperSpec extends FreeSpec with Matchers with SampleRepor
         address1 = address1Value, address2 = None, address3 = None,
         address4 = None, address5 = None, postcode = postCodeValue,
         sic07 = sic07Value, employees = employeesValue.toInt, employment = employmentValue.toInt,
-        turnover = turnoverValue.toInt, prn = prnValue.toFloat
+        turnover = turnoverValue.toInt, prn = prnValue
       ))
     }
 

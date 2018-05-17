@@ -33,8 +33,7 @@ object ReportingUnitRowMapper extends RowMapper[ReportingUnit] {
       turnover <- variables.get(turnover)
       turnoverInt <- Try(turnover.toInt).toOption
       prn <- variables.get(prn)
-      prnFloat <- Try(prn.toFloat).toOption
     } yield ReportingUnit(Rurn(rurn), optRuref, Ern(ern), optEntref, name, optTradingStyle, optLegalStatus,
       address1, optAddress2, optAddress3, optAddress4, optAddress5, postcode, sic07, employeesInt, employmentInt,
-      turnoverInt, prnFloat)
+      turnoverInt, prn)
 }

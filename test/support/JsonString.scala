@@ -10,9 +10,6 @@ object JsonString {
   def int(name: String, value: Int): Option[String] =
     Some(s""""$name":$value""")
 
-  def float(name: String, value: Float): Option[String] =
-    Some(s""""$name":$value""")
-
   def optionalInt(name: String, optValue: Option[Int]): Option[String] =
     optValue.flatMap(int(name, _))
 

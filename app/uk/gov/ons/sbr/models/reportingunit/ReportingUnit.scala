@@ -22,7 +22,7 @@ case class ReportingUnit(
   @ApiModelProperty(value = "Reporting Unit employees", dataType = "int", example = "13000", required = true) employees: Int,
   @ApiModelProperty(value = "Reporting Unit employment", dataType = "int", example = "100", required = true) employment: Int,
   @ApiModelProperty(value = "Reporting Unit turnover", dataType = "int", example = "1000000", required = true) turnover: Int,
-  @ApiModelProperty(value = "Reporting Unit prn", dataType = "float", example = "0.2", required = true) prn: Float
+  @ApiModelProperty(value = "Reporting Unit prn", dataType = "string", example = "0.2", required = true) prn: String
 )
 
 object ReportingUnit {

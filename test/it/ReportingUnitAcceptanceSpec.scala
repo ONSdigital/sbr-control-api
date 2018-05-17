@@ -41,7 +41,7 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
           aColumnWith(name = employees, value = SampleAllValuesReportingUnit.employees.toString),
           aColumnWith(name = employment, value = SampleAllValuesReportingUnit.employment.toString),
           aColumnWith(name = turnover, value = SampleAllValuesReportingUnit.turnover.toString),
-          aColumnWith(name = prn, value = SampleAllValuesReportingUnit.prn.toString))
+          aColumnWith(name = prn, value = SampleAllValuesReportingUnit.prn))
       ).mkString("[", ",", "]")
     }}"""
 
@@ -66,7 +66,7 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
           aColumnWith(name = employees, value = SampleAllValuesReportingUnit.employees.toString),
           aColumnWith(name = employment, value = SampleAllValuesReportingUnit.employment.toString),
           aColumnWith(name = turnover, value = SampleAllValuesReportingUnit.turnover.toString),
-          aColumnWith(name = prn, value = SampleAllValuesReportingUnit.prn.toString)),
+          aColumnWith(name = prn, value = SampleAllValuesReportingUnit.prn)),
         aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn1)}", columns =
           aColumnWith(name = rurn, value = TargetRurn1.value),
           aColumnWith(name = ruref, value = SampleAllValuesReportingUnit1.ruref.get),
@@ -85,7 +85,7 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
           aColumnWith(name = employees, value = SampleAllValuesReportingUnit1.employees.toString),
           aColumnWith(name = employment, value = SampleAllValuesReportingUnit1.employment.toString),
           aColumnWith(name = turnover, value = SampleAllValuesReportingUnit1.turnover.toString),
-          aColumnWith(name = prn, value = SampleAllValuesReportingUnit1.prn.toString))
+          aColumnWith(name = prn, value = SampleAllValuesReportingUnit1.prn))
       ).mkString("[", ",", "]")
     }}"""
 
