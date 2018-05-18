@@ -47,8 +47,8 @@ class HBaseRestReportingUnitRepositorySpec extends FreeSpec with Matchers with M
   "A Reporting Unit repository" - {
     "supports retrieval of a reporting unit by Enterprise reference (ERN), period, and Reporting Unit reference (RURN)" - {
       "returning the target reporting unit when it exists" in new SingleResultFixture {
-        (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(ARow))))
-        (rowMapper.fromRow _).expects(ARow).returning(Some(TargetReportingUnit))
+        (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(toRow(ARow)))))
+        (rowMapper.fromRow _).expects(toRow(ARow)).returning(Some(TargetReportingUnit))
 
         whenReady(repository.retrieveReportingUnit(TargetErn, TargetPeriod, TargetRurn)) { result =>
           result.right.value shouldBe Some(TargetReportingUnit)

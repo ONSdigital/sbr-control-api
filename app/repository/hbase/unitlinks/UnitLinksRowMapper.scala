@@ -93,8 +93,10 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
     None
   }
 
-  private def returnNoneWhenBothParentAndChildIsEmpty(children: Option[Map[UnitId, UnitType]],
-    parents: Option[Map[UnitType, UnitId]]): Boolean = {
+  private def returnNoneWhenBothParentAndChildIsEmpty(
+    children: Option[Map[UnitId, UnitType]],
+    parents: Option[Map[UnitType, UnitId]]
+  ): Boolean = {
     val ifChildrenAndParentsIsEmpty = children.isEmpty && parents.isEmpty
     if (ifChildrenAndParentsIsEmpty) {
       logger.warn(s"Failure to produce UnitLinks, caused by children [$children] and parents [$parents] map being None")

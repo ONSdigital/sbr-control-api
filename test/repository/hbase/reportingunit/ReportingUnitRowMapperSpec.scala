@@ -1,7 +1,7 @@
 package repository.hbase.reportingunit
 
 import org.scalatest.{ FreeSpec, Matchers }
-
+import repository.RestRepository.Row
 import repository.hbase.reportingunit.ReportingUnitColumns._
 import support.sample.SampleReportingUnit
 import uk.gov.ons.sbr.models.enterprise.Ern
@@ -43,7 +43,7 @@ class ReportingUnitRowMapperSpec extends FreeSpec with Matchers with SampleRepor
 
   "A Reporting Unit row mapper" - {
     "can create a Reporting Unit when all possible variables are defined" in new Fixture {
-      ReportingUnitRowMapper.fromRow(allVariables) shouldBe Some(ReportingUnit(
+      ReportingUnitRowMapper.fromRow(Row("", allVariables)) shouldBe Some(ReportingUnit(
         rurn = Rurn(rurnValue), ruref = Some(rurefValue), ern = Ern(ernValue), entref = Some(entrefValue),
         name = nameValue, tradingStyle = Some(tradingStyleValue), legalStatus = Some(legalStatusValue),
         address1 = address1Value, address2 = Some(address2Value), address3 = Some(address3Value),
@@ -54,7 +54,7 @@ class ReportingUnitRowMapperSpec extends FreeSpec with Matchers with SampleRepor
     }
 
     "can create a Reporting Unit when only the mandatory variables are defined" in new Fixture {
-      ReportingUnitRowMapper.fromRow(mandatoryVariables) shouldBe Some(ReportingUnit(
+      ReportingUnitRowMapper.fromRow(Row("", mandatoryVariables)) shouldBe Some(ReportingUnit(
         rurn = Rurn(rurnValue), ruref = None, ern = Ern(ernValue), entref = None,
         name = nameValue, tradingStyle = None, legalStatus = None,
         address1 = address1Value, address2 = None, address3 = None,

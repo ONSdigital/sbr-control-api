@@ -123,7 +123,7 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
       Then(s"the details of all reporting units that are related to the Enterprise [$TargetErn] for period [$TargetPeriod] are returned")
       response.status shouldBe OK
       response.header("Content-Type") shouldBe Some(JSON)
-      response.json.as[Seq[ReportingUnit]] should contain allOf (SampleAllValuesReportingUnit, SampleAllValuesReportingUnit1)
+      response.json.as[Seq[ReportingUnit]] should contain theSameElementsAs Seq(SampleAllValuesReportingUnit, SampleAllValuesReportingUnit1)
     }
   }
 
