@@ -28,11 +28,17 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
   def anAllLocalUnitsForEnterpriseRequest(withErn: Ern, withPeriod: Period): MappingBuilder =
     aLocalUnitQuery(LocalUnitQuery.forAllWith(withErn, withPeriod))
 
+  def anAllReportingUnitsForEnterpriseRequest(withErn: Ern, withPeriod: Period): MappingBuilder =
+    aReportingUnitQuery(ReportingUnitQuery.forAllWith(withErn, withPeriod))
+
   def aLocalUnitRequest(withErn: Ern, withPeriod: Period, withLurn: Lurn): MappingBuilder =
     aLocalUnitQuery(query = LocalUnitQuery.byRowKey(withErn, withPeriod, withLurn))
 
   def aReportingUnitRequest(withErn: Ern, withPeriod: Period, withRurn: Rurn): MappingBuilder =
-    aLocalUnitQuery(query = ReportingUnitQuery.byRowKey(withErn, withPeriod, withRurn))
+    aReportingUnitQuery(query = ReportingUnitQuery.byRowKey(withErn, withPeriod, withRurn))
+
+  private def aReportingUnitQuery(query: String): MappingBuilder =
+    createUrlAndThenGetHBaseJson(tableName = "reporting_unit", query)
 
   private def aLocalUnitQuery(query: String): MappingBuilder =
     createUrlAndThenGetHBaseJson(tableName = "local_unit", query)
