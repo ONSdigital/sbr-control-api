@@ -23,7 +23,6 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
       unitType <- unitTypeOpt
       periodOpt = toPeriod(partitionedKey(unitPeriodIndex))
       period <- periodOpt
-      t = test(partitionedKey.mkString)
 
       (partitionedParentMap, partitionedChildrenMap) = partitionMap(rows.fields)
 
@@ -44,7 +43,6 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
 
     } yield UnitLinks(UnitId(id), period, parents, children, unitType)
 
-  private def test(t: String) = print(t + " ===== "); false
   private def partitionMap(rawMap: Map[String, String]): (Map[String, String], Map[String, String]) =
     rawMap.partition { case (k, _) => k.startsWith(UnitParentPrefix) }
 
@@ -93,8 +91,10 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
     None
   }
 
-  private def returnNoneWhenBothParentAndChildIsEmpty(children: Option[Map[UnitId, UnitType]],
-    parents: Option[Map[UnitType, UnitId]]): Boolean = {
+  private def returnNoneWhenBothParentAndChildIsEmpty(
+    children: Option[Map[UnitId, UnitType]],
+    parents: Option[Map[UnitType, UnitId]]
+  ): Boolean = {
     val ifChildrenAndParentsIsEmpty = children.isEmpty && parents.isEmpty
     if (ifChildrenAndParentsIsEmpty) {
       logger.warn(s"Failure to produce UnitLinks, caused by children [$children] and parents [$parents] map being None")
