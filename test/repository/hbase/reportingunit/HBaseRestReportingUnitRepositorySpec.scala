@@ -46,7 +46,7 @@ class HBaseRestReportingUnitRepositorySpec extends FreeSpec with Matchers with M
 
   "A Reporting Unit repository" - {
     "supports retrieval of a reporting unit by Enterprise reference (ERN), period, and Reporting Unit reference (RURN)" - {
-      "returning the target reporting unit when it exists" ignore new SingleResultFixture {
+      "returning the target reporting unit when it exists" in new SingleResultFixture {
         (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(toRow(ARow)))))
         (rowMapper.fromRow _).expects(toRow(ARow)).returning(Some(TargetReportingUnit))
 
@@ -82,7 +82,7 @@ class HBaseRestReportingUnitRepositorySpec extends FreeSpec with Matchers with M
     }
 
     "supports retrieval of all reporting units for an enterprise at a specific period in time" - {
-      "returning the target reporting units when any exist" ignore new MultipleResultFixture {
+      "returning the target reporting units when any exist" in new MultipleResultFixture {
         val rows = Seq(ARow, AnotherRow)
         (restRepository.findRows _).expects(TargetTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Right(rows.map(toRow))))
         (rowMapper.fromRow _).expects(toRow(ARow)).returning(Some(TargetReportingUnit))
