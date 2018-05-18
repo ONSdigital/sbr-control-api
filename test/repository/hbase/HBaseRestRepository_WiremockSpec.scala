@@ -18,6 +18,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
   private val Table = "table"
   private val RowKey = "rowKey"
   private val ColumnFamily = "cg"
+  private val UnusedRowKey = ""
 
   // test timeout must exceed the configured HBaseRest timeout to properly test client-side timeout handling
   override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(1500, Millis)), interval = scaled(Span(50, Millis)))
@@ -49,15 +50,17 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
     }(new Port(wireMockPort))
   }
 
+  private def toRow(variables: Map[String, String]) = Row(rowKey = UnusedRowKey, fields = variables)
+
   "A HBase REST Repository" - {
     "when expecting to find at most one row" - {
       "can process a valid success response containing a single row" in { fixture =>
         val expectedRow = Map("key1" -> "value1")
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
-        (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq(expectedRow)))
+        (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq(toRow(expectedRow))))
 
         whenReady(fixture.repository.findRow(Table, RowKey, ColumnFamily)) { result =>
-          result.right.value shouldBe Some(expectedRow)
+          result.right.value shouldBe Some(toRow(expectedRow))
         }
       }
 
@@ -89,7 +92,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
         "when multiple results are found" in { fixture =>
           val multipleRows = Seq(Map("key" -> "value1"), Map("key" -> "value2"))
           stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
-          (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(multipleRows))
+          (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(multipleRows.map(toRow)))
 
           whenReady(fixture.repository.findRow(Table, RowKey, ColumnFamily)) { result =>
             result.left.value shouldBe "At most one result was expected but found [2]"
@@ -103,10 +106,10 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
         val row1 = Map("key1" -> "value1")
         val row2 = Map("key2" -> "value2")
         stubHBaseFor(getHBaseJson(fixture.targetUrl, fixture.auth).willReturn(anOkResponse().withBody(DummyJsonResponseStr)))
-        (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq(row1, row2)))
+        (fixture.readsRows.reads _).expects(Json.parse(DummyJsonResponseStr)).returning(JsSuccess(Seq(toRow(row1), toRow(row2))))
 
         whenReady(fixture.repository.findRows(Table, RowKey, ColumnFamily)) { result =>
-          result.right.value should contain theSameElementsAs Seq(row1, row2)
+          result.right.value should contain theSameElementsAs Seq(toRow(row1), toRow(row2))
         }
       }
     }

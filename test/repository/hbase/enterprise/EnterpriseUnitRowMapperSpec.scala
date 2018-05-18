@@ -3,6 +3,7 @@ package repository.hbase.enterprise
 import org.scalatest.{ FreeSpec, Matchers }
 
 import EnterpriseUnitColumns._
+import repository.RestRepository.Row
 import support.sample.SampleEnterpriseUnit
 
 class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
@@ -25,17 +26,18 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
 
     val allVariables: Map[String, String] =
       mandatoryVariables ++ optionalVariables
+
+    val UnusedRowKey = ""
   }
 
   "An Enterprise Unit RowMapper" - {
     "can make an Enterprise" - {
       "when all the fields are given" in new Fixture {
-        EnterpriseUnitRowMapper.fromRow(allVariables) shouldBe Some(SampleEnterpriseWithAllFields)
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables)) shouldBe Some(SampleEnterpriseWithAllFields)
       }
 
       "when only mandatory fields are given" in new Fixture {
-        println(EnterpriseUnitRowMapper.fromRow(mandatoryVariables))
-        EnterpriseUnitRowMapper.fromRow(mandatoryVariables) shouldBe Some(SampleEnterpriseWithNoOptionalFields)
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = mandatoryVariables)) shouldBe Some(SampleEnterpriseWithNoOptionalFields)
       }
 
     }
@@ -45,29 +47,29 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
         val mandatoryColumnKeys = mandatoryVariables.keys
         mandatoryColumnKeys.foreach { column =>
           withClue(s"Missing field is $column") {
-            EnterpriseUnitRowMapper.fromRow(mandatoryVariables - column) shouldBe None
+            EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = mandatoryVariables - column)) shouldBe None
           }
         }
       }
 
       "a non-numeric value is found for employees" in new Fixture {
-        EnterpriseUnitRowMapper.fromRow(allVariables.updated(employees, "invalid_int")) shouldBe None
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(employees, "invalid_int"))) shouldBe None
       }
 
       "a non-numeric value is found for jobs" in new Fixture {
-        EnterpriseUnitRowMapper.fromRow(allVariables.updated(jobs, "invalid_int")) shouldBe None
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(jobs, "invalid_int"))) shouldBe None
       }
 
       "a non-integeral value is found for employees" in new Fixture {
-        EnterpriseUnitRowMapper.fromRow(allVariables.updated(employees, "12.90")) shouldBe None
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(employees, "12.90"))) shouldBe None
       }
 
       "a non-integral value is found for jobs" in new Fixture {
-        EnterpriseUnitRowMapper.fromRow(allVariables.updated(jobs, "456.90")) shouldBe None
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(jobs, "456.90"))) shouldBe None
       }
 
       "a non-integral value is found for employees and jobs" in new Fixture {
-        EnterpriseUnitRowMapper.fromRow(allVariables.updated(employees, "12.90").updated(jobs, "90.89")) shouldBe None
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(employees, "12.90").updated(jobs, "90.89"))) shouldBe None
       }
     }
   }

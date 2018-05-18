@@ -1,6 +1,7 @@
 package repository.hbase.reportingunit
 
 import org.scalatest.{ FreeSpec, Matchers }
+
 import repository.hbase.reportingunit.ReportingUnitColumns._
 import support.sample.SampleReportingUnit
 import uk.gov.ons.sbr.models.enterprise.Ern
@@ -35,6 +36,9 @@ class ReportingUnitRowMapperSpec extends FreeSpec with Matchers with SampleRepor
       employment -> employmentValue, turnover -> turnoverValue, prn -> prnValue)
     private val optionalColumns = Seq(ruref, entref, tradingStyle, legalStatus, address2, address3, address4, address5)
     val mandatoryVariables: Map[String, String] = allVariables -- optionalColumns
+    private val UnusedRowKey = ""
+
+    def toRow(variables: Map[String, String]) = Row(rowKey = UnusedRowKey, fields = variables)
   }
 
   "A Reporting Unit row mapper" - {
@@ -65,7 +69,7 @@ class ReportingUnitRowMapperSpec extends FreeSpec with Matchers with SampleRepor
         val mandatoryColumns = mandatoryVariables.keys
         mandatoryColumns.foreach { column =>
           withClue(s"with missing column [$column]") {
-            ReportingUnitRowMapper.fromRow(mandatoryVariables - column) shouldBe None
+            ReportingUnitRowMapper.fromRow(toRow(mandatoryVariables - column)) shouldBe None
           }
         }
       }
