@@ -5,6 +5,8 @@ object LocalUnitColumns {
   val luref = "luref"
   val ern = "ern"
   val entref = "entref"
+  val rurn = "rurn"
+  val ruref = "ruref"
   val name = "name"
   val tradingstyle = "tradingstyle"
   val address1 = "address1"

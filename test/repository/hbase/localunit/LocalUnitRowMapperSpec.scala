@@ -5,6 +5,7 @@ import org.scalatest.{ FreeSpec, Matchers }
 import uk.gov.ons.sbr.models.Address
 import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
 import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
+import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnitLink, Rurn }
 
 import repository.RestRepository.Row
 import repository.hbase.localunit.LocalUnitColumns._
@@ -16,6 +17,8 @@ class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
     val lurefValue = "cd"
     val ernValue = "ef"
     val entrefValue = "gh"
+    val rurnValue = "hg"
+    val rurefValue = "ji"
     val nameValue = "ij"
     val tradingstyleValue = "kl"
     val address1Value = "mn"
@@ -28,10 +31,10 @@ class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
     val employeesValue = "34"
 
     val allVariables = Map(lurn -> lurnValue, luref -> lurefValue, ern -> ernValue, entref -> entrefValue,
-      name -> nameValue, tradingstyle -> tradingstyleValue, address1 -> address1Value, address2 -> address2Value,
+      name -> nameValue, rurn -> rurnValue, ruref -> rurefValue, tradingstyle -> tradingstyleValue, address1 -> address1Value, address2 -> address2Value,
       address3 -> address3Value, address4 -> address4Value, address5 -> address5Value, postcode -> postcodeValue,
       sic07 -> sic07Value, employees -> employeesValue)
-    private val optionalColumns = Seq(luref, entref, tradingstyle, address2, address3, address4, address5)
+    private val optionalColumns = Seq(luref, entref, ruref, tradingstyle, address2, address3, address4, address5)
     val mandatoryVariables: Map[String, String] = allVariables -- optionalColumns
 
     val UnusedRowKey = ""
@@ -41,7 +44,7 @@ class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
     "can create a LocalUnit when all possible variables are defined" in new Fixture {
       LocalUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables)) shouldBe Some(LocalUnit(Lurn(lurnValue), luref = Some(lurefValue),
         name = nameValue, tradingStyle = Some(tradingstyleValue), sic07 = sic07Value, employees = employeesValue.toInt,
-        enterprise = EnterpriseLink(Ern(ernValue), entref = Some(entrefValue)),
+        enterprise = EnterpriseLink(Ern(ernValue), entref = Some(entrefValue)), reportingUnit = ReportingUnitLink(Rurn(rurnValue), ruref = Some(rurefValue)),
         address = Address(line1 = address1Value, line2 = Some(address2Value), line3 = Some(address3Value),
           line4 = Some(address4Value), line5 = Some(address5Value), postcode = postcodeValue)))
     }
@@ -49,7 +52,7 @@ class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
     "can create a LocalUnit when only the mandatory variables are defined" in new Fixture {
       LocalUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = mandatoryVariables)) shouldBe Some(LocalUnit(Lurn(lurnValue), luref = None,
         name = nameValue, tradingStyle = None, sic07 = sic07Value, employees = employeesValue.toInt,
-        enterprise = EnterpriseLink(Ern(ernValue), entref = None),
+        enterprise = EnterpriseLink(Ern(ernValue), entref = None), reportingUnit = ReportingUnitLink(Rurn(rurnValue), ruref = None),
         address = Address(line1 = address1Value, line2 = None, line3 = None, line4 = None, line5 = None, postcode = postcodeValue)))
     }
 

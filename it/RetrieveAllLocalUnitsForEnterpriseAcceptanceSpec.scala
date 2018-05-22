@@ -7,6 +7,7 @@ import org.scalatest.OptionValues
 
 import uk.gov.ons.sbr.models.enterprise.{EnterpriseLink, Ern}
 import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
+import uk.gov.ons.sbr.models.reportingunit.{ReportingUnitLink, Rurn}
 import uk.gov.ons.sbr.models.{Address, Period}
 
 import fixture.ServerAcceptanceSpec
@@ -18,6 +19,7 @@ import support.WithWireMockHBase
 class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
 
   private val TargetErn = Ern("1000000123")
+  private val TargetRurn = Rurn("91000000123")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
   private val LurnOne = Lurn("900000010")
   private val LurnTwo = Lurn("900000020")
@@ -29,6 +31,7 @@ class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
           aColumnWith(name = lurn, value = LurnOne.value),
           aColumnWith(name = luref, value = s"one-luref"),
           aColumnWith(name = ern, value = TargetErn.value),
+          aColumnWith(name = rurn, value = TargetRurn.value),
           aColumnWith(name = name, value = "one-name"),
           aColumnWith(name = address1, value = "one-address1"),
           aColumnWith(name = address2, value = "one-address2"),
@@ -41,6 +44,8 @@ class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
           aColumnWith(name = lurn, value = LurnTwo.value),
           aColumnWith(name = ern, value = TargetErn.value),
           aColumnWith(name = entref, value = "two-entref"),
+          aColumnWith(name = rurn, value = TargetRurn.value),
+          aColumnWith(name = ruref, value = "two-ruref"),
           aColumnWith(name = name, value = "two-name"),
           aColumnWith(name = tradingstyle, value = "two-tradingstyle"),
           aColumnWith(name = address1, value = "two-address1"),
@@ -72,10 +77,12 @@ class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
       response.json.as[Seq[LocalUnit]] should contain theSameElementsAs Seq(
         LocalUnit(LurnOne, luref = Some("one-luref"), name = "one-name", tradingStyle = None,
           sic07 = "one-sic07", employees = 42, enterprise = EnterpriseLink(TargetErn, entref = None),
+          reportingUnit = ReportingUnitLink(TargetRurn, ruref = None),
           address = Address(line1 = "one-address1", line2 = Some("one-address2"), line3 = Some("one-address3"),
             line4 = Some("one-address4"), line5 = None, postcode = "one-postcode")),
         LocalUnit(LurnTwo, luref = None, name = "two-name", tradingStyle = Some("two-tradingstyle"),
           sic07 = "two-sic07", employees = 36, enterprise = EnterpriseLink(TargetErn, entref = Some("two-entref")),
+          reportingUnit = ReportingUnitLink(TargetRurn, ruref = Some("two-ruref")),
           address = Address(line1 = "two-address1", line2 = Some("two-address2"), line3 = None,
             line4 = None, line5 = Some("two-address5"), postcode = "two-postcode"))
       )

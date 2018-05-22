@@ -5,6 +5,7 @@ import scala.util.Try
 import uk.gov.ons.sbr.models.Address
 import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
 import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
+import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnitLink, Rurn }
 
 import repository.RestRepository.Row
 import repository.RowMapper
@@ -35,8 +36,15 @@ object LocalUnitRowMapper extends RowMapper[LocalUnit] {
       employees <- variables.fields.get(employees)
       employeesInt <- Try(employees.toInt).toOption
       enterpriseLink <- toEnterpriseLink(variables)
+      reportingUnitLink <- toReportingUnitLink(variables)
       address <- toAddress(variables)
-    } yield LocalUnit(Lurn(lurn), optLuref, name, optTradingStyle, sic07, employeesInt, enterpriseLink, address)
+    } yield LocalUnit(Lurn(lurn), optLuref, enterpriseLink, reportingUnitLink, name, optTradingStyle, address, sic07, employeesInt)
+
+  private def toReportingUnitLink(variables: Row): Option[ReportingUnitLink] =
+    for {
+      rurn <- variables.fields.get(rurn)
+      optRuref = variables.fields.get(ruref)
+    } yield ReportingUnitLink(Rurn(rurn), optRuref)
 
   private def toEnterpriseLink(variables: Row): Option[EnterpriseLink] =
     for {

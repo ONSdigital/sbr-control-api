@@ -7,6 +7,7 @@ import org.scalatest.OptionValues
 
 import uk.gov.ons.sbr.models.enterprise.{EnterpriseLink, Ern}
 import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
+import uk.gov.ons.sbr.models.reportingunit.{ReportingUnitLink, Rurn}
 import uk.gov.ons.sbr.models.{Address, Period}
 
 import fixture.ServerAcceptanceSpec
@@ -17,6 +18,7 @@ import support.WithWireMockHBase
 
 class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
   private val TargetErn = Ern("1000000012")
+  private val TargetRurn = Rurn("91000000012")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
   private val TargetLurn = Lurn("900000011")
 
@@ -28,6 +30,8 @@ class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
           aColumnWith(name = luref, value = "some-luref"),
           aColumnWith(name = ern, value = TargetErn.value),
           aColumnWith(name = entref, value = "some-entref"),
+          aColumnWith(name = rurn, value = TargetRurn.value),
+          aColumnWith(name = ruref, value = "two-ruref"),
           aColumnWith(name = name, value = "some-name"),
           aColumnWith(name = tradingstyle, value = "some-tradingstyle"),
           aColumnWith(name = address1, value = "some-address1"),
@@ -59,6 +63,7 @@ class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
       response.json.as[LocalUnit] shouldBe
         LocalUnit(TargetLurn, luref = Some("some-luref"), name = "some-name", tradingStyle = Some("some-tradingstyle"),
           sic07 = "some-sic07", employees = 99, enterprise = EnterpriseLink(TargetErn, entref = Some("some-entref")),
+          reportingUnit = ReportingUnitLink(TargetRurn, ruref = Some("two-ruref")),
           address = Address(line1 = "some-address1", line2 = Some("some-address2"), line3 = None, line4 = None,
             line5 = Some("some-address5"), postcode = "some-postcode"))
     }

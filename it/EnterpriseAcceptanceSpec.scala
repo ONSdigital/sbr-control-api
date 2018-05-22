@@ -65,8 +65,8 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
           tradingStyle = Some(SampleTradingStyle), address = aAddressSample(
             line2 = Some(SampleAddressLine2),
             line5 = Some(SampleAddressLine5)
-          ), sic07 = SampleSIC07, legalStatus = SampleLegalStatus,
-          employees = Some(SampleNumberOfEmployees), jobs = Some(SampleJobs), containedTurnover = Some(SampleContainedTurnover),
+          ), sic07 = SampleSIC07, legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees),
+          jobs = Some(SampleJobs), containedTurnover = Some(SampleContainedTurnover),
           standardTurnover = Some(SampleStandardTurnover), groupTurnover = Some(SampleGroupTurnover),
           apportionedTurnover = None, enterpriseTurnover = Some(SampleEnterpriseTurnover))
     }

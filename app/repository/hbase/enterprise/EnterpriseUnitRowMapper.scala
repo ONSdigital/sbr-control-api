@@ -57,11 +57,9 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
       if invalidInt(enterpriseTurnoverOptTry)
       enterpriseTurnoverOptInt = parseTry(enterpriseTurnoverOptTry)
 
-    } yield Enterprise(ern = Ern(ern), entref = entrefStr, name = name, tradingStyle = tradingStyleStr, address = address,
-      sic07 = sic07, legalStatus = legalStatus, jobs = jobsOptInt, employees = employeeOptInt,
-      containedTurnover = containedTurnoverOptInt, standardTurnover = standardTurnoverOptInt,
-      groupTurnover = groupTurnoverOptInt, apportionedTurnover = apportionedTurnoverOptInt,
-      enterpriseTurnover = enterpriseTurnoverOptInt)
+    } yield Enterprise(Ern(ern), entrefStr, name, tradingStyleStr, address, sic07, legalStatus, employeeOptInt, jobsOptInt,
+      containedTurnoverOptInt, standardTurnoverOptInt, groupTurnoverOptInt, apportionedTurnoverOptInt,
+      enterpriseTurnoverOptInt)
 
   private def toAddress(variables: Row): Option[Address] =
     for {
