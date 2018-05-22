@@ -7,14 +7,16 @@ sbr-control-api is a Play Framework application written predominantly in Scala. 
 
 ### Endpoints
 
-| method | endpoint                                              | example                                                        |
-|--------|-------------------------------------------------------|----------------------------------------------------------------|
-| GET    | /v1/units/:id                                         | /v1/units/1234567890                                           |
-| GET    | /v1/periods/:period/types/:unitType/units/:id         | /v1/periods/201802/types/ENT/units/1234567890                  |
-| GET    | /v1/enterprises/:id                                   | /v1/enterprises/1234567890                                     |
-| GET    | /v1/periods/:period/enterprises/:id                   | /v1/periods/201802/enterprises/1234567890                      |
-| GET    | /v1/enterprises/:ern/periods/:period/localunits/:lurn | /v1/enterprises/1234567890/periods/201802/localunits/123456789 |
-| GET    | /v1/enterprises/:ern/periods/:period/localunits       | /v1/enterprises/1234567890/periods/201802/localunits           |                           |
+| method | endpoint                                                  | example                                                              |
+|--------|-----------------------------------------------------------|----------------------------------------------------------------------|
+| GET    | /v1/units/:id                                             | /v1/units/1234567890                                                 |
+| GET    | /v1/periods/:period/types/:unitType/units/:id             | /v1/periods/201802/types/ENT/units/1234567890                        |
+| GET    | /v1/enterprises/:id                                       | /v1/enterprises/1234567890                                           |
+| GET    | /v1/periods/:period/enterprises/:id                       | /v1/periods/201802/enterprises/1234567890                            |
+| GET    | /v1/enterprises/:ern/periods/:period/localunits/:lurn     | /v1/enterprises/1234567890/periods/201802/localunits/123456789       |
+| GET    | /v1/enterprises/:ern/periods/:period/localunits           | /v1/enterprises/1234567890/periods/201802/localunits                 |
+| GET    | /v1/enterprises/:ern/periods/:period/reportingunits/:rurn | /v1/enterprises/1234567890/periods/201802/reportingunits/33000000000 |
+| GET    | /v1/enterprises/:ern/periods/:period/reportingunits       | /v1/enterprises/1234567890/periods/201802/reportingunits             |
 
 ### Prerequisites
 
@@ -40,7 +42,7 @@ brew install hbase
 
 To compile, build and run the application use the following command:
 ```shell
-sbt "api/run"
+sbt run
 ```
 The default application port is 9000. To specify an alternative port use `-Dhttp.port=8080`.
 
@@ -88,7 +90,11 @@ To test all test suites we can use:
 sbt test
 ```
 
-Testing an individual test suite can be specified by using the `testOnly`.
+Testing an individual test suite can be specified by using `testOnly`. For example:
+
+```shell
+sbt "testOnly *ReportingUnitAcceptanceSpec"
+```
 
 SBR Api uses its own test configuration settings for integration tests, the details of which can be found on the [ONS Confluence](https://collaborate2.ons.gov.uk/confluence/display/SBR/Scala+Testing).
 

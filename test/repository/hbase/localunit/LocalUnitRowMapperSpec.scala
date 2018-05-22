@@ -4,6 +4,8 @@ import org.scalatest.{ FreeSpec, Matchers }
 
 import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
 import uk.gov.ons.sbr.models.localunit.{ Address, LocalUnit, Lurn }
+
+import repository.RestRepository.Row
 import repository.hbase.localunit.LocalUnitColumns._
 
 class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
@@ -30,11 +32,13 @@ class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
       sic07 -> sic07Value, employees -> employeesValue)
     private val optionalColumns = Seq(luref, entref, tradingstyle, address2, address3, address4, address5)
     val mandatoryVariables: Map[String, String] = allVariables -- optionalColumns
+
+    val UnusedRowKey = ""
   }
 
   "A LocalUnit row mapper" - {
     "can create a LocalUnit when all possible variables are defined" in new Fixture {
-      LocalUnitRowMapper.fromRow(allVariables) shouldBe Some(LocalUnit(Lurn(lurnValue), luref = Some(lurefValue),
+      LocalUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables)) shouldBe Some(LocalUnit(Lurn(lurnValue), luref = Some(lurefValue),
         name = nameValue, tradingStyle = Some(tradingstyleValue), sic07 = sic07Value, employees = employeesValue.toInt,
         enterprise = EnterpriseLink(Ern(ernValue), entref = Some(entrefValue)),
         address = Address(line1 = address1Value, line2 = Some(address2Value), line3 = Some(address3Value),
@@ -42,7 +46,7 @@ class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
     }
 
     "can create a LocalUnit when only the mandatory variables are defined" in new Fixture {
-      LocalUnitRowMapper.fromRow(mandatoryVariables) shouldBe Some(LocalUnit(Lurn(lurnValue), luref = None,
+      LocalUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = mandatoryVariables)) shouldBe Some(LocalUnit(Lurn(lurnValue), luref = None,
         name = nameValue, tradingStyle = None, sic07 = sic07Value, employees = employeesValue.toInt,
         enterprise = EnterpriseLink(Ern(ernValue), entref = None),
         address = Address(line1 = address1Value, line2 = None, line3 = None, line4 = None, line5 = None, postcode = postcodeValue)))
@@ -53,17 +57,17 @@ class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
         val mandatoryColumns = mandatoryVariables.keys
         mandatoryColumns.foreach { column =>
           withClue(s"with missing column [$column]") {
-            LocalUnitRowMapper.fromRow(mandatoryVariables - column) shouldBe None
+            LocalUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = mandatoryVariables - column)) shouldBe None
           }
         }
       }
 
       "the value of employees is non-numeric" in new Fixture {
-        LocalUnitRowMapper.fromRow(allVariables.updated(employees, "non-numeric")) shouldBe None
+        LocalUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(employees, "non-numeric"))) shouldBe None
       }
 
       "the value of employees is not an integral value" in new Fixture {
-        LocalUnitRowMapper.fromRow(allVariables.updated(employees, "3.14159")) shouldBe None
+        LocalUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(employees, "3.14159"))) shouldBe None
       }
     }
   }

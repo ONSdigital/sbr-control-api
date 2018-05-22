@@ -5,14 +5,16 @@ import java.time.Month.JANUARY
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ EitherValues, FreeSpec, Matchers }
+
 import repository.hbase.HBase.DefaultColumnFamily
 import repository.{ RestRepository, RowMapper }
 import support.sample.SampleLocalUnit
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
-
 import scala.concurrent.Future
+
+import repository.RestRepository.Row
 
 class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockFactory with ScalaFutures with EitherValues {
 
@@ -25,6 +27,9 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
     val rowMapper: RowMapper[LocalUnit] = mock[RowMapper[LocalUnit]]
     val config = HBaseRestLocalUnitRepositoryConfig(TargetTable)
     val repository = new HBaseRestLocalUnitRepository(config, restRepository, rowMapper)
+
+    private val UnusedRowKey = ""
+    def toRow(variables: Map[String, String]) = Row(rowKey = UnusedRowKey, fields = variables)
   }
 
   private trait SingleResultFixture extends Fixture with SampleLocalUnit {
@@ -43,8 +48,8 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
   "A Local Unit repository" - {
     "supports retrieval of a local unit by Enterprise reference (ERN), period, and Local Unit reference (LURN)" - {
       "returning the target local unit when it exists" in new SingleResultFixture {
-        (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(ARow))))
-        (rowMapper.fromRow _).expects(ARow).returning(Some(TargetLocalUnit))
+        (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(toRow(ARow)))))
+        (rowMapper.fromRow _).expects(toRow(ARow)).returning(Some(TargetLocalUnit))
 
         whenReady(repository.retrieveLocalUnit(TargetErn, TargetPeriod, TargetLurn)) { result =>
           result.right.value shouldBe Some(TargetLocalUnit)
@@ -60,8 +65,8 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
       }
 
       "signalling failure when a valid Local Unit cannot be constructed from a successful HBase REST response" in new SingleResultFixture {
-        (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(ARow))))
-        (rowMapper.fromRow _).expects(ARow).returning(None)
+        (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(toRow(ARow)))))
+        (rowMapper.fromRow _).expects(toRow(ARow)).returning(None)
 
         whenReady(repository.retrieveLocalUnit(TargetErn, TargetPeriod, TargetLurn)) { result =>
           result.left.value shouldBe "Unable to construct a Local Unit from Row data"
@@ -80,9 +85,9 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
     "supports retrieval of all local units for an enterprise at a specific period in time" - {
       "returning the target local units when any exist" in new MultipleResultFixture {
         val rows = Seq(ARow, AnotherRow)
-        (restRepository.findRows _).expects(TargetTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Right(rows)))
-        (rowMapper.fromRow _).expects(ARow).returning(Some(TargetLocalUnit))
-        (rowMapper.fromRow _).expects(AnotherRow).returning(Some(AnotherLocalUnit))
+        (restRepository.findRows _).expects(TargetTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Right(rows.map(toRow))))
+        (rowMapper.fromRow _).expects(toRow(ARow)).returning(Some(TargetLocalUnit))
+        (rowMapper.fromRow _).expects(toRow(AnotherRow)).returning(Some(AnotherLocalUnit))
 
         whenReady(repository.findLocalUnitsForEnterprise(TargetErn, TargetPeriod)) { result =>
           result.right.value should contain theSameElementsAs Seq(TargetLocalUnit, AnotherLocalUnit)
@@ -99,9 +104,9 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
 
       "signalling failure when a valid Local Unit cannot be constructed from a successful HBase REST response" in new MultipleResultFixture {
         val rows = Seq(ARow, AnotherRow)
-        (restRepository.findRows _).expects(TargetTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Right(rows)))
-        (rowMapper.fromRow _).expects(ARow).returning(Some(TargetLocalUnit))
-        (rowMapper.fromRow _).expects(AnotherRow).returning(None)
+        (restRepository.findRows _).expects(TargetTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Right(rows.map(toRow))))
+        (rowMapper.fromRow _).expects(toRow(ARow)).returning(Some(TargetLocalUnit))
+        (rowMapper.fromRow _).expects(toRow(AnotherRow)).returning(None)
 
         whenReady(repository.findLocalUnitsForEnterprise(TargetErn, TargetPeriod)) { result =>
           result.left.value shouldBe "Unable to construct a Local Unit from Row data"
