@@ -1,7 +1,8 @@
 package support.sample
 
+import uk.gov.ons.sbr.models.Address
 import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
-import uk.gov.ons.sbr.models.localunit.{ Address, LocalUnit, Lurn }
+import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 
 trait SampleLocalUnit {
   val SampleMandatoryValuesAddress = Address(line1 = "line1-value", line2 = None, line3 = None,

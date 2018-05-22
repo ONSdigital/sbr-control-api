@@ -15,12 +15,32 @@ class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
          |{${
         withValues(
           string(name = "ern", value = ent.ern.value),
-          string(name = "entref", value = ent.entref),
+          optionalString(name = "entref", optValue = ent.entref),
           string(name = "name", value = ent.name),
-          string(name = "postcode", value = ent.postcode),
+          optionalString(name = "tradingStyle", optValue = ent.tradingStyle)
+        )
+      },
+       |"address": {${
+        withValues(
+          string(name = "line1", value = ent.address.line1),
+          optionalString(name = "line2", optValue = ent.address.line2),
+          optionalString(name = "line3", optValue = ent.address.line3),
+          optionalString(name = "line4", optValue = ent.address.line4),
+          optionalString(name = "line5", optValue = ent.address.line5),
+          string(name = "postcode", value = ent.address.postcode)
+        )
+      }},
+        ${
+        withValues(
+          string(name = "sic07", value = ent.sic07),
           string(name = "legalStatus", value = ent.legalStatus),
           optionalInt(name = "employees", optValue = ent.employees),
-          optionalInt(name = "jobs", optValue = ent.jobs)
+          optionalInt(name = "jobs", optValue = ent.jobs),
+          optionalInt(name = "containedTurnover", optValue = ent.containedTurnover),
+          optionalInt(name = "standardTurnover", optValue = ent.standardTurnover),
+          optionalInt(name = "groupTurnover", optValue = ent.groupTurnover),
+          optionalInt(name = "apportionedTurnover", optValue = ent.apportionedTurnover),
+          optionalInt(name = "enterpriseTurnover", optValue = ent.enterpriseTurnover)
         )
       }
        |}""".stripMargin
@@ -37,6 +57,5 @@ class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
       }
     }
   }
-
 }
 

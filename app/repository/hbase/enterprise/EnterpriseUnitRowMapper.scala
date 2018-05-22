@@ -2,6 +2,7 @@ package repository.hbase.enterprise
 
 import scala.util.Try
 
+import uk.gov.ons.sbr.models.Address
 import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
 
 import utils.TrySupport
@@ -14,22 +15,63 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
   override def fromRow(variables: Row): Option[Enterprise] =
     for {
       ern <- variables.fields.get(ern)
-      entref <- variables.fields.get(entref)
+      entrefStr = variables.fields.get(entref)
       name <- variables.fields.get(name)
-      postcode <- variables.fields.get(postcode)
+      tradingStyleStr = variables.fields.get(tradingStyle)
+      address <- toAddress(variables)
       legalStatus <- variables.fields.get(legalStatus)
-
-      employeesStr = variables.fields.get(employees)
-      employeeOptTry = asInt(employeesStr)
-      if invalidInt(employeeOptTry)
-      employeeOptInt = parseTry(employeeOptTry)
+      sic07 <- variables.fields.get(sic07)
 
       jobsStr = variables.fields.get(jobs)
       jobsOptTry = asInt(jobsStr)
       if invalidInt(jobsOptTry)
       jobsOptInt = parseTry(jobsOptTry)
 
-    } yield Enterprise(Ern(ern), entref, name, postcode, legalStatus, employeeOptInt, jobsOptInt)
+      employeesStr = variables.fields.get(employees)
+      employeeOptTry = asInt(employeesStr)
+      if invalidInt(employeeOptTry)
+      employeeOptInt = parseTry(employeeOptTry)
+
+      containedTurnoverStr = variables.fields.get(containedTurnover)
+      containedTurnoverOptTry = asInt(containedTurnoverStr)
+      if invalidInt(containedTurnoverOptTry)
+      containedTurnoverOptInt = parseTry(containedTurnoverOptTry)
+
+      standardTurnoverStr = variables.fields.get(containedTurnover)
+      standardTurnoverOptTry = asInt(standardTurnoverStr)
+      if invalidInt(standardTurnoverOptTry)
+      standardTurnoverOptInt = parseTry(standardTurnoverOptTry)
+
+      groupTurnoverStr = variables.fields.get(groupTurnover)
+      groupTurnoverOptTry = asInt(groupTurnoverStr)
+      if invalidInt(groupTurnoverOptTry)
+      groupTurnoverOptInt = parseTry(groupTurnoverOptTry)
+
+      apportionedTurnoverStr = variables.fields.get(apportionedTurnover)
+      apportionedTurnoverOptTry = asInt(apportionedTurnoverStr)
+      if invalidInt(apportionedTurnoverOptTry)
+      apportionedTurnoverOptInt = parseTry(apportionedTurnoverOptTry)
+
+      enterpriseTurnoverStr = variables.fields.get(enterpriseTurnover)
+      enterpriseTurnoverOptTry = asInt(enterpriseTurnoverStr)
+      if invalidInt(enterpriseTurnoverOptTry)
+      enterpriseTurnoverOptInt = parseTry(enterpriseTurnoverOptTry)
+
+    } yield Enterprise(ern = Ern(ern), entref = entrefStr, name = name, tradingStyle = tradingStyleStr, address = address,
+      sic07 = sic07, legalStatus = legalStatus, jobs = jobsOptInt, employees = employeeOptInt,
+      containedTurnover = containedTurnoverOptInt, standardTurnover = standardTurnoverOptInt,
+      groupTurnover = groupTurnoverOptInt, apportionedTurnover = apportionedTurnoverOptInt,
+      enterpriseTurnover = enterpriseTurnoverOptInt)
+
+  private def toAddress(variables: Row): Option[Address] =
+    for {
+      line1 <- variables.fields.get(address1)
+      optLine2 = variables.fields.get(address2)
+      optLine3 = variables.fields.get(address3)
+      optLine4 = variables.fields.get(address4)
+      optLine5 = variables.fields.get(address5)
+      postcode <- variables.fields.get(postcode)
+    } yield Address(line1, optLine2, optLine3, optLine4, optLine5, postcode)
 
   private def parseTry(valueOptTry: Option[Try[Int]]) =
     valueOptTry.fold[Option[Int]](None) { tryToInt =>

@@ -1,7 +1,8 @@
-package uk.gov.ons.sbr.models.localunit
+package uk.gov.ons.sbr.models
 
-import org.scalatest.{ FreeSpec, Matchers }
 import play.api.libs.json.Json
+import org.scalatest.{ FreeSpec, Matchers }
+
 import support.JsonString
 import support.JsonString.{ optionalString, string }
 

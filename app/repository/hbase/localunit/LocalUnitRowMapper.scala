@@ -2,8 +2,9 @@ package repository.hbase.localunit
 
 import scala.util.Try
 
+import uk.gov.ons.sbr.models.Address
 import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
-import uk.gov.ons.sbr.models.localunit.{ Address, LocalUnit, Lurn }
+import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 
 import repository.RestRepository.Row
 import repository.RowMapper

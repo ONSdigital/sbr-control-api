@@ -1,7 +1,7 @@
 import java.time.Month.MARCH
 
 import play.api.http.ContentTypes.JSON
-import play.api.http.Status.{ OK, NOT_FOUND, BAD_REQUEST }
+import play.api.http.Status.{ BAD_REQUEST, NOT_FOUND, OK }
 import org.scalatest.OptionValues
 
 import uk.gov.ons.sbr.models.Period
@@ -11,6 +11,7 @@ import fixture.ServerAcceptanceSpec
 import it.fixture.ReadsEnterpriseUnit.enterpriseReads
 import repository.hbase.enterprise.EnterpriseUnitColumns._
 import repository.hbase.enterprise.EnterpriseUnitRowKey
+import repository.hbase.localunit.LocalUnitColumns.{ address1, address2, address5, postcode, sic07 }
 import support.WithWireMockHBase
 import support.sample.SampleEnterpriseUnit
 
@@ -26,10 +27,19 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
           aColumnWith(name = ern, value = TargetErn.value),
           aColumnWith(name = entref, value = SampleEnterpriseReference),
           aColumnWith(name = name, value = SampleEnterpriseName),
+          aColumnWith(name = tradingStyle, value = SampleTradingStyle),
+          aColumnWith(name = address1, value = SampleAddressLine1),
+          aColumnWith(name = address2, value = SampleAddressLine2),
+          aColumnWith(name = address5, value = SampleAddressLine5),
           aColumnWith(name = postcode, value = SamplePostcode),
+          aColumnWith(name = sic07, value = SampleSIC07),
           aColumnWith(name = legalStatus, value = SampleLegalStatus),
+          aColumnWith(name = jobs, value = SampleJobs.toString),
           aColumnWith(name = employees, value = SampleNumberOfEmployees.toString),
-          aColumnWith(name = jobs, value = SampleJobs.toString))
+          aColumnWith(name = containedTurnover, value = SampleContainedTurnover.toString),
+          aColumnWith(name = standardTurnover, value = SampleStandardTurnover.toString),
+          aColumnWith(name = groupTurnover, value = SampleGroupTurnover.toString),
+          aColumnWith(name = enterpriseTurnover, value = SampleEnterpriseTurnover.toString))
       ).mkString("[", ",", "]")
     }}"""
 
@@ -51,8 +61,14 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
       response.status shouldBe OK
       response.header("Content-Type") shouldBe Some(JSON)
       response.json.as[Enterprise] shouldBe
-        Enterprise(ern = TargetErn, entref = SampleEnterpriseReference, name = SampleEnterpriseName, postcode = SamplePostcode,
-          legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees), jobs = Some(SampleJobs))
+        Enterprise(ern = TargetErn, entref = Some(SampleEnterpriseReference), name = SampleEnterpriseName,
+          tradingStyle = Some(SampleTradingStyle), address = aAddressSample(
+            line2 = Some(SampleAddressLine2),
+            line5 = Some(SampleAddressLine5)
+          ), sic07 = SampleSIC07, legalStatus = SampleLegalStatus,
+          employees = Some(SampleNumberOfEmployees), jobs = Some(SampleJobs), containedTurnover = Some(SampleContainedTurnover),
+          standardTurnover = Some(SampleStandardTurnover), groupTurnover = Some(SampleGroupTurnover),
+          apportionedTurnover = None, enterpriseTurnover = Some(SampleEnterpriseTurnover))
     }
   }
 

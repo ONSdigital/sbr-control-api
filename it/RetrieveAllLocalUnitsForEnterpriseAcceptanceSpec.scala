@@ -1,17 +1,19 @@
 import java.time.Month.MARCH
 
+import play.api.http.HeaderNames.CONTENT_TYPE
+import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK}
+import play.mvc.Http.MimeTypes.JSON
+import org.scalatest.OptionValues
+
+import uk.gov.ons.sbr.models.enterprise.{EnterpriseLink, Ern}
+import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
+import uk.gov.ons.sbr.models.{Address, Period}
+
 import fixture.ServerAcceptanceSpec
 import it.fixture.ReadsLocalUnit.localUnitReads
-import org.scalatest.OptionValues
-import play.api.http.HeaderNames.CONTENT_TYPE
-import play.api.http.Status.{ BAD_REQUEST, NOT_FOUND, OK }
-import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.localunit.LocalUnitColumns._
 import repository.hbase.localunit.LocalUnitQuery
 import support.WithWireMockHBase
-import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
-import uk.gov.ons.sbr.models.localunit.{ Address, LocalUnit, Lurn }
 
 class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
 

@@ -12,16 +12,28 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
     val mandatoryVariables =
       Map(
         ern -> SampleEnterpriseId.value,
-        entref -> SampleEnterpriseReference,
         name -> SampleEnterpriseName,
+        address1 -> SampleAddressLine1,
         postcode -> SamplePostcode,
+        sic07 -> SampleSIC07,
         legalStatus -> SampleLegalStatus
       )
 
     val optionalVariables =
       Map(
+        entref -> SampleEnterpriseReference,
+        tradingStyle -> SampleTradingStyle,
+        address2 -> SampleAddressLine2,
+        address3 -> SampleAddressLine3,
+        address4 -> SampleAddressLine4,
+        address5 -> SampleAddressLine5,
         employees -> SampleNumberOfEmployees.toString,
-        jobs -> SampleJobs.toString
+        jobs -> SampleJobs.toString,
+        containedTurnover -> SampleContainedTurnover.toString,
+        standardTurnover -> SampleStandardTurnover.toString,
+        groupTurnover -> SampleGroupTurnover.toString,
+        apportionedTurnover -> SampleApportionedTurnover.toString,
+        enterpriseTurnover -> SampleEnterpriseTurnover.toString
       )
 
     val allVariables: Map[String, String] =

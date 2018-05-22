@@ -3,6 +3,7 @@ package controllers.v1
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import org.scalatest.{ FreeSpec, Matchers }
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 
@@ -11,7 +12,6 @@ import uk.gov.ons.sbr.models.unitlinks.UnitType
 
 import controllers.v1.fixture.HttpServerErrorStatusCode
 import support.sample.SampleUnitLinks
-import play.api.test.Helpers._
 
 /*
  * We are relying on the router to perform argument validation for us (via regex constraints).
