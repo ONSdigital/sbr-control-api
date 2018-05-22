@@ -42,8 +42,7 @@ class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
           optionalInt(name = "apportionedTurnover", optValue = ent.apportionedTurnover),
           optionalInt(name = "enterpriseTurnover", optValue = ent.enterpriseTurnover)
         )
-      }
-       |}""".stripMargin
+      }}""".stripMargin
   }
 
   "A enterprise" - {
