@@ -35,7 +35,7 @@ GET     /v1/enterprises/:ern/periods/:period/reportingunits                     
 GET     /                                   controllers.HomeController.status
 
 # Route for deployed version information (in JSON).
-GET     /version                            controllers.VersionController.version
+# GET     /version                            controllers.VersionController.version
 
 # Route for health check information (in JSON).
 GET     /health                             controllers.HealthController.health

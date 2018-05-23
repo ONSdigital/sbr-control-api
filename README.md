@@ -42,7 +42,7 @@ sbr-control-api is a Play Framework application written predominantly in Scala. 
 
 To install SBT quickly you can use Homebrew ([Brew](http://brew.sh)):
 ```shell
-brew install sbt
+brew install gradle
 ```
 Similarly we can get Scala (for development purposes) using brew:
 ```shell
@@ -57,7 +57,7 @@ brew install hbase
 
 To compile, build and run the application use the following command:
 ```shell
-sbt run
+gradle runPlayBinary
 ```
 The default application port is 9000. To specify an alternative port use `-Dhttp.port=8080`.
 
@@ -102,7 +102,7 @@ sbt assembly
 To test all test suites we can use:
 
 ```shell
-sbt test
+gradle test
 ```
 
 Testing an individual test suite can be specified by using `testOnly`. For example:

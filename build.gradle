@@ -1,0 +1,69 @@
+plugins {
+    id 'play'
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+}
+
+dependencies {
+    play 'com.sksamuel.scapegoat:scalac-scapegoat-plugin_2.11:1.0.0'
+    play 'com.typesafe.play:play-cache_2.11:2.5.18'         // cache
+    play 'com.typesafe.play:filters-helpers_2.11:2.5.18'    // filters
+    play 'com.typesafe.play:play-netty-server_2.11:2.5.18'
+    play 'com.typesafe.play:play-logback_2.11:2.5.18'
+    play 'com.typesafe.play:play-ws_2.11:2.5.18'            // ws
+    play 'com.typesafe.play:twirl-api_2.11:1.1.1'
+    play 'com.typesafe.scala-logging:scala-logging_2.11:3.5.0'
+    play 'io.lemonlabs:scala-uri_2.11:0.5.0'
+    play 'com.typesafe:config:1.3.1'
+    play 'io.swagger:swagger-play2_2.11:1.5.3'
+    play 'org.apache.hadoop:hadoop-common:2.6.0'
+    play 'org.apache.hbase:hbase-client:1.0.0'
+    play 'org.apache.hbase:hbase-common:1.0.0'
+    play 'org.webjars:swagger-ui:3.1.4'
+    play 'org.webjars:webjars-play_2.11:2.5.0-3'
+
+    playTest 'org.scalatestplus.play:scalatestplus-play_2.11:2.0.0'
+    playTest 'org.scalatest:scalatest_2.11:3.0.4'
+    playTest 'com.github.tomakehurst:wiremock:1.58'
+    playTest 'org.scalamock:scalamock_2.11:4.1.0'
+}
+
+model {
+    components {
+        play {
+            platform play: '2.5.18', scala: '2.11', java: '1.8'
+            injectedRoutesGenerator = true
+            tasks.withType(RoutesCompile) {
+                additionalImports = ['extensions.Binders._']
+            }
+            binaries.all {
+                tasks.withType(PlatformScalaCompile) {
+                    scalaCompileOptions.additionalParameters = [
+                        "-language:experimental.macros",
+                        "-target:jvm-1.8",
+                        "-encoding", "UTF-8",
+                        "-language:reflectiveCalls",
+                        "-language:experimental.macros",
+                        "-language:implicitConversions",
+                        "-language:higherKinds",
+                        "-language:postfixOps",
+                        "-deprecation", // warning and location for usages of deprecated APIs
+                        "-feature", // warning and location for usages of features that should be imported explicitly
+                        "-unchecked", // additional warnings where generated code depends on assumptions
+                        "-Xlint", // recommended additional warnings
+                        "-Xcheckinit", // runtime error when a val is not initialized due to trait hierarchies (instead of NPE somewhere else)
+                        "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver
+                        "-Ywarn-value-discard", // Warn when non-Unit expression results are unused
+                        "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures
+                        "-Ywarn-dead-code", // Warn when dead code is identified
+                        "-Ywarn-unused", // Warn when local and private vals, vars, defs, and types are unused
+                        "-Ywarn-numeric-widen" // Warn when numerics are widened
+                        ]
+                }
+            }
+        }
+    }
+}

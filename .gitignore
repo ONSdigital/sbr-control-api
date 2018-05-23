@@ -11,4 +11,6 @@ project/project/
 
 .cache
 .history
-scalastyle-config.xml
+
+.gradle/
+build/
