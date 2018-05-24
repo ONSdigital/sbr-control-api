@@ -53,8 +53,8 @@ trait SampleEnterpriseUnit {
     address: Address = SampleFullAddress): Enterprise =
     template.copy(ern = ern, apportionedTurnover = apportionedTurnover, address = address)
 
-  def aAddressSample(line2: Option[String] = None, line3: Option[String] = None, line4: Option[String] = None,
-    line5: Option[String] = None): Address =
+  def aAddressSampleWithOptionalValues(line2: Option[String] = None, line3: Option[String] = None,
+                                       line4: Option[String] = None, line5: Option[String] = None): Address =
     SamplePartialAddress.copy(line2 = line2, line3 = line3, line4 = line4, line5 = line5)
 
 }

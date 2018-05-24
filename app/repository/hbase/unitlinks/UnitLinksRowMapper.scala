@@ -39,7 +39,6 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
        * NOTE: GUARD - to not create UnitLinks in the event children and parents is None.
        */
       if returnNoneWhenBothParentAndChildIsEmpty(children, parents)
-
     } yield UnitLinks(UnitId(id), period, parents, children, unitType)
   }
 

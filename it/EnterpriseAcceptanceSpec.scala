@@ -62,7 +62,7 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
       response.header("Content-Type") shouldBe Some(JSON)
       response.json.as[Enterprise] shouldBe
         Enterprise(ern = TargetErn, entref = Some(SampleEnterpriseReference), name = SampleEnterpriseName,
-          tradingStyle = Some(SampleTradingStyle), address = aAddressSample(
+          tradingStyle = Some(SampleTradingStyle), address = aAddressSampleWithOptionalValues(
             line2 = Some(SampleAddressLine2),
             line5 = Some(SampleAddressLine5)
           ), sic07 = SampleSIC07, legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees),

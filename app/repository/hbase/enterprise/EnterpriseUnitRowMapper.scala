@@ -15,9 +15,9 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
   override def fromRow(variables: Row): Option[Enterprise] =
     for {
       ern <- variables.fields.get(ern)
-      entrefStr = variables.fields.get(entref)
+      entrefOptStr = variables.fields.get(entref)
       name <- variables.fields.get(name)
-      tradingStyleStr = variables.fields.get(tradingStyle)
+      tradingStyleOptStr = variables.fields.get(tradingStyle)
       address <- toAddress(variables)
       legalStatus <- variables.fields.get(legalStatus)
       sic07 <- variables.fields.get(sic07)
@@ -57,8 +57,8 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
       if invalidInt(enterpriseTurnoverOptTry)
       enterpriseTurnoverOptInt = parseTry(enterpriseTurnoverOptTry)
 
-    } yield Enterprise(Ern(ern), entrefStr, name, tradingStyleStr, address, sic07, legalStatus, employeeOptInt, jobsOptInt,
-      containedTurnoverOptInt, standardTurnoverOptInt, groupTurnoverOptInt, apportionedTurnoverOptInt,
+    } yield Enterprise(Ern(ern), entrefOptStr, name, tradingStyleOptStr, address, sic07, legalStatus, employeeOptInt,
+      jobsOptInt, containedTurnoverOptInt, standardTurnoverOptInt, groupTurnoverOptInt, apportionedTurnoverOptInt,
       enterpriseTurnoverOptInt)
 
   private def toAddress(variables: Row): Option[Address] =

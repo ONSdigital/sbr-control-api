@@ -32,7 +32,7 @@ trait SampleLocalUnit {
     address = SampleAllValuesAddress
   )
 
-  def anReportingUnitLink(rurn: Rurn, template: ReportingUnitLink = SampleAllValuesReportingUnitLink): ReportingUnitLink =
+  def aReportingUnitLink(rurn: Rurn, template: ReportingUnitLink = SampleAllValuesReportingUnitLink): ReportingUnitLink =
     template.copy(rurn = rurn)
 
   def anEnterpriseLink(ern: Ern, template: EnterpriseLink = SampleAllValuesEnterpriseLink): EnterpriseLink =
