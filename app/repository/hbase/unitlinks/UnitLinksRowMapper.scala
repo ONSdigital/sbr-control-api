@@ -15,7 +15,8 @@ import repository.hbase.unitlinks.UnitLinksRowKey._
 
 object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
 
-  override def fromRow(rows: Row): Option[UnitLinks] =
+  override def fromRow(rows: Row): Option[UnitLinks] = {
+    val (partitionedParentMap, partitionedChildrenMap) = partitionMap(rows.fields)
     for {
       partitionedKey <- splitRowKey(rows.rowKey)(logger)
       id = partitionedKey(unitIdIndex)
@@ -23,8 +24,6 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
       unitType <- unitTypeOpt
       periodOpt = toPeriod(partitionedKey(unitPeriodIndex))
       period <- periodOpt
-
-      (partitionedParentMap, partitionedChildrenMap) = partitionMap(rows.fields)
 
       /*
        * NOTE: GUARD - to not create UnitLinks in the event the left partition is not
@@ -40,8 +39,8 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
        * NOTE: GUARD - to not create UnitLinks in the event children and parents is None.
        */
       if returnNoneWhenBothParentAndChildIsEmpty(children, parents)
-
     } yield UnitLinks(UnitId(id), period, parents, children, unitType)
+  }
 
   private def partitionMap(rawMap: Map[String, String]): (Map[String, String], Map[String, String]) =
     rawMap.partition { case (k, _) => k.startsWith(UnitParentPrefix) }

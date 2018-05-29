@@ -13,11 +13,7 @@ class LocalUnitSpec extends FreeSpec with Matchers {
          |{${
         withValues(
           string("lurn", localUnit.lurn.value),
-          optionalString("luref", localUnit.luref),
-          string("name", localUnit.name),
-          optionalString("tradingStyle", localUnit.tradingStyle),
-          string("sic07", localUnit.sic07),
-          int("employees", localUnit.employees)
+          optionalString("luref", localUnit.luref)
         )
       },
          | "enterprise": {${
@@ -27,6 +23,19 @@ class LocalUnitSpec extends FreeSpec with Matchers {
         )
       }
          | },
+         | "reportingUnit": {${
+        withValues(
+          string("rurn", localUnit.reportingUnit.rurn.value),
+          optionalString("ruref", localUnit.reportingUnit.ruref)
+        )
+      }
+         | },
+         |  ${
+        withValues(
+          string("name", localUnit.name),
+          optionalString("tradingStyle", localUnit.tradingStyle)
+        )
+      },
          | "address": {${
         withValues(
           string("line1", localUnit.address.line1),
@@ -36,9 +45,13 @@ class LocalUnitSpec extends FreeSpec with Matchers {
           optionalString("line5", localUnit.address.line5),
           string("postcode", localUnit.address.postcode)
         )
-      }
-         | }
-         |}""".stripMargin
+      }},
+         | ${
+        withValues(
+          string("sic07", localUnit.sic07),
+          int("employees", localUnit.employees)
+        )
+      }}""".stripMargin
   }
 
   "A LocalUnit" - {

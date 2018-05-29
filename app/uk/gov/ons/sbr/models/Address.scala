@@ -1,7 +1,7 @@
-package uk.gov.ons.sbr.models.localunit
+package uk.gov.ons.sbr.models
 
-import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.Json
+import io.swagger.annotations.ApiModelProperty
 
 case class Address(
   @ApiModelProperty(value = "line1", dataType = "string", example = "21 High Street", required = true) line1: String,
