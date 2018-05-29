@@ -2,7 +2,8 @@ package repository.hbase.enterprise
 
 import scala.util.Try
 
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
+import uk.gov.ons.sbr.models.Address
+import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern, Turnover }
 
 import utils.TrySupport
 import repository.RestRepository.Row
@@ -14,27 +15,63 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
   override def fromRow(variables: Row): Option[Enterprise] =
     for {
       ern <- variables.fields.get(ern)
-      entref <- variables.fields.get(entref)
+      entrefOptStr = variables.fields.get(entref)
       name <- variables.fields.get(name)
-      postcode <- variables.fields.get(postcode)
+      tradingStyleOptStr = variables.fields.get(tradingStyle)
+      address <- toAddress(variables)
       legalStatus <- variables.fields.get(legalStatus)
-
-      employeesStr = variables.fields.get(employees)
-      employeeOptTry = asInt(employeesStr)
-      if invalidInt(employeeOptTry)
-      employeeOptInt = parseTry(employeeOptTry)
+      sic07 <- variables.fields.get(sic07)
 
       jobsStr = variables.fields.get(jobs)
       jobsOptTry = asInt(jobsStr)
       if invalidInt(jobsOptTry)
       jobsOptInt = parseTry(jobsOptTry)
 
-    } yield Enterprise(Ern(ern), entref, name, postcode, legalStatus, employeeOptInt, jobsOptInt)
+      employeesStr = variables.fields.get(employees)
+      employeeOptTry = asInt(employeesStr)
+      if invalidInt(employeeOptTry)
+      employeeOptInt = parseTry(employeeOptTry)
 
-  private def parseTry(valueOptTry: Option[Try[Int]]) =
+      turnoverObjectTry = toTurnover(variables)
+      if turnoverObjectTry.isSuccess
+      turnoverOpt = turnoverObjectTry.toOption.flatten
+
+    } yield Enterprise(Ern(ern), entrefOptStr, name, tradingStyleOptStr, address, sic07, legalStatus, employeeOptInt,
+      jobsOptInt, turnover = turnoverOpt)
+
+  private def toAddress(variables: Row): Option[Address] =
+    for {
+      line1 <- variables.fields.get(address1)
+      optLine2 = variables.fields.get(address2)
+      optLine3 = variables.fields.get(address3)
+      optLine4 = variables.fields.get(address4)
+      optLine5 = variables.fields.get(address5)
+      postcode <- variables.fields.get(postcode)
+    } yield Address(line1, optLine2, optLine3, optLine4, optLine5, postcode)
+
+  private def toTurnover(variables: Row): Try[Option[Turnover]] = {
+    val toIntTakesTurnoverType = optStringToTurnoverInt(variables, _: String)
+    Try {
+      val containedTurnoverOpt = toIntTakesTurnoverType(containedTurnover)
+      val standardTurnoverOpt = toIntTakesTurnoverType(standardTurnover)
+      val groupTurnoverOpt = toIntTakesTurnoverType(groupTurnover)
+      val apportionedTurnoverOpt = toIntTakesTurnoverType(apportionedTurnover)
+      val enterpriseTurnoverOpt = toIntTakesTurnoverType(enterpriseTurnover)
+      if (List(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt).forall(_.isEmpty)) {
+        None
+      } else Some(Turnover(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt))
+    }
+  }
+
+  private def optStringToTurnoverInt(variables: Row, turnoverType: String) = {
+    val optStrTurnover = variables.fields.get(turnoverType)
+    val optIntOrFail = optStrTurnover.map(_.toInt)
+    optIntOrFail
+  }
+
+  private def parseTry(valueOptTry: Option[Try[Int]]): Option[Int] =
     valueOptTry.fold[Option[Int]](None) { tryToInt =>
-      // TODO - Add logger for Assertion Exception
-      TrySupport.fold(tryToInt)(failure => throw failure, integralVal => Some(integralVal))
+      TrySupport.fold(tryToInt)(_ => None, integralVal => Some(integralVal))
     }
 
   private def asInt(fieldAsStr: Option[String]): Option[Try[Int]] =

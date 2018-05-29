@@ -1,17 +1,20 @@
 import java.time.Month.MARCH
 
+import play.api.http.HeaderNames.CONTENT_TYPE
+import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK}
+import play.mvc.Http.MimeTypes.JSON
+import org.scalatest.OptionValues
+
+import uk.gov.ons.sbr.models.enterprise.{EnterpriseLink, Ern}
+import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
+import uk.gov.ons.sbr.models.reportingunit.{ReportingUnitLink, Rurn}
+import uk.gov.ons.sbr.models.{Address, Period}
+
 import fixture.ServerAcceptanceSpec
 import it.fixture.ReadsLocalUnit.localUnitReads
-import org.scalatest.OptionValues
-import play.api.http.HeaderNames.CONTENT_TYPE
-import play.api.http.Status.{ BAD_REQUEST, NOT_FOUND, OK }
-import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.localunit.LocalUnitColumns._
 import repository.hbase.localunit.LocalUnitQuery
 import support.WithWireMockHBase
-import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
-import uk.gov.ons.sbr.models.localunit.{ Address, LocalUnit, Lurn }
 
 class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
   private val TargetErn = Ern("1000000012")
@@ -26,6 +29,8 @@ class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
           aColumnWith(name = luref, value = "some-luref"),
           aColumnWith(name = ern, value = TargetErn.value),
           aColumnWith(name = entref, value = "some-entref"),
+          aColumnWith(name = rurn, value = "91000000012"),
+          aColumnWith(name = ruref, value = "two-ruref"),
           aColumnWith(name = name, value = "some-name"),
           aColumnWith(name = tradingstyle, value = "some-tradingstyle"),
           aColumnWith(name = address1, value = "some-address1"),
@@ -57,6 +62,7 @@ class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
       response.json.as[LocalUnit] shouldBe
         LocalUnit(TargetLurn, luref = Some("some-luref"), name = "some-name", tradingStyle = Some("some-tradingstyle"),
           sic07 = "some-sic07", employees = 99, enterprise = EnterpriseLink(TargetErn, entref = Some("some-entref")),
+          reportingUnit = ReportingUnitLink(Rurn("91000000012"), ruref = Some("two-ruref")),
           address = Address(line1 = "some-address1", line2 = Some("some-address2"), line3 = None, line4 = None,
             line5 = Some("some-address5"), postcode = "some-postcode"))
     }
