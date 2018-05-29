@@ -3,7 +3,7 @@ package repository.hbase.enterprise
 import scala.util.Try
 
 import uk.gov.ons.sbr.models.Address
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
+import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern, Turnover }
 
 import utils.TrySupport
 import repository.RestRepository.Row
@@ -32,34 +32,12 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
       if invalidInt(employeeOptTry)
       employeeOptInt = parseTry(employeeOptTry)
 
-      containedTurnoverStr = variables.fields.get(containedTurnover)
-      containedTurnoverOptTry = asInt(containedTurnoverStr)
-      if invalidInt(containedTurnoverOptTry)
-      containedTurnoverOptInt = parseTry(containedTurnoverOptTry)
-
-      standardTurnoverStr = variables.fields.get(containedTurnover)
-      standardTurnoverOptTry = asInt(standardTurnoverStr)
-      if invalidInt(standardTurnoverOptTry)
-      standardTurnoverOptInt = parseTry(standardTurnoverOptTry)
-
-      groupTurnoverStr = variables.fields.get(groupTurnover)
-      groupTurnoverOptTry = asInt(groupTurnoverStr)
-      if invalidInt(groupTurnoverOptTry)
-      groupTurnoverOptInt = parseTry(groupTurnoverOptTry)
-
-      apportionedTurnoverStr = variables.fields.get(apportionedTurnover)
-      apportionedTurnoverOptTry = asInt(apportionedTurnoverStr)
-      if invalidInt(apportionedTurnoverOptTry)
-      apportionedTurnoverOptInt = parseTry(apportionedTurnoverOptTry)
-
-      enterpriseTurnoverStr = variables.fields.get(enterpriseTurnover)
-      enterpriseTurnoverOptTry = asInt(enterpriseTurnoverStr)
-      if invalidInt(enterpriseTurnoverOptTry)
-      enterpriseTurnoverOptInt = parseTry(enterpriseTurnoverOptTry)
+      turnoverObjectTry = toTurnover(variables)
+      if turnoverObjectTry.isSuccess
+      turnoverOpt = turnoverObjectTry.toOption.flatten
 
     } yield Enterprise(Ern(ern), entrefOptStr, name, tradingStyleOptStr, address, sic07, legalStatus, employeeOptInt,
-      jobsOptInt, containedTurnoverOptInt, standardTurnoverOptInt, groupTurnoverOptInt, apportionedTurnoverOptInt,
-      enterpriseTurnoverOptInt)
+      jobsOptInt, turnover = turnoverOpt)
 
   private def toAddress(variables: Row): Option[Address] =
     for {
@@ -71,10 +49,29 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
       postcode <- variables.fields.get(postcode)
     } yield Address(line1, optLine2, optLine3, optLine4, optLine5, postcode)
 
-  private def parseTry(valueOptTry: Option[Try[Int]]) =
+  private def toTurnover(variables: Row): Try[Option[Turnover]] = {
+    val toIntTakesTurnoverType = optStringToTurnoverInt(variables, _: String)
+    Try {
+      val containedTurnoverOpt = toIntTakesTurnoverType(containedTurnover)
+      val standardTurnoverOpt = toIntTakesTurnoverType(standardTurnover)
+      val groupTurnoverOpt = toIntTakesTurnoverType(groupTurnover)
+      val apportionedTurnoverOpt = toIntTakesTurnoverType(apportionedTurnover)
+      val enterpriseTurnoverOpt = toIntTakesTurnoverType(enterpriseTurnover)
+      if (!List(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt).forall(_.isEmpty)) {
+        Some(Turnover(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt))
+      } else None
+    }
+  }
+
+  private def optStringToTurnoverInt(variables: Row, turnoverType: String) = {
+    val optStrTurnover = variables.fields.get(turnoverType)
+    val optIntOrFail = optStrTurnover.map(_.toInt)
+    optIntOrFail
+  }
+
+  private def parseTry(valueOptTry: Option[Try[Int]]): Option[Int] =
     valueOptTry.fold[Option[Int]](None) { tryToInt =>
-      // TODO - Add logger for Assertion Exception
-      TrySupport.fold(tryToInt)(failure => throw failure, integralVal => Some(integralVal))
+      TrySupport.fold(tryToInt)(_ => None, integralVal => Some(integralVal))
     }
 
   private def asInt(fieldAsStr: Option[String]): Option[Try[Int]] =

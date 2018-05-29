@@ -15,11 +15,7 @@ case class Enterprise(
   @ApiModelProperty(value = "Legal status", dataType = "string", example = "NP10 5XJ", required = true) legalStatus: String,
   @ApiModelProperty(value = "Number of employees (source: PAYE)", dataType = "int", example = "100", required = false) employees: Option[Int],
   @ApiModelProperty(value = "Sum of employees for latest period (source: PAYE)", dataType = "int", example = "100", required = false) jobs: Option[Int],
-  @ApiModelProperty(value = "Sum of turnover for contained rep vats", dataType = "int", example = "99") containedTurnover: Option[Int],
-  @ApiModelProperty(value = "Sum of turnover for standard vats", dataType = "int", example = "99") standardTurnover: Option[Int],
-  @ApiModelProperty(value = "Sum of vat group turnover", dataType = "int", example = "99") groupTurnover: Option[Int],
-  @ApiModelProperty(value = "Apportioned turnover based on employees", dataType = "int", example = "99") apportionedTurnover: Option[Int],
-  @ApiModelProperty(value = "Sum of all turnover values for that enterprise", dataType = "int", example = "99") enterpriseTurnover: Option[Int]
+  @ApiModelProperty(value = "A container for various turnover calculations", dataType = "uk.gov.ons.sbr.models.enterprise.Turnover", required = true) turnover: Option[Turnover]
 )
 
 object Enterprise {

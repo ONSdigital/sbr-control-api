@@ -51,7 +51,6 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
       "when only mandatory fields are given" in new Fixture {
         EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = mandatoryVariables)) shouldBe Some(SampleEnterpriseWithNoOptionalFields)
       }
-
     }
 
     "fails to create an Enterprise when" - {
@@ -72,12 +71,52 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
         EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(jobs, "invalid_int"))) shouldBe None
       }
 
+      "a non-numeric value is found for contained turnover" in new Fixture {
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(containedTurnover, "invalid_int"))) shouldBe None
+      }
+
+      "a non-numeric value is found for standard turnover" in new Fixture {
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(standardTurnover, "invalid_int"))) shouldBe None
+      }
+
+      "a non-numeric value is found for group turnover" in new Fixture {
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(groupTurnover, "invalid_int"))) shouldBe None
+      }
+
+      "a non-numeric value is found for apportioned turnover" in new Fixture {
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(apportionedTurnover, "invalid_int"))) shouldBe None
+      }
+
+      "a non-numeric value is found for enterprise turnover" in new Fixture {
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(enterpriseTurnover, "invalid_int"))) shouldBe None
+      }
+
       "a non-integeral value is found for employees" in new Fixture {
         EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(employees, "12.90"))) shouldBe None
       }
 
       "a non-integral value is found for jobs" in new Fixture {
         EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(jobs, "456.90"))) shouldBe None
+      }
+
+      "a non-integeral value is found for contained turnover" in new Fixture {
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(containedTurnover, "12.90"))) shouldBe None
+      }
+
+      "a non-integral value is found for standard turnover" in new Fixture {
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(standardTurnover, "456.90"))) shouldBe None
+      }
+
+      "a non-integeral value is found for group turnover" in new Fixture {
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(groupTurnover, "12.90"))) shouldBe None
+      }
+
+      "a non-integral value is found for apportioned turnover" in new Fixture {
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(apportionedTurnover, "456.90"))) shouldBe None
+      }
+
+      "a non-integral value is found for enterprise turnover" in new Fixture {
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(enterpriseTurnover, "456.90"))) shouldBe None
       }
 
       "a non-integral value is found for employees and jobs" in new Fixture {

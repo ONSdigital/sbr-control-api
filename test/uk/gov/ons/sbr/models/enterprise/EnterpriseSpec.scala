@@ -10,6 +10,19 @@ class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
 
   private trait Fixture extends SampleEnterpriseUnit {
 
+    private def writeAsJsonTurnover(turnover: Turnover) =
+      s"""
+         |, "turnover":{ ${
+        withValues(
+          optionalInt(name = "containedTurnover", optValue = turnover.containedTurnover),
+          optionalInt(name = "standardTurnover", optValue = turnover.standardTurnover),
+          optionalInt(name = "groupTurnover", optValue = turnover.groupTurnover),
+          optionalInt(name = "apportionedTurnover", optValue = turnover.apportionedTurnover),
+          optionalInt(name = "enterpriseTurnover", optValue = turnover.enterpriseTurnover)
+        )
+      }}
+      """
+
     def expectedJsonOutput(ent: Enterprise): String =
       s"""
          |{${
@@ -20,7 +33,7 @@ class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
           optionalString(name = "tradingStyle", optValue = ent.tradingStyle)
         )
       },
-       |"address": {${
+         |"address": {${
         withValues(
           string(name = "line1", value = ent.address.line1),
           optionalString(name = "line2", optValue = ent.address.line2),
@@ -35,13 +48,13 @@ class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
           string(name = "sic07", value = ent.sic07),
           string(name = "legalStatus", value = ent.legalStatus),
           optionalInt(name = "employees", optValue = ent.employees),
-          optionalInt(name = "jobs", optValue = ent.jobs),
-          optionalInt(name = "containedTurnover", optValue = ent.containedTurnover),
-          optionalInt(name = "standardTurnover", optValue = ent.standardTurnover),
-          optionalInt(name = "groupTurnover", optValue = ent.groupTurnover),
-          optionalInt(name = "apportionedTurnover", optValue = ent.apportionedTurnover),
-          optionalInt(name = "enterpriseTurnover", optValue = ent.enterpriseTurnover)
+          optionalInt(name = "jobs", optValue = ent.jobs)
         )
+      }
+        ${
+        ent.turnover.fold("") { turnover =>
+          writeAsJsonTurnover(turnover = turnover)
+        }
       }}""".stripMargin
   }
 

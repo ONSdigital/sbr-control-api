@@ -1,16 +1,15 @@
 package uk.gov.ons.sbr.models.reportingunit
 
 import play.api.libs.json.Json
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{ FreeSpec, Matchers }
 
-import repository.hbase.reportingunit.ReportingUnitColumns.{ruref, rurn}
+import repository.hbase.reportingunit.ReportingUnitColumns.{ ruref, rurn }
 import support.JsonString
-import support.JsonString.{optionalString, string}
+import support.JsonString.{ optionalString, string }
 import support.sample.SampleReportingUnit
 
-
-class ReportingUnitLinkSpec extends FreeSpec with Matchers{
-  private trait Fixture extends SampleReportingUnit{
+class ReportingUnitLinkSpec extends FreeSpec with Matchers {
+  private trait Fixture extends SampleReportingUnit {
     def expectedJsonStrOf(ru: ReportingUnitLink): String = {
       JsonString.withObject(
         string(rurn, ru.rurn.value),

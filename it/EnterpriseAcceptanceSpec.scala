@@ -1,17 +1,17 @@
 import java.time.Month.MARCH
 
 import play.api.http.ContentTypes.JSON
-import play.api.http.Status.{ BAD_REQUEST, NOT_FOUND, OK }
+import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK}
 import org.scalatest.OptionValues
 
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
+import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern, Turnover}
 
 import fixture.ServerAcceptanceSpec
 import it.fixture.ReadsEnterpriseUnit.enterpriseReads
 import repository.hbase.enterprise.EnterpriseUnitColumns._
 import repository.hbase.enterprise.EnterpriseUnitRowKey
-import repository.hbase.localunit.LocalUnitColumns.{ address1, address2, address5, postcode, sic07 }
+import repository.hbase.localunit.LocalUnitColumns.{address1, address2, address5, postcode, sic07}
 import support.WithWireMockHBase
 import support.sample.SampleEnterpriseUnit
 
@@ -63,12 +63,11 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
       response.json.as[Enterprise] shouldBe
         Enterprise(ern = TargetErn, entref = Some(SampleEnterpriseReference), name = SampleEnterpriseName,
           tradingStyle = Some(SampleTradingStyle), address = aAddressSampleWithOptionalValues(
-            line2 = Some(SampleAddressLine2),
-            line5 = Some(SampleAddressLine5)
-          ), sic07 = SampleSIC07, legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees),
-          jobs = Some(SampleJobs), containedTurnover = Some(SampleContainedTurnover),
+            line2 = Some(SampleAddressLine2), line5 = Some(SampleAddressLine5)), sic07 = SampleSIC07,
+          legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees), jobs = Some(SampleJobs),
+          turnover = Some(Turnover(containedTurnover = Some(SampleContainedTurnover),
           standardTurnover = Some(SampleStandardTurnover), groupTurnover = Some(SampleGroupTurnover),
-          apportionedTurnover = None, enterpriseTurnover = Some(SampleEnterpriseTurnover))
+          apportionedTurnover = None, enterpriseTurnover = Some(SampleEnterpriseTurnover))))
     }
   }
 
