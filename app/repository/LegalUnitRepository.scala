@@ -8,6 +8,6 @@ import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, UBRN }
 import scala.concurrent.Future
 
 trait LegalUnitRepository {
-  def retrieveLegalUnit(ern: Ern, period: Period, uBRN: UBRN): Future[Either[ErrorMessage, Option[LegalUnit]]]
+  def retrieveLegalUnit(ern: Ern, period: Period, ubrn: UBRN): Future[Either[ErrorMessage, Option[LegalUnit]]]
   def findLegalUnitsForEnterprise(ern: Ern, period: Period): Future[Either[ErrorMessage, Seq[LegalUnit]]]
 }

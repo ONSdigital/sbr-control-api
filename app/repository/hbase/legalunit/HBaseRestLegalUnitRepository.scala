@@ -24,9 +24,9 @@ class HBaseRestLegalUnitRepository @Inject() (
     rowMapper: RowMapper[LegalUnit]
 ) extends LegalUnitRepository with LazyLogging {
 
-  override def retrieveLegalUnit(ern: Ern, period: Period, uBRN: UBRN): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
-    logger.info(s"Retrieving Legal Unit with [$ern] [$uBRN] for [$period].")
-    restRepository.findRow(config.tableName, LegalUnitQuery.byRowKey(ern, period, uBRN), DefaultColumnFamily).map(fromErrorOrRow)
+  override def retrieveLegalUnit(ern: Ern, period: Period, ubrn: UBRN): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
+    logger.info(s"Retrieving Legal Unit with [$ern] [$ubrn] for [$period].")
+    restRepository.findRow(config.tableName, LegalUnitQuery.byRowKey(ern, period, ubrn), DefaultColumnFamily).map(fromErrorOrRow)
   }
 
   override def findLegalUnitsForEnterprise(ern: Ern, period: Period): Future[Either[ErrorMessage, Seq[LegalUnit]]] = {

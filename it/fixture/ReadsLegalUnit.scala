@@ -1,4 +1,4 @@
-package it.fixture
+package fixture
 
 import play.api.libs.json.{ Json, Reads }
 import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }

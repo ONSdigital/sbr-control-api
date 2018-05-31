@@ -6,8 +6,8 @@ import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.legalunit.UBRN
 
 object LegalUnitQuery {
-  def byRowKey(ern: Ern, period: Period, uBRN: UBRN): String =
-    queryBy(ern, period, UBRNSelector = uBRN.value)
+  def byRowKey(ern: Ern, period: Period, ubrn: UBRN): String =
+    queryBy(ern, period, UBRNSelector = ubrn.value)
 
   def forAllWith(ern: Ern, period: Period): String =
     queryBy(ern, period, UBRNSelector = Wildcard)

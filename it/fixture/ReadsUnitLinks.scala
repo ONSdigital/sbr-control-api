@@ -1,4 +1,4 @@
-package it.fixture
+package fixture
 
 import play.api.libs.json._
 

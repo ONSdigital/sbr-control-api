@@ -32,15 +32,15 @@ class HBaseRestLegalUnitRepositorySpec extends FreeSpec with Matchers with MockF
   }
 
   private trait SingleResultFixture extends Fixture with SampleLegalUnit {
-    val TargetUBRN = UBRN("900000015")
+    val TargetUBRN = UBRN("1010101900000015")
     val TargetLegalUnit = aLegalUnit(TargetErn, TargetUBRN)
     val TargetRowKey = LegalUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetUBRN)
     val ARow = Map("key" -> s"rowkey-for-${TargetUBRN.value}")
   }
 
   private trait MultipleResultFixture extends SingleResultFixture {
-    val AnotherLegalUnit = aLegalUnit(TargetErn, UBRN("900000020"))
-    val AnotherRow = Map("key" -> s"rowkey-for-${AnotherLegalUnit.uBRN.value}")
+    val AnotherLegalUnit = aLegalUnit(TargetErn, UBRN("9000000201234567"))
+    val AnotherRow = Map("key" -> s"rowkey-for-${AnotherLegalUnit.ubrn.value}")
     val TargetQuery = LegalUnitQuery.forAllWith(TargetErn, TargetPeriod)
   }
 
@@ -101,7 +101,7 @@ class HBaseRestLegalUnitRepositorySpec extends FreeSpec with Matchers with MockF
         }
       }
 
-      "signalling failure when a valid Local Unit cannot be constructed from a successful HBase REST response" in new MultipleResultFixture {
+      "signalling failure when a valid Legal Unit cannot be constructed from a successful HBase REST response" in new MultipleResultFixture {
         val rows = Seq(ARow, AnotherRow)
         (restRepository.findRows _).expects(TargetTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Right(rows.map(toRow))))
         (rowMapper.fromRow _).expects(toRow(ARow)).returning(Some(TargetLegalUnit))

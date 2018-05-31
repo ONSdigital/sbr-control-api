@@ -31,15 +31,15 @@ class LegalUnitController @Inject() (repository: LegalUnitRepository) extends Co
     }
   }
   override def retrieveAllLegalUnitsForEnterprise(ernStr: String, periodStr: String): Action[AnyContent] = Action.async {
-    repository.findLegalUnitsForEnterprise(Ern(ernStr), Period.fromString(periodStr)).map { errorOrLocalUnits =>
-      errorOrLocalUnits.fold(resultOnFailure, resultOnSuccessWithMaybeManyUnits)
+    repository.findLegalUnitsForEnterprise(Ern(ernStr), Period.fromString(periodStr)).map { errorOrLegalUnits =>
+      errorOrLegalUnits.fold(resultOnFailure, resultOnSuccessWithMaybeManyUnits)
     }
   }
-  private def resultOnSuccessWithMaybeManyUnits(localUnits: Seq[LegalUnit]): Result =
-    if (localUnits.isEmpty) NotFound
-    else Ok(toJson(localUnits))
+  private def resultOnSuccessWithMaybeManyUnits(legalUnits: Seq[LegalUnit]): Result =
+    if (legalUnits.isEmpty) NotFound
+    else Ok(toJson(legalUnits))
 
-  def badRequest(ernStr: String, periodStr: String, uBRNStrOpt: Option[String]) = Action {
+  def badRequest(ernStr: String, periodStr: String, ubrnStrOpt: Option[String]) = Action {
     BadRequest
   }
 }

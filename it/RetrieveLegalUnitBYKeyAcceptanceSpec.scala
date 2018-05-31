@@ -1,17 +1,17 @@
 import java.time.Month.MARCH
 
+import fixture.ReadsLegalUnit.legalUnitReads
 import fixture.ServerAcceptanceSpec
-import it.fixture.ReadsLegalUnit.legalUnitReads
 import org.scalatest.OptionValues
 import play.api.http.HeaderNames.CONTENT_TYPE
-import play.api.http.Status.{ BAD_REQUEST, NOT_FOUND, OK, INTERNAL_SERVER_ERROR }
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.legalunit.LegalUnitColumns._
 import repository.hbase.legalunit.LegalUnitQuery
 import support.WithWireMockHBase
-import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
-import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, UBRN }
+import uk.gov.ons.sbr.models.{Address, Period}
+import uk.gov.ons.sbr.models.enterprise.{EnterpriseLink, Ern}
+import uk.gov.ons.sbr.models.legalunit.{LegalUnit, UBRN}
 
 class RetrieveLegalUnitBYKeyAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
 
@@ -23,10 +23,20 @@ class RetrieveLegalUnitBYKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
     s"""{"Row": ${
       List(
         aRowWith(key = s"${LegalUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetUBRN)}", columns =
-          aColumnWith(name = uBRN, value = TargetUBRN.value),
-          aColumnWith(name = UBRNref, value = "some-UBRN"),
+          aColumnWith(name = ubrn, value = TargetUBRN.value),
           aColumnWith(name = ern, value = TargetErn.value),
-          aColumnWith(name = entref, value = "some-entref"))
+          aColumnWith(name = entref, value = "some-entref"),
+          aColumnWith(name = name, value = "some-name"),
+          aColumnWith(name = tradingstyle, value = "some-tradingstyle"),
+          aColumnWith(name = address1, value = "some-address1"),
+          aColumnWith(name = address2, value = "some-address2"),
+          aColumnWith(name = address5, value = "some-address5"),
+          aColumnWith(name = postcode, value = "some-postcode"),
+          aColumnWith(name = sic07, value = "some-sic07"),
+          aColumnWith(name = jobs, value = "99"),
+          aColumnWith(name = legalStatus, value = "some-legalStatus"),
+          aColumnWith(name = tradingStatus, value = "some-tradingStatus"),
+          aColumnWith(name = crn, value = "some-crn"))
       ).mkString("[", ",", "]")
     }}"""
 
@@ -40,7 +50,6 @@ class RetrieveLegalUnitBYKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
       stubHBaseFor(aLegalUnitRequest(withErn = TargetErn, withPeriod = TargetPeriod, withUBRN = TargetUBRN).willReturn(
         anOkResponse().withBody(LegalUnitSingleMatchHBaseResponseBody)
       ))
-
       When(s"the legal unit with $TargetErn, $TargetPeriod, and $TargetUBRN is requested")
       val response = await(wsClient.url(s"/v1/enterprises/${TargetErn.value}/periods/${Period.asString(TargetPeriod)}/legalunits/${TargetUBRN.value}").get())
 
@@ -48,7 +57,10 @@ class RetrieveLegalUnitBYKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
       response.status shouldBe OK
       response.header(CONTENT_TYPE).value shouldBe JSON
       response.json.as[LegalUnit] shouldBe
-        LegalUnit(TargetUBRN, UBRNref = Some("some-UBRN"), enterprise = EnterpriseLink(TargetErn, entref = Some("some-entref")))
+        LegalUnit(TargetUBRN, crn = Some("some-crn"), name = "some-name", legalStatus = "some-legalStatus", tradingStatus = "some-tradingStatus",
+          tradingstyle = Some("some-tradingstyle"), sic07 = "some-sic07", turnover = None, jobs = Some(99),
+          enterprise = EnterpriseLink(TargetErn, entref = Some("some-entref")), address = Address(line1 = "some-address1", line2 = Some("some-address2"), line3 = None, line4 = None,
+            line5 = Some("some-address5"), postcode = "some-postcode"))
     }
   }
   feature("retrieve a non-existent Legal Unit") {
@@ -78,16 +90,13 @@ class RetrieveLegalUnitBYKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
   }
   feature("handle inability to connect to HBase REST service") {
     scenario("WireMock stops, imitating a loss of connection to HBase") { wsClient =>
-      Given("request sent to the HBase REST mock")
-      stubHBaseFor(aLegalUnitRequest(withErn = TargetErn, withPeriod = TargetPeriod, withUBRN = TargetUBRN).willReturn(
-        anOkResponse().withBody(LegalUnitSingleMatchHBaseResponseBody)
-      ))
-
-      When("the mock of HBase stops")
+      Given("the legal unit repositary is unavailable")
       stopWireMock()
+
+      When("the user requests a legal unit")
       val response = await(wsClient.url(s"/v1/enterprises/${TargetErn.value}/periods/${Period.asString(TargetPeriod)}/legalunits/${TargetUBRN.value}").get())
 
-      Then("an INTERNAL SERVER ERROR response is returned")
+      Then("the INTERNAL SERVER ERROR response is returned")
       response.status shouldBe INTERNAL_SERVER_ERROR
     }
   }

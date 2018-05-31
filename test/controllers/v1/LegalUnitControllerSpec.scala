@@ -21,7 +21,7 @@ class LegalUnitControllerSpec extends FreeSpec with Matchers with MockFactory wi
   private trait Fixture extends SampleLegalUnit {
     val TargetErn = Ern("1234567890")
     val TargetPeriod = Period.fromYearMonth(2018, FEBRUARY)
-    val TargetUBRN = UBRN("987654321")
+    val TargetUBRN = UBRN("0987654321234567")
     val TargetLegalUnit = aLegalUnit(TargetErn, TargetUBRN)
 
     val repository: LegalUnitRepository = mock[LegalUnitRepository]
@@ -151,5 +151,4 @@ class LegalUnitControllerSpec extends FreeSpec with Matchers with MockFactory wi
       }
     }
   }
-
 }

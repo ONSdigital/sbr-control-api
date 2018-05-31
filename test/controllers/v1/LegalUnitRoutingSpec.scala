@@ -78,7 +78,7 @@ class LegalUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPerSui
         }
 
         "has more than sixteen digits" in new Fixture {
-          val UBRNTooManyDigits = ValidUBRN + "16"
+          val UBRNTooManyDigits = ValidUBRN + "15"
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ValidErn/periods/$ValidPeriod/legalunits/$UBRNTooManyDigits"))
 
@@ -86,7 +86,7 @@ class LegalUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPerSui
         }
 
         "is non-numeric" in new Fixture {
-          val UBRNNonNumeric = new String(Array.fill(9)('Z'))
+          val UBRNNonNumeric = new String(Array.fill(16)('Z'))
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ValidErn/periods/$ValidPeriod/legalunits/$UBRNNonNumeric"))
 

@@ -6,7 +6,9 @@ case class UBRN(value: String)
 
 object UBRN {
   implicit val writes = new Writes[UBRN] {
-    override def writes(uBRN: UBRN): JsValue =
-      JsString(uBRN.value)
+    override def writes(ubrn: UBRN): JsValue =
+      JsString(ubrn.value)
   }
+  def reverse(ubrn: UBRN): String =
+    ubrn.value.reverse
 }
