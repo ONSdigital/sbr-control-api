@@ -59,7 +59,13 @@ To compile, build and run the application use the following command:
 ```shell
 gradle runPlayBinary
 ```
-The default application port is 9000. To specify an alternative port use `-Dhttp.port=8080`.
+The default application port is 9000. To specify an alternative port update the `build.gradle` with:
+
+```
+tasks.withType(PlayRun) { 
+    httpPort = 9010
+}
+```
 
 ##### HBase REST
 
@@ -69,7 +75,7 @@ start-hbase.sh
 ```
 
 Now that HBase has started, we can open the shell and create the namespace and tables.
-```sbtshell
+```shell
 hbase shell
 create_namespace 'sbr_control_db'
 create 'sbr_control_db:enterprise', 'd'
@@ -94,7 +100,7 @@ For metadata relating to HBase REST, go to [localhost:8085](http://localhost:808
 
 To package the project in a runnable fat-jar:
 ```shell
-sbt assembly
+gradle playBinary
 ```
 
 #### Test
@@ -108,7 +114,7 @@ gradle test
 Testing an individual test suite can be specified by using `testOnly`. For example:
 
 ```shell
-sbt "testOnly *ReportingUnitAcceptanceSpec"
+gradle test --tests *ReportingUnitAcceptanceSpec
 ```
 
 SBR Api uses its own test configuration settings for integration tests, the details of which can be found on the [ONS Confluence](https://collaborate2.ons.gov.uk/confluence/display/SBR/Scala+Testing).
