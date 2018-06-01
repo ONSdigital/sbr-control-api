@@ -7,34 +7,39 @@ repositories {
     jcenter()
 }
 
-dependencies {
-    play 'com.sksamuel.scapegoat:scalac-scapegoat-plugin_2.11:1.0.0'
-    play 'com.typesafe.play:play-cache_2.11:2.5.18'         // cache
-    play 'com.typesafe.play:filters-helpers_2.11:2.5.18'    // filters
-    play 'com.typesafe.play:play-netty-server_2.11:2.5.18'
-    play 'com.typesafe.play:play-logback_2.11:2.5.18'
-    play 'com.typesafe.play:play-ws_2.11:2.5.18'            // ws
-    play 'com.typesafe.play:twirl-api_2.11:1.1.1'
-    play 'com.typesafe.scala-logging:scala-logging_2.11:3.5.0'
-    play 'io.lemonlabs:scala-uri_2.11:0.5.0'
-    play 'com.typesafe:config:1.3.1'
-    play 'io.swagger:swagger-play2_2.11:1.5.3'
-    play 'org.apache.hadoop:hadoop-common:2.6.0'
-    play 'org.apache.hbase:hbase-client:1.0.0'
-    play 'org.apache.hbase:hbase-common:1.0.0'
-    play 'org.webjars:swagger-ui:3.1.4'
-    play 'org.webjars:webjars-play_2.11:2.5.0-3'
+ext {
+    scalaVersion = "2.11"
+    playVersion = "2.5.18"
+}
 
-    playTest 'org.scalatestplus.play:scalatestplus-play_2.11:2.0.0'
-    playTest 'org.scalatest:scalatest_2.11:3.0.4'
-    playTest 'com.github.tomakehurst:wiremock:1.58'
-    playTest 'org.scalamock:scalamock_2.11:4.1.0'
+dependencies {
+    play "com.sksamuel.scapegoat:scalac-scapegoat-plugin_${scalaVersion}:1.0.0"
+    play "com.typesafe.play:play-cache_${scalaVersion}:${playVersion}"         // cache
+    play "com.typesafe.play:filters-helpers_${scalaVersion}:${playVersion}"    // filters
+    play "com.typesafe.play:play-netty-server_${scalaVersion}:${playVersion}"
+    play "com.typesafe.play:play-logback_${scalaVersion}:${playVersion}"
+    play "com.typesafe.play:play-ws_${scalaVersion}:${playVersion}"            // ws
+    play "com.typesafe.play:twirl-api_${scalaVersion}:1.1.1"
+    play "com.typesafe.scala-logging:scala-logging_${scalaVersion}:3.5.0"
+    play "io.lemonlabs:scala-uri_${scalaVersion}:0.5.0"
+    play "com.typesafe:config:1.3.1"
+    play "io.swagger:swagger-play2_${scalaVersion}:1.5.3"
+    play "org.apache.hadoop:hadoop-common:2.6.0"
+    play "org.apache.hbase:hbase-client:1.0.0"
+    play "org.apache.hbase:hbase-common:1.0.0"
+    play "org.webjars:swagger-ui:3.1.4"
+    play "org.webjars:webjars-play_${scalaVersion}:2.5.0-3"
+
+    playTest "org.scalatestplus.play:scalatestplus-play_${scalaVersion}:2.0.0"
+    playTest "org.scalatest:scalatest_${scalaVersion}:3.0.4"
+    playTest "com.github.tomakehurst:wiremock:1.58"
+    playTest "org.scalamock:scalamock_${scalaVersion}:4.1.0"
 }
 
 model {
     components {
         play {
-            platform play: '2.5.18', scala: '2.11', java: '1.8'
+            platform play: "${playVersion}", scala: "${scalaVersion}", java: '1.8'
             injectedRoutesGenerator = true
             tasks.withType(RoutesCompile) {
                 additionalImports = ['extensions.Binders._']
@@ -66,4 +71,9 @@ model {
             }
         }
     }
+}
+
+tasks.withType(PlayRun) { 
+    httpPort = 9000 
+    // forkOptions.jvmArgs = ['-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=9021'] 
 }
