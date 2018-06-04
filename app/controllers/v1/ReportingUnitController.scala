@@ -30,7 +30,7 @@ class ReportingUnitController @Inject() (repository: ReportingUnitRepository) ex
     if (reportingUnits.isEmpty) NotFound
     else Ok(toJson(reportingUnits))
 
-  def badRequest(ernStr: String, periodStr: String, rurnStrOpt: Option[String]) = Action {
+  def badRequest(ernStr: String, periodStr: String, rurnStrOpt: Option[String]): Action[AnyContent] = Action {
     BadRequest
   }
 }
