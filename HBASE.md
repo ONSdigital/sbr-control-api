@@ -32,6 +32,7 @@ Create the three tables, within the namespace with a column family.
 create 'sbr_control_db:enterprise', 'd'
 create 'sbr_control_db:unit_links', 'l'
 create 'sbr_control_db:local_unit', 'd'
+create 'sbr_control_db:legal_unit', 'd'
 ```
 
 Insert some Enterprise data.
@@ -125,6 +126,48 @@ put 'sbr_control_db:unit_links' , '41037492~VAT~201801', 'l:p_LEU', '19283746599
 
 put 'sbr_control_db:unit_links' , '38576395~PAYE~201802', 'l:p_LEU', '192837465999'
 put 'sbr_control_db:unit_links' , '38576395~PAYE~201801', 'l:p_LEU', '192837465999'
+```
+
+Insert some Legal Unit data.
+
+```shell
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:UBRN', '1000012345000001'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:ern', '3210000001'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:entref', 'entref-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:crn', 'crn-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:name', 'Company X'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:tradingstyle', 'A'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:address1', 'address1-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:address2', 'address2-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:address3', 'address3-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:address4', 'address4-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:address5', 'address5-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:postcode', 'postcode-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:sic07', 'sic07-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:jobs', '123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:turnover', '10'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:legalStatus', 'legalStatus-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000002', 'd:tradingStatus', 'legalStatus-123'
+
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:UBRN', '1000012345000001'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:ern', '3210000001'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:entref', 'entref-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:crn', 'crn-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:name', 'Company X'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:tradingstyle', 'A'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:address1', 'address1-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:address2', 'address2-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:address3', 'address3-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:address4', 'address4-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:address5', 'address5-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:postcode', 'postcode-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:sic07', 'sic07-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:jobs', '123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:turnover', '10'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:legalStatus', 'legalStatus-123'
+put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:tradingStatus', 'legalStatus-123'
+
+
 ```
 
 Use the following URL's to test HBase REST:
