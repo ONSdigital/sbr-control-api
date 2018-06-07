@@ -20,4 +20,8 @@ trait WithWireMock extends BeforeAndAfterEach { this: Suite =>
     try wireMockServer.stop()
     finally super.afterEach()
   }
+
+  def stopWireMock(): Unit = {
+    wireMockServer.stop()
+  }
 }

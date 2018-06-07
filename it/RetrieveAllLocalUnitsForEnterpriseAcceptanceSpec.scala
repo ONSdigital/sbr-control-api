@@ -108,7 +108,7 @@ class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
       val invalidPeriod = "2018-02"
 
       When(s"the local units with $TargetErn for an invalid period of $invalidPeriod are requested")
-      val response = await(wsClient.url(s"/v1/enterprises/123456789/periods/$invalidPeriod/localunits").get())
+      val response = await(wsClient.url(s"/v1/enterprises/${TargetErn.value}/periods/$invalidPeriod/localunits").get())
 
       Then(s"a BAD REQUEST response is returned")
       response.status shouldBe BAD_REQUEST
