@@ -30,16 +30,18 @@ class LegalUnitController @Inject() (repository: LegalUnitRepository) extends Co
       errorOrLegalUnit.fold(resultOnFailure, resultOnSuccessWithAtMostOneUnit[LegalUnit])
     }
   }
+
   override def retrieveAllLegalUnitsForEnterprise(ernStr: String, periodStr: String): Action[AnyContent] = Action.async {
     repository.findLegalUnitsForEnterprise(Ern(ernStr), Period.fromString(periodStr)).map { errorOrLegalUnits =>
       errorOrLegalUnits.fold(resultOnFailure, resultOnSuccessWithMaybeManyUnits)
     }
   }
+
   private def resultOnSuccessWithMaybeManyUnits(legalUnits: Seq[LegalUnit]): Result =
     if (legalUnits.isEmpty) NotFound
     else Ok(toJson(legalUnits))
 
-  def badRequest(ernStr: String, periodStr: String, ubrnStrOpt: Option[String]) = Action {
+  def badRequest(ernStr: String, periodStr: String, ubrnStrOpt: Option[String]): Action[AnyContent] = Action {
     BadRequest
   }
 }
