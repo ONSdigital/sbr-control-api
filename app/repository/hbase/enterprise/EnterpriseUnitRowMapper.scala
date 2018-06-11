@@ -1,52 +1,59 @@
 package repository.hbase.enterprise
 
+import com.typesafe.scalalogging.LazyLogging
+import org.slf4j.Logger
+import repository.Field.{ mandatoryStringNamed, optionalIntNamed, optionalStringNamed }
 import repository.RestRepository.Row
 import repository.RowMapper
 import repository.hbase.enterprise.EnterpriseUnitColumns._
 import uk.gov.ons.sbr.models.Address
 import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern, Turnover }
 
-import scala.util.{ Success, Try }
+import scala.util.Try
 
-object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
+object EnterpriseUnitRowMapper extends RowMapper[Enterprise] with LazyLogging {
 
-  override def fromRow(variables: Row): Option[Enterprise] =
+  private implicit val fieldLogger: Logger = logger.underlying
+
+  override def fromRow(variables: Row): Option[Enterprise] = {
+    val fields = variables.fields
     for {
-      ern <- variables.fields.get(ern)
-      entrefOpt = variables.fields.get(entref)
-      name <- variables.fields.get(name)
-      tradingStyleOpt = variables.fields.get(tradingStyle)
-      address <- toAddress(variables.fields)
-      legalStatus <- variables.fields.get(legalStatus)
-      sic07 <- variables.fields.get(sic07)
-      (employeesOpt, jobsOpt) <- tryToEmployeesJobs(variables.fields).toOption
-      turnoverOpt <- tryToTurnover(variables.fields).toOption
+      ern <- mandatoryStringNamed(ern).apply(fields)
+      entrefOpt = optionalStringNamed(entref).apply(fields)
+      name <- mandatoryStringNamed(name).apply(fields)
+      tradingStyleOpt = optionalStringNamed(tradingStyle).apply(fields)
+      address <- toAddress(fields)
+      legalStatus <- mandatoryStringNamed(legalStatus).apply(fields)
+      sic07 <- mandatoryStringNamed(sic07).apply(fields)
+      (employeesOpt, jobsOpt) <- tryToEmployeesJobs(fields).toOption
+      turnoverOpt <- tryToTurnover(fields).toOption
     } yield Enterprise(Ern(ern), entrefOpt, name, tradingStyleOpt, address, sic07, legalStatus,
       employeesOpt, jobsOpt, turnoverOpt)
+  }
 
   private def toAddress(fields: Map[String, String]): Option[Address] =
     for {
-      line1 <- fields.get(address1)
-      optLine2 = fields.get(address2)
-      optLine3 = fields.get(address3)
-      optLine4 = fields.get(address4)
-      optLine5 = fields.get(address5)
-      postcode <- fields.get(postcode)
+      line1 <- mandatoryStringNamed(address1).apply(fields)
+      optLine2 = optionalStringNamed(address2).apply(fields)
+      optLine3 = optionalStringNamed(address3).apply(fields)
+      optLine4 = optionalStringNamed(address4).apply(fields)
+      optLine5 = optionalStringNamed(address5).apply(fields)
+      postcode <- mandatoryStringNamed(postcode).apply(fields)
     } yield Address(line1, optLine2, optLine3, optLine4, optLine5, postcode)
 
   private def tryToEmployeesJobs(fields: Map[String, String]): Try[(Option[Int], Option[Int])] =
     for {
-      employeesOpt <- tryToOptionalInt(fields.get(employees))
-      jobsOpt <- tryToOptionalInt(fields.get(jobs))
+      employeesOpt <- optionalIntNamed(employees).apply(fields)
+      jobsOpt <- optionalIntNamed(jobs).apply(fields)
     } yield (employeesOpt, jobsOpt)
 
   private def tryToTurnover(fields: Map[String, String]): Try[Option[Turnover]] =
     for {
-      containedTurnoverOpt <- tryToOptionalInt(fields.get(containedTurnover))
-      standardTurnoverOpt <- tryToOptionalInt(fields.get(standardTurnover))
-      groupTurnoverOpt <- tryToOptionalInt(fields.get(groupTurnover))
-      apportionedTurnoverOpt <- tryToOptionalInt(fields.get(apportionedTurnover))
-      enterpriseTurnoverOpt <- tryToOptionalInt(fields.get(enterpriseTurnover))
+      containedTurnoverOpt <- optionalIntNamed(containedTurnover).apply(fields)
+      standardTurnoverOpt <- optionalIntNamed(standardTurnover).apply(fields)
+      groupTurnoverOpt <- optionalIntNamed(groupTurnover).apply(fields)
+      apportionedTurnoverOpt <- optionalIntNamed(apportionedTurnover).apply(fields)
+      enterpriseTurnoverOpt <- optionalIntNamed(enterpriseTurnover).apply(fields)
       // a single option containing the first Some; else None
       anyTurnoverOpt = containedTurnoverOpt.orElse(standardTurnoverOpt).orElse(groupTurnoverOpt).orElse(
         apportionedTurnoverOpt
@@ -54,12 +61,4 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
     } yield anyTurnoverOpt.map { _ =>
       Turnover(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt)
     }
-
-  private def tryToOptionalInt(strOpt: Option[String]): Try[Option[Int]] =
-    strOpt.fold[Try[Option[Int]]](Success(None)) { str =>
-      tryToInt(str).map(Some(_))
-    }
-
-  private def tryToInt(str: String): Try[Int] =
-    Try(str.toInt)
 }
