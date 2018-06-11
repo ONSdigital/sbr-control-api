@@ -172,9 +172,9 @@ put 'sbr_control_db:legal_unit', '3210000001~201801~1000012345000001', 'd:tradin
 
 Use the following URL's to test HBase REST:
 
-[http://localhost:8080/sbr_control_db:enterprise/3210000001~*/d](http://localhost:8080/sbr_control_db:enterprise/3210000001~*/d)
-[http://localhost:8080/sbr_control_db:enterprise/3210000001~201802/d](http://localhost:8080/sbr_control_db:enterprise/3210000001~201802/d)
-[http://localhost:8080/sbr_control_db:unit_links/1000000123~*/l](http://localhost:8080/sbr_control_db:unit_links/1000000123~*/l)
+[http://localhost:8080/sbr_control_db:enterprise/3210000001~*/d](http://localhost:8080/sbr_control_db:enterprise/3210000001~*/d)<br/>
+[http://localhost:8080/sbr_control_db:enterprise/3210000001~201802/d](http://localhost:8080/sbr_control_db:enterprise/3210000001~201802/d)<br/>
+[http://localhost:8080/sbr_control_db:unit_links/1000000123~*/l](http://localhost:8080/sbr_control_db:unit_links/1000000123~*/l)<br/>
 [http://localhost:8080/sbr_control_db:unit_links/1000000123~ENT~201802/l](http://localhost:8080/sbr_control_db:unit_links/1000000123~ENT~201802/l)
 
 Run the API:
@@ -185,7 +185,7 @@ sbt run
 
 Test the API routes:
 
-[http://localhost:9000/v1/units/12345](http://localhost:9000/v1/units/12345)
-[http://localhost:9000/v1/periods/201802/types/ENT/units/12345](http://localhost:9000/v1/periods/201802/types/ENT/units/12345)
-[http://localhost:9000/v1/enterprises/12345](http://localhost:9000/v1/enterprises/12345)
-[http://localhost:9000/v1/periods/201802/enterprises/12345](http://localhost:9000/v1/periods/201802/enterprises/12345)
+[http://localhost:9000/v1/units/1000000123](http://localhost:9000/v1/units/1000000123)<br/>
+[http://localhost:9000/v1/periods/201802/types/ENT/units/1000000123](http://localhost:9000/v1/periods/201802/types/ENT/units/1000000123)<br/>
+[http://localhost:9000/v1/enterprises/1000000123](http://localhost:9000/v1/enterprises/1000000123)<br/>
+[http://localhost:9000/v1/periods/201802/enterprises/1000000123](http://localhost:9000/v1/periods/201802/enterprises/1000000123)
