@@ -22,8 +22,8 @@ GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/loc
 GET     /v1/enterprises/:ern/periods/:period/localunits                                                                   controllers.v1.LocalUnitController.badRequest(ern, period, None: Option[String])
 
 # Legal Units
-GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/legalunits/$UBRN<\d{16}>                     controllers.v1.LegalUnitController.retrieveLegalUnit(ern, period, UBRN)
-GET     /v1/enterprises/:ern/periods/:period/legalunits/:UBRN                                                             controllers.v1.LegalUnitController.badRequest(ern, period, UBRN: Option[String])
+GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/legalunits/$ubrn<\d{16}>                     controllers.v1.LegalUnitController.retrieveLegalUnit(ern, period, ubrn)
+GET     /v1/enterprises/:ern/periods/:period/legalunits/:ubrn                                                             controllers.v1.LegalUnitController.badRequest(ern, period, ubrn: Option[String])
 GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/legalunits                                   controllers.v1.LegalUnitController.retrieveAllLegalUnitsForEnterprise(ern, period)
 GET     /v1/enterprises/:ern/periods/:period/legalunits                                                                   controllers.v1.LegalUnitController.badRequest(ern, period, None: Option[String])
 

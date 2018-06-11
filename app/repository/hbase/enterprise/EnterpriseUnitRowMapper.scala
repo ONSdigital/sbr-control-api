@@ -57,9 +57,8 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
       val groupTurnoverOpt = toIntTakesTurnoverType(groupTurnover)
       val apportionedTurnoverOpt = toIntTakesTurnoverType(apportionedTurnover)
       val enterpriseTurnoverOpt = toIntTakesTurnoverType(enterpriseTurnover)
-      if (List(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt).forall(_.isEmpty)) {
-        None
-      } else Some(Turnover(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt))
+      if (List(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt).forall(_.isEmpty)) None
+      else Some(Turnover(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt))
     }
   }
 
