@@ -31,7 +31,7 @@ import services.{ DataAccess, HBaseRestDataAccess }
  * configuration file.
  */
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule {
-  override def configure() = {
+  override def configure(): Unit = {
     val underlyingConfig = configuration.underlying
     val hBaseRestConfig = HBaseRestRepositoryConfigLoader.load(underlyingConfig)
     val hBaseRestLocalUnitConfig = HBaseRestLocalUnitRepositoryConfigLoader.load(underlyingConfig)

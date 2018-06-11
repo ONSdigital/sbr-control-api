@@ -39,7 +39,7 @@ class LocalUnitController @Inject() (repository: LocalUnitRepository) extends Co
     if (localUnits.isEmpty) NotFound
     else Ok(toJson(localUnits))
 
-  def badRequest(ernStr: String, periodStr: String, lurnStrOpt: Option[String]) = Action {
+  def badRequest(ernStr: String, periodStr: String, lurnStrOpt: Option[String]): Action[AnyContent] = Action {
     BadRequest
   }
 }
