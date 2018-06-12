@@ -123,10 +123,8 @@ pipeline {
         stage ('Bundle') {
             agent any
             when {
-                anyOf {
-                    branch "develop"
-                    branch "release"
-                    branch "master"
+                expression {
+                    env.BRANCH_NAME.toString().equals(BRANCH_DEV) || env.BRANCH_NAME.toString().equals(BRANCH_TEST) || env.BRANCH_NAME.toString().equals(BRANCH_PROD)
                 }
             }
             steps {
@@ -141,10 +139,8 @@ pipeline {
         stage("Releases"){
             agent any
             when {
-                anyOf {
-                    branch "develop"
-                    branch "release"
-                    branch "master"
+                expression {
+                    env.BRANCH_NAME.toString().equals(BRANCH_DEV) || env.BRANCH_NAME.toString().equals(BRANCH_TEST) || env.BRANCH_NAME.toString().equals(BRANCH_PROD)
                 }
             }
             steps {
@@ -162,7 +158,9 @@ pipeline {
         stage ('Package and Push Artifact') {
             agent any
             when {
-                branch "master"
+                expression {
+                    env.BRANCH_NAME.toString().equals(BRANCH_PROD)
+                }
             }
             steps {
                 script {
@@ -180,10 +178,8 @@ pipeline {
         stage('Deploy'){
             agent any
             when {
-                anyOf {
-                    branch "develop"
-                    branch "release"
-                    branch "master"
+                expression {
+                    env.BRANCH_NAME.toString().equals(BRANCH_DEV) || env.BRANCH_NAME.toString().equals(BRANCH_TEST) || env.BRANCH_NAME.toString().equals(BRANCH_PROD)
                 }
             }
             steps {
@@ -202,9 +198,8 @@ pipeline {
         stage('Integration Tests') {
             agent any
             when {
-                anyOf {
-                    branch "develop"
-                    branch "release"
+                expression {
+                    env.BRANCH_NAME.toString().equals(BRANCH_DEV) || env.BRANCH_NAME.toString().equals(BRANCH_TEST)
                 }
             }
             steps {
