@@ -1,14 +1,14 @@
 package repository.hbase.legalunit
 
-import scala.util.Try
-import utils.TrySupport
-
-import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
-import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, UBRN }
+import com.typesafe.scalalogging.LazyLogging
+import org.slf4j.Logger
+import repository.Field.{ mandatoryStringNamed, optionalIntNamed, optionalStringNamed }
 import repository.RestRepository.Row
 import repository.RowMapper
 import repository.hbase.legalunit.LegalUnitColumns._
 import uk.gov.ons.sbr.models.Address
+import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
+import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, UBRN }
 
 /*
  * The following fields are optional:
@@ -25,57 +25,40 @@ import uk.gov.ons.sbr.models.Address
  * Note that we use '=' for these fields within the body of the for expression rather than a generator '<-', so
  * that we capture the field as an Option.
  */
-object LegalUnitRowMapper extends RowMapper[LegalUnit] {
+object LegalUnitRowMapper extends RowMapper[LegalUnit] with LazyLogging {
 
-  override def fromRow(variables: Row): Option[LegalUnit] =
+  private implicit val fieldLogger: Logger = logger.underlying
+
+  override def fromRow(variables: Row): Option[LegalUnit] = {
+    val fields = variables.fields
     for {
-      ubrn <- variables.fields.get(ubrn)
-      name <- variables.fields.get(name)
-      sic07 <- variables.fields.get(sic07)
-      legalStatus <- variables.fields.get(legalStatus)
-      tradingStatus <- variables.fields.get(tradingStatus)
-      enterpriseLink <- toEnterpriseLink(variables)
-      address <- toAddress(variables)
-      optTradingStyle = variables.fields.get(tradingstyle)
-      optCrn = variables.fields.get(crn)
+      ubrn <- mandatoryStringNamed(ubrn).apply(fields)
+      name <- mandatoryStringNamed(name).apply(fields)
+      sic07 <- mandatoryStringNamed(sic07).apply(fields)
+      legalStatus <- mandatoryStringNamed(legalStatus).apply(fields)
+      tradingStatus <- mandatoryStringNamed(tradingStatus).apply(fields)
+      enterpriseLink <- toEnterpriseLink(fields)
+      address <- toAddress(fields)
+      optTradingStyle = optionalStringNamed(tradingstyle).apply(fields)
+      optCrn = optionalStringNamed(crn).apply(fields)
+      jobsOpt <- optionalIntNamed(jobs).apply(fields).toOption
+      turnoverOpt <- optionalIntNamed(turnover).apply(fields).toOption
+    } yield LegalUnit(UBRN(ubrn), optCrn, name, legalStatus, tradingStatus, optTradingStyle, sic07, turnoverOpt, jobsOpt, enterpriseLink, address)
+  }
 
-      jobsStr = variables.fields.get(jobs)
-      jobsOptTry = asInt(jobsStr)
-      if invalidInt(jobsOptTry)
-      jobsOptInt = parseTry(jobsOptTry)
-
-      turnoverStr = variables.fields.get(turnover)
-      turnoverOptTry = asInt(turnoverStr)
-      if invalidInt(turnoverOptTry)
-      turnoverOptInt = parseTry(turnoverOptTry)
-
-    } yield LegalUnit(UBRN(ubrn), optCrn, name, legalStatus, tradingStatus, optTradingStyle, sic07, turnoverOptInt, jobsOptInt, enterpriseLink, address)
-
-  private def toEnterpriseLink(variables: Row): Option[EnterpriseLink] =
+  private def toEnterpriseLink(fields: Map[String, String]): Option[EnterpriseLink] =
     for {
-      ern <- variables.fields.get(ern)
-      optEntref = variables.fields.get(entref)
+      ern <- mandatoryStringNamed(ern).apply(fields)
+      optEntref = optionalStringNamed(entref).apply(fields)
     } yield EnterpriseLink(Ern(ern), optEntref)
 
-  private def toAddress(variables: Row): Option[Address] =
+  private def toAddress(fields: Map[String, String]): Option[Address] =
     for {
-      line1 <- variables.fields.get(address1)
-      optLine2 = variables.fields.get(address2)
-      optLine3 = variables.fields.get(address3)
-      optLine4 = variables.fields.get(address4)
-      optLine5 = variables.fields.get(address5)
-      postcode <- variables.fields.get(postcode)
+      line1 <- mandatoryStringNamed(address1).apply(fields)
+      optLine2 = optionalStringNamed(address2).apply(fields)
+      optLine3 = optionalStringNamed(address3).apply(fields)
+      optLine4 = optionalStringNamed(address4).apply(fields)
+      optLine5 = optionalStringNamed(address5).apply(fields)
+      postcode <- mandatoryStringNamed(postcode).apply(fields)
     } yield Address(line1, optLine2, optLine3, optLine4, optLine5, postcode)
-
-  private def parseTry(valueOptTry: Option[Try[Int]]) =
-    valueOptTry.fold[Option[Int]](None) { tryToInt =>
-      // TODO - Add logger for Assertion Exception
-      TrySupport.fold(tryToInt)(failure => throw failure, integralVal => Some(integralVal))
-    }
-
-  private def asInt(fieldAsStr: Option[String]): Option[Try[Int]] =
-    fieldAsStr.map(x => Try(x.toInt))
-
-  private def invalidInt(fieldOptTry: Option[Try[Int]]) =
-    fieldOptTry.fold(true)(_.isSuccess)
 }
