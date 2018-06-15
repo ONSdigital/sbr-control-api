@@ -16,8 +16,10 @@ object HBaseRestRepositoryConfigLoader extends HBaseRestConfigLoader[HBaseRestRe
   override def load(rootConfig: Config, path: String): HBaseRestRepositoryConfig = {
     val config = rootConfig.getConfig(path)
     HBaseRestRepositoryConfig(
-      protocolWithHostname = config.getString("host"),
-      port = config.getString("port"),
+      protocol = config.getString("protocol"),
+      hostname = config.getString("host"),
+      port = config.getInt("port"),
+      prefix = Option(config.getString("prefix")),
       namespace = config.getString("namespace"),
       username = config.getString("username"),
       password = config.getString("password"),

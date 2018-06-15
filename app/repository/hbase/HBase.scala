@@ -5,8 +5,8 @@ object HBase {
   val Wildcard = "*"
   val DefaultColumnFamily = "d"
 
-  def rowKeyUrl(protocolWithHostname: String, port: String, namespace: String, table: String, rowKey: String, columnFamily: String): String =
-    s"$protocolWithHostname:$port/${rowKeyUrl(namespace, table, rowKey, columnFamily)}"
+  def rowKeyUrl(protocol: String, hostname: String, port: Int, prefix: Option[String], namespace: String, table: String, rowKey: String, columnFamily: String): String =
+    s"$protocol://$hostname:$port/${prefix.fold("")(p => if (p.trim.isEmpty()) "" else p + "/")}${rowKeyUrl(namespace, table, rowKey, columnFamily)}"
 
   def rowKeyUrl(namespace: String, table: String, rowKey: String, columnFamily: String): String =
     s"$namespace:$table/$rowKey/$columnFamily"

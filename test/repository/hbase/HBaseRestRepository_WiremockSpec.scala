@@ -34,7 +34,7 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
   }
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    val config = HBaseRestRepositoryConfig(protocolWithHostname = "http://localhost", port = wireMockPort.toString,
+    val config = HBaseRestRepositoryConfig(protocol = "http", hostname = "localhost", port = wireMockPort.toInt, prefix = None,
       "namespace", "username", "password", timeout = 1000L)
     val auth = Authorization(config.username, config.password)
     val responseReaderMaker = mock[HBaseResponseReaderMaker]

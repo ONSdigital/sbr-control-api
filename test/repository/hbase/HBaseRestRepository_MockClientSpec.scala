@@ -20,7 +20,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
   private trait Fixture {
     val wsClient = stub[WSClient]
     val wsRequest = mock[WSRequest]
-    val config = HBaseRestRepositoryConfig(protocolWithHostname = "http://somehost", port = "4321", "namespace",
+    val config = HBaseRestRepositoryConfig(protocol = "http", hostname = "somehost", port = 4321, prefix = Some("HBase"), "namespace",
       "username", "password", timeout = 3321L)
 
     val restRepository = new HBaseRestRepository(config, wsClient, stub[HBaseResponseReaderMaker])
@@ -59,5 +59,22 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         result.left.value shouldBe "Connection failed"
       }
     }
+
+    //    /*
+    //         * test for HBaseRestRepositoryConfig when port has a suffix on it like on the gitlab data
+    //         * including port as "4321/HBase"
+    //         */
+    //    "puts through a request with a suffix on the port" in new Fixture {
+    //      (wsClient.url _).when(*).returns(wsRequest)
+    //      (wsRequest.withRequestTimeout _).expects(3321L.milliseconds).returning(wsRequest)
+    //      (wsRequest.get _).expects().returning(Future.successful(stub[WSResponse]))
+    //
+    //      val portConfig = HBaseRestRepositoryConfig(protocolWithHostname = "http://somehost", port = "4321/HBase", "namespace",
+    //        "username", "password", timeout = 3321L)
+    //      val portRestRepository = new HBaseRestRepository(config, wsClient, stub[HBaseResponseReaderMaker])
+    //
+    //      portRestRepository.findRows("table", "rowKey", "columnFamily")
+    //    }
+
   }
 }

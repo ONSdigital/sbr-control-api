@@ -17,7 +17,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ Future, TimeoutException }
 import scala.util.Try
 
-case class HBaseRestRepositoryConfig(protocolWithHostname: String, port: String,
+case class HBaseRestRepositoryConfig(protocol: String, hostname: String, port: Int, prefix: Option[String],
   namespace: String, username: String, password: String, timeout: Long)
 
 /*
@@ -42,7 +42,7 @@ class HBaseRestRepository @Inject() (
 
   override def findRows(table: String, query: String, columnFamily: String): Future[Either[ErrorMessage, Seq[Row]]] = {
     val withRowReader = responseReaderMaker.forColumnFamily(columnFamily)
-    val url = HBase.rowKeyUrl(config.protocolWithHostname, config.port, config.namespace, table, query, columnFamily)
+    val url = HBase.rowKeyUrl(config.protocol, config.hostname, config.port, config.prefix, config.namespace, table, query, columnFamily)
     logger.info(s"Requesting [$url] from HBase REST.")
     requestFor(url).get().map {
       (fromResponseToErrorOrJson _).andThen(convertToErrorOrRows(withRowReader))
