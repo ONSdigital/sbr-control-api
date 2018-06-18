@@ -3,6 +3,7 @@ package config
 import com.typesafe.config.{ ConfigException, ConfigFactory }
 import org.scalatest.{ FreeSpec, Matchers }
 import repository.hbase.HBaseRestRepositoryConfig
+import utils.BaseUrl
 
 class HBaseRestRepositoryConfigLoaderSpec extends FreeSpec with Matchers {
 
@@ -26,10 +27,7 @@ class HBaseRestRepositoryConfigLoaderSpec extends FreeSpec with Matchers {
   "The config for the HBase REST repository" - {
     "can be successfully loaded when valid" in new Fixture {
       HBaseRestRepositoryConfigLoader.load(config) shouldBe HBaseRestRepositoryConfig(
-        protocol = "http",
-        hostname = "example-hostname",
-        port = 1234,
-        prefix = Some(""),
+        baseUrl = BaseUrl("http", "example-hostname", 1234, Some("")),
         namespace = "example-namespace",
         username = "example-username",
         password = "example-password",

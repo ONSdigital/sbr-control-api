@@ -11,6 +11,7 @@ import play.api.libs.json.{ JsError, JsSuccess, Json, Reads }
 import play.api.test.WsTestClient
 import repository.RestRepository.Row
 import support.WithWireMockHBase
+import utils.BaseUrl
 
 class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec with WithWireMockHBase with Matchers with ScalaFutures with PatienceConfiguration with EitherValues with MockFactory with OneInstancePerTest {
 
@@ -34,8 +35,10 @@ class HBaseRestRepository_WiremockSpec extends org.scalatest.fixture.FreeSpec wi
   }
 
   override protected def withFixture(test: OneArgTest): Outcome = {
-    val config = HBaseRestRepositoryConfig(protocol = "http", hostname = "localhost", port = wireMockPort.toInt, prefix = None,
-      "namespace", "username", "password", timeout = 1000L)
+    val config = HBaseRestRepositoryConfig(
+      BaseUrl("http", "localhost", wireMockPort.toInt, None),
+      "namespace", "username", "password", timeout = 1000L
+    )
     val auth = Authorization(config.username, config.password)
     val responseReaderMaker = mock[HBaseResponseReaderMaker]
     val readsRows = mock[Reads[Seq[Row]]]

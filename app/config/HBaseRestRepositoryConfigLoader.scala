@@ -2,6 +2,7 @@ package config
 
 import com.typesafe.config.Config
 import repository.hbase.HBaseRestRepositoryConfig
+import utils.BaseUrl
 
 /*
  * We want a misconfigured server to "fail fast".
@@ -16,10 +17,7 @@ object HBaseRestRepositoryConfigLoader extends HBaseRestConfigLoader[HBaseRestRe
   override def load(rootConfig: Config, path: String): HBaseRestRepositoryConfig = {
     val config = rootConfig.getConfig(path)
     HBaseRestRepositoryConfig(
-      protocol = config.getString("protocol"),
-      hostname = config.getString("host"),
-      port = config.getInt("port"),
-      prefix = Option(config.getString("prefix")),
+      baseUrl = BaseUrl(config.getString("protocol"), config.getString("host"), config.getInt("port"), Option(config.getString("prefix"))),
       namespace = config.getString("namespace"),
       username = config.getString("username"),
       password = config.getString("password"),
