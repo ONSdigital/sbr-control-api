@@ -1,5 +1,5 @@
 #!groovy
-@Library('jenkins-pipeline-shared@develop') _
+@Library('jenkins-pipeline-shared') _
 
 
 pipeline {
@@ -27,6 +27,9 @@ pipeline {
 
         NAMESPACE = "sbr_dev_db"
         TABLENAME = "empty"
+
+        SBT_HOME = tool name: 'sbt.13.13', type: 'org.jvnet.hudson.plugins.SbtPluginBuilder$SbtInstallation'
+        PATH = "${env.SBT_HOME}/bin:${env.PATH}"
     }
     options {
         skipDefaultCheckout()
@@ -42,7 +45,7 @@ pipeline {
                 deleteDir()
                 checkout scm
                 stash name: 'app'
-                sh "$SBT version"
+                sh "sbt version"
                 script {
                     version = '1.0.' + env.BUILD_NUMBER
                     currentBuild.displayName = version
@@ -59,7 +62,7 @@ pipeline {
                     git(url: "$GITLAB_URL/StatBusReg/sbr-control-api.git", credentialsId: 'sbr-gitlab-id', branch: 'develop')
                 }
                         
-                sh '$SBT clean compile "project api" universal:packageBin coverage test coverageReport'
+                sh 'sbt clean compile "project api" universal:packageBin coverage test coverageReport'
                 stash name: 'compiled'
               
                 script {
@@ -86,18 +89,18 @@ pipeline {
                 parallel (
                     "Unit" :  {
                         colourText("info","Running unit tests")
-                        // sh "$SBT test"
+                        // sh "sbt test"
                     },
                     "Style" : {
                         colourText("info","Running style tests")
                         sh '''
-                            $SBT scalastyleGenerateConfig
-                            $SBT scalastyle
+                            sbt scalastyleGenerateConfig
+                            sbt scalastyle
                         '''
                     },
                     "Additional" : {
                         colourText("info","Running additional tests")
-                        sh '$SBT scapegoat'
+                        sh 'sbt scapegoat'
                     }
                 )
             }
@@ -167,8 +170,8 @@ pipeline {
                     env.NODE_STAGE = "Package and Push Artifact"
                 }
                 sh '''
-                    $SBT clean compile package
-                    $SBT clean compile assembly
+                    sbt clean compile package
+                    sbt clean compile assembly
                 '''
                 colourText("success", 'Package.')
             }
@@ -207,7 +210,7 @@ pipeline {
                     env.NODE_STAGE = "Integration Tests"
                 }
                 unstash 'compiled'
-                sh "$SBT it:test"
+                sh "sbt it:test"
                 colourText("success", 'Integration Tests - For Release or Dev environment.')
             }
         }
