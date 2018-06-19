@@ -102,8 +102,8 @@ class FieldSpec extends FreeSpec with Matchers with MockFactory {
     }
 
     "when mandatory" - {
-      "returns Success(Some(value)) when present and a successful conversion" in new Fixture {
-        Typed.mandatory[Int].apply(Employees -> Some(Success(42))) shouldBe Success(Some(42))
+      "returns Success(value) when present and a successful conversion" in new Fixture {
+        Typed.mandatory[Int].apply(Employees -> Some(Success(42))) shouldBe Success(42)
       }
 
       "logs when present and a failed conversion" in new Fixture {
@@ -175,8 +175,8 @@ class FieldSpec extends FreeSpec with Matchers with MockFactory {
     }
 
     "a mandatoryIntNamed" - {
-      "returns Success(Some(int)) when a value is present which represents a valid Int" in new PresentFixture {
-        Field.mandatoryIntNamed(Employees).apply(Variables) shouldBe Success(Some(EmployeesValue.toInt))
+      "returns Success(int) when a value is present which represents a valid Int" in new PresentFixture {
+        Field.mandatoryIntNamed(Employees).apply(Variables) shouldBe Success(EmployeesValue.toInt)
       }
 
       "logs when missing" in new MissingFixture {
