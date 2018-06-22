@@ -11,7 +11,7 @@ import uk.gov.ons.sbr.models.reportingunit.{ReportingUnitLink, Rurn}
 import uk.gov.ons.sbr.models.{Address, Period}
 
 import fixture.ServerAcceptanceSpec
-import it.fixture.ReadsLocalUnit.localUnitReads
+import fixture.ReadsLocalUnit.localUnitReads
 import repository.hbase.localunit.LocalUnitColumns._
 import repository.hbase.localunit.LocalUnitQuery
 import support.WithWireMockHBase
