@@ -8,7 +8,7 @@ import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern, Turnover}
 
 import fixture.ServerAcceptanceSpec
-import it.fixture.ReadsEnterpriseUnit.enterpriseReads
+import fixture.ReadsEnterpriseUnit.enterpriseReads
 import repository.hbase.enterprise.EnterpriseUnitColumns._
 import repository.hbase.enterprise.EnterpriseUnitRowKey
 import repository.hbase.localunit.LocalUnitColumns.{address1, address2, address5, postcode, sic07}
