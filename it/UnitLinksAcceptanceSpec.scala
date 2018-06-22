@@ -9,7 +9,7 @@ import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.unitlinks._
 
 import fixture.ServerAcceptanceSpec
-import it.fixture.ReadsUnitLinks._
+import fixture.ReadsUnitLinks._
 import repository.hbase.unitlinks.UnitLinksRowKey
 import support.WithWireMockHBase
 

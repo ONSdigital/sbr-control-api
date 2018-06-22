@@ -2,14 +2,14 @@ package repository.hbase.localunit
 
 import com.typesafe.scalalogging.LazyLogging
 import org.slf4j.Logger
-import repository.Field.{mandatoryIntNamed, mandatoryStringNamed, optionalStringNamed}
+import repository.Field.{ mandatoryIntNamed, mandatoryStringNamed, optionalStringNamed }
 import repository.RestRepository.Row
 import repository.hbase.localunit.LocalUnitColumns._
-import repository.{Field, RowMapper}
+import repository.{ Field, RowMapper }
 import uk.gov.ons.sbr.models.Address
-import uk.gov.ons.sbr.models.enterprise.{EnterpriseLink, Ern}
-import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
-import uk.gov.ons.sbr.models.reportingunit.{ReportingUnitLink, Rurn}
+import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
+import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
+import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnitLink, Rurn }
 
 /*
  * The following fields are optional:
