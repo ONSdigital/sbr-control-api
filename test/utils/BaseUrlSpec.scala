@@ -7,7 +7,7 @@ import utils.BaseUrl.asUrlString
 class BaseUrlSpec extends FreeSpec with Matchers {
   "A BaseUrl" - {
     "can be represented as a URL string" - {
-      "containing no prefix" in {
+      "containing a null or empty string prefix" in {
         asUrlString(BaseUrl(protocol = "http", host = "hostname", port = 1234, prefix = None)) shouldBe "http://hostname:1234"
       }
       "containing a prefix" in {

@@ -17,7 +17,7 @@ class HBaseRestRepositoryConfigLoaderSpec extends FreeSpec with Matchers {
          |    namespace = "example-namespace"
          |    protocol = "http"
          |    host = "example-hostname"
-         |    port = "1234"
+         |    port = 1234
          |    prefix = ""
          |  }
          |}""".stripMargin
@@ -27,7 +27,7 @@ class HBaseRestRepositoryConfigLoaderSpec extends FreeSpec with Matchers {
   "The config for the HBase REST repository" - {
     "can be successfully loaded when valid" in new Fixture {
       HBaseRestRepositoryConfigLoader.load(config) shouldBe HBaseRestRepositoryConfig(
-        baseUrl = BaseUrl("http", "example-hostname", 1234, Some("")),
+        baseUrl = BaseUrl("http", "example-hostname", 1234, None),
         namespace = "example-namespace",
         username = "example-username",
         password = "example-password",
