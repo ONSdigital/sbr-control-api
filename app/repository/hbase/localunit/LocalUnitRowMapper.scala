@@ -1,15 +1,15 @@
 package repository.hbase.localunit
 
-import scala.util.Try
-
+import com.typesafe.scalalogging.LazyLogging
+import org.slf4j.Logger
+import repository.Field.{ mandatoryIntNamed, mandatoryStringNamed, optionalStringNamed }
+import repository.RestRepository.Row
+import repository.hbase.localunit.LocalUnitColumns._
+import repository.{ Field, RowMapper }
 import uk.gov.ons.sbr.models.Address
 import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
 import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnitLink, Rurn }
-
-import repository.RestRepository.Row
-import repository.RowMapper
-import repository.hbase.localunit.LocalUnitColumns._
 
 /*
  * The following fields are optional:
@@ -24,41 +24,44 @@ import repository.hbase.localunit.LocalUnitColumns._
  * Note that we use '=' for these fields within the body of the for expression rather than a generator '<-', so
  * that we capture the field as an Option.
  */
-object LocalUnitRowMapper extends RowMapper[LocalUnit] {
+object LocalUnitRowMapper extends RowMapper[LocalUnit] with LazyLogging {
 
-  override def fromRow(variables: Row): Option[LocalUnit] =
-    for {
-      lurn <- variables.fields.get(lurn)
-      optLuref = variables.fields.get(luref)
-      name <- variables.fields.get(name)
-      optTradingStyle = variables.fields.get(tradingstyle)
-      sic07 <- variables.fields.get(sic07)
-      employees <- variables.fields.get(employees)
-      employeesInt <- Try(employees.toInt).toOption
-      enterpriseLink <- toEnterpriseLink(variables)
-      reportingUnitLink <- toReportingUnitLink(variables)
-      address <- toAddress(variables)
-    } yield LocalUnit(Lurn(lurn), optLuref, enterpriseLink, reportingUnitLink, name, optTradingStyle, address, sic07, employeesInt)
+  private implicit val fieldLogger: Logger = logger.underlying
 
-  private def toReportingUnitLink(variables: Row): Option[ReportingUnitLink] =
+  override def fromRow(variables: Row): Option[LocalUnit] = {
+    val fields = variables.fields
     for {
-      rurn <- variables.fields.get(rurn)
-      optRuref = variables.fields.get(ruref)
-    } yield ReportingUnitLink(Rurn(rurn), optRuref)
+      lurn <- mandatoryStringNamed(lurn).apply(fields)
+      optLuref = optionalStringNamed(luref).apply(fields)
+      name <- mandatoryStringNamed(name).apply(fields)
+      optTradingStyle = optionalStringNamed(tradingstyle).apply(fields)
+      sic07 <- mandatoryStringNamed(sic07).apply(fields)
+      employees <- mandatoryIntNamed(employees).apply(fields).toOption
+      enterpriseLink <- toEnterpriseLink(fields)
+      reportingUnitLink <- toReportingUnitLink(fields)
+      address <- toAddress(fields)
+    } yield LocalUnit(Lurn(lurn), optLuref, enterpriseLink, reportingUnitLink, name, optTradingStyle, address, sic07, employees)
+  }
 
-  private def toEnterpriseLink(variables: Row): Option[EnterpriseLink] =
+  private def toEnterpriseLink(fields: Map[String, String]): Option[EnterpriseLink] =
     for {
-      ern <- variables.fields.get(ern)
-      optEntref = variables.fields.get(entref)
+      ern <- mandatoryStringNamed(ern).apply(fields)
+      optEntref = optionalStringNamed(entref).apply(fields)
     } yield EnterpriseLink(Ern(ern), optEntref)
 
-  private def toAddress(variables: Row): Option[Address] =
+  private def toReportingUnitLink(fields: Map[String, String]): Option[ReportingUnitLink] =
     for {
-      line1 <- variables.fields.get(address1)
-      optLine2 = variables.fields.get(address2)
-      optLine3 = variables.fields.get(address3)
-      optLine4 = variables.fields.get(address4)
-      optLine5 = variables.fields.get(address5)
-      postcode <- variables.fields.get(postcode)
+      rurn <- mandatoryStringNamed(rurn).apply(fields)
+      optRuref = optionalStringNamed(ruref).apply(fields)
+    } yield ReportingUnitLink(Rurn(rurn), optRuref)
+
+  private def toAddress(fields: Map[String, String]): Option[Address] =
+    for {
+      line1 <- mandatoryStringNamed(address1).apply(fields)
+      optLine2 = optionalStringNamed(address2).apply(fields)
+      optLine3 = optionalStringNamed(address3).apply(fields)
+      optLine4 = optionalStringNamed(address4).apply(fields)
+      optLine5 = optionalStringNamed(address5).apply(fields)
+      postcode <- mandatoryStringNamed(postcode).apply(fields)
     } yield Address(line1, optLine2, optLine3, optLine4, optLine5, postcode)
 }

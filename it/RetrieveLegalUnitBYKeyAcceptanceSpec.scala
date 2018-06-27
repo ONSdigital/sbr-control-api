@@ -1,10 +1,10 @@
 import java.time.Month.MARCH
 
+import controllers.v1.fixture.HttpServerErrorStatusCode
 import fixture.ReadsLegalUnit.legalUnitReads
 import fixture.ServerAcceptanceSpec
 import org.scalatest.OptionValues
 import play.api.http.HeaderNames.CONTENT_TYPE
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK}
 import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.legalunit.LegalUnitColumns._
 import repository.hbase.legalunit.LegalUnitQuery
@@ -13,7 +13,7 @@ import uk.gov.ons.sbr.models.{Address, Period}
 import uk.gov.ons.sbr.models.enterprise.{EnterpriseLink, Ern}
 import uk.gov.ons.sbr.models.legalunit.{LegalUnit, UBRN}
 
-class RetrieveLegalUnitBYKeyAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
+class RetrieveLegalUnitBYKeyAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with HttpServerErrorStatusCode with OptionValues {
 
   private val TargetErn = Ern("1000000123")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
@@ -63,6 +63,7 @@ class RetrieveLegalUnitBYKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
             line5 = Some("some-address5"), postcode = "some-postcode"))
     }
   }
+
   feature("retrieve a non-existent Legal Unit") {
     scenario(s"by exact Enterprise reference (ERN), period, and Legal Unit reference (UBRN)") { wsClient =>
       Given(s"a legal unit does not exist with $TargetErn, $TargetPeriod, and $TargetUBRN")
@@ -77,6 +78,7 @@ class RetrieveLegalUnitBYKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
       response.status shouldBe NOT_FOUND
     }
   }
+
   feature("validate request parameters") {
     scenario(s"rejecting an Enterprise reference (ERN) that is not ten digits long") { wsClient =>
       Given(s"that an ERN is represented by a ten digit number")
@@ -88,16 +90,17 @@ class RetrieveLegalUnitBYKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
       response.status shouldBe BAD_REQUEST
     }
   }
+
   feature("handle inability to connect to HBase REST service") {
     scenario("WireMock stops, imitating a loss of connection to HBase") { wsClient =>
-      Given("the legal unit repositary is unavailable")
+      Given("the legal unit repository is unavailable")
       stopWireMock()
 
       When("the user requests a legal unit")
       val response = await(wsClient.url(s"/v1/enterprises/${TargetErn.value}/periods/${Period.asString(TargetPeriod)}/legalunits/${TargetUBRN.value}").get())
 
-      Then("the INTERNAL SERVER ERROR response is returned")
-      response.status shouldBe INTERNAL_SERVER_ERROR
+      Then("a server error is returned")
+      response.status shouldBe aServerError
     }
   }
 }

@@ -3,6 +3,7 @@ package repository
 import org.slf4j.Logger
 import repository.Field.Conversions.toInt
 
+import scala.Function.const
 import scala.util.{ Failure, Success, Try }
 
 object Field {
@@ -39,22 +40,32 @@ object Field {
      */
 
     def optional[A](implicit logger: Logger): (TypedField[A]) => Try[Option[A]] =
-      endState { _ => Success(None) }
+      endState(
+        onMissing = const[Try[Option[A]], String](Success(None)),
+        onSuccessfulConversion = Some.apply
+      )
 
-    def mandatory[A](implicit logger: Logger): (TypedField[A]) => Try[Option[A]] =
-      endState { name =>
+    def mandatory[A](implicit logger: Logger): (TypedField[A]) => Try[A] =
+      endState(
+        onMissing = name => {
         logMissingMandatoryField(logger, name)
         Failure(new NoSuchElementException(name))
-      }
+      },
+        onSuccessfulConversion = identity
+      )
 
-    private def endState[A](onMissing: String => Try[Option[A]])(implicit logger: Logger): (TypedField[A]) => Try[Option[A]] = {
-      case (name, optTryValue) => optTryValue.fold(onMissing(name)) { tryValue =>
-        tryValue.failed.foreach { cause =>
-          logFailedConversion(logger, name, cause)
+    private def endState[A, B](onMissing: String => Try[B], onSuccessfulConversion: A => B)(implicit logger: Logger): (TypedField[A]) => Try[B] = {
+      case (name, optTryValue) =>
+        optTryValue.fold(onMissing(name)) { tryValue =>
+          logCauseOnFailure(logger, name, tryValue)
+          tryValue.map(onSuccessfulConversion)
         }
-        tryValue.map(Some(_))
-      }
     }
+
+    private def logCauseOnFailure[A](logger: Logger, name: String, tryValue: Try[A]): Unit =
+      tryValue.failed.foreach { cause =>
+        logFailedConversion(logger, name, cause)
+      }
 
     private def logFailedConversion(logger: Logger, name: String, cause: Throwable): Unit =
       logger.error(s"Conversion attempt of field [$name] failed with cause [${cause.getMessage}].", cause)
@@ -91,7 +102,7 @@ object Field {
   def optionalIntNamed(name: String)(implicit logger: Logger): Variables => Try[Option[Int]] =
     Typed.optional[Int].compose(anIntNamed(name))
 
-  def mandatoryIntNamed(name: String)(implicit logger: Logger): Variables => Try[Option[Int]] =
+  def mandatoryIntNamed(name: String)(implicit logger: Logger): Variables => Try[Int] =
     Typed.mandatory[Int].compose(anIntNamed(name))
 
   private def anIntNamed(name: String): Variables => (String, Option[Try[Int]]) =
