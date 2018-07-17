@@ -3,6 +3,7 @@ import sbtbuildinfo.BuildInfoPlugin.autoImport._
 import sbtassembly.AssemblyPlugin.autoImport._
 import com.typesafe.sbt.SbtNativePackager.Universal
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.dockerExposedPorts
+import sbt.ExclusionRule
 
 val publishRepo = settingKey[String]("publishRepo")
 
@@ -46,6 +47,10 @@ lazy val publishingSettings = Seq(
   releaseCommitMessage := s"Setting Release tag to ${(version in ThisBuild).value}",
   // no commit - ignore zip and other package files
   releaseIgnoreUntrackedFiles := true
+)
+
+lazy val exTransDeps: Seq[ExclusionRule] = Seq(
+  ExclusionRule("org.webjars", "npm")
 )
 
 /*
@@ -121,7 +126,6 @@ lazy val api = (project in file("."))
       "org.scalatest"                %%    "scalatest"           %    "3.0.4"           % Test,
       "com.github.tomakehurst"       %     "wiremock"            %    "1.58"            % Test,
       "org.scalamock"                %%    "scalamock"           %    "4.1.0"           % Test,
-      "org.webjars"                  %%    "webjars-play"        %    "2.5.0-3",
       "io.lemonlabs"                 %%    "scala-uri"           %    "0.5.0",
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",
       "com.typesafe"                 %     "config"              %    "1.3.1",
@@ -135,8 +139,7 @@ lazy val api = (project in file("."))
       // Hadoop & HBase (for creating the tableName)
       "org.apache.hadoop" % "hadoop-common" % "2.6.0",
       "org.apache.hbase" % "hbase-common" % "1.0.0",
-      "org.apache.hbase" % "hbase-client" % "1.0.0"
-      excludeAll ExclusionRule("commons-logging", "commons-logging")
+      "org.apache.hbase" % "hbase-client" % "1.0.0" excludeAll ExclusionRule("commons-logging", "commons-logging")
     ),
     // Assembly
     assemblyJarName in assembly := s"${name.value}-${version.value}.jar",
