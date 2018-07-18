@@ -2,6 +2,7 @@ package repository.hbase
 
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
+
 import play.api.http.HeaderNames.ACCEPT
 import play.api.http.MimeTypes.JSON
 import play.api.http.Status.{ NOT_FOUND, OK, UNAUTHORIZED }
@@ -11,14 +12,13 @@ import play.api.libs.ws.WSAuthScheme.BASIC
 import play.api.libs.ws.{ WSClient, WSRequest, WSResponse }
 import repository.RestRepository
 import repository.RestRepository.{ ErrorMessage, Row }
-import utils.TrySupport
+import utils.{ BaseUrl, TrySupport }
 
 import scala.concurrent.duration._
 import scala.concurrent.{ Future, TimeoutException }
 import scala.util.Try
 
-case class HBaseRestRepositoryConfig(protocolWithHostname: String, port: String,
-  namespace: String, username: String, password: String, timeout: Long)
+case class HBaseRestRepositoryConfig(baseUrl: BaseUrl, namespace: String, username: String, password: String, timeout: Long)
 
 /*
  * The public finder methods exposed by this class should be implemented in such a way as to always
@@ -42,7 +42,7 @@ class HBaseRestRepository @Inject() (
 
   override def findRows(table: String, query: String, columnFamily: String): Future[Either[ErrorMessage, Seq[Row]]] = {
     val withRowReader = responseReaderMaker.forColumnFamily(columnFamily)
-    val url = HBase.rowKeyUrl(config.protocolWithHostname, config.port, config.namespace, table, query, columnFamily)
+    val url = HBase.rowKeyUrl(withBase = config.baseUrl, config.namespace, table, query, columnFamily)
     logger.info(s"Requesting [$url] from HBase REST.")
     requestFor(url).get().map {
       (fromResponseToErrorOrJson _).andThen(convertToErrorOrRows(withRowReader))

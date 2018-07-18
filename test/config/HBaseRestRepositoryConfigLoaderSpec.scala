@@ -3,6 +3,7 @@ package config
 import com.typesafe.config.{ ConfigException, ConfigFactory }
 import org.scalatest.{ FreeSpec, Matchers }
 import repository.hbase.HBaseRestRepositoryConfig
+import utils.BaseUrl
 
 class HBaseRestRepositoryConfigLoaderSpec extends FreeSpec with Matchers {
 
@@ -14,8 +15,10 @@ class HBaseRestRepositoryConfigLoaderSpec extends FreeSpec with Matchers {
          |    password = "example-password"
          |    timeout = 6000
          |    namespace = "example-namespace"
-         |    host = "http://example-hostname"
-         |    port = "1234"
+         |    protocol = "http"
+         |    host = "example-hostname"
+         |    port = 1234
+         |    prefix = ""
          |  }
          |}""".stripMargin
     val config = ConfigFactory.parseString(SampleConfiguration)
@@ -24,8 +27,7 @@ class HBaseRestRepositoryConfigLoaderSpec extends FreeSpec with Matchers {
   "The config for the HBase REST repository" - {
     "can be successfully loaded when valid" in new Fixture {
       HBaseRestRepositoryConfigLoader.load(config) shouldBe HBaseRestRepositoryConfig(
-        protocolWithHostname = "http://example-hostname",
-        port = "1234",
+        baseUrl = BaseUrl("http", "example-hostname", 1234, None),
         namespace = "example-namespace",
         username = "example-username",
         password = "example-password",
@@ -35,7 +37,7 @@ class HBaseRestRepositoryConfigLoaderSpec extends FreeSpec with Matchers {
 
     "cannot be loaded" - {
       "when a required key is missing" in new Fixture {
-        val mandatoryKeys = Seq("username", "password", "timeout", "namespace", "host", "port")
+        val mandatoryKeys = Seq("username", "password", "timeout", "namespace", "protocol", "host", "port")
         mandatoryKeys.foreach { key =>
           withClue(s"with missing key $key") {
             val config = ConfigFactory.parseString(SampleConfiguration.replaceFirst(key, "missing"))
