@@ -3,10 +3,10 @@ package repository.hbase.legalunit
 import repository.hbase.HBase.{ RowKeyDelimiter, Wildcard }
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.legalunit.UBRN
+import uk.gov.ons.sbr.models.legalunit.Ubrn
 
 object LegalUnitQuery {
-  def byRowKey(ern: Ern, period: Period, ubrn: UBRN): String =
+  def byRowKey(ern: Ern, period: Period, ubrn: Ubrn): String =
     queryBy(ern, period, UBRNSelector = ubrn.value)
 
   def forAllWith(ern: Ern, period: Period): String =

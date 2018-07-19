@@ -11,7 +11,7 @@ import repository.{ RestRepository, RowMapper }
 import support.sample.SampleLegalUnit
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, UBRN }
+import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, Ubrn }
 
 import scala.concurrent.Future
 
@@ -32,14 +32,14 @@ class HBaseRestLegalUnitRepositorySpec extends FreeSpec with Matchers with MockF
   }
 
   private trait SingleResultFixture extends Fixture with SampleLegalUnit {
-    val TargetUBRN = UBRN("1010101900000015")
-    val TargetLegalUnit = aLegalUnit(TargetErn, TargetUBRN)
+    val TargetUBRN = Ubrn("1010101900000015")
+    val TargetLegalUnit = aLegalUnit(TargetUBRN)
     val TargetRowKey = LegalUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetUBRN)
     val ARow = Map("key" -> s"rowkey-for-${TargetUBRN.value}")
   }
 
   private trait MultipleResultFixture extends SingleResultFixture {
-    val AnotherLegalUnit = aLegalUnit(TargetErn, UBRN("9000000201234567"))
+    val AnotherLegalUnit = aLegalUnit(Ubrn("9000000201234567"))
     val AnotherRow = Map("key" -> s"rowkey-for-${AnotherLegalUnit.ubrn.value}")
     val TargetQuery = LegalUnitQuery.forAllWith(TargetErn, TargetPeriod)
   }
