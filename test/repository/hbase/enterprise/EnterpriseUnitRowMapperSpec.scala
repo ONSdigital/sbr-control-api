@@ -16,7 +16,8 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
         address1 -> SampleAddressLine1,
         postcode -> SamplePostcode,
         sic07 -> SampleSIC07,
-        legalStatus -> SampleLegalStatus
+        legalStatus -> SampleLegalStatus,
+        prn -> SamplePrn.toString()
       )
 
     val optionalVariables =
@@ -91,6 +92,10 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
         EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(enterpriseTurnover, "invalid_int"))) shouldBe None
       }
 
+      "a non-numeric value if found for prn" in new Fixture {
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(prn, "invalid_bigDecimal"))) shouldBe None
+      }
+
       "a non-integeral value is found for employees" in new Fixture {
         EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(employees, "12.90"))) shouldBe None
       }
@@ -124,5 +129,4 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
       }
     }
   }
-
 }
