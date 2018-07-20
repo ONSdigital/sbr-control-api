@@ -1,82 +1,64 @@
 package repository.hbase.enterprise
 
-import scala.util.Try
-
-import uk.gov.ons.sbr.models.Address
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern, Turnover }
-
-import utils.TrySupport
+import com.typesafe.scalalogging.LazyLogging
+import org.slf4j.Logger
+import repository.Field.{ mandatoryStringNamed, optionalIntNamed, optionalStringNamed }
 import repository.RestRepository.Row
 import repository.RowMapper
 import repository.hbase.enterprise.EnterpriseUnitColumns._
+import uk.gov.ons.sbr.models.Address
+import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern, Turnover }
 
-object EnterpriseUnitRowMapper extends RowMapper[Enterprise] {
+import scala.util.Try
 
-  override def fromRow(variables: Row): Option[Enterprise] =
+object EnterpriseUnitRowMapper extends RowMapper[Enterprise] with LazyLogging {
+
+  private implicit val fieldLogger: Logger = logger.underlying
+
+  override def fromRow(variables: Row): Option[Enterprise] = {
+    val fields = variables.fields
     for {
-      ern <- variables.fields.get(ern)
-      entrefOptStr = variables.fields.get(entref)
-      name <- variables.fields.get(name)
-      tradingStyleOptStr = variables.fields.get(tradingStyle)
-      address <- toAddress(variables)
-      legalStatus <- variables.fields.get(legalStatus)
-      sic07 <- variables.fields.get(sic07)
+      ern <- mandatoryStringNamed(ern).apply(fields)
+      entrefOpt = optionalStringNamed(entref).apply(fields)
+      name <- mandatoryStringNamed(name).apply(fields)
+      tradingStyleOpt = optionalStringNamed(tradingStyle).apply(fields)
+      address <- toAddress(fields)
+      legalStatus <- mandatoryStringNamed(legalStatus).apply(fields)
+      sic07 <- mandatoryStringNamed(sic07).apply(fields)
+      (employeesOpt, jobsOpt) <- tryToEmployeesJobs(fields).toOption
+      turnoverOpt <- tryToTurnover(fields).toOption
+    } yield Enterprise(Ern(ern), entrefOpt, name, tradingStyleOpt, address, sic07, legalStatus,
+      employeesOpt, jobsOpt, turnoverOpt)
+  }
 
-      jobsStr = variables.fields.get(jobs)
-      jobsOptTry = asInt(jobsStr)
-      if invalidInt(jobsOptTry)
-      jobsOptInt = parseTry(jobsOptTry)
-
-      employeesStr = variables.fields.get(employees)
-      employeeOptTry = asInt(employeesStr)
-      if invalidInt(employeeOptTry)
-      employeeOptInt = parseTry(employeeOptTry)
-
-      turnoverObjectTry = toTurnover(variables)
-      if turnoverObjectTry.isSuccess
-      turnoverOpt = turnoverObjectTry.toOption.flatten
-
-    } yield Enterprise(Ern(ern), entrefOptStr, name, tradingStyleOptStr, address, sic07, legalStatus, employeeOptInt,
-      jobsOptInt, turnover = turnoverOpt)
-
-  private def toAddress(variables: Row): Option[Address] =
+  private def toAddress(fields: Map[String, String]): Option[Address] =
     for {
-      line1 <- variables.fields.get(address1)
-      optLine2 = variables.fields.get(address2)
-      optLine3 = variables.fields.get(address3)
-      optLine4 = variables.fields.get(address4)
-      optLine5 = variables.fields.get(address5)
-      postcode <- variables.fields.get(postcode)
+      line1 <- mandatoryStringNamed(address1).apply(fields)
+      optLine2 = optionalStringNamed(address2).apply(fields)
+      optLine3 = optionalStringNamed(address3).apply(fields)
+      optLine4 = optionalStringNamed(address4).apply(fields)
+      optLine5 = optionalStringNamed(address5).apply(fields)
+      postcode <- mandatoryStringNamed(postcode).apply(fields)
     } yield Address(line1, optLine2, optLine3, optLine4, optLine5, postcode)
 
-  private def toTurnover(variables: Row): Try[Option[Turnover]] = {
-    val toIntTakesTurnoverType = optStringToTurnoverInt(variables, _: String)
-    Try {
-      val containedTurnoverOpt = toIntTakesTurnoverType(containedTurnover)
-      val standardTurnoverOpt = toIntTakesTurnoverType(standardTurnover)
-      val groupTurnoverOpt = toIntTakesTurnoverType(groupTurnover)
-      val apportionedTurnoverOpt = toIntTakesTurnoverType(apportionedTurnover)
-      val enterpriseTurnoverOpt = toIntTakesTurnoverType(enterpriseTurnover)
-      if (List(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt).forall(_.isEmpty)) None
-      else Some(Turnover(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt))
+  private def tryToEmployeesJobs(fields: Map[String, String]): Try[(Option[Int], Option[Int])] =
+    for {
+      employeesOpt <- optionalIntNamed(employees).apply(fields)
+      jobsOpt <- optionalIntNamed(jobs).apply(fields)
+    } yield (employeesOpt, jobsOpt)
+
+  private def tryToTurnover(fields: Map[String, String]): Try[Option[Turnover]] =
+    for {
+      containedTurnoverOpt <- optionalIntNamed(containedTurnover).apply(fields)
+      standardTurnoverOpt <- optionalIntNamed(standardTurnover).apply(fields)
+      groupTurnoverOpt <- optionalIntNamed(groupTurnover).apply(fields)
+      apportionedTurnoverOpt <- optionalIntNamed(apportionedTurnover).apply(fields)
+      enterpriseTurnoverOpt <- optionalIntNamed(enterpriseTurnover).apply(fields)
+      // a single option containing the first Some; else None
+      anyTurnoverOpt = containedTurnoverOpt.orElse(standardTurnoverOpt).orElse(groupTurnoverOpt).orElse(
+        apportionedTurnoverOpt
+      ).orElse(enterpriseTurnoverOpt)
+    } yield anyTurnoverOpt.map { _ =>
+      Turnover(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt)
     }
-  }
-
-  private def optStringToTurnoverInt(variables: Row, turnoverType: String) = {
-    val optStrTurnover = variables.fields.get(turnoverType)
-    val optIntOrFail = optStrTurnover.map(_.toInt)
-    optIntOrFail
-  }
-
-  private def parseTry(valueOptTry: Option[Try[Int]]): Option[Int] =
-    valueOptTry.fold[Option[Int]](None) { tryToInt =>
-      TrySupport.fold(tryToInt)(_ => None, integralVal => Some(integralVal))
-    }
-
-  private def asInt(fieldAsStr: Option[String]): Option[Try[Int]] =
-    fieldAsStr.map(x => Try(x.toInt))
-
-  private def invalidInt(fieldOptTry: Option[Try[Int]]) =
-    fieldOptTry.fold(true)(_.isSuccess)
-
 }

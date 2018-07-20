@@ -37,6 +37,8 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
   override def fakeApplication(): Application = new GuiceApplicationBuilder().configure(Map("db.hbase-rest.timeout" -> "100")).build()
 
   private trait Fixture extends HttpServerErrorStatusCode with SampleUnitLinks {
+    val MinLengthUnitId = "1234" // PAYE references can be from 4 characters in length
+    val MaxLengthUnitId = "1234567890123456"
     val ValidUnitId = SampleUnitId.value
     val ValidPeriod = Period.asString(SamplePeriod)
     val ValidUnitType = UnitType.toAcronym(SampleUnitType)
@@ -57,6 +59,16 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
         "includes special characters" in new Fixture {
           val unitIdWithSpecialCharacters = ValidUnitId + "_a!b0"
           val Some(result) = fakeRequest(url = s"/v1/periods/$ValidPeriod/types/$ValidUnitType/units/$unitIdWithSpecialCharacters")
+          status(result) should be(aServerError)
+        }
+
+        "has the minimum length" in new Fixture {
+          val Some(result) = fakeRequest(url = s"/v1/periods/$ValidPeriod/types/$ValidUnitType/units/$MinLengthUnitId")
+          status(result) should be(aServerError)
+        }
+
+        "has the maximum length" in new Fixture {
+          val Some(result) = fakeRequest(url = s"/v1/periods/$ValidPeriod/types/$ValidUnitType/units/$MaxLengthUnitId")
           status(result) should be(aServerError)
         }
       }
@@ -96,14 +108,14 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
 
     "rejected when" - {
       "the UnitId" - {
-        "has fewer than 6 characters" in new Fixture {
-          val unitIdTooShort = ValidUnitId take 5
+        "is too short" in new Fixture {
+          val unitIdTooShort = MinLengthUnitId.drop(1)
           val Some(result) = fakeRequest(url = s"/v1/periods/$ValidPeriod/types/$ValidUnitType/units/$unitIdTooShort")
           status(result) shouldBe BAD_REQUEST
         }
 
-        "has more than the maximum character length 16" in new Fixture {
-          val unitIdTooLong = ValidUnitId + "1234567"
+        "is too long" in new Fixture {
+          val unitIdTooLong = MaxLengthUnitId + "9"
           val Some(result) = fakeRequest(url = s"/v1/periods/$ValidPeriod/types/$ValidUnitType/units/$unitIdTooLong")
           status(result) shouldBe BAD_REQUEST
         }
@@ -184,5 +196,4 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
       }
     }
   }
-
 }

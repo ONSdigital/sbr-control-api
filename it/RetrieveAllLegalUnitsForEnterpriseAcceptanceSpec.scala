@@ -7,11 +7,10 @@ import org.scalatest.OptionValues
 
 import uk.gov.ons.sbr.models.enterprise.{EnterpriseLink, Ern}
 import uk.gov.ons.sbr.models.legalunit.{LegalUnit, UBRN}
-import uk.gov.ons.sbr.models.reportingunit.{ReportingUnitLink, Rurn}
 import uk.gov.ons.sbr.models.{Address, Period}
 
-import it.fixture.ServerAcceptanceSpec
-import it.fixture.ReadsLegalUnit.legalUnitReads
+import fixture.ServerAcceptanceSpec
+import fixture.ReadsLegalUnit.legalUnitReads
 import repository.hbase.legalunit.LegalUnitColumns._
 import repository.hbase.legalunit.LegalUnitQuery
 import support.WithWireMockHBase
@@ -28,18 +27,18 @@ class RetrieveAllLegalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
       List(
         aRowWith(key = s"${LegalUnitQuery.byRowKey(TargetErn, TargetPeriod, UBRNOne)}", columns =
           aColumnWith(name = ubrn, value = UBRNOne.value),
-          aColumnWith(name = ern, value = TargetErn.value)),
-        aColumnWith(name = crn, value = "one-crn"),
-        aColumnWith(name = name, value = "one-name"),
-        aColumnWith(name = address1, value = "one-address1"),
-        aColumnWith(name = address2, value = "one-address2"),
-        aColumnWith(name = address3, value = "one-address3"),
-        aColumnWith(name = address4, value = "one-address4"),
-        aColumnWith(name = postcode, value = "one-postcode"),
-        aColumnWith(name = sic07, value = "one-sic07"),
-        aColumnWith(name = jobs, value = "42"),
-        aColumnWith(name = legalStatus, value = "one-legalStatus"),
-        aColumnWith(name = tradingStatus, value = "one-tradingStatus"),
+          aColumnWith(name = ern, value = TargetErn.value),
+          aColumnWith(name = crn, value = "one-crn"),
+          aColumnWith(name = name, value = "one-name"),
+          aColumnWith(name = address1, value = "one-address1"),
+          aColumnWith(name = address2, value = "one-address2"),
+          aColumnWith(name = address3, value = "one-address3"),
+          aColumnWith(name = address4, value = "one-address4"),
+          aColumnWith(name = postcode, value = "one-postcode"),
+          aColumnWith(name = sic07, value = "one-sic07"),
+          aColumnWith(name = jobs, value = "42"),
+          aColumnWith(name = legalStatus, value = "one-legalStatus"),
+          aColumnWith(name = tradingStatus, value = "one-tradingStatus")),
         aRowWith(key = s"${LegalUnitQuery.byRowKey(TargetErn, TargetPeriod, UBRNTwo)}", columns =
           aColumnWith(name = ubrn, value = UBRNTwo.value),
           aColumnWith(name = ern, value = TargetErn.value),

@@ -4,6 +4,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ EitherValues, FreeSpec, Matchers }
 import play.api.libs.ws.{ WSClient, WSRequest, WSResponse }
+import utils.BaseUrl
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -20,7 +21,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
   private trait Fixture {
     val wsClient = stub[WSClient]
     val wsRequest = mock[WSRequest]
-    val config = HBaseRestRepositoryConfig(protocolWithHostname = "http://somehost", port = "4321", "namespace",
+    val config = HBaseRestRepositoryConfig(BaseUrl(protocol = "http", host = "somehost", port = 4321, prefix = Some("HBase")), "namespace",
       "username", "password", timeout = 3321L)
 
     val restRepository = new HBaseRestRepository(config, wsClient, stub[HBaseResponseReaderMaker])

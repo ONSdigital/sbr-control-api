@@ -33,9 +33,10 @@ trait Properties {
   // HBase REST Auth/URLs
   lazy val username: String = hBaseRestConfig.getString("username")
   lazy val password: String = hBaseRestConfig.getString("password")
+  lazy val protocol: String = hBaseRestConfig.getString("protocol")
   lazy val host: String = hBaseRestConfig.getString("host")
   lazy val port: String = hBaseRestConfig.getString("port")
-  lazy val baseUrl: String = s"$host:$port"
+  lazy val baseUrl: String = s"$protocol://$host:$port"
 
   // HBase REST data formatting config
   lazy val delimiter: String = hBaseRestConfig.getString("delimiter")
