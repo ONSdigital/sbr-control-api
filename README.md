@@ -1,3 +1,23 @@
+
+<!-- vim-markdown-toc GFM -->
+
+* [sbr-control-api](#sbr-control-api)
+        * [What is this repository?](#what-is-this-repository)
+        * [Endpoints](#endpoints)
+        * [Prerequisites](#prerequisites)
+        * [Development Setup (MacOS)](#development-setup-macos)
+        * [Running the App](#running-the-app)
+                * [HBase REST](#hbase-rest)
+            * [Package](#package)
+            * [Test](#test)
+            * [API Documentation](#api-documentation)
+        * [Running the App in Production Mode](#running-the-app-in-production-mode)
+        * [Troubleshooting](#troubleshooting)
+        * [Contributing](#contributing)
+        * [License](#license)
+
+<!-- vim-markdown-toc -->
+
 # sbr-control-api
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
 [![Dependency Status](https://www.versioneye.com/user/projects/58e23bf2d6c98d00417476cc/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/58e23bf2d6c98d00417476cc)
@@ -112,7 +132,31 @@ Swagger API is used to document and expose swagger definitions of the routes and
  
  For a graphical interface using Swagger Ui use path:
  `http://localhost:9000/docs`
- 
+
+### Running the App in Production Mode
+
+Running the application in Production Mode is needed to eliminate the overhead imposed by the auto-reload functionality of dev mode.
+In production mode, the auto-reload is turned off and there is no overhead due to SBT constantly monitoring and watching for file changes.
+
+Running in production mode requires that `play.crypto.secret` be defined in the application.conf with a non-default value (default value is `changeme`, which is not accepted). Note that the actual key itself is Play Version dependent (for example it is `play.http.secret.key` for Play 2.6.x)
+
+Run in Production Mode by using a utility provided by play called `testProd`:
+
+```shell
+# For Play Framework 2.5.x (current)
+sbt testProd
+```
+
+(The command used to run in Production mode is different between Play versions. 
+For the latest Play Framework version, 2.6.x as of this writing, the command is:
+
+```shell
+# For Play Framework 2.6.x
+sbt runProd
+```
+
+)
+
 ### Troubleshooting
 See [FAQ](FAQ.md) for possible and common solutions.
 
