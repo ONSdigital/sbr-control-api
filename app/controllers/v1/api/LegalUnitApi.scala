@@ -21,7 +21,7 @@ trait LegalUnitApi {
   def retrieveLegalUnit(
     @ApiParam(value = "Enterprise Reference Number (ERN) - a ten digit number", example = "1000000012", required = true) ernStr: String,
     @ApiParam(value = "Period (unit load date) - in YYYYMM format", example = "201803", required = true) periodStr: String,
-    @ApiParam(value = "Legal Unit Reference Number (UBRN) - a sixteen digit number", example = "0000000000111111", required = true) uBRNStr: String
+    @ApiParam(value = "Legal Unit Reference Number (UBRN) - a sixteen digit number", example = "0000000000111111", required = true) ubrnStr: String
   ): Action[AnyContent]
 
   /*

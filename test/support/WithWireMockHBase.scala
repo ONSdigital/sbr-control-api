@@ -9,7 +9,7 @@ import com.github.tomakehurst.wiremock.client.{ MappingBuilder, ResponseDefiniti
 
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.legalunit.UBRN
+import uk.gov.ons.sbr.models.legalunit.Ubrn
 import uk.gov.ons.sbr.models.localunit.Lurn
 import uk.gov.ons.sbr.models.reportingunit.Rurn
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
@@ -55,8 +55,8 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
   def anAllLegalUnitsForEnterpriseRequest(withErn: Ern, withPeriod: Period): MappingBuilder =
     aLegalUnitQuery(LegalUnitQuery.forAllWith(withErn, withPeriod))
 
-  def aLegalUnitRequest(withErn: Ern, withPeriod: Period, withUBRN: UBRN): MappingBuilder =
-    aLegalUnitQuery(query = LegalUnitQuery.byRowKey(withErn, withPeriod, withUBRN))
+  def aLegalUnitRequest(withErn: Ern, withPeriod: Period, withUbrn: Ubrn): MappingBuilder =
+    aLegalUnitQuery(query = LegalUnitQuery.byRowKey(withErn, withPeriod, withUbrn))
 
   private def aLegalUnitQuery(query: String): MappingBuilder =
     createUrlAndThenGetHBaseJson(tableName = "legal_unit", query)
