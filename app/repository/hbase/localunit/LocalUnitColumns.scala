@@ -8,7 +8,7 @@ object LocalUnitColumns {
   val rurn = "rurn"
   val ruref = "ruref"
   val name = "name"
-  val tradingstyle = "tradingstyle"
+  val tradingStyle = "trading_style"
   val address1 = "address1"
   val address2 = "address2"
   val address3 = "address3"

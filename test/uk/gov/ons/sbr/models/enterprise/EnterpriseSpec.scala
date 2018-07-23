@@ -48,7 +48,8 @@ class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
           string(name = "sic07", value = ent.sic07),
           string(name = "legalStatus", value = ent.legalStatus),
           optionalInt(name = "employees", optValue = ent.employees),
-          optionalInt(name = "jobs", optValue = ent.jobs)
+          optionalInt(name = "jobs", optValue = ent.jobs),
+          string(name = "prn", value = ent.prn.toString())
         )
       }
         ${

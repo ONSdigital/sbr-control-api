@@ -23,7 +23,7 @@ trait SampleReportingUnit {
     employees = 100,
     employment = 500,
     turnover = 623481,
-    prn = "0.2"
+    prn = BigDecimal("0.2")
   )
 
   val SampleAllValuesReportingUnit1 = ReportingUnit(
@@ -44,7 +44,7 @@ trait SampleReportingUnit {
     employees = 8462,
     employment = 193,
     turnover = 856288,
-    prn = "0.3"
+    prn = BigDecimal("0.3")
   )
 
   def withOnlyMandatoryFields(ru: ReportingUnit): ReportingUnit = ru.copy(ruref = None, entref = None,

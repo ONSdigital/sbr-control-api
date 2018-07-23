@@ -131,6 +131,16 @@ class FieldSpec extends FreeSpec with Matchers with MockFactory {
         Field.Conversions.toInt(EmployeesValue) shouldBe a[Failure[_]]
       }
     }
+
+    "toBigDecimal" - {
+      "succeeds when the field value represents a valid decimal" in new Fixture {
+        Field.Conversions.toBigDecimal("3.14159") shouldBe Success(BigDecimal("3.14159"))
+      }
+
+      "fails when the field value does not represent a valid decimal" in new NonNumericFixture {
+        Field.Conversions.toInt(EmployeesValue) shouldBe a[Failure[_]]
+      }
+    }
   }
 
   "A field that is" - {
@@ -191,6 +201,26 @@ class FieldSpec extends FreeSpec with Matchers with MockFactory {
         })
 
         Field.mandatoryIntNamed(Employees).apply(Variables) shouldBe a[Failure[_]]
+      }
+    }
+
+    "a mandatoryBigDecimalNamed" - {
+      "returns Success(bigDecimal) when a value is present which represents a valid decimal" in new Fixture {
+        Field.mandatoryBigDecimalNamed("pi").apply(Map("pi" -> "3.14159")) shouldBe Success(BigDecimal("3.14159"))
+      }
+
+      "logs when missing" in new MissingFixture {
+        (logger.error(_: String)).expects(s"Mandatory field [$Employees] is missing.")
+
+        Field.mandatoryBigDecimalNamed(Employees).apply(Variables) shouldBe a[Failure[_]]
+      }
+
+      "logs when a value is present which does not represent a valid decimal" in new NonNumericFixture {
+        (logger.error(_: String, _: Throwable)).expects(where {
+          (msg: String, _: Throwable) => msg.startsWith(s"Conversion attempt of field [$Employees] failed")
+        })
+
+        Field.mandatoryBigDecimalNamed(Employees).apply(Variables) shouldBe a[Failure[_]]
       }
     }
   }

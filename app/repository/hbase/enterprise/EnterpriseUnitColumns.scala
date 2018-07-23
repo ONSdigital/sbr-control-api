@@ -20,4 +20,5 @@ object EnterpriseUnitColumns {
   val groupTurnover = "grp_turnover"
   val apportionedTurnover = "app_turnover"
   val enterpriseTurnover = "ent_turnover"
+  val prn = "prn"
 }

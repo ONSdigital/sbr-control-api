@@ -13,28 +13,28 @@ import repository.hbase.localunit.LocalUnitColumns._
 class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
 
   private trait Fixture {
-    val lurnValue = "ab"
-    val lurefValue = "cd"
-    val ernValue = "ef"
-    val entrefValue = "gh"
-    val rurnValue = "hg"
-    val rurefValue = "ji"
-    val nameValue = "ij"
-    val tradingstyleValue = "kl"
-    val address1Value = "mn"
-    val address2Value = "op"
-    val address3Value = "qr"
-    val address4Value = "st"
-    val address5Value = "uv"
-    val postcodeValue = "wx"
-    val sic07Value = "yz"
+    val lurnValue = "222226789"
+    val lurefValue = "888886789"
+    val ernValue = "1100000001"
+    val entrefValue = "9990009991"
+    val rurnValue = "33000000051"
+    val rurefValue = "49906016135"
+    val nameValue = "Big Box Cereal"
+    val tradingStyleValue = "Big Box Cereal Ltd"
+    val address1Value = "1 Black Barn Cottages"
+    val address2Value = "Saxtead Road"
+    val address3Value = "Framlingham"
+    val address4Value = "Greatstone"
+    val address5Value = "Kent"
+    val postcodeValue = "TN28 8NX"
+    val sic07Value = "10612"
     val employeesValue = "34"
 
     val allVariables = Map(lurn -> lurnValue, luref -> lurefValue, ern -> ernValue, entref -> entrefValue,
-      name -> nameValue, rurn -> rurnValue, ruref -> rurefValue, tradingstyle -> tradingstyleValue, address1 -> address1Value, address2 -> address2Value,
+      name -> nameValue, rurn -> rurnValue, ruref -> rurefValue, tradingStyle -> tradingStyleValue, address1 -> address1Value, address2 -> address2Value,
       address3 -> address3Value, address4 -> address4Value, address5 -> address5Value, postcode -> postcodeValue,
       sic07 -> sic07Value, employees -> employeesValue)
-    private val optionalColumns = Seq(luref, entref, ruref, tradingstyle, address2, address3, address4, address5)
+    private val optionalColumns = Seq(luref, entref, ruref, tradingStyle, address2, address3, address4, address5)
     val mandatoryVariables: Map[String, String] = allVariables -- optionalColumns
 
     val UnusedRowKey = ""
@@ -43,7 +43,7 @@ class LocalUnitRowMapperSpec extends FreeSpec with Matchers {
   "A LocalUnit row mapper" - {
     "can create a LocalUnit when all possible variables are defined" in new Fixture {
       LocalUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables)) shouldBe Some(LocalUnit(Lurn(lurnValue), luref = Some(lurefValue),
-        name = nameValue, tradingStyle = Some(tradingstyleValue), sic07 = sic07Value, employees = employeesValue.toInt,
+        name = nameValue, tradingStyle = Some(tradingStyleValue), sic07 = sic07Value, employees = employeesValue.toInt,
         enterprise = EnterpriseLink(Ern(ernValue), entref = Some(entrefValue)), reportingUnit = ReportingUnitLink(Rurn(rurnValue), ruref = Some(rurefValue)),
         address = Address(line1 = address1Value, line2 = Some(address2Value), line3 = Some(address3Value),
           line4 = Some(address4Value), line5 = Some(address5Value), postcode = postcodeValue)))

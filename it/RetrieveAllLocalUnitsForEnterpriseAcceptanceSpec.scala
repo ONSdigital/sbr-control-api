@@ -47,7 +47,7 @@ class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
           aColumnWith(name = rurn, value = TargetRurn.value),
           aColumnWith(name = ruref, value = "two-ruref"),
           aColumnWith(name = name, value = "two-name"),
-          aColumnWith(name = tradingstyle, value = "two-tradingstyle"),
+          aColumnWith(name = tradingStyle, value = "two-tradingstyle"),
           aColumnWith(name = address1, value = "two-address1"),
           aColumnWith(name = address2, value = "two-address2"),
           aColumnWith(name = address5, value = "two-address5"),
