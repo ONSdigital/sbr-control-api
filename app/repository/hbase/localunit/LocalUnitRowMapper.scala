@@ -15,7 +15,8 @@ import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnitLink, Rurn }
  * The following fields are optional:
  * - luref
  * - entref
- * - tradingstyle
+ * - tradingStyle
+ * - ruref
  * - address2
  * - address3
  * - address4
@@ -34,7 +35,7 @@ object LocalUnitRowMapper extends RowMapper[LocalUnit] with LazyLogging {
       lurn <- mandatoryStringNamed(lurn).apply(fields)
       optLuref = optionalStringNamed(luref).apply(fields)
       name <- mandatoryStringNamed(name).apply(fields)
-      optTradingStyle = optionalStringNamed(tradingstyle).apply(fields)
+      optTradingStyle = optionalStringNamed(tradingStyle).apply(fields)
       sic07 <- mandatoryStringNamed(sic07).apply(fields)
       employees <- mandatoryIntNamed(employees).apply(fields).toOption
       enterpriseLink <- toEnterpriseLink(fields)
