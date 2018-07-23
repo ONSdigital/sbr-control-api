@@ -14,23 +14,10 @@ class LegalUnitSpec extends FreeSpec with Matchers {
          |{${
         withValues(
           string("ubrn", legalUnit.ubrn.value),
-          optionalString("crn", legalUnit.crn),
           string("name", legalUnit.name),
-          string("legalStatus", legalUnit.legalStatus),
-          string("tradingStatus", legalUnit.tradingStatus),
-          optionalString("tradingstyle", legalUnit.tradingstyle),
-          string("sic07", legalUnit.sic07),
-          optionalInt("turnover", legalUnit.turnover),
-          optionalInt("jobs", legalUnit.jobs)
+          optionalString("tradingStyle", legalUnit.tradingStyle)
         )
       },
-         | "enterprise": {${
-        withValues(
-          string("ern", legalUnit.enterprise.ern.value),
-          optionalString("entref", legalUnit.enterprise.entref)
-        )
-      }
-         | },
          |  "address": {${
         withValues(
           string("line1", legalUnit.address.line1),
@@ -41,14 +28,27 @@ class LegalUnitSpec extends FreeSpec with Matchers {
           string("postcode", legalUnit.address.postcode)
         )
       }
-         | }
+         | },
+         | ${
+        withValues(
+          string("legalStatus", legalUnit.legalStatus),
+          optionalString("tradingStatus", legalUnit.tradingStatus),
+          string("sic07", legalUnit.sic07),
+          optionalInt("payeJobs", legalUnit.payeJobs),
+          optionalInt("turnover", legalUnit.turnover),
+          string("birthDate", legalUnit.birthDate),
+          optionalString("deathDate", legalUnit.deathDate),
+          optionalString("deathCode", legalUnit.deathCode),
+          optionalString("crn", legalUnit.crn.map(_.value)),
+          optionalString("uprn", legalUnit.uprn.map(_.value))
+        )
+      }
          |}""".stripMargin
   }
 
   "A LegalUnit" - {
     "can be represented as JSON" - {
       "when all fields are defined" in new Fixture {
-        println(expectedJsonStrOf(SampleAllValuesLegalUnit))
         Json.toJson(SampleAllValuesLegalUnit) shouldBe Json.parse(expectedJsonStrOf(SampleAllValuesLegalUnit))
       }
 
