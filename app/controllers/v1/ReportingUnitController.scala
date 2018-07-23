@@ -1,18 +1,20 @@
 package controllers.v1
 
-import javax.inject.Inject
-
+import controllers.v1.ControllerResultProcessor._
 import controllers.v1.api.ReportingUnitApi
+import io.swagger.annotations.Api
+import javax.inject.{ Inject, Singleton }
+import play.api.libs.json.Json._
 import play.api.mvc.{ Action, AnyContent, Controller, Result }
 import repository.ReportingUnitRepository
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnit, Rurn }
-import controllers.v1.ControllerResultProcessor._
-import play.api.libs.json.Json._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
+@Api("Search")
+@Singleton
 class ReportingUnitController @Inject() (repository: ReportingUnitRepository) extends Controller with ReportingUnitApi {
   override def retrieveReportingUnit(ernStr: String, periodStr: String, rurnStr: String): Action[AnyContent] = Action.async {
     repository.retrieveReportingUnit(Ern(ernStr), Period.fromString(periodStr), Rurn(rurnStr)).map { errorOrReportingUnit =>
