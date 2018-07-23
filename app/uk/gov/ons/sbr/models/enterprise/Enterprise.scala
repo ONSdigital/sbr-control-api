@@ -2,7 +2,7 @@ package uk.gov.ons.sbr.models.enterprise
 
 import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json._
-import uk.gov.ons.sbr.models.Address
+import uk.gov.ons.sbr.models.{ Address, WritesBigDecimal }
 
 case class Enterprise(
   @ApiModelProperty(value = "Enterprise Reference Number (ERN)", dataType = "string", example = "1100000001", required = true) ern: Ern,
@@ -15,14 +15,10 @@ case class Enterprise(
   @ApiModelProperty(value = "Average of PAYE jobs across year", dataType = "int", example = "100", required = false) employees: Option[Int],
   @ApiModelProperty(value = "Sum of PAYE jobs for latest period", dataType = "int", example = "100", required = false) jobs: Option[Int],
   @ApiModelProperty(value = "A container for various turnover calculations", dataType = "uk.gov.ons.sbr.models.enterprise.Turnover", required = true) turnover: Option[Turnover],
-  @ApiModelProperty(value = "Permanent Random Number (PRN", dataType = "string", example = "0.016587362", required = true) prn: BigDecimal
+  @ApiModelProperty(value = "Permanent Random Number (PRN)", dataType = "string", example = "0.016587362", required = true) prn: BigDecimal
 )
 
 object Enterprise {
-  private implicit object WritesBigDecimal extends Writes[BigDecimal] {
-    def writes(bd: BigDecimal): JsValue =
-      JsString(bd.toString())
-  }
-
+  private implicit val writesBigDecimal: Writes[BigDecimal] = WritesBigDecimal
   implicit val writes: OWrites[Enterprise] = Json.writes[Enterprise]
 }
