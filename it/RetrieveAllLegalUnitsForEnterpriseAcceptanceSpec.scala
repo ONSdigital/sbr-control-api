@@ -23,7 +23,7 @@ class RetrieveAllLegalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
   private val LegalUnitMultipleMatchHBaseResponseBody =
     s"""{"Row": ${
       List(
-        aRowWith(key = s"${LegalUnitQuery.byRowKey(TargetErn, TargetPeriod, UbrnOne)}", columns =
+        aRowWith(key = s"${LegalUnitQuery.byRowKey(TargetErn, UbrnOne)}", columns =
           aColumnWith(name = ubrn, value = UbrnOne.value),
           aColumnWith(name = name, value = "Big Box Cereal Ltd"),
           aColumnWith(name = tradingStyle, value = "The Cereal Co"),
@@ -40,7 +40,7 @@ class RetrieveAllLegalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
           aColumnWith(name = deathDate, value = "06/06/2018"),
           aColumnWith(name = deathCode, value = "1")
         ),
-        aRowWith(key = s"${LegalUnitQuery.byRowKey(TargetErn, TargetPeriod, UbrnTwo)}", columns =
+        aRowWith(key = s"${LegalUnitQuery.byRowKey(TargetErn, UbrnTwo)}", columns =
           aColumnWith(name = ubrn, value = UbrnTwo.value),
           aColumnWith(name = crn, value = "01245670"),
           aColumnWith(name = uprn, value = "10023450178"),
