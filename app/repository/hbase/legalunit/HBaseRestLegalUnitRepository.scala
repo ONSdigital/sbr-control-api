@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, UBRN }
+import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, Ubrn }
 import utils.EitherSupport
 
 import repository.RestRepository.{ ErrorMessage, Row }
@@ -24,7 +24,7 @@ class HBaseRestLegalUnitRepository @Inject() (
     rowMapper: RowMapper[LegalUnit]
 ) extends LegalUnitRepository with LazyLogging {
 
-  override def retrieveLegalUnit(ern: Ern, period: Period, ubrn: UBRN): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
+  override def retrieveLegalUnit(ern: Ern, period: Period, ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
     logger.info(s"Retrieving Legal Unit with [$ern] [$ubrn] for [$period].")
     restRepository.findRow(config.tableName, LegalUnitQuery.byRowKey(ern, period, ubrn), DefaultColumnFamily).map(fromErrorOrRow)
   }

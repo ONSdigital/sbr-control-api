@@ -2,7 +2,7 @@ package repository.hbase.reportingunit
 
 import com.typesafe.scalalogging.LazyLogging
 import org.slf4j.Logger
-import repository.Field.{ mandatoryIntNamed, mandatoryStringNamed, optionalStringNamed }
+import repository.Field.{ mandatoryBigDecimalNamed, mandatoryIntNamed, mandatoryStringNamed, optionalStringNamed }
 import repository.RestRepository.Row
 import repository.RowMapper
 import repository.hbase.reportingunit.ReportingUnitColumns._
@@ -33,7 +33,7 @@ object ReportingUnitRowMapper extends RowMapper[ReportingUnit] with LazyLogging 
       employees <- mandatoryIntNamed(employees).apply(fields).toOption
       employment <- mandatoryIntNamed(employment).apply(fields).toOption
       turnover <- mandatoryIntNamed(turnover).apply(fields).toOption
-      prn <- mandatoryStringNamed(prn).apply(fields)
+      prn <- mandatoryBigDecimalNamed(prn).apply(fields).toOption
     } yield ReportingUnit(Rurn(rurn), optRuref, Ern(ern), optEntref, name, optTradingStyle, optLegalStatus,
       address1, optAddress2, optAddress3, optAddress4, optAddress5, postcode, sic07, employees, employment,
       turnover, prn)

@@ -32,7 +32,7 @@ class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
           aColumnWith(name = rurn, value = "91000000012"),
           aColumnWith(name = ruref, value = "two-ruref"),
           aColumnWith(name = name, value = "some-name"),
-          aColumnWith(name = tradingstyle, value = "some-tradingstyle"),
+          aColumnWith(name = tradingStyle, value = "some-tradingstyle"),
           aColumnWith(name = address1, value = "some-address1"),
           aColumnWith(name = address2, value = "some-address2"),
           aColumnWith(name = address5, value = "some-address5"),

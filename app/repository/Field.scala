@@ -1,7 +1,7 @@
 package repository
 
 import org.slf4j.Logger
-import repository.Field.Conversions.toInt
+import repository.Field.Conversions.{ toBigDecimal, toInt }
 
 import scala.Function.const
 import scala.util.{ Failure, Success, Try }
@@ -74,6 +74,9 @@ object Field {
   private[repository] object Conversions {
     def toInt(field: String): Try[Int] =
       Try(field.toInt)
+
+    def toBigDecimal(field: String): Try[BigDecimal] =
+      Try(BigDecimal(field))
   }
 
   private def logMissingMandatoryField(logger: Logger, name: String): Unit =
@@ -107,4 +110,10 @@ object Field {
 
   private def anIntNamed(name: String): Variables => (String, Option[Try[Int]]) =
     Raw.named(name).andThen(Typed.tryConversion(toInt))
+
+  def mandatoryBigDecimalNamed(name: String)(implicit logger: Logger): Variables => Try[BigDecimal] =
+    Typed.mandatory[BigDecimal].compose(aBigDecimalNamed(name))
+
+  private def aBigDecimalNamed(name: String): Variables => (String, Option[Try[BigDecimal]]) =
+    Raw.named(name).andThen(Typed.tryConversion(toBigDecimal))
 }

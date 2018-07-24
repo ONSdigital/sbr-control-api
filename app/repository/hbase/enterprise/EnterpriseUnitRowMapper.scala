@@ -2,7 +2,7 @@ package repository.hbase.enterprise
 
 import com.typesafe.scalalogging.LazyLogging
 import org.slf4j.Logger
-import repository.Field.{ mandatoryStringNamed, optionalIntNamed, optionalStringNamed }
+import repository.Field.{ mandatoryBigDecimalNamed, mandatoryStringNamed, optionalIntNamed, optionalStringNamed }
 import repository.RestRepository.Row
 import repository.RowMapper
 import repository.hbase.enterprise.EnterpriseUnitColumns._
@@ -27,8 +27,9 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] with LazyLogging {
       sic07 <- mandatoryStringNamed(sic07).apply(fields)
       (employeesOpt, jobsOpt) <- tryToEmployeesJobs(fields).toOption
       turnoverOpt <- tryToTurnover(fields).toOption
+      prn <- mandatoryBigDecimalNamed(prn).apply(fields).toOption
     } yield Enterprise(Ern(ern), entrefOpt, name, tradingStyleOpt, address, sic07, legalStatus,
-      employeesOpt, jobsOpt, turnoverOpt)
+      employeesOpt, jobsOpt, turnoverOpt, prn)
   }
 
   private def toAddress(fields: Map[String, String]): Option[Address] =

@@ -26,6 +26,7 @@ trait SampleEnterpriseUnit {
   val SampleGroupTurnover = 99
   val SampleApportionedTurnover = 99
   val SampleEnterpriseTurnover = 99
+  val SamplePrn = BigDecimal("0.016587362")
 
   val SampleFullAddress: Address = Address(line1 = SampleAddressLine1, line2 = Some(SampleAddressLine2),
     line3 = Some(SampleAddressLine3), line4 = Some(SampleAddressLine4), line5 = Some(SampleAddressLine5),
@@ -42,12 +43,11 @@ trait SampleEnterpriseUnit {
     Enterprise(SampleEnterpriseId, entref = Some(SampleEnterpriseReference), name = SampleEnterpriseName,
       tradingStyle = Some(SampleTradingStyle), address = SampleFullAddress, sic07 = SampleSIC07,
       legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees), jobs = Some(SampleJobs),
-      turnover = Some(SampleCompleteTurnover))
+      turnover = Some(SampleCompleteTurnover), prn = SamplePrn)
 
   val SampleEnterpriseWithNoOptionalFields: Enterprise =
-    Enterprise(SampleEnterpriseId, entref = None, name = SampleEnterpriseName,
-      tradingStyle = None, address = SamplePartialAddress, sic07 = SampleSIC07,
-      legalStatus = SampleLegalStatus, employees = None, jobs = None, turnover = None)
+    SampleEnterpriseWithAllFields.copy(entref = None, tradingStyle = None, address = SamplePartialAddress,
+      employees = None, jobs = None, turnover = None)
 
   def aEnterpriseSample(ern: Ern, turnover: Option[Turnover] = Some(SampleCompleteTurnover), template: Enterprise = SampleEnterpriseWithAllFields,
     address: Address = SampleFullAddress): Enterprise =
@@ -56,5 +56,4 @@ trait SampleEnterpriseUnit {
   def aAddressSampleWithOptionalValues(line2: Option[String] = None, line3: Option[String] = None,
     line4: Option[String] = None, line5: Option[String] = None): Address =
     SamplePartialAddress.copy(line2 = line2, line3 = line3, line4 = line4, line5 = line5)
-
 }

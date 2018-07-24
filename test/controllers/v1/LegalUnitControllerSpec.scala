@@ -12,7 +12,7 @@ import repository.LegalUnitRepository
 import support.sample.SampleLegalUnit
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.legalunit.UBRN
+import uk.gov.ons.sbr.models.legalunit.Ubrn
 
 import scala.concurrent.Future
 
@@ -21,8 +21,8 @@ class LegalUnitControllerSpec extends FreeSpec with Matchers with MockFactory wi
   private trait Fixture extends SampleLegalUnit {
     val TargetErn = Ern("1234567890")
     val TargetPeriod = Period.fromYearMonth(2018, FEBRUARY)
-    val TargetUBRN = UBRN("0987654321234567")
-    val TargetLegalUnit = aLegalUnit(TargetErn, TargetUBRN)
+    val TargetUbrn = Ubrn("0987654321234567")
+    val TargetLegalUnit = aLegalUnit(TargetUbrn)
 
     val repository: LegalUnitRepository = mock[LegalUnitRepository]
     val controller = new LegalUnitController(repository)
@@ -31,10 +31,10 @@ class LegalUnitControllerSpec extends FreeSpec with Matchers with MockFactory wi
   "A request" - {
     "to retrieve a Legal Unit by Enterprise reference (ERN), period, and Legal Unit reference (UBRN)" - {
       "returns a JSON representation of the legal unit when it is found" in new Fixture {
-        (repository.retrieveLegalUnit _).expects(TargetErn, TargetPeriod, TargetUBRN).returning(
+        (repository.retrieveLegalUnit _).expects(TargetErn, TargetPeriod, TargetUbrn).returning(
           Future.successful(Right(Some(TargetLegalUnit)))
         )
-        val action = controller.retrieveLegalUnit(TargetErn.value, Period.asString(TargetPeriod), TargetUBRN.value)
+        val action = controller.retrieveLegalUnit(TargetErn.value, Period.asString(TargetPeriod), TargetUbrn.value)
         val response = action.apply(FakeRequest())
 
         status(response) shouldBe OK
@@ -43,39 +43,42 @@ class LegalUnitControllerSpec extends FreeSpec with Matchers with MockFactory wi
       }
 
       "returns NOT_FOUND when the legal unit cannot be found" in new Fixture {
-        (repository.retrieveLegalUnit _).expects(TargetErn, TargetPeriod, TargetUBRN).returning(
+        (repository.retrieveLegalUnit _).expects(TargetErn, TargetPeriod, TargetUbrn).returning(
           Future.successful(Right(None))
         )
 
-        val action = controller.retrieveLegalUnit(TargetErn.value, Period.asString(TargetPeriod), TargetUBRN.value)
+        val action = controller.retrieveLegalUnit(TargetErn.value, Period.asString(TargetPeriod), TargetUbrn.value)
         val response = action.apply(FakeRequest())
 
         status(response) shouldBe NOT_FOUND
       }
+
       "returns GATEWAY_TIMEOUT when the retrieval time exceeds the configured time out" in new Fixture {
-        (repository.retrieveLegalUnit _).expects(TargetErn, TargetPeriod, TargetUBRN).returning(
+        (repository.retrieveLegalUnit _).expects(TargetErn, TargetPeriod, TargetUbrn).returning(
           Future.successful(Left("Timeout."))
         )
 
-        val action = controller.retrieveLegalUnit(TargetErn.value, Period.asString(TargetPeriod), TargetUBRN.value)
+        val action = controller.retrieveLegalUnit(TargetErn.value, Period.asString(TargetPeriod), TargetUbrn.value)
         val response = action.apply(FakeRequest())
 
         status(response) shouldBe GATEWAY_TIMEOUT
       }
+
       "returns INTERNAL_SERVER_ERROR when the retrieval fails" in new Fixture {
-        (repository.retrieveLegalUnit _).expects(TargetErn, TargetPeriod, TargetUBRN).returning(
+        (repository.retrieveLegalUnit _).expects(TargetErn, TargetPeriod, TargetUbrn).returning(
           Future.successful(Left("Retrieval failed"))
         )
 
-        val action = controller.retrieveLegalUnit(TargetErn.value, Period.asString(TargetPeriod), TargetUBRN.value)
+        val action = controller.retrieveLegalUnit(TargetErn.value, Period.asString(TargetPeriod), TargetUbrn.value)
         val response = action.apply(FakeRequest())
 
         status(response) shouldBe INTERNAL_SERVER_ERROR
       }
     }
+
     "to retrieve all legal units for an Enterprise reference (ERN) and period" - {
       "returns a JSON representation that contains all found units when multiple legal units are found" in new Fixture {
-        val legalUnits = Seq(TargetLegalUnit, aLegalUnit(TargetErn, UBRN("123456789")))
+        val legalUnits = Seq(TargetLegalUnit, aLegalUnit(Ubrn("123456789")))
         (repository.findLegalUnitsForEnterprise _).expects(TargetErn, TargetPeriod).returning(
           Future.successful(Right(legalUnits))
         )
@@ -139,12 +142,12 @@ class LegalUnitControllerSpec extends FreeSpec with Matchers with MockFactory wi
     }
 
     /*
- * This just tests the action.
- * See LocalUnitRoutingSpec for tests that requests are routed correctly between the available actions.
- */
+     * This just tests the action.
+     * See LegalUnitRoutingSpec for tests that requests are routed correctly between the available actions.
+     */
     "containing an invalid argument" - {
       "receives a BAD REQUEST response" in new Fixture {
-        val action = controller.badRequest(TargetErn.value, Period.asString(TargetPeriod), Some(TargetUBRN.value))
+        val action = controller.badRequest(TargetErn.value, Period.asString(TargetPeriod), Some(TargetUbrn.value))
         val response = action.apply(FakeRequest())
 
         status(response) shouldBe BAD_REQUEST
