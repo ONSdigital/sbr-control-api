@@ -80,7 +80,7 @@ lazy val commonSettings = Seq (
 )
 
 lazy val api = (project in file("."))
-  .enablePlugins(BuildInfoPlugin, GitVersioning, GitBranchPrompt, PlayScala)
+  .enablePlugins(BuildInfoPlugin, GitVersioning, GitBranchPrompt, PlayScala, JavaAgent)
   .configs(ITest)
   .settings(inConfig(ITest)(Defaults.testSettings) : _*)
   .settings(commonSettings: _*)
@@ -107,6 +107,8 @@ lazy val api = (project in file("."))
         git.gitTagToVersionNumber.?.value.getOrElse(Some(Constant.projectStage))+"@"+ git.formattedDateVersion.?.value.getOrElse("")
     }),
     javaOptions in Test += "-DSBR_DB_PORT=8075",
+    javaOptions in Universal += "-Dorg.aspectj.tracing.factory=default",
+    javaAgents += "org.aspectj" % "aspectjweaver" % "1.8.13",
     // di router -> swagger
     routesGenerator := InjectedRoutesGenerator,
     buildInfoOptions += BuildInfoOption.ToMap,
@@ -123,6 +125,9 @@ lazy val api = (project in file("."))
       "io.lemonlabs"                 %%    "scala-uri"           %    "0.5.0",
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",
       "com.typesafe"                 %     "config"              %    "1.3.1",
+      // kamon (for tracing)
+      "io.kamon"                     %%    "kamon-play-2.5"      %    "1.0.1",
+      "io.kamon"                     %%    "kamon-zipkin"        %    "1.0.0",
       // Swagger
       "io.swagger"                   %%    "swagger-play2"       %    "1.5.3",
       "org.webjars"                  %     "swagger-ui"          %    "3.1.4",
