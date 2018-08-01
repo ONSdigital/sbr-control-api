@@ -1,5 +1,8 @@
 <configuration>
 
+  <!-- see https://github.com/kamon-io/kamon-logback#logging-traceid -->
+  <conversionRule conversionWord="traceID" converterClass="kamon.logback.LogbackTraceIDConverter"/>
+
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
     <file>${application.home:-.}/logs/application.log</file>
     <encoder>
@@ -13,7 +16,7 @@
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%date %highlight(%-5level) [%logger{16}] - %m%n%xException{10}</pattern>
+      <pattern>%date %highlight(%-5level) [%traceID] [%logger{16}] - %m%n%xException{10}</pattern>
     </encoder>
   </appender>
 

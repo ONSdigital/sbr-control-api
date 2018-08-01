@@ -128,6 +128,7 @@ lazy val api = (project in file("."))
       // kamon (for tracing)
       "io.kamon"                     %%    "kamon-play-2.5"      %    "1.0.1",
       "io.kamon"                     %%    "kamon-zipkin"        %    "1.0.0",
+      "io.kamon"                     %%    "kamon-logback"       %    "1.0.0",
       // Swagger
       "io.swagger"                   %%    "swagger-play2"       %    "1.5.3",
       "org.webjars"                  %     "swagger-ui"          %    "3.1.4",
