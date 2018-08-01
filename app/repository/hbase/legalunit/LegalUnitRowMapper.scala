@@ -7,20 +7,22 @@ import repository.RestRepository.Row
 import repository.RowMapper
 import repository.hbase.legalunit.LegalUnitColumns._
 import uk.gov.ons.sbr.models.Address
-import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
-import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, UBRN }
+import uk.gov.ons.sbr.models.legalunit.{ Crn, LegalUnit, Ubrn, Uprn }
 
 /*
  * The following fields are optional:
- * - jobs
- * - entref
- * - tradingstyle
+ * - tradingStyle
  * - address2
  * - address3
  * - address4
  * - address5
+ * - payeJobs
  * - turnover
+ * - tradingStatus
+ * - deathDate
+ * - deathCode
  * - crn
+ * - uprn
  *
  * Note that we use '=' for these fields within the body of the for expression rather than a generator '<-', so
  * that we capture the field as an Option.
@@ -34,23 +36,21 @@ object LegalUnitRowMapper extends RowMapper[LegalUnit] with LazyLogging {
     for {
       ubrn <- mandatoryStringNamed(ubrn).apply(fields)
       name <- mandatoryStringNamed(name).apply(fields)
-      sic07 <- mandatoryStringNamed(sic07).apply(fields)
-      legalStatus <- mandatoryStringNamed(legalStatus).apply(fields)
-      tradingStatus <- mandatoryStringNamed(tradingStatus).apply(fields)
-      enterpriseLink <- toEnterpriseLink(fields)
+      optTradingStyle = optionalStringNamed(tradingStyle).apply(fields)
       address <- toAddress(fields)
-      optTradingStyle = optionalStringNamed(tradingstyle).apply(fields)
-      optCrn = optionalStringNamed(crn).apply(fields)
-      jobsOpt <- optionalIntNamed(jobs).apply(fields).toOption
-      turnoverOpt <- optionalIntNamed(turnover).apply(fields).toOption
-    } yield LegalUnit(UBRN(ubrn), optCrn, name, legalStatus, tradingStatus, optTradingStyle, sic07, turnoverOpt, jobsOpt, enterpriseLink, address)
+      sic07 <- mandatoryStringNamed(sic07).apply(fields)
+      optPayeJobs <- optionalIntNamed(payeJobs).apply(fields).toOption
+      optTurnover <- optionalIntNamed(turnover).apply(fields).toOption
+      legalStatus <- mandatoryStringNamed(legalStatus).apply(fields)
+      optTradingStatus = optionalStringNamed(tradingStatus).apply(fields)
+      birthDate <- mandatoryStringNamed(birthDate).apply(fields)
+      optDeathDate = optionalStringNamed(deathDate).apply(fields)
+      optDeathCode = optionalStringNamed(deathCode).apply(fields)
+      optCrn = optionalStringNamed(crn).apply(fields).map(Crn(_))
+      optUprn = optionalStringNamed(uprn).apply(fields).map(Uprn(_))
+    } yield LegalUnit(Ubrn(ubrn), name, legalStatus, optTradingStatus, optTradingStyle, sic07, optTurnover,
+      optPayeJobs, address, birthDate, optDeathDate, optDeathCode, optCrn, optUprn)
   }
-
-  private def toEnterpriseLink(fields: Map[String, String]): Option[EnterpriseLink] =
-    for {
-      ern <- mandatoryStringNamed(ern).apply(fields)
-      optEntref = optionalStringNamed(entref).apply(fields)
-    } yield EnterpriseLink(Ern(ern), optEntref)
 
   private def toAddress(fields: Map[String, String]): Option[Address] =
     for {

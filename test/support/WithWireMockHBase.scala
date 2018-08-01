@@ -2,18 +2,15 @@ package support
 
 import play.api.http.Status.OK
 import play.mvc.Http.MimeTypes.JSON
-
 import org.scalatest.Suite
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.client.{ MappingBuilder, ResponseDefinitionBuilder, WireMock }
-
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.legalunit.UBRN
+import uk.gov.ons.sbr.models.legalunit.Ubrn
 import uk.gov.ons.sbr.models.localunit.Lurn
 import uk.gov.ons.sbr.models.reportingunit.Rurn
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
-
 import repository.hbase.HBase.rowKeyUrl
 import repository.hbase.enterprise.EnterpriseUnitRowKey
 import repository.hbase.localunit.LocalUnitQuery
@@ -22,6 +19,7 @@ import repository.hbase.reportingunit.ReportingUnitQuery
 import repository.hbase.unitlinks.UnitLinksProperties.UnitLinksColumnFamily
 import repository.hbase.unitlinks.UnitLinksRowKey
 import repository.hbase.HBase.DefaultColumnFamily
+import repository.hbase.PeriodTableName
 
 trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBaseResponseFixture { this: Suite =>
   override val wireMockPort = 8075
@@ -53,13 +51,15 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
     )
 
   def anAllLegalUnitsForEnterpriseRequest(withErn: Ern, withPeriod: Period): MappingBuilder =
-    aLegalUnitQuery(LegalUnitQuery.forAllWith(withErn, withPeriod))
+    aLegalUnitQuery(withPeriod, LegalUnitQuery.forAllWith(withErn))
 
-  def aLegalUnitRequest(withErn: Ern, withPeriod: Period, withUBRN: UBRN): MappingBuilder =
-    aLegalUnitQuery(query = LegalUnitQuery.byRowKey(withErn, withPeriod, withUBRN))
+  def aLegalUnitRequest(withErn: Ern, withPeriod: Period, withUbrn: Ubrn): MappingBuilder =
+    aLegalUnitQuery(withPeriod, LegalUnitQuery.byRowKey(withErn, withUbrn))
 
-  private def aLegalUnitQuery(query: String): MappingBuilder =
-    createUrlAndThenGetHBaseJson(tableName = "legal_unit", query)
+  private def aLegalUnitQuery(withPeriod: Period, withQuery: String): MappingBuilder = {
+    val tableName = PeriodTableName("legal_unit", withPeriod)
+    createUrlAndThenGetHBaseJson(tableName, withQuery)
+  }
 
   def aEnterpriseUnitRequest(withErn: Ern, withPeriod: Period): MappingBuilder = {
     val rowKey = EnterpriseUnitRowKey(withErn, withPeriod)

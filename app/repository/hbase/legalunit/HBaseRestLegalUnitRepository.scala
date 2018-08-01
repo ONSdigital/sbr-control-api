@@ -3,18 +3,16 @@ package repository.hbase.legalunit
 import javax.inject.Inject
 
 import scala.concurrent.Future
-
 import com.typesafe.scalalogging.LazyLogging
-
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, UBRN }
+import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, Ubrn }
 import utils.EitherSupport
-
 import repository.RestRepository.{ ErrorMessage, Row }
 import repository.hbase.HBase.DefaultColumnFamily
 import repository.{ LegalUnitRepository, RestRepository, RowMapper }
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import repository.hbase.PeriodTableName
 
 case class HBaseRestLegalUnitRepositoryConfig(tableName: String)
 
@@ -24,15 +22,18 @@ class HBaseRestLegalUnitRepository @Inject() (
     rowMapper: RowMapper[LegalUnit]
 ) extends LegalUnitRepository with LazyLogging {
 
-  override def retrieveLegalUnit(ern: Ern, period: Period, ubrn: UBRN): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
+  override def retrieveLegalUnit(ern: Ern, period: Period, ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
     logger.info(s"Retrieving Legal Unit with [$ern] [$ubrn] for [$period].")
-    restRepository.findRow(config.tableName, LegalUnitQuery.byRowKey(ern, period, ubrn), DefaultColumnFamily).map(fromErrorOrRow)
+    restRepository.findRow(tableName(period), LegalUnitQuery.byRowKey(ern, ubrn), DefaultColumnFamily).map(fromErrorOrRow)
   }
 
   override def findLegalUnitsForEnterprise(ern: Ern, period: Period): Future[Either[ErrorMessage, Seq[LegalUnit]]] = {
     logger.info(s"Finding Legal Units with [$ern] for [$period].")
-    restRepository.findRows(config.tableName, LegalUnitQuery.forAllWith(ern, period), DefaultColumnFamily).map(fromErrorOrRows)
+    restRepository.findRows(tableName(period), LegalUnitQuery.forAllWith(ern), DefaultColumnFamily).map(fromErrorOrRows)
   }
+
+  private def tableName(period: Period): String =
+    PeriodTableName(config.tableName, period)
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[LegalUnit]] = {
     val errorOrRows = errorOrRow.right.map(_.toSeq)

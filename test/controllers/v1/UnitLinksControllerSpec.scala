@@ -85,5 +85,4 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with MockFactory wi
       }
     }
   }
-
 }

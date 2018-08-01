@@ -39,7 +39,8 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
           aColumnWith(name = containedTurnover, value = SampleContainedTurnover.toString),
           aColumnWith(name = standardTurnover, value = SampleStandardTurnover.toString),
           aColumnWith(name = groupTurnover, value = SampleGroupTurnover.toString),
-          aColumnWith(name = enterpriseTurnover, value = SampleEnterpriseTurnover.toString))
+          aColumnWith(name = enterpriseTurnover, value = SampleEnterpriseTurnover.toString),
+          aColumnWith(name = prn, value = SamplePrn.toString()))
       ).mkString("[", ",", "]")
     }}"""
 
@@ -67,7 +68,7 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
           legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees), jobs = Some(SampleJobs),
           turnover = Some(Turnover(containedTurnover = Some(SampleContainedTurnover),
           standardTurnover = Some(SampleStandardTurnover), groupTurnover = Some(SampleGroupTurnover),
-          apportionedTurnover = None, enterpriseTurnover = Some(SampleEnterpriseTurnover))))
+          apportionedTurnover = None, enterpriseTurnover = Some(SampleEnterpriseTurnover))), prn = SamplePrn)
     }
   }
 
@@ -95,8 +96,6 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
 
       Then(s"a BAD REQUEST response is returned")
       response.status shouldBe BAD_REQUEST
-
     }
   }
-
 }

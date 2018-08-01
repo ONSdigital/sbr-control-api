@@ -1,12 +1,11 @@
 package repository.hbase.legalunit
 
 object LegalUnitColumns {
-  val ubrn = "UBRN"
-  val ern = "ern"
-  val entref = "entref"
+  val ubrn = "ubrn"
   val crn = "crn"
+  val uprn = "uprn"
   val name = "name"
-  val tradingstyle = "tradingstyle"
+  val tradingStyle = "trading_style"
   val address1 = "address1"
   val address2 = "address2"
   val address3 = "address3"
@@ -14,9 +13,11 @@ object LegalUnitColumns {
   val address5 = "address5"
   val postcode = "postcode"
   val sic07 = "sic07"
-  val jobs = "jobs"
+  val payeJobs = "paye_jobs"
   val turnover = "turnover"
-  val legalStatus = "legalStatus"
-  val tradingStatus = "tradingStatus"
-
+  val legalStatus = "legal_status"
+  val tradingStatus = "trading_status"
+  val birthDate = "birth_date"
+  val deathDate = "death_date"
+  val deathCode = "death_code"
 }
