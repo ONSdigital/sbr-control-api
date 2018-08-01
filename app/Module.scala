@@ -1,24 +1,22 @@
 import java.time.Clock
 
-import play.api.{ Configuration, Environment }
 import com.google.inject.{ AbstractModule, TypeLiteral }
-import uk.gov.ons.sbr.models.enterprise.Enterprise
-import uk.gov.ons.sbr.models.localunit.LocalUnit
-import uk.gov.ons.sbr.models.legalunit.LegalUnit
-import uk.gov.ons.sbr.models.reportingunit.ReportingUnit
-import uk.gov.ons.sbr.models.unitlinks.UnitLinks
-
-import config._
-import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader }
+import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, _ }
+import kamon.Kamon
+import play.api.{ Configuration, Environment }
 import repository._
 import repository.hbase._
 import repository.hbase.enterprise.{ EnterpriseUnitRowMapper, HBaseRestEnterpriseUnitRepository, HBaseRestEnterpriseUnitRepositoryConfig }
+import repository.hbase.legalunit.{ HBaseRestLegalUnitRepository, HBaseRestLegalUnitRepositoryConfig, LegalUnitRowMapper }
 import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
 import repository.hbase.reportingunit.{ HBaseRestReportingUnitRepository, HBaseRestReportingUnitRepositoryConfig, ReportingUnitRowMapper }
 import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksRowMapper }
-import repository.hbase.legalunit.{ HBaseRestLegalUnitRepository, HBaseRestLegalUnitRepositoryConfig, LegalUnitRowMapper }
-
 import services.{ DataAccess, HBaseRestDataAccess }
+import uk.gov.ons.sbr.models.enterprise.Enterprise
+import uk.gov.ons.sbr.models.legalunit.LegalUnit
+import uk.gov.ons.sbr.models.localunit.LocalUnit
+import uk.gov.ons.sbr.models.reportingunit.ReportingUnit
+import uk.gov.ons.sbr.models.unitlinks.UnitLinks
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -61,5 +59,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     bind(new TypeLiteral[RowMapper[Enterprise]]() {}).toInstance(EnterpriseUnitRowMapper)
     bind(new TypeLiteral[RowMapper[UnitLinks]]() {}).toInstance(UnitLinksRowMapper)
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
+
+    Kamon.loadReportersFromConfig()
   }
 }
