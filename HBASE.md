@@ -27,32 +27,50 @@ create_namespace 'sbr_control_db'
 ```
 
 Create the tables within the namespace with a column family.
+Note that there are distinct tables per period.
 
 ```shell
-create 'sbr_control_db:enterprise', 'd'
+create 'sbr_control_db:enterprise_201801', 'd'
+create 'sbr_control_db:legal_unit_201801', 'd'
+
 create 'sbr_control_db:unit_links', 'l'
 create 'sbr_control_db:local_unit', 'd'
-create 'sbr_control_db:legal_unit_201801', 'd'
+
+create 'sbr_control_db:enterprise_201802', 'd'
+create 'sbr_control_db:legal_unit_201802', 'd'
 ```
 
 Insert some Enterprise data.
 
 ```shell
-put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:ern', '1000000123'
-put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:entref', 'idbr-1000000123'
-put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:name', 'Tesco'
-put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:postcode', 'AB10 5BD'
-put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:legalstatus', 'A'
-put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:paye_employees', '1'
-put 'sbr_control_db:enterprise' , '3210000001~201802', 'd:paye_jobs', '5'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:ern', '1000000123'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:entref', '201801-entref-1000000123'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:name', '201801-name-1000000123'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:address1', '201801-addresss1-1000000123'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:address2', '201801-address2-1000000123'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:address3', '201801-address3-1000000123'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:address4', '201801-address4-1000000123'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:address5', '201801-address5-1000000123'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:postcode', '201801-postcode-1000000123'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:sic07', '201801-sic07-1000000123'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:trading_style', '201801-tradingstyle-1000000123'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:legal_status', '201801-legalstatus-1000000123'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:paye_jobs', '5'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:paye_empees', '1'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:cntd_turnover', '99'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:std_turnover', '100'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:grp_turnover', '101'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:app_turnover', '102'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:ent_turnover', '103'
+put 'sbr_control_db:enterprise_201801', '3210000001', 'd:prn', '0.038709584'
 
-put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:ern', '1000000123'
-put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:entref', 'idbr-1000000123'
-put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:name', 'Tesco'
-put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:postcode', 'AB10 5BD'
-put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:legalstatus', 'A'
-put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:paye_employees', '1'
-put 'sbr_control_db:enterprise' , '3210000001~201801', 'd:paye_jobs', '5'
+put 'sbr_control_db:enterprise_201802', '3210000001', 'd:ern', '1000000123'
+put 'sbr_control_db:enterprise_201802', '3210000001', 'd:name', '201802-name-1000000123'
+put 'sbr_control_db:enterprise_201802', '3210000001', 'd:address1', '201802-address1-1000000123'
+put 'sbr_control_db:enterprise_201802', '3210000001', 'd:postcode', '201802-postcode-1000000123'
+put 'sbr_control_db:enterprise_201802', '3210000001', 'd:sic07', '201802-sic07-1000000123'
+put 'sbr_control_db:enterprise_201802', '3210000001', 'd:legal_status', '201802-legalstatus-1000000123'
+put 'sbr_control_db:enterprise_201802', '3210000001', 'd:prn', '0.049810695'
 ```
 
 Insert some Local Unit data.
@@ -72,7 +90,6 @@ put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:address5', 'a
 put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:postcode', 'postcode-123'
 put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:sic07', 'sic07-123'
 put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:employees', '123'
-
 
 put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:lurn', '900000123'
 put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:luref', 'luref-900000123'
@@ -132,32 +149,32 @@ Insert some Legal Unit data.
 
 ```shell
 put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:ubrn', '1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:name', 'Company-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:trading_style', 'tradingStyle-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address1', 'address1-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address2', 'address2-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address3', 'address3-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address4', 'address4-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address5', 'address5-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:postcode', 'postcode-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:sic07', 'sic07-2'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:name', '201801-name-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:trading_style', '201801-tradingstyle-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address1', '201801-address1-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address2', '201801-address2-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address3', '201801-address3-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address4', '201801-address4-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address5', '201801-address5-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:postcode', '201801-postcode-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:sic07', '201801-sic07-1000012345000002'
 put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:paye_jobs', '2'
 put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:turnover', '20'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:legal_status', 'legalStatus-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:trading_status', 'tradingStatus-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:birth_date', 'birthDate-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:death_date', 'deathDate-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:death_code', 'deathCode-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:crn', 'crn-2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:uprn', 'uprn-2'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:legal_status', '201801-legalstatus-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:trading_status', '201801-tradingstatus-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:birth_date', '201801-birthdate-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:death_date', '201801-deathdate-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:death_code', '201801-deathcode-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:crn', '201801-crn-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:uprn', '201801-uprn-1000012345000002'
 
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000001', 'd:ubrn', '1000012345000001'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000001', 'd:name', 'Company-1'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000001', 'd:address1', 'address1-1'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000001', 'd:postcode', 'postcode-1'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000001', 'd:sic07', 'sic07-1'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000001', 'd:legal_status', 'legalStatus-1'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000001', 'd:birth_date', 'birthDate-1'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:ubrn', '1000012345000001'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:name', '201802-name-1000012345000001'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:address1', '201802-address1-1000012345000001'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:postcode', '201802-postcode-1000012345000001'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:sic07', '201802-sic07-1000012345000001'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:legal_status', '201802-legalstatus-1000012345000001'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:birth_date', '201802-birthdate-1000012345000001'
 ```
 
 Use the following URL's to test HBase REST:
@@ -175,7 +192,9 @@ sbt run
 
 Test the API routes:
 
+[http://localhost:9000/v1/periods/201801/enterprises/1000000123](http://localhost:9000/v1/periods/201801/enterprises/1000000123)
+[http://localhost:9000/v1/periods/201802/enterprises/1000000123](http://localhost:9000/v1/periods/201802/enterprises/1000000123)
+[http://localhost:9000/v1/enterprises/1000000123/periods/201801/legalunits/1000012345000002](http://localhost:9000/v1/enterprises/1000000123/periods/201801/legalunits/1000012345000002)
+[http://localhost:9000/v1/enterprises/1000000123/periods/201802/legalunits/1000012345000001](http://localhost:9000/v1/enterprises/1000000123/periods/201802/legalunits/1000012345000001)
 [http://localhost:9000/v1/units/1000000123](http://localhost:9000/v1/units/1000000123)<br/>
 [http://localhost:9000/v1/periods/201802/types/ENT/units/1000000123](http://localhost:9000/v1/periods/201802/types/ENT/units/1000000123)<br/>
-[http://localhost:9000/v1/enterprises/1000000123](http://localhost:9000/v1/enterprises/1000000123)<br/>
-[http://localhost:9000/v1/periods/201802/enterprises/1000000123](http://localhost:9000/v1/periods/201802/enterprises/1000000123)
