@@ -166,6 +166,21 @@ sbt runProd
 
 )
 
+#### Application Tracing
+[kamon](http://kamon.io) is used to automatically instrument the application and report trace spans to
+[zipkin](https://zipkin.io/).
+
+The AspectJ Weaver is required to make this happen, see [adding-the-aspectj-weaver](http://kamon.io/documentation/1.x/recipes/adding-the-aspectj-weaver/)
+for further details.  Note that this is not currently activated when running tests.
+
+To manually test, run a Zipkin 2 server.  The simplest way to do this is via docker:
+
+    docker run --rm -d -p 9411:9411 openzipkin/zipkin:2.10.4
+
+Then run the application via `sbt run`, and exercise an endpoint.
+The trace information should be available in the Zipkin UI at
+[http://localhost:9411/zipkin/](http://localhost:9411/zipkin/).
+
 ### Troubleshooting
 See [FAQ](FAQ.md) for possible and common solutions.
 

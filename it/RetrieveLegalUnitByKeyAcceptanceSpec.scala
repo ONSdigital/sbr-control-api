@@ -22,7 +22,7 @@ class RetrieveLegalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
   private val LegalUnitSingleMatchHBaseResponseBody =
     s"""{"Row": ${
       List(
-        aRowWith(key = s"${LegalUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetUbrn)}", columns =
+        aRowWith(key = s"${LegalUnitQuery.byRowKey(TargetErn, TargetUbrn)}", columns =
           aColumnWith(name = ubrn, value = TargetUbrn.value),
           aColumnWith(name = crn, value = "01245960"),
           aColumnWith(name = uprn, value = "10023450178"),

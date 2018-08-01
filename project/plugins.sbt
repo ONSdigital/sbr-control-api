@@ -36,3 +36,8 @@ addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.6.0")
 addSbtPlugin("com.sksamuel.scapegoat" %% "sbt-scapegoat" % "1.0.4")
 
 addSbtPlugin("org.scalastyle" % "scalastyle-sbt-plugin" % "0.8.0")
+
+// kamon (for tracing)
+resolvers += Resolver.bintrayIvyRepo("kamon-io", "sbt-plugins")
+addSbtPlugin("io.kamon" % "sbt-aspectj-play-runner" % "1.0.4")
+addSbtPlugin("com.lightbend.sbt" % "sbt-javaagent" % "0.1.4")
