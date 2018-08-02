@@ -27,28 +27,24 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
   private val Namespace = "sbr_control_db"
 
   def anAllLocalUnitsForEnterpriseRequest(withErn: Ern, withPeriod: Period): MappingBuilder =
-    aLocalUnitQuery(LocalUnitQuery.forAllWith(withErn, withPeriod))
+    aLocalUnitQuery(withPeriod, LocalUnitQuery.forAllWith(withErn))
+
+  def aLocalUnitRequest(withErn: Ern, withPeriod: Period, withLurn: Lurn): MappingBuilder =
+    aLocalUnitQuery(withPeriod, LocalUnitQuery.byRowKey(withErn, withLurn))
+
+  private def aLocalUnitQuery(withPeriod: Period, withQuery: String): MappingBuilder = {
+    val tableName = PeriodTableName("local_unit", withPeriod)
+    createUrlAndThenGetHBaseJson(tableName, withQuery)
+  }
 
   def anAllReportingUnitsForEnterpriseRequest(withErn: Ern, withPeriod: Period): MappingBuilder =
     aReportingUnitQuery(ReportingUnitQuery.forAllWith(withErn, withPeriod))
-
-  def aLocalUnitRequest(withErn: Ern, withPeriod: Period, withLurn: Lurn): MappingBuilder =
-    aLocalUnitQuery(query = LocalUnitQuery.byRowKey(withErn, withPeriod, withLurn))
 
   def aReportingUnitRequest(withErn: Ern, withPeriod: Period, withRurn: Rurn): MappingBuilder =
     aReportingUnitQuery(query = ReportingUnitQuery.byRowKey(withErn, withPeriod, withRurn))
 
   private def aReportingUnitQuery(query: String): MappingBuilder =
     createUrlAndThenGetHBaseJson(tableName = "reporting_unit", query)
-
-  private def aLocalUnitQuery(query: String): MappingBuilder =
-    createUrlAndThenGetHBaseJson(tableName = "local_unit", query)
-
-  private def createUrlAndThenGetHBaseJson(tableName: String, rowKey: String, columnFamily: String = DefaultColumnFamily): MappingBuilder =
-    getHBaseJson(
-      "/" + rowKeyUrl(namespace = Namespace, table = tableName, rowKey, columnFamily = columnFamily),
-      Authorization("", "")
-    )
 
   def anAllLegalUnitsForEnterpriseRequest(withErn: Ern, withPeriod: Period): MappingBuilder =
     aLegalUnitQuery(withPeriod, LegalUnitQuery.forAllWith(withErn))
@@ -71,6 +67,12 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
 
   def aUnitLinksQuery(query: String): MappingBuilder =
     createUrlAndThenGetHBaseJson(tableName = "unit_links", rowKey = query, columnFamily = UnitLinksColumnFamily)
+
+  private def createUrlAndThenGetHBaseJson(tableName: String, rowKey: String, columnFamily: String = DefaultColumnFamily): MappingBuilder =
+    getHBaseJson(
+      "/" + rowKeyUrl(namespace = Namespace, table = tableName, rowKey, columnFamily = columnFamily),
+      Authorization("", "")
+    )
 
   def getHBaseJson(url: String, auth: Authorization): MappingBuilder =
     get(urlEqualTo(url)).

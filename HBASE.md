@@ -32,12 +32,13 @@ Note that there are distinct tables per period.
 ```shell
 create 'sbr_control_db:enterprise_201801', 'd'
 create 'sbr_control_db:legal_unit_201801', 'd'
+create 'sbr_control_db:local_unit_201801', 'd'
 
 create 'sbr_control_db:unit_links', 'l'
-create 'sbr_control_db:local_unit', 'd'
 
 create 'sbr_control_db:enterprise_201802', 'd'
 create 'sbr_control_db:legal_unit_201802', 'd'
+create 'sbr_control_db:local_unit_201802', 'd'
 ```
 
 Insert some Enterprise data.
@@ -76,35 +77,31 @@ put 'sbr_control_db:enterprise_201802', '3210000001', 'd:prn', '0.049810695'
 Insert some Local Unit data.
 
 ```shell
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:lurn', '900000123'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:luref', 'luref-900000123'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:ern', '1000000123'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:entref', 'entref-123'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:name', 'Company 123'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:trading_style', 'A'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:address1', 'address1-123'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:address2', 'address2-123'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:address3', 'address3-123'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:address4', 'address4-123'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:address5', 'address5-123'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:postcode', 'postcode-123'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:sic07', 'sic07-123'
-put 'sbr_control_db:local_unit', '3210000001~201802~900000123', 'd:employees', '123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:lurn', '900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:luref', '201801-luref-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:ern', '201801-ern-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:entref', '201801-entref-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:rurn', '201801-rurn-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:ruref', '201801-ruref-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:name', '201801-name-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:trading_style', '201801-tradingstyle-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:address1', '201801-address1-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:address2', '201801-address2-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:address3', '201801-address3-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:address4', '201801-address4-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:address5', '201801-address5-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:postcode', '201801-postcode-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:sic07', '201801-sic07-900000123'
+put 'sbr_control_db:local_unit_201801', '3210000001~900000123', 'd:employees', '123'
 
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:lurn', '900000123'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:luref', 'luref-900000123'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:ern', '1000000123'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:entref', 'entref-123'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:name', 'Company 123'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:trading_style', 'A'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:address1', 'address1-123'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:address2', 'address2-123'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:address3', 'address3-123'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:address4', 'address4-123'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:address5', 'address5-123'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:postcode', 'postcode-123'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:sic07', 'sic07-123'
-put 'sbr_control_db:local_unit', '3210000001~201801~900000123', 'd:employees', '123'
+put 'sbr_control_db:local_unit_201802', '3210000001~900000123', 'd:lurn', '900000123'
+put 'sbr_control_db:local_unit_201802', '3210000001~900000123', 'd:ern', '201802-ern-900000123'
+put 'sbr_control_db:local_unit_201802', '3210000001~900000123', 'd:rurn', '201802-rurn-900000123'
+put 'sbr_control_db:local_unit_201802', '3210000001~900000123', 'd:name', '201802-name-900000123'
+put 'sbr_control_db:local_unit_201802', '3210000001~900000123', 'd:address1', '201802-address1-900000123'
+put 'sbr_control_db:local_unit_201802', '3210000001~900000123', 'd:postcode', '201802-postcode-900000123'
+put 'sbr_control_db:local_unit_201802', '3210000001~900000123', 'd:sic07', '201802-sic07-900000123'
+put 'sbr_control_db:local_unit_201802', '3210000001~900000123', 'd:employees', '124'
 ```
 
 Insert some unit link data.
@@ -193,8 +190,17 @@ sbt run
 Test the API routes:
 
 [http://localhost:9000/v1/periods/201801/enterprises/1000000123](http://localhost:9000/v1/periods/201801/enterprises/1000000123)
+
 [http://localhost:9000/v1/periods/201802/enterprises/1000000123](http://localhost:9000/v1/periods/201802/enterprises/1000000123)
+
 [http://localhost:9000/v1/enterprises/1000000123/periods/201801/legalunits/1000012345000002](http://localhost:9000/v1/enterprises/1000000123/periods/201801/legalunits/1000012345000002)
+
 [http://localhost:9000/v1/enterprises/1000000123/periods/201802/legalunits/1000012345000001](http://localhost:9000/v1/enterprises/1000000123/periods/201802/legalunits/1000012345000001)
-[http://localhost:9000/v1/units/1000000123](http://localhost:9000/v1/units/1000000123)<br/>
-[http://localhost:9000/v1/periods/201802/types/ENT/units/1000000123](http://localhost:9000/v1/periods/201802/types/ENT/units/1000000123)<br/>
+
+[http://localhost:9000/v1/enterprises/1000000123/periods/201801/localunits/900000123](http://localhost:9000/v1/enterprises/1000000123/periods/201801/localunits/900000123)
+
+[http://localhost:9000/v1/enterprises/1000000123/periods/201802/localunits/900000123](http://localhost:9000/v1/enterprises/1000000123/periods/201802/localunits/900000123)
+
+[http://localhost:9000/v1/units/1000000123](http://localhost:9000/v1/units/1000000123)
+
+[http://localhost:9000/v1/periods/201802/types/ENT/units/1000000123](http://localhost:9000/v1/periods/201802/types/ENT/units/1000000123)

@@ -24,7 +24,7 @@ class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
   private val LocalUnitSingleMatchHBaseResponseBody =
     s"""{"Row": ${
       List(
-        aRowWith(key = s"${LocalUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetLurn)}", columns =
+        aRowWith(key = s"${LocalUnitQuery.byRowKey(TargetErn, TargetLurn)}", columns =
           aColumnWith(name = lurn, value = TargetLurn.value),
           aColumnWith(name = luref, value = "some-luref"),
           aColumnWith(name = ern, value = TargetErn.value),
