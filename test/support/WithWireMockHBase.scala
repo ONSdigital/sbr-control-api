@@ -16,8 +16,7 @@ import repository.hbase.enterprise.EnterpriseUnitRowKey
 import repository.hbase.localunit.LocalUnitQuery
 import repository.hbase.legalunit.LegalUnitQuery
 import repository.hbase.reportingunit.ReportingUnitQuery
-import repository.hbase.unitlinks.UnitLinksProperties.UnitLinksColumnFamily
-import repository.hbase.unitlinks.UnitLinksRowKey
+import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, UnitLinksRowKey }
 import repository.hbase.HBase.DefaultColumnFamily
 import repository.hbase.PeriodTableName
 
@@ -64,11 +63,11 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
     createUrlAndThenGetHBaseJson(tableName, EnterpriseUnitRowKey(withErn))
   }
 
-  def aUnitLinksExactRowKeyRequest(withStatUnit: UnitId, withUnitType: UnitType, withPeriod: Period): MappingBuilder =
-    aUnitLinksQuery(query = UnitLinksRowKey(withStatUnit, withUnitType, withPeriod))
-
-  def aUnitLinksQuery(query: String): MappingBuilder =
-    createUrlAndThenGetHBaseJson(tableName = "unit_links", rowKey = query, columnFamily = UnitLinksColumnFamily)
+  def aUnitLinksExactRowKeyRequest(withStatUnit: UnitId, withUnitType: UnitType, withPeriod: Period): MappingBuilder = {
+    val tableName = PeriodTableName("unit_links", withPeriod)
+    val rowKey = UnitLinksRowKey(withStatUnit, withUnitType)
+    createUrlAndThenGetHBaseJson(tableName, rowKey, columnFamily = HBaseRestUnitLinksRepository.ColumnFamily)
+  }
 
   private def createUrlAndThenGetHBaseJson(tableName: String, rowKey: String, columnFamily: String = DefaultColumnFamily): MappingBuilder =
     getHBaseJson(

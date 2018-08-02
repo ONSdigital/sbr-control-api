@@ -23,8 +23,16 @@ trait SampleUnitLinks {
   val SamplePeriod: Period = Period.fromYearMonth(2018, AUGUST)
   val SampleUnitType: UnitType = UnitType.fromAcronym(LegalUnit)
   val SampleChildren: Map[UnitId, UnitType] =
-    Map(UnitId(SamplePayAsYouEarnChildId) -> UnitType.fromAcronym(PayAsYouEarnTax), UnitId(SampleCompaniesHouseChildId) -> UnitType.fromAcronym(CompaniesHouse))
-  val SampleParents: Map[UnitType, UnitId] = Map(UnitType.fromAcronym(Enterprise) -> UnitId(SampleEnterpriseParentId))
+    Map(
+      UnitId(SamplePayAsYouEarnChildId) -> UnitType.fromAcronym(PayAsYouEarnTax),
+      UnitId(SampleCompaniesHouseChildId) -> UnitType.fromAcronym(CompaniesHouse)
+    )
+  val SampleParents: Map[UnitType, UnitId] =
+    Map(UnitType.fromAcronym(Enterprise) -> UnitId(SampleEnterpriseParentId))
+
+  val SampleUnitLinksNoPeriodWithAllFields = UnitLinksNoPeriod(
+    id = SampleUnitId, unitType = SampleUnitType, parents = Some(SampleParents), children = Some(SampleChildren)
+  )
 
   val SampleUnitLinksWithOnlyMandatoryFields: UnitLinks =
     UnitLinks(id = SampleUnitId, period = SamplePeriod, parents = None, children = None, unitType = SampleUnitType)
@@ -39,5 +47,4 @@ trait SampleUnitLinks {
     template.copy(id = unitId, parents = parents, children = children)
 
   def unitIdAsString(unitId: UnitId): String = unitId.value
-
 }

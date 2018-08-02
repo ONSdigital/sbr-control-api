@@ -31,7 +31,7 @@ class UnitLinksAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
   private val UnitLinksSingleMatchHBaseResponseBody =
     s"""{ "Row": ${
       List(
-        aRowWith(key = s"${UnitLinksRowKey(TargetLeuUnitId, TargetLegalUnitType, TargetPeriod)}", columns =
+        aRowWith(key = s"${UnitLinksRowKey(TargetLeuUnitId, TargetLegalUnitType)}", columns =
           aColumnWith(name = aParentUnitTypeWithPrefix(EntParentUnitType), value = ErnParent.value),
           aColumnWith(name = aChildIdWithPrefix(VatId), value = VATChildUnitTypeAsString),
           aColumnWith(name = aChildIdWithPrefix(CHId), value = CHChildUnitTypeAsString))
@@ -40,7 +40,7 @@ class UnitLinksAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
 
   info("As a SBR user")
   info("I want to retrieve the Unit Link that matches the given unit id, unit type and specific period")
-  info("Where I can than view Unit Links details on the user interface")
+  info("So that I can than view Unit Link details via the user interface")
 
   feature("retrieve units links for an existing statistical unit") {
     scenario("by the exact statistical unit identifier, statistical unit type and period") { wsClient =>
@@ -49,10 +49,10 @@ class UnitLinksAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
         anOkResponse().withBody(UnitLinksSingleMatchHBaseResponseBody)
       ))
 
-      When(s"a Unit Links is request with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod")
+      When(s"the Unit Links with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod are requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/types/${UnitType.toAcronym(TargetLegalUnitType)}/units/${TargetLeuUnitId.value}").get())
 
-      Then(s"the details of the Unit Links identified with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod is returned")
+      Then(s"the details of the Unit Links identified by $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod are returned")
       response.status shouldBe OK
       response.header(CONTENT_TYPE) shouldBe Some(JSON)
       response.json.as[UnitLinks] shouldBe
@@ -63,19 +63,18 @@ class UnitLinksAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
     }
   }
 
-  feature("respond to a non-existent Enterprise Unit request") {
-    scenario("by an exact Enterprise reference (ERN) and period") { wsClient =>
-      Given(s"an does not exist with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod")
+  feature("respond to a request to retrieve unit links that do not exist") {
+    scenario("by the exact statistical unit identifier, statistical unit type and period") { wsClient =>
+      Given(s"unit links do not exist with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod")
       stubHBaseFor(aUnitLinksExactRowKeyRequest(withStatUnit = TargetLeuUnitId, withUnitType = TargetLegalUnitType, withPeriod = TargetPeriod).willReturn(
         anOkResponse().withBody(NoMatchFoundResponse)
       ))
 
-      When(s"an unit links with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod is requested")
+      When(s"the Unit links with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod are requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/types/${UnitType.toAcronym(TargetLegalUnitType)}/units/${TargetLeuUnitId.value}").get())
 
-      Then("a NOT_FOUND response status to given back with no details are returned")
+      Then("a NOT_FOUND response is returned")
       response.status shouldBe NOT_FOUND
     }
   }
-
 }
