@@ -1,20 +1,16 @@
 package repository.hbase.reportingunit
 
 import repository.hbase.HBase.{ RowKeyDelimiter, Wildcard }
-import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.reportingunit.Rurn
 
 object ReportingUnitQuery {
-  def byRowKey(ern: Ern, period: Period, rurn: Rurn): String =
-    queryBy(ern, period, rurnSelector = rurn.value)
+  def byRowKey(ern: Ern, rurn: Rurn): String =
+    queryBy(ern, rurnSelector = rurn.value)
 
-  def forAllWith(ern: Ern, period: Period): String =
-    queryBy(ern, period, rurnSelector = Wildcard)
+  def forAllWith(ern: Ern): String =
+    queryBy(ern, rurnSelector = Wildcard)
 
-  private def queryBy(ern: Ern, period: Period, rurnSelector: String): String = {
-    val ernStr = Ern.reverse(ern)
-    val periodStr = Period.asString(period)
-    Seq(ernStr, periodStr, rurnSelector).mkString(RowKeyDelimiter)
-  }
+  private def queryBy(ern: Ern, rurnSelector: String): String =
+    Seq(Ern.reverse(ern), rurnSelector).mkString(RowKeyDelimiter)
 }

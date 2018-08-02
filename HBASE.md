@@ -33,12 +33,14 @@ Note that there are distinct tables per period.
 create 'sbr_control_db:enterprise_201801', 'd'
 create 'sbr_control_db:legal_unit_201801', 'd'
 create 'sbr_control_db:local_unit_201801', 'd'
+create 'sbr_control_db:reporting_unit_201801', 'd'
 
 create 'sbr_control_db:unit_links', 'l'
 
 create 'sbr_control_db:enterprise_201802', 'd'
 create 'sbr_control_db:legal_unit_201802', 'd'
 create 'sbr_control_db:local_unit_201802', 'd'
+create 'sbr_control_db:reporting_unit_201802', 'd'
 ```
 
 Insert some Enterprise data.
@@ -74,6 +76,38 @@ put 'sbr_control_db:enterprise_201802', '3210000001', 'd:legal_status', '201802-
 put 'sbr_control_db:enterprise_201802', '3210000001', 'd:prn', '0.049810695'
 ```
 
+Insert some Legal Unit data.
+
+```shell
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:ubrn', '1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:name', '201801-name-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:trading_style', '201801-tradingstyle-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address1', '201801-address1-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address2', '201801-address2-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address3', '201801-address3-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address4', '201801-address4-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address5', '201801-address5-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:postcode', '201801-postcode-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:sic07', '201801-sic07-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:paye_jobs', '2'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:turnover', '20'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:legal_status', '201801-legalstatus-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:trading_status', '201801-tradingstatus-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:birth_date', '201801-birthdate-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:death_date', '201801-deathdate-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:death_code', '201801-deathcode-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:crn', '201801-crn-1000012345000002'
+put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:uprn', '201801-uprn-1000012345000002'
+
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:ubrn', '1000012345000001'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:name', '201802-name-1000012345000001'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:address1', '201802-address1-1000012345000001'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:postcode', '201802-postcode-1000012345000001'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:sic07', '201802-sic07-1000012345000001'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:legal_status', '201802-legalstatus-1000012345000001'
+put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:birth_date', '201802-birthdate-1000012345000001'
+```
+
 Insert some Local Unit data.
 
 ```shell
@@ -102,6 +136,41 @@ put 'sbr_control_db:local_unit_201802', '3210000001~900000123', 'd:address1', '2
 put 'sbr_control_db:local_unit_201802', '3210000001~900000123', 'd:postcode', '201802-postcode-900000123'
 put 'sbr_control_db:local_unit_201802', '3210000001~900000123', 'd:sic07', '201802-sic07-900000123'
 put 'sbr_control_db:local_unit_201802', '3210000001~900000123', 'd:employees', '124'
+```
+
+Insert some Reporting Unit data.
+
+```shell
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:rurn', '33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:ruref', '201801-ruref-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:ern', '201801-ern-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:entref', '201801-entref-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:name', '201801-name-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:trading_style', '201801-tradingstyle-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:legal_status', '201801-legalstatus-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:address1', '201801-address1-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:address2', '201801-address2-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:address3', '201801-address3-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:address4', '201801-address4-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:address5', '201801-address5-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:postcode', '201801-postcode-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:sic07', '201801-sic07-33000000123'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:employees', '20'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:employment', '22'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:turnover', '200'
+put 'sbr_control_db:reporting_unit_201801', '3210000001~33000000123', 'd:prn', '0.127347284'
+
+put 'sbr_control_db:reporting_unit_201802', '3210000001~33000000123', 'd:rurn', '33000000123'
+put 'sbr_control_db:reporting_unit_201802', '3210000001~33000000123', 'd:ern', '201802-ern-33000000123'
+put 'sbr_control_db:reporting_unit_201802', '3210000001~33000000123', 'd:name', '201802-name-33000000123'
+put 'sbr_control_db:reporting_unit_201802', '3210000001~33000000123', 'd:legal_status', '201802-legalstatus-33000000123'
+put 'sbr_control_db:reporting_unit_201802', '3210000001~33000000123', 'd:address1', '201802-address1-33000000123'
+put 'sbr_control_db:reporting_unit_201802', '3210000001~33000000123', 'd:postcode', '201802-postcode-33000000123'
+put 'sbr_control_db:reporting_unit_201802', '3210000001~33000000123', 'd:sic07', '201802-sic07-33000000123'
+put 'sbr_control_db:reporting_unit_201802', '3210000001~33000000123', 'd:employees', '20'
+put 'sbr_control_db:reporting_unit_201802', '3210000001~33000000123', 'd:employment', '22'
+put 'sbr_control_db:reporting_unit_201802', '3210000001~33000000123', 'd:turnover', '200'
+put 'sbr_control_db:reporting_unit_201802', '3210000001~33000000123', 'd:prn', '0.238458395'
 ```
 
 Insert some unit link data.
@@ -142,38 +211,6 @@ put 'sbr_control_db:unit_links' , '38576395~PAYE~201802', 'l:p_LEU', '1928374659
 put 'sbr_control_db:unit_links' , '38576395~PAYE~201801', 'l:p_LEU', '192837465999'
 ```
 
-Insert some Legal Unit data.
-
-```shell
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:ubrn', '1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:name', '201801-name-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:trading_style', '201801-tradingstyle-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address1', '201801-address1-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address2', '201801-address2-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address3', '201801-address3-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address4', '201801-address4-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:address5', '201801-address5-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:postcode', '201801-postcode-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:sic07', '201801-sic07-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:paye_jobs', '2'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:turnover', '20'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:legal_status', '201801-legalstatus-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:trading_status', '201801-tradingstatus-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:birth_date', '201801-birthdate-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:death_date', '201801-deathdate-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:death_code', '201801-deathcode-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:crn', '201801-crn-1000012345000002'
-put 'sbr_control_db:legal_unit_201801', '3210000001~1000012345000002', 'd:uprn', '201801-uprn-1000012345000002'
-
-put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:ubrn', '1000012345000001'
-put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:name', '201802-name-1000012345000001'
-put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:address1', '201802-address1-1000012345000001'
-put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:postcode', '201802-postcode-1000012345000001'
-put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:sic07', '201802-sic07-1000012345000001'
-put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:legal_status', '201802-legalstatus-1000012345000001'
-put 'sbr_control_db:legal_unit_201802', '3210000001~1000012345000001', 'd:birth_date', '201802-birthdate-1000012345000001'
-```
-
 Use the following URL's to test HBase REST:
 
 [http://localhost:8080/sbr_control_db:enterprise/3210000001~*/d](http://localhost:8080/sbr_control_db:enterprise/3210000001~*/d)<br/>
@@ -200,6 +237,10 @@ Test the API routes:
 [http://localhost:9000/v1/enterprises/1000000123/periods/201801/localunits/900000123](http://localhost:9000/v1/enterprises/1000000123/periods/201801/localunits/900000123)
 
 [http://localhost:9000/v1/enterprises/1000000123/periods/201802/localunits/900000123](http://localhost:9000/v1/enterprises/1000000123/periods/201802/localunits/900000123)
+
+[http://localhost:9000/v1/enterprises/1000000123/periods/201801/reportingunits/33000000123](http://localhost:9000/v1/enterprises/1000000123/periods/201801/reportingunits/33000000123)
+
+[http://localhost:9000/v1/enterprises/1000000123/periods/201802/reportingunits/33000000123](http://localhost:9000/v1/enterprises/1000000123/periods/201802/reportingunits/33000000123)
 
 [http://localhost:9000/v1/units/1000000123](http://localhost:9000/v1/units/1000000123)
 
