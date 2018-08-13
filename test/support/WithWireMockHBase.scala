@@ -61,9 +61,9 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
     createUrlAndThenGetHBaseJson(tableName, withQuery)
   }
 
-  def aEnterpriseUnitRequest(withErn: Ern, withPeriod: Period): MappingBuilder = {
-    val rowKey = EnterpriseUnitRowKey(withErn, withPeriod)
-    createUrlAndThenGetHBaseJson(tableName = "enterprise", rowKey)
+  def anEnterpriseUnitRequest(withErn: Ern, withPeriod: Period): MappingBuilder = {
+    val tableName = PeriodTableName("enterprise", withPeriod)
+    createUrlAndThenGetHBaseJson(tableName, EnterpriseUnitRowKey(withErn))
   }
 
   def aUnitLinksExactRowKeyRequest(withStatUnit: UnitId, withUnitType: UnitType, withPeriod: Period): MappingBuilder =

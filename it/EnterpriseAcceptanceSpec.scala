@@ -23,7 +23,7 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
   private val EnterpriseUnitSingleMatchHBaseResponseBody =
     s"""{"Row": ${
       List(
-        aRowWith(key = s"${EnterpriseUnitRowKey(TargetErn, TargetPeriod)}", columns =
+        aRowWith(key = s"${EnterpriseUnitRowKey(TargetErn)}", columns =
           aColumnWith(name = ern, value = TargetErn.value),
           aColumnWith(name = entref, value = SampleEnterpriseReference),
           aColumnWith(name = name, value = SampleEnterpriseName),
@@ -51,7 +51,7 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
   feature("retrieve an existing enterprise unit") {
     scenario("by exact Enterprise reference (ERN) and period") { wsClient =>
       Given(s"an enterprise exists with $TargetErn and $TargetPeriod")
-      stubHBaseFor(aEnterpriseUnitRequest(withErn = TargetErn, withPeriod = TargetPeriod).willReturn(
+      stubHBaseFor(anEnterpriseUnitRequest(withErn = TargetErn, withPeriod = TargetPeriod).willReturn(
         anOkResponse().withBody(EnterpriseUnitSingleMatchHBaseResponseBody)
       ))
 
@@ -74,24 +74,24 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
 
   feature("respond to a non-existent Enterprise Unit request") {
     scenario("by an exact Enterprise reference (ERN) and period") { wsClient =>
-      Given(s"an does not exist with $TargetErn and $TargetPeriod")
-      stubHBaseFor(aEnterpriseUnitRequest(withErn = TargetErn, withPeriod = TargetPeriod).willReturn(
+      Given(s"an enterprise does not exist with $TargetErn and $TargetPeriod")
+      stubHBaseFor(anEnterpriseUnitRequest(withErn = TargetErn, withPeriod = TargetPeriod).willReturn(
         anOkResponse().withBody(NoMatchFoundResponse)
       ))
 
       When(s"an enterprise unit with $TargetErn and $TargetPeriod is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/enterprises/${TargetErn.value}").get())
 
-      Then("a NOT_FOUND response status to given back with no details are returned")
+      Then("a NOT_FOUND response is returned")
       response.status shouldBe NOT_FOUND
     }
   }
 
-  feature("responds to a invalid request due to validation route validation") {
-    scenario("rejects request due to Enterprise reference number (ERN) is too short") { wsClient =>
+  feature("responds to an invalid request") {
+    scenario("rejects request due to Enterprise reference number (ERN) being too short") { wsClient =>
       Given(s"that an ERN is represented by a ten digit number")
 
-      When(s"the user requests a Local Unit having an ERN that is not ten digits long")
+      When(s"the user requests an enterprise having an ERN that is not ten digits long")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/enterprises/123456789}").get())
 
       Then(s"a BAD REQUEST response is returned")
