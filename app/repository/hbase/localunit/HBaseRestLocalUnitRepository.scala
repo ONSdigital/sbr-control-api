@@ -3,18 +3,16 @@ package repository.hbase.localunit
 import javax.inject.Inject
 
 import scala.concurrent.Future
-
 import com.typesafe.scalalogging.LazyLogging
-
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 import utils.EitherSupport
-
 import repository.RestRepository.{ ErrorMessage, Row }
 import repository.hbase.HBase.DefaultColumnFamily
 import repository.{ LocalUnitRepository, RestRepository, RowMapper }
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import repository.hbase.PeriodTableName
 
 case class HBaseRestLocalUnitRepositoryConfig(tableName: String)
 
@@ -26,13 +24,16 @@ class HBaseRestLocalUnitRepository @Inject() (
 
   override def retrieveLocalUnit(ern: Ern, period: Period, lurn: Lurn): Future[Either[ErrorMessage, Option[LocalUnit]]] = {
     logger.info(s"Retrieving Local Unit with [$ern] [$lurn] for [$period].")
-    restRepository.findRow(config.tableName, LocalUnitQuery.byRowKey(ern, period, lurn), DefaultColumnFamily).map(fromErrorOrRow)
+    restRepository.findRow(tableName(period), LocalUnitQuery.byRowKey(ern, lurn), DefaultColumnFamily).map(fromErrorOrRow)
   }
 
   override def findLocalUnitsForEnterprise(ern: Ern, period: Period): Future[Either[ErrorMessage, Seq[LocalUnit]]] = {
     logger.info(s"Finding Local Units with [$ern] for [$period].")
-    restRepository.findRows(config.tableName, LocalUnitQuery.forAllWith(ern, period), DefaultColumnFamily).map(fromErrorOrRows)
+    restRepository.findRows(tableName(period), LocalUnitQuery.forAllWith(ern), DefaultColumnFamily).map(fromErrorOrRows)
   }
+
+  private def tableName(period: Period): String =
+    PeriodTableName(config.tableName, period)
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[LocalUnit]] = {
     val errorOrRows = errorOrRow.right.map(_.toSeq)

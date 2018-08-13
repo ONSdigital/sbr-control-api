@@ -21,11 +21,12 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
   private trait Fixture {
     val TargetErn = Ern("1000000013")
     val TargetPeriod = Period.fromYearMonth(2018, JANUARY)
-    val TargetTable = "local_unit"
+    val TargetBaseTable = "local_unit"
+    val TargetPeriodTable = s"${TargetBaseTable}_${Period.asString(TargetPeriod)}"
 
     val restRepository: RestRepository = mock[RestRepository]
     val rowMapper: RowMapper[LocalUnit] = mock[RowMapper[LocalUnit]]
-    val config = HBaseRestLocalUnitRepositoryConfig(TargetTable)
+    val config = HBaseRestLocalUnitRepositoryConfig(TargetBaseTable)
     val repository = new HBaseRestLocalUnitRepository(config, restRepository, rowMapper)
 
     private val UnusedRowKey = ""
@@ -35,20 +36,20 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
   private trait SingleResultFixture extends Fixture with SampleLocalUnit {
     val TargetLurn = Lurn("900000015")
     val TargetLocalUnit = aLocalUnit(TargetErn, TargetLurn)
-    val TargetRowKey = LocalUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetLurn)
+    val TargetRowKey = LocalUnitQuery.byRowKey(TargetErn, TargetLurn)
     val ARow = Map("key" -> s"rowkey-for-${TargetLurn.value}")
   }
 
   private trait MultipleResultFixture extends SingleResultFixture {
     val AnotherLocalUnit = aLocalUnit(TargetErn, Lurn("900000020"))
     val AnotherRow = Map("key" -> s"rowkey-for-${AnotherLocalUnit.lurn.value}")
-    val TargetQuery = LocalUnitQuery.forAllWith(TargetErn, TargetPeriod)
+    val TargetQuery = LocalUnitQuery.forAllWith(TargetErn)
   }
 
   "A Local Unit repository" - {
     "supports retrieval of a local unit by Enterprise reference (ERN), period, and Local Unit reference (LURN)" - {
       "returning the target local unit when it exists" in new SingleResultFixture {
-        (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(toRow(ARow)))))
+        (restRepository.findRow _).expects(TargetPeriodTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(toRow(ARow)))))
         (rowMapper.fromRow _).expects(toRow(ARow)).returning(Some(TargetLocalUnit))
 
         whenReady(repository.retrieveLocalUnit(TargetErn, TargetPeriod, TargetLurn)) { result =>
@@ -57,7 +58,7 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
       }
 
       "returning nothing when the target local unit does not exist" in new SingleResultFixture {
-        (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(None)))
+        (restRepository.findRow _).expects(TargetPeriodTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(None)))
 
         whenReady(repository.retrieveLocalUnit(TargetErn, TargetPeriod, TargetLurn)) { result =>
           result.right.value shouldBe None
@@ -65,7 +66,7 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
       }
 
       "signalling failure when a valid Local Unit cannot be constructed from a successful HBase REST response" in new SingleResultFixture {
-        (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(toRow(ARow)))))
+        (restRepository.findRow _).expects(TargetPeriodTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Right(Some(toRow(ARow)))))
         (rowMapper.fromRow _).expects(toRow(ARow)).returning(None)
 
         whenReady(repository.retrieveLocalUnit(TargetErn, TargetPeriod, TargetLurn)) { result =>
@@ -74,7 +75,7 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
       }
 
       "signalling failure when the underlying REST repository encounters a failure" in new SingleResultFixture {
-        (restRepository.findRow _).expects(TargetTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Left("A Failure Message")))
+        (restRepository.findRow _).expects(TargetPeriodTable, TargetRowKey, DefaultColumnFamily).returning(Future.successful(Left("A Failure Message")))
 
         whenReady(repository.retrieveLocalUnit(TargetErn, TargetPeriod, TargetLurn)) { result =>
           result.left.value shouldBe "A Failure Message"
@@ -85,7 +86,7 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
     "supports retrieval of all local units for an enterprise at a specific period in time" - {
       "returning the target local units when any exist" in new MultipleResultFixture {
         val rows = Seq(ARow, AnotherRow)
-        (restRepository.findRows _).expects(TargetTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Right(rows.map(toRow))))
+        (restRepository.findRows _).expects(TargetPeriodTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Right(rows.map(toRow))))
         (rowMapper.fromRow _).expects(toRow(ARow)).returning(Some(TargetLocalUnit))
         (rowMapper.fromRow _).expects(toRow(AnotherRow)).returning(Some(AnotherLocalUnit))
 
@@ -95,7 +96,7 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
       }
 
       "returning nothing when no local units are found" in new MultipleResultFixture {
-        (restRepository.findRows _).expects(TargetTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Right(Seq.empty)))
+        (restRepository.findRows _).expects(TargetPeriodTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Right(Seq.empty)))
 
         whenReady(repository.findLocalUnitsForEnterprise(TargetErn, TargetPeriod)) { result =>
           result.right.value shouldBe empty
@@ -104,7 +105,7 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
 
       "signalling failure when a valid Local Unit cannot be constructed from a successful HBase REST response" in new MultipleResultFixture {
         val rows = Seq(ARow, AnotherRow)
-        (restRepository.findRows _).expects(TargetTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Right(rows.map(toRow))))
+        (restRepository.findRows _).expects(TargetPeriodTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Right(rows.map(toRow))))
         (rowMapper.fromRow _).expects(toRow(ARow)).returning(Some(TargetLocalUnit))
         (rowMapper.fromRow _).expects(toRow(AnotherRow)).returning(None)
 
@@ -114,7 +115,7 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
       }
 
       "signalling failure when the underlying REST repository encounters a failure" in new MultipleResultFixture {
-        (restRepository.findRows _).expects(TargetTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Left("A Failure Message")))
+        (restRepository.findRows _).expects(TargetPeriodTable, TargetQuery, DefaultColumnFamily).returning(Future.successful(Left("A Failure Message")))
 
         whenReady(repository.findLocalUnitsForEnterprise(TargetErn, TargetPeriod)) { result =>
           result.left.value shouldBe "A Failure Message"

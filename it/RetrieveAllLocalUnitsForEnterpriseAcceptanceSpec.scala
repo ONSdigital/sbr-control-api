@@ -27,7 +27,7 @@ class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
   private val LocalUnitMultipleMatchHBaseResponseBody =
     s"""{"Row": ${
       List(
-        aRowWith(key = s"${LocalUnitQuery.byRowKey(TargetErn, TargetPeriod, LurnOne)}", columns =
+        aRowWith(key = s"${LocalUnitQuery.byRowKey(TargetErn, LurnOne)}", columns =
           aColumnWith(name = lurn, value = LurnOne.value),
           aColumnWith(name = luref, value = s"one-luref"),
           aColumnWith(name = ern, value = TargetErn.value),
@@ -40,7 +40,7 @@ class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
           aColumnWith(name = postcode, value = "one-postcode"),
           aColumnWith(name = sic07, value = "one-sic07"),
           aColumnWith(name = employees, value = "42")),
-        aRowWith(key = s"${LocalUnitQuery.byRowKey(TargetErn, TargetPeriod, LurnTwo)}", columns =
+        aRowWith(key = s"${LocalUnitQuery.byRowKey(TargetErn, LurnTwo)}", columns =
           aColumnWith(name = lurn, value = LurnTwo.value),
           aColumnWith(name = ern, value = TargetErn.value),
           aColumnWith(name = entref, value = "two-entref"),
