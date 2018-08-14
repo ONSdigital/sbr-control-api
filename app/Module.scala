@@ -1,15 +1,14 @@
-import com.google.inject.{ AbstractModule, TypeLiteral }
-import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, _ }
+import com.google.inject.{AbstractModule, TypeLiteral}
+import config.{HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, _}
 import kamon.Kamon
-import play.api.{ Configuration, Environment }
+import play.api.{Configuration, Environment}
 import repository._
 import repository.hbase._
-import repository.hbase.enterprise.{ EnterpriseUnitRowMapper, HBaseRestEnterpriseUnitRepository, HBaseRestEnterpriseUnitRepositoryConfig }
-import repository.hbase.legalunit.{ HBaseRestLegalUnitRepository, HBaseRestLegalUnitRepositoryConfig, LegalUnitRowMapper }
-import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
-import repository.hbase.reportingunit.{ HBaseRestReportingUnitRepository, HBaseRestReportingUnitRepositoryConfig, ReportingUnitRowMapper }
-import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksNoPeriodRowMapper }
-import services.{ DataAccess, HBaseRestDataAccess }
+import repository.hbase.enterprise.{EnterpriseUnitRowMapper, HBaseRestEnterpriseUnitRepository, HBaseRestEnterpriseUnitRepositoryConfig}
+import repository.hbase.legalunit.{HBaseRestLegalUnitRepository, HBaseRestLegalUnitRepositoryConfig, LegalUnitRowMapper}
+import repository.hbase.localunit.{HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper}
+import repository.hbase.reportingunit.{HBaseRestReportingUnitRepository, HBaseRestReportingUnitRepositoryConfig, ReportingUnitRowMapper}
+import repository.hbase.unitlinks.{HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksNoPeriodRowMapper}
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 import uk.gov.ons.sbr.models.legalunit.LegalUnit
 import uk.gov.ons.sbr.models.localunit.LocalUnit
@@ -42,7 +41,6 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     bind(classOf[HBaseRestUnitLinksRepositoryConfig]).toInstance(hbaseRestUnitLinksConfig)
     bind(classOf[HBaseRestReportingUnitRepositoryConfig]).toInstance(hbaseRestReportingUnitConfig)
 
-    bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
     bind(classOf[RestRepository]).to(classOf[HBaseRestRepository])
     bind(classOf[LocalUnitRepository]).to(classOf[HBaseRestLocalUnitRepository])
     bind(classOf[LegalUnitRepository]).to(classOf[HBaseRestLegalUnitRepository])

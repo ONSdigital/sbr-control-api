@@ -1,14 +1,11 @@
 package controllers.v1
 
-import javax.inject.{ Inject, Singleton }
-
 import com.typesafe.config.Config
+import controllers.BuildInfo
 import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
+import javax.inject.{ Inject, Singleton }
 import play.api.libs.json.Json
 import play.api.mvc.{ Action, AnyContent, Controller }
-
-import utils.FutureResponse.futureSuccess
-import controllers.BuildInfo
 
 @Api("Utils")
 @Singleton
@@ -22,8 +19,8 @@ class LastUpdateController @Inject() (implicit val config: Config) extends Contr
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Success - Displays json list of dates for official development.")
   ))
-  def latestListings: Action[AnyContent] = Action.async {
-    Ok(Json.obj("status" -> "OK", "bi-api-deployed-date" -> s"${BuildInfo.builtAtMillis}")).future
+  def latestListings: Action[AnyContent] = Action {
+    Ok(Json.obj("status" -> "OK", "bi-api-deployed-date" -> s"${BuildInfo.builtAtMillis}"))
   }
 
 }
