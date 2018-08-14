@@ -44,4 +44,13 @@ object UnitLinks {
           id.value -> unitType
       }
   }
+
+  def from(period: Period, unitLinksNoPeriod: UnitLinksNoPeriod): UnitLinks =
+    UnitLinks(
+      id = unitLinksNoPeriod.id,
+      period,
+      parents = unitLinksNoPeriod.parents,
+      children = unitLinksNoPeriod.children,
+      unitType = unitLinksNoPeriod.unitType
+    )
 }

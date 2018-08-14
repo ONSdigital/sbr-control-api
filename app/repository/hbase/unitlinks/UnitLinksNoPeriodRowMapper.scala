@@ -1,29 +1,18 @@
 package repository.hbase.unitlinks
 
+import com.typesafe.scalalogging.LazyLogging
+import repository.{ RestRepository, RowMapper }
+import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinksNoPeriod, UnitType }
+import repository.hbase.unitlinks.UnitLinksPrefix.{ Child, Parent }
+import utils.TrySupport
+
 import scala.util.Try
 
-import com.typesafe.scalalogging.LazyLogging
-
-import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
-
-import utils.TrySupport
-import repository.RestRepository.Row
-import repository.RowMapper
-import repository.hbase.unitlinks.UnitLinksProperties.{ UnitChildPrefix, UnitParentPrefix }
-import repository.hbase.unitlinks.UnitLinksRowKey._
-
-object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
-
-  override def fromRow(rows: Row): Option[UnitLinks] = {
-    val (partitionedParentMap, partitionedChildrenMap) = partitionMap(rows.fields)
+object UnitLinksNoPeriodRowMapper extends RowMapper[UnitLinksNoPeriod] with LazyLogging {
+  override def fromRow(row: RestRepository.Row): Option[UnitLinksNoPeriod] = {
+    val (partitionedParentMap, partitionedChildrenMap) = partitionMap(row.fields)
     for {
-      partitionedKey <- splitRowKey(rows.rowKey)(logger)
-      id = partitionedKey(unitIdIndex)
-      unitTypeOpt = toUnitType(partitionedKey(unitTypeIndex))
-      unitType <- unitTypeOpt
-      periodOpt = toPeriod(partitionedKey(unitPeriodIndex))
-      period <- periodOpt
+      (unitId, unitType) <- UnitLinksRowKey.unapply(row.rowKey)
 
       /*
        * NOTE: GUARD - to not create UnitLinks in the event the left partition is not
@@ -39,40 +28,28 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
        * NOTE: GUARD - to not create UnitLinks in the event children and parents is None.
        */
       if returnNoneWhenBothParentAndChildIsEmpty(children, parents)
-    } yield UnitLinks(UnitId(id), period, parents, children, unitType)
+    } yield UnitLinksNoPeriod(unitId, unitType, parents, children)
   }
 
   private def partitionMap(rawMap: Map[String, String]): (Map[String, String], Map[String, String]) =
-    rawMap.partition { case (k, _) => k.startsWith(UnitParentPrefix) }
+    rawMap.partition { case (k, _) => k.startsWith(Parent) }
 
   private def returnNoneIfAllNotPrefixedAsChild(rawMap: Map[String, String]): Boolean =
-    rawMap.forall { case (k, _) => k.startsWith(UnitChildPrefix) }
-
-  private def toPeriod(periodStr: String): Option[Period] =
-    toUnitLinksDataType(periodStr)(Period.parseString)
-
-  private def toUnitType(unitTypeAsStr: String): Option[UnitType] =
-    toUnitLinksDataType(unitTypeAsStr)(UnitType.fromString)
-
-  private def toUnitLinksDataType[A](fieldAsStr: String)(convertToDataType: String => Try[A]): Option[A] =
-    TrySupport.fold(convertToDataType(fieldAsStr))(failure =>
-      failedUnitTypeRespAndLog(fieldAsStr)(failure), Some(_))
+    rawMap.forall { case (k, _) => k.startsWith(Child) }
 
   private def toChildField(childMap: Map[String, String]): Option[Map[UnitId, UnitType]] =
-    toFamilyMap(childMap, UnitChildPrefix) { (key: String, value: String) =>
+    toFamilyMap(childMap, Child) { (key: String, value: String) =>
       toUnitType(value).map(unitType =>
-        UnitId(key.drop(UnitChildPrefix.length)) -> unitType)
+        UnitId(key.drop(Child.length)) -> unitType)
     }
 
   private def toParentField(parentMap: Map[String, String]): Option[Map[UnitType, UnitId]] =
-    toFamilyMap(parentMap, UnitParentPrefix) { (key: String, value: String) =>
-      toUnitType(key.drop(UnitParentPrefix.length)).map(unitType =>
+    toFamilyMap(parentMap, Parent) { (key: String, value: String) =>
+      toUnitType(key.drop(Parent.length)).map(unitType =>
         unitType -> UnitId(value))
     }
 
-  private def toFamilyMap[A, B](variables: Map[String, String], prefixFilter: String)(
-    validateAndReturnUnitType: (String, String) => Option[(A, B)]
-  ): Option[Map[A, B]] =
+  private def toFamilyMap[A, B](variables: Map[String, String], prefixFilter: String)(validateAndReturnUnitType: (String, String) => Option[(A, B)]): Option[Map[A, B]] =
     checkIfEmptyOptMap(variables.foldLeft[Option[Map[A, B]]](Some(Map.empty[A, B])) {
       case (acc, (key, value)) =>
         acc.flatMap { a =>
@@ -84,6 +61,13 @@ object UnitLinksRowMapper extends RowMapper[UnitLinks] with LazyLogging {
 
   private def checkIfEmptyOptMap[A, B](optMapDefinedOrEmpty: Option[Map[A, B]]): Option[Map[A, B]] =
     optMapDefinedOrEmpty.filter(_.nonEmpty)
+
+  private def toUnitType(unitTypeAsStr: String): Option[UnitType] =
+    toUnitLinksDataType(unitTypeAsStr)(UnitType.fromString)
+
+  private def toUnitLinksDataType[A](fieldAsStr: String)(convertToDataType: String => Try[A]): Option[A] =
+    TrySupport.fold(convertToDataType(fieldAsStr))(failure =>
+      failedUnitTypeRespAndLog(fieldAsStr)(failure), Some(_))
 
   private def failedUnitTypeRespAndLog[B](invalidStr: String)(ex: Throwable): Option[B] = {
     logger.warn(s"Failed to create data type due to invalid field value [$invalidStr]. Failed with [$ex]")

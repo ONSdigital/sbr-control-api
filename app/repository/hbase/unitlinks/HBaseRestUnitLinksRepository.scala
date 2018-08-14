@@ -1,45 +1,52 @@
 package repository.hbase.unitlinks
 
-import scala.concurrent.Future
-
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-
-import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
-
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import repository.RestRepository.{ ErrorMessage, Row }
-import repository.hbase.unitlinks.UnitLinksProperties.UnitLinksColumnFamily
+import repository.hbase.PeriodTableName
+import repository.hbase.unitlinks.HBaseRestUnitLinksRepository.ColumnFamily
 import repository.{ RestRepository, RowMapper, UnitLinksRepository }
+import uk.gov.ons.sbr.models.Period
+import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitLinksNoPeriod, UnitType }
+
+import scala.concurrent.Future
 
 case class HBaseRestUnitLinksRepositoryConfig(tableName: String)
 
 class HBaseRestUnitLinksRepository @Inject() (
     restRepository: RestRepository,
     config: HBaseRestUnitLinksRepositoryConfig,
-    rowMapper: RowMapper[UnitLinks]
+    rowMapper: RowMapper[UnitLinksNoPeriod]
 ) extends UnitLinksRepository with LazyLogging {
 
   override def retrieveUnitLinks(id: UnitId, unitType: UnitType, period: Period): Future[Either[ErrorMessage, Option[UnitLinks]]] = {
     logger.info(s"Retrieving UnitLinks with [$id] of [$unitType] for [$period]")
-    restRepository.findRow(config.tableName, UnitLinksRowKey(id, unitType, period), UnitLinksColumnFamily).map(fromErrorOrRow)
+    restRepository.findRow(tableName(period), UnitLinksRowKey(id, unitType), ColumnFamily).map(fromErrorOrRow(period))
   }
 
-  private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[UnitLinks]] = {
+  private def tableName(period: Period): String =
+    PeriodTableName(config.tableName, period)
+
+  private def fromErrorOrRow(withPeriod: Period)(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[UnitLinks]] = {
     logger.debug(s"Unit Links response is [$errorOrRow]")
     errorOrRow.right.flatMap { optRow =>
       optRow.map(fromRow).fold[Either[ErrorMessage, Option[UnitLinks]]](Right(None)) { errorOrUnitLinks =>
         logger.debug(s"From Row to Unit Links conversion is [$errorOrUnitLinks]")
-        errorOrUnitLinks.right.map(Some(_))
+        errorOrUnitLinks.right.map { unitLinksNoPeriod =>
+          Some(UnitLinks.from(withPeriod, unitLinksNoPeriod))
+        }
       }
     }
   }
 
-  private def fromRow(row: Row): Either[ErrorMessage, UnitLinks] = {
+  private def fromRow(row: Row): Either[ErrorMessage, UnitLinksNoPeriod] = {
     val optUnitLinks = rowMapper.fromRow(row)
     if (optUnitLinks.isEmpty) logger.warn(s"Unable to construct Unit Links from HBase [${config.tableName}] of [$row]")
     optUnitLinks.toRight("Unable to create Unit Links from row")
   }
+}
 
+object HBaseRestUnitLinksRepository {
+  val ColumnFamily = "l"
 }

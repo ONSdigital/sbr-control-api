@@ -1,5 +1,3 @@
-import java.time.Clock
-
 import com.google.inject.{ AbstractModule, TypeLiteral }
 import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, _ }
 import kamon.Kamon
@@ -10,13 +8,13 @@ import repository.hbase.enterprise.{ EnterpriseUnitRowMapper, HBaseRestEnterpris
 import repository.hbase.legalunit.{ HBaseRestLegalUnitRepository, HBaseRestLegalUnitRepositoryConfig, LegalUnitRowMapper }
 import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
 import repository.hbase.reportingunit.{ HBaseRestReportingUnitRepository, HBaseRestReportingUnitRepositoryConfig, ReportingUnitRowMapper }
-import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksRowMapper }
+import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksNoPeriodRowMapper }
 import services.{ DataAccess, HBaseRestDataAccess }
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 import uk.gov.ons.sbr.models.legalunit.LegalUnit
 import uk.gov.ons.sbr.models.localunit.LocalUnit
 import uk.gov.ons.sbr.models.reportingunit.ReportingUnit
-import uk.gov.ons.sbr.models.unitlinks.UnitLinks
+import uk.gov.ons.sbr.models.unitlinks.UnitLinksNoPeriod
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -52,13 +50,12 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     bind(classOf[EnterpriseUnitRepository]).to(classOf[HBaseRestEnterpriseUnitRepository])
     bind(classOf[UnitLinksRepository]).to(classOf[HBaseRestUnitLinksRepository])
     bind(classOf[HBaseResponseReaderMaker]).toInstance(HBaseResponseReader)
+
     bind(new TypeLiteral[RowMapper[ReportingUnit]]() {}).toInstance(ReportingUnitRowMapper)
     bind(new TypeLiteral[RowMapper[LocalUnit]]() {}).toInstance(LocalUnitRowMapper)
     bind(new TypeLiteral[RowMapper[LegalUnit]]() {}).toInstance(LegalUnitRowMapper)
-
     bind(new TypeLiteral[RowMapper[Enterprise]]() {}).toInstance(EnterpriseUnitRowMapper)
-    bind(new TypeLiteral[RowMapper[UnitLinks]]() {}).toInstance(UnitLinksRowMapper)
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
+    bind(new TypeLiteral[RowMapper[UnitLinksNoPeriod]]() {}).toInstance(UnitLinksNoPeriodRowMapper)
 
     Kamon.loadReportersFromConfig()
   }

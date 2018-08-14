@@ -2,7 +2,7 @@ package support
 
 import uk.gov.ons.sbr.models.unitlinks.UnitType
 
-import repository.hbase.unitlinks.UnitLinksProperties.{ UnitChildPrefix, UnitParentPrefix }
+import repository.hbase.unitlinks.UnitLinksPrefix.{ Child, Parent }
 
 trait HBaseResponseFixture {
   /*
@@ -26,7 +26,7 @@ trait HBaseResponseFixture {
         | "$$": "${hbaseEncode(value)}"
         |}""".stripMargin
 
-  def aChildIdWithPrefix(id: String) = UnitChildPrefix + id
+  def aChildIdWithPrefix(id: String) = Child + id
 
-  def aParentUnitTypeWithPrefix(unitType: UnitType) = UnitParentPrefix + UnitType.toAcronym(unitType)
+  def aParentUnitTypeWithPrefix(unitType: UnitType) = Parent + UnitType.toAcronym(unitType)
 }

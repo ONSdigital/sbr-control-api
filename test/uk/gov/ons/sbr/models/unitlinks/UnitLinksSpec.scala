@@ -42,7 +42,19 @@ class UnitLinksSpec extends FreeSpec with Matchers {
         Json.toJson(parentsFieldMapOnly) shouldBe Json.parse(expectedJsonStrOf(parentsFieldMapOnly))
       }
     }
-  }
 
+    "can be created from a UnitLinksNoPeriod and a Period" in new Fixture {
+      val unitLinksNoPeriod = SampleUnitLinksNoPeriodWithAllFields
+      val period = SamplePeriod
+
+      UnitLinks.from(period, unitLinksNoPeriod) shouldBe UnitLinks(
+        id = unitLinksNoPeriod.id,
+        period = period,
+        parents = unitLinksNoPeriod.parents,
+        children = unitLinksNoPeriod.children,
+        unitType = unitLinksNoPeriod.unitType
+      )
+    }
+  }
 }
 
