@@ -23,7 +23,7 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
   private val ReportingUnitSingleMatchHBaseResponseBody =
     s"""{"Row": ${
       List(
-        aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn)}", columns =
+        aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetRurn)}", columns =
           aColumnWith(name = rurn, value = TargetRurn.value),
           aColumnWith(name = ruref, value = SampleAllValuesReportingUnit.ruref.get),
           aColumnWith(name = ern, value = SampleAllValuesReportingUnit.ern.value),
@@ -48,7 +48,7 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
   private val ReportingUnitMultipleMatchHBaseResponseBody =
     s"""{"Row": ${
       List(
-        aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn)}", columns =
+        aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetRurn)}", columns =
           aColumnWith(name = rurn, value = TargetRurn.value),
           aColumnWith(name = ruref, value = SampleAllValuesReportingUnit.ruref.get),
           aColumnWith(name = ern, value = SampleAllValuesReportingUnit.ern.value),
@@ -67,7 +67,7 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
           aColumnWith(name = employment, value = SampleAllValuesReportingUnit.employment.toString),
           aColumnWith(name = turnover, value = SampleAllValuesReportingUnit.turnover.toString),
           aColumnWith(name = prn, value = SampleAllValuesReportingUnit.prn.toString())),
-        aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetPeriod, TargetRurn1)}", columns =
+        aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetRurn1)}", columns =
           aColumnWith(name = rurn, value = TargetRurn1.value),
           aColumnWith(name = ruref, value = SampleAllValuesReportingUnit1.ruref.get),
           aColumnWith(name = ern, value = SampleAllValuesReportingUnit1.ern.value),

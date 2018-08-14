@@ -38,13 +38,15 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
   }
 
   def anAllReportingUnitsForEnterpriseRequest(withErn: Ern, withPeriod: Period): MappingBuilder =
-    aReportingUnitQuery(ReportingUnitQuery.forAllWith(withErn, withPeriod))
+    aReportingUnitQuery(withPeriod, ReportingUnitQuery.forAllWith(withErn))
 
   def aReportingUnitRequest(withErn: Ern, withPeriod: Period, withRurn: Rurn): MappingBuilder =
-    aReportingUnitQuery(query = ReportingUnitQuery.byRowKey(withErn, withPeriod, withRurn))
+    aReportingUnitQuery(withPeriod, ReportingUnitQuery.byRowKey(withErn, withRurn))
 
-  private def aReportingUnitQuery(query: String): MappingBuilder =
-    createUrlAndThenGetHBaseJson(tableName = "reporting_unit", query)
+  private def aReportingUnitQuery(withPeriod: Period, withQuery: String): MappingBuilder = {
+    val tableName = PeriodTableName("reporting_unit", withPeriod)
+    createUrlAndThenGetHBaseJson(tableName, withQuery)
+  }
 
   def anAllLegalUnitsForEnterpriseRequest(withErn: Ern, withPeriod: Period): MappingBuilder =
     aLegalUnitQuery(withPeriod, LegalUnitQuery.forAllWith(withErn))
