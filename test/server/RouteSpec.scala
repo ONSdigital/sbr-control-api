@@ -48,14 +48,6 @@ class RouteSpec extends PlaySpec with GuiceOneAppPerSuite {
     }
   }
 
-  "LastUpdateController" should {
-    "display last modification listing" ignore {
-      val last = fakeRequest("/latest", GET)
-      status(last) mustBe NOT_FOUND
-      contentType(last) mustBe Some("application/json")
-    }
-  }
-
   private def fakeRequest(url: String, method: String = GET, appInstance: Application = app): Future[Result] =
     route(appInstance, FakeRequest(method, url)).getOrElse(sys.error(s"Route $url does not exist"))
 

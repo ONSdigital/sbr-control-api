@@ -34,9 +34,6 @@ GET     /                                   controllers.HomeController.status
 # Route for deployed version information (in JSON).
 GET     /version                            controllers.VersionController.version
 
-# Build dates
-# GET   /latest                             controllers.v1.LastUpdateController.latestListings
-
 # Route for health check information (in JSON).
 GET     /health                             controllers.HealthController.health
 
