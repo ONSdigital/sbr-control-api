@@ -9,7 +9,6 @@ import repository.hbase.legalunit.{ HBaseRestLegalUnitRepository, HBaseRestLegal
 import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
 import repository.hbase.reportingunit.{ HBaseRestReportingUnitRepository, HBaseRestReportingUnitRepositoryConfig, ReportingUnitRowMapper }
 import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksNoPeriodRowMapper }
-import services.{ DataAccess, HBaseRestDataAccess }
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 import uk.gov.ons.sbr.models.legalunit.LegalUnit
 import uk.gov.ons.sbr.models.localunit.LocalUnit
@@ -42,7 +41,6 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     bind(classOf[HBaseRestUnitLinksRepositoryConfig]).toInstance(hbaseRestUnitLinksConfig)
     bind(classOf[HBaseRestReportingUnitRepositoryConfig]).toInstance(hbaseRestReportingUnitConfig)
 
-    bind(classOf[DataAccess]).to(classOf[HBaseRestDataAccess])
     bind(classOf[RestRepository]).to(classOf[HBaseRestRepository])
     bind(classOf[LocalUnitRepository]).to(classOf[HBaseRestLocalUnitRepository])
     bind(classOf[LegalUnitRepository]).to(classOf[HBaseRestLegalUnitRepository])

@@ -1,13 +1,18 @@
 package scala.server
 
+import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test._
-import support.TestUtils
+
+import scala.concurrent.Future
 
 /**
  * Test application routes operate
  */
-class RouteSpec extends TestUtils {
+class RouteSpec extends PlaySpec with GuiceOneAppPerSuite {
 
   "No Route" should {
     "send 404 on a bad request" in {
@@ -43,11 +48,12 @@ class RouteSpec extends TestUtils {
     }
   }
 
-  "LastUpdateController" should {
-    "display last modification listing" ignore {
-      val last = fakeRequest("/latest", GET)
-      status(last) mustBe NOT_FOUND
-      contentType(last) mustBe Some("application/json")
+  private def fakeRequest(url: String, method: String = GET, appInstance: Application = app): Future[Result] =
+    route(appInstance, FakeRequest(method, url)).getOrElse(sys.error(s"Route $url does not exist"))
+
+  private def getValue(json: Option[String]): String =
+    json match {
+      case Some(x: String) => s"$x"
+      case _ => sys.error("No Value failed. Forcing test failure")
     }
-  }
 }
