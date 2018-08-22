@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 def artServer = Artifactory.server 'art-p-01'
 def buildInfo = Artifactory.newBuildInfo()
-def distDir = 'build/dist/'
+def distDir = 'build/dist'
 
 pipeline {
     libraries {
@@ -191,13 +191,13 @@ pipeline {
                         "files": [
                             {
                                 "pattern": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/*.*",
-                                "target": "${distDir}",
+                                "target": "${distDir}/",
                                 "flat": "true"
                             }
                         ]
                     }"""
                     artServer.download spec: downloadSpec, buildInfo: buildInfo
-                    sh "mv ${distDir}*.zip ${distDir}${env.SVC_NAME}.zip"
+                    sh "mv ${distDir}/*.zip ${distDir}/${env.SVC_NAME}.zip"
                 }
                 dir('vars') {
                     git url: "${GITLAB_URL}/StatBusReg/${env.SVC_NAME}.git", branch: 'feature/REG-1676-vars-file', credentialsId: 'JenkinsSBR__gitlab'
@@ -242,13 +242,13 @@ pipeline {
                         "files": [
                             {
                                 "pattern": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/*.*",
-                                "target": "${distDir}",
+                                "target": "${distDir}/",
                                 "flat": "true"
                             }
                         ]
                     }"""
                     artServer.download spec: downloadSpec, buildInfo: buildInfo
-                    sh "mv ${distDir}*.zip ${distDir}${env.SVC_NAME}.zip"
+                    sh "mv ${distDir}/*.zip ${distDir}/${env.SVC_NAME}.zip"
                 }
                 unstash name: 'Vars'
                 script {
