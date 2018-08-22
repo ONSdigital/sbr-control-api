@@ -5,7 +5,7 @@ def distDir = 'build/dist'
 
 pipeline {
     libraries {
-        lib('jenkins-pipeline-shared')
+        lib('jenkins-pipeline-shared@feature/cfdeploy-var-file')
     }
      environment {
         SVC_NAME = "sbr-control-api"
