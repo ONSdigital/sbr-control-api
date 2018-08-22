@@ -64,7 +64,7 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
   }
 
   def aUnitLinksExactRowKeyRequest(withStatUnit: UnitId, withUnitType: UnitType, withPeriod: Period): MappingBuilder = {
-    val tableName = PeriodTableName("unit_links", withPeriod)
+    val tableName = PeriodTableName("unit_link", withPeriod)
     val rowKey = UnitLinksRowKey(withStatUnit, withUnitType)
     createUrlAndThenGetHBaseJson(tableName, rowKey, columnFamily = HBaseRestUnitLinksRepository.ColumnFamily)
   }
