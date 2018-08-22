@@ -1,0 +1,18 @@
+---
+applications:
+- name: (( space ))-sbr-control-api
+  instances: (( instances ))
+  memory: (( memory ))
+  disk_quota: (( disk_quota ))
+  buildpack: java-buildpack
+  env:
+    APPLICATION_SECRET: (( APPLICATION_SECRET ))
+    SBR_DB_ENTERPRISE_TABLE_NAME: (( SBR_DB_ENTERPRISE_TABLE_NAME ))
+    SBR_DB_UNIT_LINKS_TABLE_NAME: (( SBR_DB_UNIT_LINKS_TABLE_NAME ))
+    HBASE_NAMESPACE: (( HBASE_NAMESPACE ))
+    SBR_DB_PROTOCOL: (( SBR_DB_PROTOCOL ))
+    SBR_DB_HOST: (( SBR_DB_HOST ))
+    SBR_DB_PORT: (( SBR_DB_PORT ))
+    SBR_DB_PREFIX: (( SBR_DB_PREFIX ))
+    SBR_DB_COLUMN_FAMILY_UNIT_LINKS: (( SBR_DB_COLUMN_FAMILY_UNIT_LINKS ))
+    SBR_DB_COLUMN_FAMILY_ENTERPRISE: (( SBR_DB_COLUMN_FAMILY_ENTERPRISE ))

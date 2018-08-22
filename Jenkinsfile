@@ -140,7 +140,7 @@ pipeline {
         stage ('Publish') {
             agent { label 'build.sbt_0-13-13' }
             when { 
-                branch "master" 
+                branch "feature/REG-1676-cf-manifest" 
                 // evaluate the when condition before entering this stage's agent, if any
                 beforeAgent true 
             }
@@ -149,11 +149,18 @@ pipeline {
                 unstash name: 'Checkout'
                 sh 'sbt universal:packageBin'
                 script {
+                    def shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
                     def uploadSpec = """{
                         "files": [
                             {
                                 "pattern": "target/universal/*.zip",
-                                "target": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/"
+                                "target": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/",
+                                "props": "git_sha=${shortCommit}"
+                            },
+                            {
+                                "pattern": "manifest.yml",
+                                "target": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/",
+                                "props": "git_sha=${shortCommit}"
                             }
                         ]
                     }"""
@@ -173,7 +180,7 @@ pipeline {
         stage('Deploy: Dev'){
             agent { label 'deploy.cf' }
             when { 
-                branch "master"
+                branch "feature/REG-1676-cf-manifest"
                 // evaluate the when condition before entering this stage's agent, if any
                 beforeAgent true 
             }
@@ -186,7 +193,7 @@ pipeline {
                     def downloadSpec = """{
                         "files": [
                             {
-                                "pattern": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/*.zip",
+                                "pattern": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/*.*",
                                 "target": "${distDir}",
                                 "flat": "true"
                             }
@@ -195,9 +202,10 @@ pipeline {
                     artServer.download spec: downloadSpec, buildInfo: buildInfo
                     sh "mv ${distDir}*.zip ${distDir}${env.SVC_NAME}.zip"
                 }
-                dir('config') {
-                    git url: "${GITLAB_URL}/StatBusReg/${env.SVC_NAME}.git", credentialsId: 'sion.williams__gitlab'
+                dir('vars') {
+                    git url: "${GITLAB_URL}/StatBusReg/${env.SVC_NAME}.git", branch: 'feature/REG-1676-vars-file', credentialsId: 'JenkinsSBR__gitlab'
                 }
+                stash name: 'Vars', includes: 'vars/**'
                 script {
                     cfDeploy {
                         credentialsId = "${this.env.CREDS}"
@@ -205,7 +213,8 @@ pipeline {
                         space = "${this.env.SPACE}"
                         appName = "${this.env.SPACE.toLowerCase()}-${this.env.SVC_NAME}"
                         appPath = "./${distDir}/${this.env.SVC_NAME}.zip"
-                        manifestPath  = "config/${this.env.SPACE.toLowerCase()}/manifest.yml"
+                        manifestPath  = "./${distDir}/manifest.yml"
+                        varsPath = "vars/${this.env.SPACE.toLowerCase()}/vars.yml"
                     }
                 }
             }
@@ -222,7 +231,7 @@ pipeline {
         stage('Deploy: Test'){
             agent { label 'deploy.cf' }
             when { 
-                branch "master"
+                branch "feature/REG-1676-cf-manifest"
                 // evaluate the when condition before entering this stage's agent, if any
                 beforeAgent true 
             }
@@ -235,7 +244,7 @@ pipeline {
                     def downloadSpec = """{
                         "files": [
                             {
-                                "pattern": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/*.zip",
+                                "pattern": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/*.*",
                                 "target": "${distDir}",
                                 "flat": "true"
                             }
@@ -244,9 +253,7 @@ pipeline {
                     artServer.download spec: downloadSpec, buildInfo: buildInfo
                     sh "mv ${distDir}*.zip ${distDir}${env.SVC_NAME}.zip"
                 }
-                dir('config') {
-                    git url: "${GITLAB_URL}/StatBusReg/${env.SVC_NAME}.git", credentialsId: 'sion.williams__gitlab'
-                }
+                unstash name: 'Vars'
                 script {
                     cfDeploy {
                         credentialsId = "${this.env.CREDS}"
@@ -254,7 +261,8 @@ pipeline {
                         space = "${this.env.SPACE}"
                         appName = "${this.env.SPACE.toLowerCase()}-${this.env.SVC_NAME}"
                         appPath = "./${distDir}/${this.env.SVC_NAME}.zip"
-                        manifestPath  = "config/${this.env.SPACE.toLowerCase()}/manifest.yml"
+                        manifestPath  = "./${distDir}/manifest.yml"
+                        varsPath = "vars/${this.env.SPACE.toLowerCase()}/vars.yml"
                     }
                 }
             }
