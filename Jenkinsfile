@@ -149,18 +149,15 @@ pipeline {
                 unstash name: 'Checkout'
                 sh 'sbt universal:packageBin'
                 script {
-                    def shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
                     def uploadSpec = """{
                         "files": [
                             {
                                 "pattern": "target/universal/*.zip",
-                                "target": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/",
-                                "props": "git_sha=${shortCommit}"
+                                "target": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/"
                             },
                             {
                                 "pattern": "manifest.yml",
-                                "target": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/",
-                                "props": "git_sha=${shortCommit}"
+                                "target": "registers-sbt-snapshots/uk/gov/ons/${buildInfo.name}/${buildInfo.number}/"
                             }
                         ]
                     }"""
