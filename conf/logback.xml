@@ -1,0 +1,42 @@
+<configuration>
+
+  <!-- see https://github.com/kamon-io/kamon-logback#logging-traceid -->
+  <conversionRule conversionWord="traceID" converterClass="kamon.logback.LogbackTraceIDConverter"/>
+
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <file>${application.home:-.}/logs/application.log</file>
+    <encoder>
+      <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="FILE"/>
+  </appender>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%date %highlight(%-5level) [%traceID] [%logger{16}] - %m%n%xException{10}</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="STDOUT"/>
+  </appender>
+
+  <logger name="play" level="INFO"/>
+
+  <!-- default (but not used by anything using a named logger e.g. if LazyLogging is mixed-in to the logging class )-->
+  <logger name="application" level="INFO"/>
+
+  <!-- Off these ones as they are annoying, and anyway we manage configuration ourselves -->
+  <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF"/>
+  <logger name="com.avaje.ebeaninternal.server.core.XmlConfigLoader" level="OFF"/>
+  <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF"/>
+  <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF"/>
+
+  <root level="INFO">
+    <appender-ref ref="ASYNCSTDOUT"/>
+  </root>
+
+</configuration>
