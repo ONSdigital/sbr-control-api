@@ -1,40 +1,39 @@
 import java.time.Month.MARCH
 
+import fixture.ReadsUnitLinks._
+import fixture.ServerAcceptanceSpec
 import play.api.http.HeaderNames.CONTENT_TYPE
-import play.api.http.Status.{ NOT_FOUND, OK }
+import play.api.http.Status.{NOT_FOUND, OK}
 import play.mvc.Http.MimeTypes.JSON
-
+import repository.hbase.unitlinks.{HBaseRestUnitLinksRepository, UnitLinksQualifier, UnitLinksRowKey}
+import support.WithWireMockHBase
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.unitlinks._
 
-import fixture.ServerAcceptanceSpec
-import fixture.ReadsUnitLinks._
-import repository.hbase.unitlinks.UnitLinksRowKey
-import support.WithWireMockHBase
-
 class UnitLinksAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase {
 
-  private val TargetLeuUnitId = UnitId("1000000012")
+  private val TargetLeuUnitId = UnitId("1000000000000012")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
   private val TargetLegalUnitType = UnitType.LegalUnit
 
   private val ErnParent = Ern("1000000123")
-  private val VatId = "401347263289"
-  private val CHId = "01752564"
+  private val VatId = UnitId("401347263289")
+  private val CHId = UnitId("01752564")
   private val EntParentUnitType = UnitType.Enterprise
   private val vatUnitType = UnitType.CompaniesHouse
   private val chUnitType = UnitType.CompaniesHouse
   private val CHChildUnitTypeAsString = UnitType.toAcronym(chUnitType)
   private val VATChildUnitTypeAsString = UnitType.toAcronym(vatUnitType)
+  private val Family = HBaseRestUnitLinksRepository.ColumnFamily
 
   private val UnitLinksSingleMatchHBaseResponseBody =
     s"""{ "Row": ${
       List(
         aRowWith(key = s"${UnitLinksRowKey(TargetLeuUnitId, TargetLegalUnitType)}", columns =
-          aColumnWith(name = aParentUnitTypeWithPrefix(EntParentUnitType), value = ErnParent.value),
-          aColumnWith(name = aChildIdWithPrefix(VatId), value = VATChildUnitTypeAsString),
-          aColumnWith(name = aChildIdWithPrefix(CHId), value = CHChildUnitTypeAsString))
+          aColumnWith(Family, qualifier = UnitLinksQualifier.toParent(EntParentUnitType), value = ErnParent.value),
+          aColumnWith(Family, qualifier = UnitLinksQualifier.toChild(VatId), value = VATChildUnitTypeAsString),
+          aColumnWith(Family, qualifier = UnitLinksQualifier.toChild(CHId), value = CHChildUnitTypeAsString))
       ).mkString("[", ",", "]")
     }}"""
 
@@ -45,7 +44,7 @@ class UnitLinksAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
   feature("retrieve units links for an existing statistical unit") {
     scenario("by the exact statistical unit identifier, statistical unit type and period") { wsClient =>
       Given(s"a unit links exists with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod")
-      stubHBaseFor(aUnitLinksExactRowKeyRequest(withStatUnit = TargetLeuUnitId, withUnitType = TargetLegalUnitType, withPeriod = TargetPeriod).willReturn(
+      stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLeuUnitId, withUnitType = TargetLegalUnitType, withPeriod = TargetPeriod).willReturn(
         anOkResponse().withBody(UnitLinksSingleMatchHBaseResponseBody)
       ))
 
@@ -58,7 +57,7 @@ class UnitLinksAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
       response.json.as[UnitLinks] shouldBe
         UnitLinks(id = TargetLeuUnitId, period = TargetPeriod,
           parents = Some(Map(EntParentUnitType -> UnitId(ErnParent.value))),
-          children = Some(Map(UnitId(VatId) -> vatUnitType, UnitId(CHId) -> chUnitType)),
+          children = Some(Map(VatId -> vatUnitType, CHId -> chUnitType)),
           unitType = TargetLegalUnitType)
     }
   }
@@ -66,7 +65,7 @@ class UnitLinksAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBas
   feature("respond to a request to retrieve unit links that do not exist") {
     scenario("by the exact statistical unit identifier, statistical unit type and period") { wsClient =>
       Given(s"unit links do not exist with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod")
-      stubHBaseFor(aUnitLinksExactRowKeyRequest(withStatUnit = TargetLeuUnitId, withUnitType = TargetLegalUnitType, withPeriod = TargetPeriod).willReturn(
+      stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLeuUnitId, withUnitType = TargetLegalUnitType, withPeriod = TargetPeriod).willReturn(
         anOkResponse().withBody(NoMatchFoundResponse)
       ))
 

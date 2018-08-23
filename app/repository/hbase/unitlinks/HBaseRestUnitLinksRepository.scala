@@ -4,9 +4,9 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import repository.RestRepository.{ ErrorMessage, Row }
-import repository.hbase.PeriodTableName
+import repository.hbase.{ Column, PeriodTableName }
 import repository.hbase.unitlinks.HBaseRestUnitLinksRepository.ColumnFamily
-import repository.{ RestRepository, RowMapper, UnitLinksRepository }
+import repository._
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitLinksNoPeriod, UnitType }
 
@@ -44,6 +44,13 @@ class HBaseRestUnitLinksRepository @Inject() (
     val optUnitLinks = rowMapper.fromRow(row)
     if (optUnitLinks.isEmpty) logger.warn(s"Unable to construct Unit Links from HBase [${config.tableName}] of [$row]")
     optUnitLinks.toRight("Unable to create Unit Links from row")
+  }
+
+  override def updateParentId(id: UnitId, unitType: UnitType, period: Period, parentType: UnitType,
+    fromParentId: UnitId, toParentId: UnitId): Future[UpdateResult] = {
+    val qualifiedColumn = Column(ColumnFamily, UnitLinksQualifier.toParent(parentType))
+    restRepository.update(tableName(period), UnitLinksRowKey(id, unitType), (qualifiedColumn, fromParentId.value),
+      (qualifiedColumn, toParentId.value))
   }
 }
 

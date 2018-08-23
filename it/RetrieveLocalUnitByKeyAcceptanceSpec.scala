@@ -1,44 +1,44 @@
 import java.time.Month.MARCH
 
+import fixture.ReadsLocalUnit.localUnitReads
+import fixture.ServerAcceptanceSpec
+import org.scalatest.OptionValues
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK}
 import play.mvc.Http.MimeTypes.JSON
-import org.scalatest.OptionValues
-
+import repository.hbase.HBase.DefaultColumnFamily
+import repository.hbase.localunit.LocalUnitColumns._
+import repository.hbase.localunit.LocalUnitQuery
+import support.WithWireMockHBase
 import uk.gov.ons.sbr.models.enterprise.{EnterpriseLink, Ern}
 import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
 import uk.gov.ons.sbr.models.reportingunit.{ReportingUnitLink, Rurn}
 import uk.gov.ons.sbr.models.{Address, Period}
 
-import fixture.ServerAcceptanceSpec
-import fixture.ReadsLocalUnit.localUnitReads
-import repository.hbase.localunit.LocalUnitColumns._
-import repository.hbase.localunit.LocalUnitQuery
-import support.WithWireMockHBase
-
 class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
   private val TargetErn = Ern("1000000012")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
   private val TargetLurn = Lurn("900000011")
+  private val Family = DefaultColumnFamily
 
   private val LocalUnitSingleMatchHBaseResponseBody =
     s"""{"Row": ${
       List(
         aRowWith(key = s"${LocalUnitQuery.byRowKey(TargetErn, TargetLurn)}", columns =
-          aColumnWith(name = lurn, value = TargetLurn.value),
-          aColumnWith(name = luref, value = "some-luref"),
-          aColumnWith(name = ern, value = TargetErn.value),
-          aColumnWith(name = entref, value = "some-entref"),
-          aColumnWith(name = rurn, value = "91000000012"),
-          aColumnWith(name = ruref, value = "two-ruref"),
-          aColumnWith(name = name, value = "some-name"),
-          aColumnWith(name = tradingStyle, value = "some-tradingstyle"),
-          aColumnWith(name = address1, value = "some-address1"),
-          aColumnWith(name = address2, value = "some-address2"),
-          aColumnWith(name = address5, value = "some-address5"),
-          aColumnWith(name = postcode, value = "some-postcode"),
-          aColumnWith(name = sic07, value = "some-sic07"),
-          aColumnWith(name = employees, value = "99"))
+          aColumnWith(Family, qualifier = lurn, value = TargetLurn.value),
+          aColumnWith(Family, qualifier = luref, value = "some-luref"),
+          aColumnWith(Family, qualifier = ern, value = TargetErn.value),
+          aColumnWith(Family, qualifier = entref, value = "some-entref"),
+          aColumnWith(Family, qualifier = rurn, value = "91000000012"),
+          aColumnWith(Family, qualifier = ruref, value = "two-ruref"),
+          aColumnWith(Family, qualifier = name, value = "some-name"),
+          aColumnWith(Family, qualifier = tradingStyle, value = "some-tradingstyle"),
+          aColumnWith(Family, qualifier = address1, value = "some-address1"),
+          aColumnWith(Family, qualifier = address2, value = "some-address2"),
+          aColumnWith(Family, qualifier = address5, value = "some-address5"),
+          aColumnWith(Family, qualifier = postcode, value = "some-postcode"),
+          aColumnWith(Family, qualifier = sic07, value = "some-sic07"),
+          aColumnWith(Family, qualifier = employees, value = "99"))
       ).mkString("[", ",", "]")
     }}"""
 

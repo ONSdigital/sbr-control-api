@@ -4,18 +4,18 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ EitherValues, FreeSpec, Matchers }
 import repository.RestRepository.Row
+import repository._
 import repository.hbase.unitlinks.HBaseRestUnitLinksRepository.ColumnFamily
-import repository.{ RestRepository, RowMapper }
 import support.sample.SampleUnitLinks
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.unitlinks.{ UnitLinks, UnitLinksNoPeriod }
+import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitLinksNoPeriod, UnitType }
 
 import scala.concurrent.Future
 
 class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockFactory with ScalaFutures with EitherValues {
 
   private trait Fixture extends SampleUnitLinks {
-    val TargetBaseTable = "unit_links"
+    val TargetBaseTable = "unit_link"
     val TargetPeriodTable = s"${TargetBaseTable}_${Period.asString(SamplePeriod)}"
     val TargetRowKey = UnitLinksRowKey(SampleUnitId, SampleUnitType)
     val DummyFields = Map(s"c_$Enterprise" -> SampleEnterpriseParentId)
@@ -35,6 +35,12 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
     val rowMapper = mock[RowMapper[UnitLinksNoPeriod]]
     val config = HBaseRestUnitLinksRepositoryConfig(TargetBaseTable)
     val repository = new HBaseRestUnitLinksRepository(restRepository, config, rowMapper)
+  }
+
+  private trait EditFixture extends Fixture {
+    val IncorrectLegalUnitId = UnitId("1230000000000100")
+    val TargetLegalUnitId = UnitId("1230000000000200")
+    val ColumnQualifier = "p_LEU"
   }
 
   "A UnitLinks repository" - {
@@ -70,6 +76,56 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
 
         whenReady(repository.retrieveUnitLinks(SampleUnitId, SampleUnitType, SamplePeriod)) { result =>
           result.left.value shouldBe "A Failure Message"
+        }
+      }
+    }
+
+    "supports the update of a parent link" - {
+      "returning UpdateApplied when successful" in new EditFixture {
+        (restRepository.update _).expects(TargetPeriodTable, TargetRowKey,
+          (s"$ColumnFamily:$ColumnQualifier", IncorrectLegalUnitId.value), (s"$ColumnFamily:$ColumnQualifier", TargetLegalUnitId.value)).returning(
+            Future.successful(UpdateApplied)
+          )
+
+        whenReady(repository.updateParentId(id = SampleUnitId, unitType = SampleUnitType, period = SamplePeriod,
+          parentType = UnitType.LegalUnit, fromParentId = IncorrectLegalUnitId, toParentId = TargetLegalUnitId)) { result =>
+          result shouldBe UpdateApplied
+        }
+      }
+
+      "returning UpdateConflicted when target link has been modified by another user" in new EditFixture {
+        (restRepository.update _).expects(TargetPeriodTable, TargetRowKey,
+          (s"$ColumnFamily:$ColumnQualifier", IncorrectLegalUnitId.value), (s"$ColumnFamily:$ColumnQualifier", TargetLegalUnitId.value)).returning(
+            Future.successful(UpdateConflicted)
+          )
+
+        whenReady(repository.updateParentId(id = SampleUnitId, unitType = SampleUnitType, period = SamplePeriod,
+          parentType = UnitType.LegalUnit, fromParentId = IncorrectLegalUnitId, toParentId = TargetLegalUnitId)) { result =>
+          result shouldBe UpdateConflicted
+        }
+      }
+
+      "returning UpdateTargetNotFound when the target link does not exist" in new EditFixture {
+        (restRepository.update _).expects(TargetPeriodTable, TargetRowKey,
+          (s"$ColumnFamily:$ColumnQualifier", IncorrectLegalUnitId.value), (s"$ColumnFamily:$ColumnQualifier", TargetLegalUnitId.value)).returning(
+            Future.successful(UpdateTargetNotFound)
+          )
+
+        whenReady(repository.updateParentId(id = SampleUnitId, unitType = SampleUnitType, period = SamplePeriod,
+          parentType = UnitType.LegalUnit, fromParentId = IncorrectLegalUnitId, toParentId = TargetLegalUnitId)) { result =>
+          result shouldBe UpdateTargetNotFound
+        }
+      }
+
+      "returning UpdateFailed when the update is attempted but is unsuccessful" in new EditFixture {
+        (restRepository.update _).expects(TargetPeriodTable, TargetRowKey,
+          (s"$ColumnFamily:$ColumnQualifier", IncorrectLegalUnitId.value), (s"$ColumnFamily:$ColumnQualifier", TargetLegalUnitId.value)).returning(
+            Future.successful(UpdateFailed)
+          )
+
+        whenReady(repository.updateParentId(id = SampleUnitId, unitType = SampleUnitType, period = SamplePeriod,
+          parentType = UnitType.LegalUnit, fromParentId = IncorrectLegalUnitId, toParentId = TargetLegalUnitId)) { result =>
+          result shouldBe UpdateFailed
         }
       }
     }

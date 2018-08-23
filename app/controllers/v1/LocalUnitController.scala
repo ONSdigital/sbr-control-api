@@ -18,7 +18,6 @@ import repository.LocalUnitRepository
 /*
  * Note that we are relying on regex patterns in the routes definitions to apply argument validation.
  * Only requests with valid arguments should be routed to the retrieve... actions.
- * All other requests should be routed to the badRequest action.
  */
 @Api("Search")
 @Singleton
@@ -38,8 +37,4 @@ class LocalUnitController @Inject() (repository: LocalUnitRepository) extends Co
   private def resultOnSuccessWithMaybeManyUnits(localUnits: Seq[LocalUnit]): Result =
     if (localUnits.isEmpty) NotFound
     else Ok(toJson(localUnits))
-
-  def badRequest(ernStr: String, periodStr: String, lurnStrOpt: Option[String]): Action[AnyContent] = Action {
-    BadRequest
-  }
 }

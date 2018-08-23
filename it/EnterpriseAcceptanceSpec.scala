@@ -1,46 +1,47 @@
 import java.time.Month.MARCH
 
-import play.api.http.ContentTypes.JSON
-import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK}
-import org.scalatest.OptionValues
-
-import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern, Turnover}
-
-import fixture.ServerAcceptanceSpec
 import fixture.ReadsEnterpriseUnit.enterpriseReads
+import fixture.ServerAcceptanceSpec
+import org.scalatest.OptionValues
+import play.api.http.ContentTypes.JSON
+import play.api.http.HeaderNames.CONTENT_TYPE
+import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK}
+import repository.hbase.HBase.DefaultColumnFamily
 import repository.hbase.enterprise.EnterpriseUnitColumns._
 import repository.hbase.enterprise.EnterpriseUnitRowKey
 import repository.hbase.localunit.LocalUnitColumns.{address1, address2, address5, postcode, sic07}
 import support.WithWireMockHBase
 import support.sample.SampleEnterpriseUnit
+import uk.gov.ons.sbr.models.Period
+import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern, Turnover}
 
 class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues with SampleEnterpriseUnit {
 
   private val TargetErn = Ern("1000000012")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
+  private val Family = DefaultColumnFamily
 
   private val EnterpriseUnitSingleMatchHBaseResponseBody =
     s"""{"Row": ${
       List(
         aRowWith(key = s"${EnterpriseUnitRowKey(TargetErn)}", columns =
-          aColumnWith(name = ern, value = TargetErn.value),
-          aColumnWith(name = entref, value = SampleEnterpriseReference),
-          aColumnWith(name = name, value = SampleEnterpriseName),
-          aColumnWith(name = tradingStyle, value = SampleTradingStyle),
-          aColumnWith(name = address1, value = SampleAddressLine1),
-          aColumnWith(name = address2, value = SampleAddressLine2),
-          aColumnWith(name = address5, value = SampleAddressLine5),
-          aColumnWith(name = postcode, value = SamplePostcode),
-          aColumnWith(name = sic07, value = SampleSIC07),
-          aColumnWith(name = legalStatus, value = SampleLegalStatus),
-          aColumnWith(name = jobs, value = SampleJobs.toString),
-          aColumnWith(name = employees, value = SampleNumberOfEmployees.toString),
-          aColumnWith(name = containedTurnover, value = SampleContainedTurnover.toString),
-          aColumnWith(name = standardTurnover, value = SampleStandardTurnover.toString),
-          aColumnWith(name = groupTurnover, value = SampleGroupTurnover.toString),
-          aColumnWith(name = enterpriseTurnover, value = SampleEnterpriseTurnover.toString),
-          aColumnWith(name = prn, value = SamplePrn.toString()))
+          aColumnWith(Family, qualifier = ern, value = TargetErn.value),
+          aColumnWith(Family, qualifier = entref, value = SampleEnterpriseReference),
+          aColumnWith(Family, qualifier = name, value = SampleEnterpriseName),
+          aColumnWith(Family, qualifier = tradingStyle, value = SampleTradingStyle),
+          aColumnWith(Family, qualifier = address1, value = SampleAddressLine1),
+          aColumnWith(Family, qualifier = address2, value = SampleAddressLine2),
+          aColumnWith(Family, qualifier = address5, value = SampleAddressLine5),
+          aColumnWith(Family, qualifier = postcode, value = SamplePostcode),
+          aColumnWith(Family, qualifier = sic07, value = SampleSIC07),
+          aColumnWith(Family, qualifier = legalStatus, value = SampleLegalStatus),
+          aColumnWith(Family, qualifier = jobs, value = SampleJobs.toString),
+          aColumnWith(Family, qualifier = employees, value = SampleNumberOfEmployees.toString),
+          aColumnWith(Family, qualifier = containedTurnover, value = SampleContainedTurnover.toString),
+          aColumnWith(Family, qualifier = standardTurnover, value = SampleStandardTurnover.toString),
+          aColumnWith(Family, qualifier = groupTurnover, value = SampleGroupTurnover.toString),
+          aColumnWith(Family, qualifier = enterpriseTurnover, value = SampleEnterpriseTurnover.toString),
+          aColumnWith(Family, qualifier = prn, value = SamplePrn.toString()))
       ).mkString("[", ",", "]")
     }}"""
 
@@ -60,7 +61,7 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
 
       Then(s"the details of the enterprise identified by $TargetPeriod and $TargetErn should be returned")
       response.status shouldBe OK
-      response.header("Content-Type") shouldBe Some(JSON)
+      response.header(CONTENT_TYPE) shouldBe Some(JSON)
       response.json.as[Enterprise] shouldBe
         Enterprise(ern = TargetErn, entref = Some(SampleEnterpriseReference), name = SampleEnterpriseName,
           tradingStyle = Some(SampleTradingStyle), address = aAddressSampleWithOptionalValues(
