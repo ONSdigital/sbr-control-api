@@ -8,11 +8,11 @@ class UnitLinksRowKeySpec extends FreeSpec with Matchers {
   private trait Fixture {
     val Id = "109085670091"
     val Type = "LEU"
-    val RowKey = s"$Id~$Type"
+    val RowKey = s"$Type~$Id"
   }
 
   "A Unit Links Row Key" - {
-    "is comprised of the unit identifier and the unit type" in new Fixture {
+    "is comprised of the unit type and the unit identifier" in new Fixture {
       UnitLinksRowKey(UnitId(Id), UnitType.LegalUnit) shouldBe RowKey
     }
 
@@ -36,7 +36,7 @@ class UnitLinksRowKeySpec extends FreeSpec with Matchers {
       }
 
       "an unrecognised UnitType" in new Fixture {
-        val badRowKey = s"$Id~UNKNOWN"
+        val badRowKey = s"UNKNOWN~$Id"
 
         UnitLinksRowKey.unapply(badRowKey) shouldBe None
       }

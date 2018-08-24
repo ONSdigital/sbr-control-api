@@ -11,7 +11,7 @@ class UnitLinksNoPeriodRowMapperSpec extends FreeSpec with Matchers {
   private trait Fixture extends SampleUnitLinks {
     val UnitIdStr = SampleUnitId.value
     val UnitTypeStr = UnitType.toAcronym(SampleUnitType)
-    val RowKey = s"$UnitIdStr~$UnitTypeStr"
+    val RowKey = s"$UnitTypeStr~$UnitIdStr"
 
     val ParentsMapStr = Map(
       Parent + Enterprise -> SampleEnterpriseParentId
@@ -59,7 +59,7 @@ class UnitLinksNoPeriodRowMapperSpec extends FreeSpec with Matchers {
         }
 
         "because it contains an unrecognised unit type" in new Fixture {
-          val row = Row(rowKey = s"$UnitIdStr~UNKNOWN", fields = FamilyMapStr)
+          val row = Row(rowKey = s"UNKNOWN~$UnitIdStr", fields = FamilyMapStr)
 
           UnitLinksNoPeriodRowMapper.fromRow(row) shouldBe None
         }
