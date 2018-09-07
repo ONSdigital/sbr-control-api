@@ -44,7 +44,9 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
           aColumnWith(Family, qualifier = employees, value = SampleAllValuesReportingUnit.employees.toString),
           aColumnWith(Family, qualifier = employment, value = SampleAllValuesReportingUnit.employment.toString),
           aColumnWith(Family, qualifier = turnover, value = SampleAllValuesReportingUnit.turnover.toString),
-          aColumnWith(Family, qualifier = prn, value = SampleAllValuesReportingUnit.prn.toString()))
+          aColumnWith(Family, qualifier = prn, value = SampleAllValuesReportingUnit.prn.toString()),
+          aColumnWith(Family, qualifier = region, value = SampleAllValuesReportingUnit.region)
+        )
       ).mkString("[", ",", "]")
     }}"""
 
@@ -69,7 +71,8 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
           aColumnWith(Family, qualifier = employees, value = SampleAllValuesReportingUnit.employees.toString),
           aColumnWith(Family, qualifier = employment, value = SampleAllValuesReportingUnit.employment.toString),
           aColumnWith(Family, qualifier = turnover, value = SampleAllValuesReportingUnit.turnover.toString),
-          aColumnWith(Family, qualifier = prn, value = SampleAllValuesReportingUnit.prn.toString())),
+          aColumnWith(Family, qualifier = prn, value = SampleAllValuesReportingUnit.prn.toString()),
+          aColumnWith(Family, qualifier = region, value = SampleAllValuesReportingUnit.region)),
         aRowWith(key = s"${ReportingUnitQuery.byRowKey(TargetErn, TargetRurn1)}", columns =
           aColumnWith(Family, qualifier = rurn, value = TargetRurn1.value),
           aColumnWith(Family, qualifier = ruref, value = SampleAllValuesReportingUnit1.ruref.get),
@@ -88,7 +91,8 @@ class ReportingUnitAcceptanceSpec extends ServerAcceptanceSpec with WithWireMock
           aColumnWith(Family, qualifier = employees, value = SampleAllValuesReportingUnit1.employees.toString),
           aColumnWith(Family, qualifier = employment, value = SampleAllValuesReportingUnit1.employment.toString),
           aColumnWith(Family, qualifier = turnover, value = SampleAllValuesReportingUnit1.turnover.toString),
-          aColumnWith(Family, qualifier = prn, value = SampleAllValuesReportingUnit1.prn.toString()))
+          aColumnWith(Family, qualifier = prn, value = SampleAllValuesReportingUnit1.prn.toString()),
+          aColumnWith(Family, qualifier = region, value = SampleAllValuesReportingUnit1.region))
       ).mkString("[", ",", "]")
     }}"""
 
