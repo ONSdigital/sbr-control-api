@@ -119,8 +119,8 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         (wsRequest.withRequestTimeout _).expects(ClientTimeout.milliseconds).returning(wsRequest)
         (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
 
-        Await.result(restRepository.update(Table, RowKey, beforeField = s"$ColumnFamily:$ColumnQualifier" -> "A",
-          afterField = s"$ColumnFamily:$ColumnQualifier" -> "B"), AwaitTime)
+        Await.result(restRepository.update(Table, RowKey, checkField = s"$ColumnFamily:$ColumnQualifier" -> "A",
+          updateField = s"$ColumnFamily:$ColumnQualifier" -> "B"), AwaitTime)
       }
 
       "targets the specified host and port when making a request" in new EditFixture {
@@ -133,8 +133,8 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
         (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
 
-        Await.result(restRepository.update(Table, RowKey, beforeField = s"$ColumnFamily:$ColumnQualifier" -> "A",
-          afterField = s"$ColumnFamily:$ColumnQualifier" -> "B"), AwaitTime)
+        Await.result(restRepository.update(Table, RowKey, checkField = s"$ColumnFamily:$ColumnQualifier" -> "A",
+          updateField = s"$ColumnFamily:$ColumnQualifier" -> "B"), AwaitTime)
       }
 
       /*
@@ -150,8 +150,8 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
           Future.failed(new Exception("Connection failed"))
         )
 
-        whenReady(restRepository.update(Table, RowKey, beforeField = s"$ColumnFamily:$ColumnQualifier" -> "A",
-          afterField = s"$ColumnFamily:$ColumnQualifier" -> "B")) { result =>
+        whenReady(restRepository.update(Table, RowKey, checkField = s"$ColumnFamily:$ColumnQualifier" -> "A",
+          updateField = s"$ColumnFamily:$ColumnQualifier" -> "B")) { result =>
           result shouldBe UpdateFailed
         }
       }

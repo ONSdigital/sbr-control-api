@@ -2,8 +2,7 @@ package services
 
 import javax.inject.Inject
 import repository.UnitLinksRepository
-import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
+import uk.gov.ons.sbr.models.UnitKey
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -17,8 +16,8 @@ import scala.concurrent.Future
  * the response body, it would be preferable to use a HEAD request for such checks.
  */
 class UnitRepositoryRegisterService @Inject() (unitLinksRepository: UnitLinksRepository) extends UnitRegisterService {
-  override def isRegisteredUnit(unitId: UnitId, unitType: UnitType, period: Period): Future[UnitRegisterResult] =
-    unitLinksRepository.retrieveUnitLinks(unitId, unitType, period).map {
+  override def isRegisteredUnit(unitKey: UnitKey): Future[UnitRegisterResult] =
+    unitLinksRepository.retrieveUnitLinks(unitKey).map {
       _.fold[UnitRegisterResult](
         errorMessage => UnitRegisterFailure(errorMessage),
         optUnitLinks => optUnitLinks.fold[UnitRegisterResult](UnitNotFound)(_ => UnitFound)

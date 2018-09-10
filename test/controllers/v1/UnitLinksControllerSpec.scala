@@ -14,10 +14,10 @@ import play.mvc.Http.MimeTypes.JSON
 import repository.UnitLinksRepository
 import services._
 import support.sample.SampleUnitLinks
-import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.patch.Operation
 import uk.gov.ons.sbr.models.patch.OperationTypes.{ Replace, Test }
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
+import uk.gov.ons.sbr.models.{ Period, UnitKey }
 
 import scala.concurrent.Future
 
@@ -29,13 +29,16 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
     val controller = new UnitLinksController(repository, patchService)
   }
 
-  private trait ReadFixture extends Fixture with SampleUnitLinks
+  private trait ReadFixture extends Fixture with SampleUnitLinks {
+    val SampleUnitLinkId = UnitKey(SampleUnitId, SampleUnitType, SamplePeriod)
+  }
 
   private trait EditFixture extends Fixture {
     val VatRef = "862764963000"
     val IncorrectLegalUnitId = UnitId("1230000000000100")
     val TargetLegalUnitId = UnitId("1230000000000200")
     val SamplePeriod = Period.fromYearMonth(2018, AUGUST)
+    val ExpectedUnitKey = UnitKey(UnitId(VatRef), UnitType.ValueAddedTax, SamplePeriod)
     val ExpectedPatch = Seq(
       Operation(Test, "/parents/LEU", JsString(IncorrectLegalUnitId.value)),
       Operation(Replace, "/parents/LEU", JsString(TargetLegalUnitId.value))
@@ -49,7 +52,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
   "A request" - {
     "to retrieve Unit Links by Unit Id, type and period)" - {
       "returns a JSON representation of the Unit Links when it is found" in new ReadFixture {
-        (repository.retrieveUnitLinks _).expects(SampleUnitId, SampleUnitType, SamplePeriod).returning(
+        (repository.retrieveUnitLinks _).expects(SampleUnitLinkId).returning(
           Future.successful(Right(Some(SampleUnitLinksWithAllFields)))
         )
 
@@ -62,7 +65,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
       }
 
       "returns NOT_FOUND when the Unit Links cannot be found" in new ReadFixture {
-        (repository.retrieveUnitLinks _).expects(SampleUnitId, SampleUnitType, SamplePeriod).returning(
+        (repository.retrieveUnitLinks _).expects(SampleUnitLinkId).returning(
           Future.successful(Right(None))
         )
 
@@ -73,7 +76,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
       }
 
       "returns GATEWAY_TIMEOUT when the retrieval time exceeds the configured time out" in new ReadFixture {
-        (repository.retrieveUnitLinks _).expects(SampleUnitId, SampleUnitType, SamplePeriod).returning(
+        (repository.retrieveUnitLinks _).expects(SampleUnitLinkId).returning(
           Future.successful(Left("Timeout."))
         )
 
@@ -84,7 +87,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
       }
 
       "returns INTERNAL_SERVER_ERROR when the retrieval fails" in new ReadFixture {
-        (repository.retrieveUnitLinks _).expects(SampleUnitId, SampleUnitType, SamplePeriod).returning(
+        (repository.retrieveUnitLinks _).expects(SampleUnitLinkId).returning(
           Future.successful(Left("Retrieval failed"))
         )
 
@@ -97,7 +100,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
 
     "to patch VAT unit links" - {
       "succeeds when the repository is updated successfully" in new EditFixture {
-        (patchService.applyPatchTo _).expects(UnitId(VatRef), UnitType.ValueAddedTax, SamplePeriod, ExpectedPatch).returning(
+        (patchService.applyPatchTo _).expects(ExpectedUnitKey, ExpectedPatch).returning(
           Future.successful(PatchApplied)
         )
         val action = controller.patchVatUnitLinks(VatRef, Period.asString(SamplePeriod))
@@ -109,7 +112,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
       }
 
       "returns CONFLICT when the change conflicts with that of another user" in new EditFixture {
-        (patchService.applyPatchTo _).expects(UnitId(VatRef), UnitType.ValueAddedTax, SamplePeriod, ExpectedPatch).returning(
+        (patchService.applyPatchTo _).expects(ExpectedUnitKey, ExpectedPatch).returning(
           Future.successful(PatchConflicted)
         )
         val action = controller.patchVatUnitLinks(VatRef, Period.asString(SamplePeriod))
@@ -151,7 +154,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
       }
 
       "returns UNPROCESSABLE ENTITY when a patch complies with the Json Patch specification but is rejected" in new EditFixture {
-        (patchService.applyPatchTo _).expects(UnitId(VatRef), UnitType.ValueAddedTax, SamplePeriod, *).returning(
+        (patchService.applyPatchTo _).expects(ExpectedUnitKey, *).returning(
           Future.successful(PatchRejected)
         )
         val action = controller.patchVatUnitLinks(VatRef, Period.asString(SamplePeriod))
@@ -163,7 +166,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
       }
 
       "returns NOT FOUND when a patch targets an entity that does not exist" in new EditFixture {
-        (patchService.applyPatchTo _).expects(UnitId(VatRef), UnitType.ValueAddedTax, SamplePeriod, *).returning(
+        (patchService.applyPatchTo _).expects(ExpectedUnitKey, *).returning(
           Future.successful(PatchTargetNotFound)
         )
         val action = controller.patchVatUnitLinks(VatRef, Period.asString(SamplePeriod))
@@ -175,7 +178,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
       }
 
       "returns INTERNAL SERVER ERROR when an attempt to apply a valid patch fails" in new EditFixture {
-        (patchService.applyPatchTo _).expects(UnitId(VatRef), UnitType.ValueAddedTax, SamplePeriod, *).returning(
+        (patchService.applyPatchTo _).expects(ExpectedUnitKey, *).returning(
           Future.successful(PatchFailed)
         )
         val action = controller.patchVatUnitLinks(VatRef, Period.asString(SamplePeriod))

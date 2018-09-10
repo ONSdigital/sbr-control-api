@@ -121,13 +121,13 @@ class HBaseRestRepository @Inject() (
    * In order to provide a RESTful interface and distinguish Conflict from Not Found we therefore perform a GET first.
    * In order to do a GET, we need to determine the relevant column family.
    */
-  override def update(table: String, rowKey: RowKey, beforeField: Field, afterField: Field): Future[UpdateResult] =
-    columnFamilyOf(beforeField).fold[Future[UpdateResult]](Future.successful(UpdateRejected)) { columnFamily =>
+  override def update(table: String, rowKey: RowKey, checkField: Field, updateField: Field): Future[UpdateResult] =
+    columnFamilyOf(checkField).fold[Future[UpdateResult]](Future.successful(UpdateRejected)) { columnFamily =>
       findRow(table, rowKey, columnFamily).flatMap {
         _.fold[Future[UpdateResult]](
           _ => Future.successful(UpdateFailed),
           _.fold[Future[UpdateResult]](Future.successful(UpdateTargetNotFound)) { _ =>
-            checkAndUpdate(table, rowKey, beforeField, afterField)
+            checkAndUpdate(table, rowKey, checkField, updateField)
           }
         )
       }
@@ -136,10 +136,10 @@ class HBaseRestRepository @Inject() (
   private def columnFamilyOf(field: Field): Option[String] =
     Column.unapply(field._1).map(_._1)
 
-  private def checkAndUpdate(table: String, rowKey: RowKey, beforeField: Field, afterField: Field): Future[UpdateResult] = {
+  private def checkAndUpdate(table: String, rowKey: RowKey, checkField: Field, updateField: Field): Future[UpdateResult] = {
     val url = HBase.checkedPutUrl(withBase = config.baseUrl, config.namespace, table, rowKey)
     logger.info(s"Requesting update of [$url] via HBase REST.")
-    val checkAndUpdateJson = toJson(CheckAndUpdate(rowKey, beforeField, afterField))(HBaseData.format)
+    val checkAndUpdateJson = toJson(CheckAndUpdate(rowKey, checkField, updateField))(HBaseData.format)
     baseRequest(url).withHeaders(CONTENT_TYPE -> JSON).put(checkAndUpdateJson).map {
       toUpdateResult
     }.recover {

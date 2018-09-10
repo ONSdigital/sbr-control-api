@@ -1,13 +1,12 @@
 package services
 
 import repository.RestRepository.ErrorMessage
-import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
+import uk.gov.ons.sbr.models.UnitKey
 
 import scala.concurrent.Future
 
 trait UnitRegisterService {
-  def isRegisteredUnit(unitId: UnitId, unitType: UnitType, period: Period): Future[UnitRegisterResult]
+  def isRegisteredUnit(unitKey: UnitKey): Future[UnitRegisterResult]
 }
 
 sealed trait UnitRegisterResult

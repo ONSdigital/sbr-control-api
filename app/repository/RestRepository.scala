@@ -7,7 +7,7 @@ trait RestRepository {
   def findRow(table: String, rowKey: RowKey, columnFamily: String): Future[Either[ErrorMessage, Option[Row]]]
   def findRows(table: String, query: String, columnFamily: String): Future[Either[ErrorMessage, Seq[Row]]]
 
-  def update(table: String, rowKey: RowKey, beforeField: Field, afterField: Field): Future[UpdateResult]
+  def update(table: String, rowKey: RowKey, checkField: Field, updateField: Field): Future[UpdateResult]
 }
 
 sealed trait UpdateResult

@@ -5,9 +5,10 @@ import scala.reflect.internal.util.StringOps
 object Column {
   private val Delimiter = ":"
 
-  def apply(family: String, qualifier: String): String =
-    if (family.trim.isEmpty) throw new IllegalArgumentException("Column family cannot be blank")
-    else family + Delimiter + qualifier
+  def apply(family: String, qualifier: String): String = {
+    require(family.trim.nonEmpty, "Column family cannot be blank")
+    family + Delimiter + qualifier
+  }
 
   def unapply(column: String): Option[(String, String)] =
     splitColumn(column).flatMap {

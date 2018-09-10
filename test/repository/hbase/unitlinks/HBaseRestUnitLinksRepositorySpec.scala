@@ -7,8 +7,8 @@ import repository.RestRepository.Row
 import repository._
 import repository.hbase.unitlinks.HBaseRestUnitLinksRepository.ColumnFamily
 import support.sample.SampleUnitLinks
-import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitLinksNoPeriod, UnitType }
+import uk.gov.ons.sbr.models.{ Period, UnitKey }
 
 import scala.concurrent.Future
 
@@ -20,6 +20,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
     val TargetRowKey = UnitLinksRowKey(SampleUnitId, SampleUnitType)
     val DummyFields = Map(s"c_$Enterprise" -> SampleEnterpriseParentId)
 
+    val TargetUnitLinkId = UnitKey(SampleUnitId, SampleUnitType, SamplePeriod)
     val TargetUnitLinksNoPeriod = SampleUnitLinksNoPeriodWithAllFields.copy(children = None)
     val TargetUnitLinks = UnitLinks(
       id = TargetUnitLinksNoPeriod.id,
@@ -29,7 +30,8 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
       unitType = TargetUnitLinksNoPeriod.unitType
     )
 
-    def toRow(fields: Map[String, String], rowkey: String = TargetRowKey): Row = Row(rowKey = rowkey, fields = fields)
+    def toRow(fields: Map[String, String], rowkey: String = TargetRowKey): Row =
+      Row(rowKey = rowkey, fields = fields)
 
     val restRepository = mock[RestRepository]
     val rowMapper = mock[RowMapper[UnitLinksNoPeriod]]
@@ -41,40 +43,52 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
     val IncorrectLegalUnitId = UnitId("1230000000000100")
     val TargetLegalUnitId = UnitId("1230000000000200")
     val ColumnQualifier = "p_LEU"
+    val UpdateDescriptor = UpdateParentDescriptor(
+      parentType = UnitType.LegalUnit,
+      fromParentId = IncorrectLegalUnitId, toParentId = TargetLegalUnitId
+    )
   }
 
   "A UnitLinks repository" - {
     "supports unit links retrieval when given unit id, unit type and period" - {
       "returning a target unit links when it exists" in new Fixture {
-        (restRepository.findRow _).expects(TargetPeriodTable, TargetRowKey, ColumnFamily).returning(Future.successful(Right(Some(toRow(DummyFields)))))
+        (restRepository.findRow _).expects(TargetPeriodTable, TargetRowKey, ColumnFamily).returning(
+          Future.successful(Right(Some(toRow(DummyFields))))
+        )
         (rowMapper.fromRow _).expects(toRow(DummyFields)).returning(Some(TargetUnitLinksNoPeriod))
 
-        whenReady(repository.retrieveUnitLinks(SampleUnitId, SampleUnitType, SamplePeriod)) { result =>
+        whenReady(repository.retrieveUnitLinks(TargetUnitLinkId)) { result =>
           result.right.value shouldBe Some(TargetUnitLinks)
         }
       }
 
       "returning nothing when unit links does not exist" in new Fixture {
-        (restRepository.findRow _).expects(TargetPeriodTable, TargetRowKey, ColumnFamily).returning(Future.successful(Right(None)))
+        (restRepository.findRow _).expects(TargetPeriodTable, TargetRowKey, ColumnFamily).returning(
+          Future.successful(Right(None))
+        )
 
-        whenReady(repository.retrieveUnitLinks(SampleUnitId, SampleUnitType, SamplePeriod)) { result =>
+        whenReady(repository.retrieveUnitLinks(TargetUnitLinkId)) { result =>
           result.right.value shouldBe None
         }
       }
 
       "signals a failure when the row mapper is unable to construct a valid UnitLinks representation from the HBase row" in new Fixture {
-        (restRepository.findRow _).expects(TargetPeriodTable, TargetRowKey, ColumnFamily).returning(Future.successful(Right(Some(toRow(DummyFields)))))
+        (restRepository.findRow _).expects(TargetPeriodTable, TargetRowKey, ColumnFamily).returning(
+          Future.successful(Right(Some(toRow(DummyFields))))
+        )
         (rowMapper.fromRow _).expects(toRow(DummyFields)).returning(None)
 
-        whenReady(repository.retrieveUnitLinks(SampleUnitId, SampleUnitType, SamplePeriod)) { result =>
+        whenReady(repository.retrieveUnitLinks(TargetUnitLinkId)) { result =>
           result.left.value shouldBe "Unable to create Unit Links from row"
         }
       }
 
       "signals failure when failure occurs from underlying Rest repository" in new Fixture {
-        (restRepository.findRow _).expects(TargetPeriodTable, TargetRowKey, ColumnFamily).returning(Future.successful(Left("A Failure Message")))
+        (restRepository.findRow _).expects(TargetPeriodTable, TargetRowKey, ColumnFamily).returning(
+          Future.successful(Left("A Failure Message"))
+        )
 
-        whenReady(repository.retrieveUnitLinks(SampleUnitId, SampleUnitType, SamplePeriod)) { result =>
+        whenReady(repository.retrieveUnitLinks(TargetUnitLinkId)) { result =>
           result.left.value shouldBe "A Failure Message"
         }
       }
@@ -87,8 +101,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
             Future.successful(UpdateApplied)
           )
 
-        whenReady(repository.updateParentId(id = SampleUnitId, unitType = SampleUnitType, period = SamplePeriod,
-          parentType = UnitType.LegalUnit, fromParentId = IncorrectLegalUnitId, toParentId = TargetLegalUnitId)) { result =>
+        whenReady(repository.updateParentId(TargetUnitLinkId, UpdateDescriptor)) { result =>
           result shouldBe UpdateApplied
         }
       }
@@ -99,8 +112,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
             Future.successful(UpdateConflicted)
           )
 
-        whenReady(repository.updateParentId(id = SampleUnitId, unitType = SampleUnitType, period = SamplePeriod,
-          parentType = UnitType.LegalUnit, fromParentId = IncorrectLegalUnitId, toParentId = TargetLegalUnitId)) { result =>
+        whenReady(repository.updateParentId(TargetUnitLinkId, UpdateDescriptor)) { result =>
           result shouldBe UpdateConflicted
         }
       }
@@ -111,8 +123,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
             Future.successful(UpdateTargetNotFound)
           )
 
-        whenReady(repository.updateParentId(id = SampleUnitId, unitType = SampleUnitType, period = SamplePeriod,
-          parentType = UnitType.LegalUnit, fromParentId = IncorrectLegalUnitId, toParentId = TargetLegalUnitId)) { result =>
+        whenReady(repository.updateParentId(TargetUnitLinkId, UpdateDescriptor)) { result =>
           result shouldBe UpdateTargetNotFound
         }
       }
@@ -123,8 +134,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
             Future.successful(UpdateFailed)
           )
 
-        whenReady(repository.updateParentId(id = SampleUnitId, unitType = SampleUnitType, period = SamplePeriod,
-          parentType = UnitType.LegalUnit, fromParentId = IncorrectLegalUnitId, toParentId = TargetLegalUnitId)) { result =>
+        whenReady(repository.updateParentId(TargetUnitLinkId, UpdateDescriptor)) { result =>
           result shouldBe UpdateFailed
         }
       }

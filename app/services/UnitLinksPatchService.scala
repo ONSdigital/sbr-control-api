@@ -5,7 +5,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import repository._
 import services.UnitLinksPatchService.{ ParentLegalUnit, asUnitId, toPatchStatus }
-import uk.gov.ons.sbr.models.Period
+import uk.gov.ons.sbr.models.UnitKey
 import uk.gov.ons.sbr.models.patch.OperationTypes.{ Replace, Test }
 import uk.gov.ons.sbr.models.patch.{ Operation, Patch }
 import uk.gov.ons.sbr.models.unitlinks.UnitType.LegalUnit
@@ -15,14 +15,14 @@ import utils.JsResultSupport
 import scala.concurrent.Future
 
 class UnitLinksPatchService @Inject() (repository: UnitLinksRepository, unitRegisterService: UnitRegisterService) extends PatchService {
-  override def applyPatchTo(unitId: UnitId, unitType: UnitType, period: Period, patch: Patch): Future[PatchStatus] =
+  override def applyPatchTo(unitKey: UnitKey, patch: Patch): Future[PatchStatus] =
     patch match {
       case Operation(Test, ParentLegalUnit, fromValue) :: Operation(Replace, ParentLegalUnit, toValue) :: Nil =>
         JsResultSupport.map2(asUnitId(fromValue), asUnitId(toValue))(_ -> _).fold(
           invalid = _ => Future.successful(PatchRejected),
           valid = {
           case (fromUbrn, toUbrn) =>
-            updateParentUbrn(unitId, unitType, period, fromUbrn, toUbrn)
+            updateParentUbrn(unitKey, fromUbrn, toUbrn)
         }
         )
       case _ =>
@@ -36,11 +36,14 @@ class UnitLinksPatchService @Inject() (repository: UnitLinksRepository, unitRegi
    * Legal Unit between the check and the update steps.  For now, we assume that units will not be outright deleted
    * and that this is sufficient.
    */
-  private def updateParentUbrn(unitId: UnitId, unitType: UnitType, period: Period, fromUbrn: UnitId, toUbrn: UnitId): Future[PatchStatus] =
-    unitRegisterService.isRegisteredUnit(toUbrn, LegalUnit, period).flatMap {
-      case UnitFound => repository.updateParentId(unitId, unitType, period, LegalUnit, fromUbrn, toUbrn).map(toPatchStatus)
-      case UnitNotFound => Future.successful(PatchRejected)
-      case UnitRegisterFailure(_) => Future.successful(PatchFailed)
+  private def updateParentUbrn(unitKey: UnitKey, fromUbrn: UnitId, toUbrn: UnitId): Future[PatchStatus] =
+    unitRegisterService.isRegisteredUnit(UnitKey(toUbrn, LegalUnit, unitKey.period)).flatMap {
+      case UnitFound =>
+        repository.updateParentId(unitKey, UpdateParentDescriptor(LegalUnit, fromUbrn, toUbrn)).map(toPatchStatus)
+      case UnitNotFound =>
+        Future.successful(PatchRejected)
+      case UnitRegisterFailure(_) =>
+        Future.successful(PatchFailed)
     }
 }
 

@@ -14,7 +14,7 @@ class CheckAndUpdateSpec extends FreeSpec with Matchers {
 
   "A check and update specification" - {
     "defines the target cell value followed by a check value (which is used to protect against 'lost updates')" in new Fixture {
-      CheckAndUpdate(rowKey = RowKey, beforeField = Column -> CheckValue, afterField = Column -> TargetValue) shouldBe Seq(
+      CheckAndUpdate(rowKey = RowKey, checkField = Column -> CheckValue, updateField = Column -> TargetValue) shouldBe Seq(
         HBaseRow(key = RowKey, cells = Seq(
           HBaseCell(column = Column, value = TargetValue),
           HBaseCell(column = Column, value = CheckValue)
