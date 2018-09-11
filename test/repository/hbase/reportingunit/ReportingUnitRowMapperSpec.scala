@@ -28,39 +28,67 @@ class ReportingUnitRowMapperSpec extends FreeSpec with Matchers with SampleRepor
     val turnoverValue = "314"
     val prnValue = "0.127698473"
     val legalStatusValue = "aa"
+    val regionValue = "E12000001"
 
     val allVariables = Map(rurn -> rurnValue, ruref -> rurefValue, ern -> ernValue, entref -> entrefValue,
       name -> nameValue, tradingStyle -> tradingStyleValue, legalStatus -> legalStatusValue,
       address1 -> address1Value, address2 -> address2Value, address3 -> address3Value, address4 -> address4Value,
       address5 -> address5Value, postcode -> postCodeValue, sic07 -> sic07Value, employees -> employeesValue,
-      employment -> employmentValue, turnover -> turnoverValue, prn -> prnValue)
+      employment -> employmentValue, turnover -> turnoverValue, prn -> prnValue, region -> regionValue)
     private val optionalColumns = Seq(ruref, entref, tradingStyle, legalStatus, address2, address3, address4, address5)
     val mandatoryVariables: Map[String, String] = allVariables -- optionalColumns
     val UnusedRowKey = ""
 
-    def toRow(variables: Map[String, String]) = Row(rowKey = UnusedRowKey, fields = variables)
+    def toRow(variables: Map[String, String]): Row =
+      Row(rowKey = UnusedRowKey, fields = variables)
   }
 
   "A Reporting Unit row mapper" - {
     "can create a Reporting Unit when all possible variables are defined" in new Fixture {
       ReportingUnitRowMapper.fromRow(Row("", allVariables)) shouldBe Some(ReportingUnit(
-        rurn = Rurn(rurnValue), ruref = Some(rurefValue), ern = Ern(ernValue), entref = Some(entrefValue),
-        name = nameValue, tradingStyle = Some(tradingStyleValue), legalStatus = Some(legalStatusValue),
-        address1 = address1Value, address2 = Some(address2Value), address3 = Some(address3Value),
-        address4 = Some(address4Value), address5 = Some(address5Value), postcode = postCodeValue,
-        sic07 = sic07Value, employees = employeesValue.toInt, employment = employmentValue.toInt,
-        turnover = turnoverValue.toInt, prn = BigDecimal(prnValue)
+        rurn = Rurn(rurnValue),
+        ruref = Some(rurefValue),
+        ern = Ern(ernValue),
+        entref = Some(entrefValue),
+        name = nameValue,
+        tradingStyle = Some(tradingStyleValue),
+        legalStatus = Some(legalStatusValue),
+        address1 = address1Value,
+        address2 = Some(address2Value),
+        address3 = Some(address3Value),
+        address4 = Some(address4Value),
+        address5 = Some(address5Value),
+        postcode = postCodeValue,
+        sic07 = sic07Value,
+        employees = employeesValue.toInt,
+        employment = employmentValue.toInt,
+        turnover = turnoverValue.toInt,
+        prn = BigDecimal(prnValue),
+        region = regionValue
       ))
     }
 
     "can create a Reporting Unit when only the mandatory variables are defined" in new Fixture {
       ReportingUnitRowMapper.fromRow(Row("", mandatoryVariables)) shouldBe Some(ReportingUnit(
-        rurn = Rurn(rurnValue), ruref = None, ern = Ern(ernValue), entref = None,
-        name = nameValue, tradingStyle = None, legalStatus = None,
-        address1 = address1Value, address2 = None, address3 = None,
-        address4 = None, address5 = None, postcode = postCodeValue,
-        sic07 = sic07Value, employees = employeesValue.toInt, employment = employmentValue.toInt,
-        turnover = turnoverValue.toInt, prn = BigDecimal(prnValue)
+        rurn = Rurn(rurnValue),
+        ruref = None,
+        ern = Ern(ernValue),
+        entref = None,
+        name = nameValue,
+        tradingStyle = None,
+        legalStatus = None,
+        address1 = address1Value,
+        address2 = None,
+        address3 = None,
+        address4 = None,
+        address5 = None,
+        postcode = postCodeValue,
+        sic07 = sic07Value,
+        employees = employeesValue.toInt,
+        employment = employmentValue.toInt,
+        turnover = turnoverValue.toInt,
+        prn = BigDecimal(prnValue),
+        region = regionValue
       ))
     }
 

@@ -38,7 +38,11 @@ class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
           aColumnWith(Family, qualifier = address5, value = "some-address5"),
           aColumnWith(Family, qualifier = postcode, value = "some-postcode"),
           aColumnWith(Family, qualifier = sic07, value = "some-sic07"),
-          aColumnWith(Family, qualifier = employees, value = "99"))
+          aColumnWith(Family, qualifier = employees, value = "99"),
+          aColumnWith(Family, qualifier = employment, value = "100"),
+          aColumnWith(Family, qualifier = region, value = "some-region"),
+          aColumnWith(Family, qualifier = prn, value = "0.016587362")
+        )
       ).mkString("[", ",", "]")
     }}"""
 
@@ -61,10 +65,13 @@ class RetrieveLocalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
       response.header(CONTENT_TYPE).value shouldBe JSON
       response.json.as[LocalUnit] shouldBe
         LocalUnit(TargetLurn, luref = Some("some-luref"), name = "some-name", tradingStyle = Some("some-tradingstyle"),
-          sic07 = "some-sic07", employees = 99, enterprise = EnterpriseLink(TargetErn, entref = Some("some-entref")),
+          sic07 = "some-sic07", employees = 99, employment = 100,
+          enterprise = EnterpriseLink(TargetErn, entref = Some("some-entref")),
           reportingUnit = ReportingUnitLink(Rurn("91000000012"), ruref = Some("two-ruref")),
           address = Address(line1 = "some-address1", line2 = Some("some-address2"), line3 = None, line4 = None,
-            line5 = Some("some-address5"), postcode = "some-postcode"))
+            line5 = Some("some-address5"), postcode = "some-postcode"),
+          region = "some-region", prn = BigDecimal("0.016587362")
+        )
     }
   }
 

@@ -39,7 +39,11 @@ class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
           aColumnWith(Family, qualifier = address4, value = "one-address4"),
           aColumnWith(Family, qualifier = postcode, value = "one-postcode"),
           aColumnWith(Family, qualifier = sic07, value = "one-sic07"),
-          aColumnWith(Family, qualifier = employees, value = "42")),
+          aColumnWith(Family, qualifier = employees, value = "42"),
+          aColumnWith(Family, qualifier = employment, value = "43"),
+          aColumnWith(Family, qualifier = region, value = "one-region"),
+          aColumnWith(Family, qualifier = prn, value = "0.127698473")
+        ),
         aRowWith(key = s"${LocalUnitQuery.byRowKey(TargetErn, LurnTwo)}", columns =
           aColumnWith(Family, qualifier = lurn, value = LurnTwo.value),
           aColumnWith(Family, qualifier = ern, value = TargetErn.value),
@@ -53,7 +57,10 @@ class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
           aColumnWith(Family, qualifier = address5, value = "two-address5"),
           aColumnWith(Family, qualifier = postcode, value = "two-postcode"),
           aColumnWith(Family, qualifier = sic07, value = "two-sic07"),
-          aColumnWith(Family, qualifier = employees, value = "36"))
+          aColumnWith(Family, qualifier = employees, value = "36"),
+          aColumnWith(Family, qualifier = employment, value = "37"),
+          aColumnWith(Family, qualifier = region, value = "two-region"),
+          aColumnWith(Family, qualifier = prn, value = "0.238709584"))
       ).mkString("[", ",", "]")
     }}"""
 
@@ -76,15 +83,21 @@ class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
       response.header(CONTENT_TYPE).value shouldBe JSON
       response.json.as[Seq[LocalUnit]] should contain theSameElementsAs Seq(
         LocalUnit(LurnOne, luref = Some("one-luref"), name = "one-name", tradingStyle = None,
-          sic07 = "one-sic07", employees = 42, enterprise = EnterpriseLink(TargetErn, entref = None),
+          sic07 = "one-sic07", employees = 42, employment = 43,
+          enterprise = EnterpriseLink(TargetErn, entref = None),
           reportingUnit = ReportingUnitLink(TargetRurn, ruref = None),
           address = Address(line1 = "one-address1", line2 = Some("one-address2"), line3 = Some("one-address3"),
-            line4 = Some("one-address4"), line5 = None, postcode = "one-postcode")),
+            line4 = Some("one-address4"), line5 = None, postcode = "one-postcode"),
+          region = "one-region", prn = BigDecimal("0.127698473")
+        ),
         LocalUnit(LurnTwo, luref = None, name = "two-name", tradingStyle = Some("two-tradingstyle"),
-          sic07 = "two-sic07", employees = 36, enterprise = EnterpriseLink(TargetErn, entref = Some("two-entref")),
+          sic07 = "two-sic07", employees = 36, employment = 37,
+          enterprise = EnterpriseLink(TargetErn, entref = Some("two-entref")),
           reportingUnit = ReportingUnitLink(TargetRurn, ruref = Some("two-ruref")),
           address = Address(line1 = "two-address1", line2 = Some("two-address2"), line3 = None,
-            line4 = None, line5 = Some("two-address5"), postcode = "two-postcode"))
+            line4 = None, line5 = Some("two-address5"), postcode = "two-postcode"),
+          region = "two-region", prn = BigDecimal("0.238709584")
+        )
       )
     }
 

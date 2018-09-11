@@ -23,7 +23,8 @@ case class ReportingUnit(
   @ApiModelProperty(value = "Reporting Unit employees", dataType = "int", example = "5", required = true) employees: Int,
   @ApiModelProperty(value = "Reporting Unit employment", dataType = "int", example = "6", required = true) employment: Int,
   @ApiModelProperty(value = "Reporting Unit turnover", dataType = "int", example = "4566", required = true) turnover: Int,
-  @ApiModelProperty(value = "Permanent Random Number (PRN)", dataType = "string", example = "0.016587362", required = true) prn: BigDecimal
+  @ApiModelProperty(value = "Permanent Random Number (PRN)", dataType = "string", example = "0.016587362", required = true) prn: BigDecimal,
+  @ApiModelProperty(value = "Region", dataType = "string", example = "E12000001", required = true) region: String
 )
 
 object ReportingUnit {

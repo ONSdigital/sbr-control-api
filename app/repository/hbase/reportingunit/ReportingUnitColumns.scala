@@ -19,4 +19,5 @@ object ReportingUnitColumns {
   val employment = "employment"
   val turnover = "turnover"
   val prn = "prn"
+  val region = "region"
 }

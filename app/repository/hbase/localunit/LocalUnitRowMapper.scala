@@ -2,14 +2,16 @@ package repository.hbase.localunit
 
 import com.typesafe.scalalogging.LazyLogging
 import org.slf4j.Logger
-import repository.Field.{ mandatoryIntNamed, mandatoryStringNamed, optionalStringNamed }
+import repository.Field.{ mandatoryBigDecimalNamed, mandatoryIntNamed, mandatoryStringNamed, optionalStringNamed }
 import repository.RestRepository.Row
+import repository.RowMapper
 import repository.hbase.localunit.LocalUnitColumns._
-import repository.{ Field, RowMapper }
 import uk.gov.ons.sbr.models.Address
 import uk.gov.ons.sbr.models.enterprise.{ EnterpriseLink, Ern }
 import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
 import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnitLink, Rurn }
+
+import scala.util.Try
 
 /*
  * The following fields are optional:
@@ -27,6 +29,8 @@ import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnitLink, Rurn }
  */
 object LocalUnitRowMapper extends RowMapper[LocalUnit] with LazyLogging {
 
+  private case class HeadCount(employees: Int, employment: Int)
+
   private implicit val fieldLogger: Logger = logger.underlying
 
   override def fromRow(variables: Row): Option[LocalUnit] = {
@@ -37,11 +41,14 @@ object LocalUnitRowMapper extends RowMapper[LocalUnit] with LazyLogging {
       name <- mandatoryStringNamed(name).apply(fields)
       optTradingStyle = optionalStringNamed(tradingStyle).apply(fields)
       sic07 <- mandatoryStringNamed(sic07).apply(fields)
-      employees <- mandatoryIntNamed(employees).apply(fields).toOption
+      headCount <- tryToHeadCount(fields).toOption
       enterpriseLink <- toEnterpriseLink(fields)
       reportingUnitLink <- toReportingUnitLink(fields)
       address <- toAddress(fields)
-    } yield LocalUnit(Lurn(lurn), optLuref, enterpriseLink, reportingUnitLink, name, optTradingStyle, address, sic07, employees)
+      prn <- mandatoryBigDecimalNamed(prn).apply(fields).toOption
+      region <- mandatoryStringNamed(region).apply(fields)
+    } yield LocalUnit(Lurn(lurn), optLuref, enterpriseLink, reportingUnitLink, name, optTradingStyle, address, sic07,
+      headCount.employees, headCount.employment, prn, region)
   }
 
   private def toEnterpriseLink(fields: Map[String, String]): Option[EnterpriseLink] =
@@ -55,6 +62,12 @@ object LocalUnitRowMapper extends RowMapper[LocalUnit] with LazyLogging {
       rurn <- mandatoryStringNamed(rurn).apply(fields)
       optRuref = optionalStringNamed(ruref).apply(fields)
     } yield ReportingUnitLink(Rurn(rurn), optRuref)
+
+  private def tryToHeadCount(fields: Map[String, String]): Try[HeadCount] =
+    for {
+      employees <- mandatoryIntNamed(employees).apply(fields)
+      employment <- mandatoryIntNamed(employment).apply(fields)
+    } yield HeadCount(employees, employment)
 
   private def toAddress(fields: Map[String, String]): Option[Address] =
     for {

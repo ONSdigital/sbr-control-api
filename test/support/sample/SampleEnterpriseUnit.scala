@@ -12,13 +12,11 @@ trait SampleEnterpriseUnit {
   val SampleEnterpriseName = "Company Name Plc"
   val SamplePostcode = "NP0 XXX"
   val SampleLegalStatus = "some-LegalUnit"
-
   val SampleAddressLine1 = "addressLine-1"
   val SampleAddressLine2 = "addressLine-2"
   val SampleAddressLine3 = "addressLine-3"
   val SampleAddressLine4 = "addressLine-4"
   val SampleAddressLine5 = "addressLine-5"
-
   val SampleSIC07 = "sic07"
   val SampleTradingStyle = "trading_style"
   val SampleContainedTurnover = 99
@@ -27,6 +25,9 @@ trait SampleEnterpriseUnit {
   val SampleApportionedTurnover = 99
   val SampleEnterpriseTurnover = 99
   val SamplePrn = BigDecimal("0.016587362")
+  val SampleWorkingProprietors = 1
+  val SampleEmployment = 101
+  val SampleRegion = "E12000001"
 
   val SampleFullAddress: Address = Address(line1 = SampleAddressLine1, line2 = Some(SampleAddressLine2),
     line3 = Some(SampleAddressLine3), line4 = Some(SampleAddressLine4), line5 = Some(SampleAddressLine5),
@@ -43,14 +44,15 @@ trait SampleEnterpriseUnit {
     Enterprise(SampleEnterpriseId, entref = Some(SampleEnterpriseReference), name = SampleEnterpriseName,
       tradingStyle = Some(SampleTradingStyle), address = SampleFullAddress, sic07 = SampleSIC07,
       legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees), jobs = Some(SampleJobs),
-      turnover = Some(SampleCompleteTurnover), prn = SamplePrn)
+      turnover = Some(SampleCompleteTurnover), prn = SamplePrn, workingProprietors = SampleWorkingProprietors,
+      employment = SampleEmployment, region = SampleRegion)
 
   val SampleEnterpriseWithNoOptionalFields: Enterprise =
     SampleEnterpriseWithAllFields.copy(entref = None, tradingStyle = None, address = SamplePartialAddress,
       employees = None, jobs = None, turnover = None)
 
-  def aEnterpriseSample(ern: Ern, turnover: Option[Turnover] = Some(SampleCompleteTurnover), template: Enterprise = SampleEnterpriseWithAllFields,
-    address: Address = SampleFullAddress): Enterprise =
+  def aEnterpriseSample(ern: Ern, turnover: Option[Turnover] = Some(SampleCompleteTurnover),
+    template: Enterprise = SampleEnterpriseWithAllFields, address: Address = SampleFullAddress): Enterprise =
     template.copy(ern = ern, turnover = turnover, address = address)
 
   def aAddressSampleWithOptionalValues(line2: Option[String] = None, line3: Option[String] = None,

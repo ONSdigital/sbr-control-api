@@ -41,7 +41,11 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
           aColumnWith(Family, qualifier = standardTurnover, value = SampleStandardTurnover.toString),
           aColumnWith(Family, qualifier = groupTurnover, value = SampleGroupTurnover.toString),
           aColumnWith(Family, qualifier = enterpriseTurnover, value = SampleEnterpriseTurnover.toString),
-          aColumnWith(Family, qualifier = prn, value = SamplePrn.toString()))
+          aColumnWith(Family, qualifier = prn, value = SamplePrn.toString()),
+          aColumnWith(Family, qualifier = workingProprietors, value = SampleWorkingProprietors.toString),
+          aColumnWith(Family, qualifier = employment, value = SampleEmployment.toString),
+          aColumnWith(Family, qualifier = region, value = SampleRegion)
+        )
       ).mkString("[", ",", "]")
     }}"""
 
@@ -69,7 +73,9 @@ class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBa
           legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees), jobs = Some(SampleJobs),
           turnover = Some(Turnover(containedTurnover = Some(SampleContainedTurnover),
           standardTurnover = Some(SampleStandardTurnover), groupTurnover = Some(SampleGroupTurnover),
-          apportionedTurnover = None, enterpriseTurnover = Some(SampleEnterpriseTurnover))), prn = SamplePrn)
+          apportionedTurnover = None, enterpriseTurnover = Some(SampleEnterpriseTurnover))), prn = SamplePrn,
+          workingProprietors = SampleWorkingProprietors, employment = SampleEmployment, region = SampleRegion
+        )
     }
   }
 

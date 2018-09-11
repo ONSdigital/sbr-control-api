@@ -9,6 +9,7 @@ import repository.hbase.reportingunit.ReportingUnitColumns._
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnit, Rurn }
 
+// FIXME: this should be creating appropriate sub-objects (e.g. address) not just a flat dump of variables (see LocalUnitRowMapper for example) ...
 object ReportingUnitRowMapper extends RowMapper[ReportingUnit] with LazyLogging {
 
   private implicit val fieldLogger: Logger = logger.underlying
@@ -34,8 +35,9 @@ object ReportingUnitRowMapper extends RowMapper[ReportingUnit] with LazyLogging 
       employment <- mandatoryIntNamed(employment).apply(fields).toOption
       turnover <- mandatoryIntNamed(turnover).apply(fields).toOption
       prn <- mandatoryBigDecimalNamed(prn).apply(fields).toOption
+      region <- mandatoryStringNamed(region).apply(fields)
     } yield ReportingUnit(Rurn(rurn), optRuref, Ern(ern), optEntref, name, optTradingStyle, optLegalStatus,
       address1, optAddress2, optAddress3, optAddress4, optAddress5, postcode, sic07, employees, employment,
-      turnover, prn)
+      turnover, prn, region)
   }
 }
