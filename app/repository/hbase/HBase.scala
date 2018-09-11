@@ -14,10 +14,10 @@ object HBase {
    * this endpoint for GET requests (ie. even when the query is for a specific rowKey and does not contain the
    * wildcard).
    */
-  def rowKeyUrl(withBase: BaseUrl, namespace: String, table: String, rowKey: String, columnFamily: String): String =
-    s"${BaseUrl.asUrlString(withBase)}/${rowKeyUrl(namespace, table, rowKey, columnFamily)}"
+  def rowKeyColFamilyUrl(withBase: BaseUrl, namespace: String, table: String, rowKey: String, columnFamily: String): String =
+    s"${BaseUrl.asUrlString(withBase)}/${rowKeyColFamilyUrl(namespace, table, rowKey, columnFamily)}"
 
-  def rowKeyUrl(namespace: String, table: String, rowKey: String, columnFamily: String): String =
+  def rowKeyColFamilyUrl(namespace: String, table: String, rowKey: String, columnFamily: String): String =
     s"${rowKeyUrl(namespace, table, rowKey)}/$columnFamily"
 
   /*
@@ -30,6 +30,9 @@ object HBase {
   def checkedPutUrl(namespace: String, table: String, rowKey: String): String =
     s"${rowKeyUrl(namespace, table, rowKey)}/?check=put"
 
-  private def rowKeyUrl(namespace: String, table: String, rowKey: String): String =
+  def rowKeyUrl(withBase: BaseUrl, namespace: String, table: String, rowKey: String): String =
+    s"${BaseUrl.asUrlString(withBase)}/${rowKeyUrl(namespace, table, rowKey)}"
+
+  def rowKeyUrl(namespace: String, table: String, rowKey: String): String =
     s"$namespace:$table/$rowKey"
 }

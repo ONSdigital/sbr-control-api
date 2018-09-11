@@ -20,6 +20,11 @@ object HBaseData {
   case class HBaseRow(key: String, cells: Seq[HBaseCell])
   case class HBaseCell(column: String, value: String)
 
+  object HBaseCell {
+    val fromField: ((String, String)) => HBaseCell =
+      (apply _).tupled
+  }
+
   /*
    * These types model the underlying HBase representation.
    * As we are relying on automatic format derivation, the field names must match those used by HBase exactly.

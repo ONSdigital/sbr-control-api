@@ -8,7 +8,14 @@ import scala.concurrent.Future
 
 case class UpdateParentDescriptor(parentType: UnitType, fromParentId: UnitId, toParentId: UnitId)
 
+sealed trait CreateChildLinkResult
+object LinkFromUnitNotFound extends CreateChildLinkResult
+object CreateChildLinkSuccess extends CreateChildLinkResult
+object CreateChildLinkFailure extends CreateChildLinkResult
+
 trait UnitLinksRepository {
   def retrieveUnitLinks(unitKey: UnitKey): Future[Either[ErrorMessage, Option[UnitLinks]]]
-  def updateParentId(unitKey: UnitKey, updateDescriptor: UpdateParentDescriptor): Future[UpdateResult]
+
+  def updateParentLink(unitKey: UnitKey, updateDescriptor: UpdateParentDescriptor): Future[UpdateResult]
+  def createChildLink(unitKey: UnitKey, childType: UnitType, childId: UnitId): Future[CreateChildLinkResult]
 }

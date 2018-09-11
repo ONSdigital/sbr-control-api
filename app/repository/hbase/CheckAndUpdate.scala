@@ -9,10 +9,7 @@ private[hbase] object CheckAndUpdate {
    */
   def apply(rowKey: RowKey, checkField: Field, updateField: Field): Seq[HBaseRow] =
     Seq(HBaseRow(key = rowKey, cells = Seq(
-      asHBaseCell(updateField),
-      asHBaseCell(checkField)
+      HBaseCell.fromField(updateField),
+      HBaseCell.fromField(checkField)
     )))
-
-  private def asHBaseCell(field: Field): HBaseCell =
-    HBaseCell(column = field._1, value = field._2)
 }

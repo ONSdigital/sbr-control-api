@@ -1,6 +1,11 @@
-import com.google.inject.{ AbstractModule, TypeLiteral }
+import com.google.inject.{ AbstractModule, Provides, TypeLiteral }
 import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, _ }
+import handlers.PatchHandler
+import handlers.http.HttpPatchHandler
+import javax.inject.{ Inject, Named }
 import kamon.Kamon
+import play.api.libs.ws.WSClient
+import play.api.mvc.Result
 import play.api.{ Configuration, Environment }
 import repository._
 import repository.hbase._
@@ -9,12 +14,14 @@ import repository.hbase.legalunit.{ HBaseRestLegalUnitRepository, HBaseRestLegal
 import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
 import repository.hbase.reportingunit.{ HBaseRestReportingUnitRepository, HBaseRestReportingUnitRepositoryConfig, ReportingUnitRowMapper }
 import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksNoPeriodRowMapper }
-import services.{ PatchService, UnitLinksPatchService, UnitRegisterService, UnitRepositoryRegisterService }
+import services._
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 import uk.gov.ons.sbr.models.legalunit.LegalUnit
 import uk.gov.ons.sbr.models.localunit.LocalUnit
 import uk.gov.ons.sbr.models.reportingunit.ReportingUnit
 import uk.gov.ons.sbr.models.unitlinks.UnitLinksNoPeriod
+
+import scala.concurrent.Future
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -47,17 +54,48 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     bind(classOf[LegalUnitRepository]).to(classOf[HBaseRestLegalUnitRepository])
     bind(classOf[ReportingUnitRepository]).to(classOf[HBaseRestReportingUnitRepository])
     bind(classOf[EnterpriseUnitRepository]).to(classOf[HBaseRestEnterpriseUnitRepository])
-    bind(classOf[UnitLinksRepository]).to(classOf[HBaseRestUnitLinksRepository])
     bind(classOf[HBaseResponseReaderMaker]).toInstance(HBaseResponseReader)
-    bind(classOf[PatchService]).to(classOf[UnitLinksPatchService])
-    bind(classOf[UnitRegisterService]).to(classOf[UnitRepositoryRegisterService])
 
     bind(new TypeLiteral[RowMapper[ReportingUnit]]() {}).toInstance(ReportingUnitRowMapper)
     bind(new TypeLiteral[RowMapper[LocalUnit]]() {}).toInstance(LocalUnitRowMapper)
     bind(new TypeLiteral[RowMapper[LegalUnit]]() {}).toInstance(LegalUnitRowMapper)
     bind(new TypeLiteral[RowMapper[Enterprise]]() {}).toInstance(EnterpriseUnitRowMapper)
     bind(new TypeLiteral[RowMapper[UnitLinksNoPeriod]]() {}).toInstance(UnitLinksNoPeriodRowMapper)
+    bind(new TypeLiteral[PatchHandler[Future[Result]]]() {}).to(classOf[HttpPatchHandler])
 
     Kamon.loadReportersFromConfig()
+  }
+
+  @Provides @Named("vat")
+  def providesVatRegisterService(@Inject() wsClient: WSClient): UnitRegisterService = {
+    val vatAdminDataBaseUrl = BaseUrlConfigLoader.load(configuration.underlying, "api.admin.data.vat")
+    new VatRegisterService(vatAdminDataBaseUrl, wsClient)
+  }
+
+  @Provides @Named("unit-link")
+  def providesUnitLinkRegisterService(
+    @Inject() restRepository: RestRepository,
+    unitLinksRepositoryConfig: HBaseRestUnitLinksRepositoryConfig
+  ): UnitRegisterService =
+    new UnitLinkUnitRegisterService(restRepository, unitLinksRepositoryConfig)
+
+  @Provides
+  def providesUnitLinksRepository(
+    @Inject() restRepository: RestRepository,
+    unitLinksRepositoryConfig: HBaseRestUnitLinksRepositoryConfig,
+    rowMapper: RowMapper[UnitLinksNoPeriod],
+    @Named("unit-link") unitLinkRegisterService: UnitRegisterService
+  ): UnitLinksRepository =
+    new HBaseRestUnitLinksRepository(restRepository, unitLinksRepositoryConfig, rowMapper, unitLinkRegisterService)
+
+  @Provides
+  def providesPatchService(
+    @Inject() unitLinksRepository: UnitLinksRepository,
+    @Named("vat") vatRegisterService: UnitRegisterService,
+    @Named("unit-link") unitLinkRegisterService: UnitRegisterService
+  ): PatchService = {
+    val vatUnitLinkPatchService = new VatUnitLinkPatchService(unitLinksRepository, unitLinkRegisterService)
+    val legalUnitLinkPatchService = new LegalUnitLinkPatchService(unitLinksRepository, vatRegisterService)
+    new UnitLinksPatchService(vatUnitLinkPatchService, legalUnitLinkPatchService)
   }
 }

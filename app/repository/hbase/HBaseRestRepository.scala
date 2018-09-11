@@ -42,7 +42,7 @@ class HBaseRestRepository @Inject() (
 
   override def findRows(table: String, query: String, columnFamily: String): Future[Either[ErrorMessage, Seq[Row]]] = {
     val withRowReader = responseReaderMaker.forColumnFamily(columnFamily)
-    val url = HBase.rowKeyUrl(withBase = config.baseUrl, config.namespace, table, query, columnFamily)
+    val url = HBase.rowKeyColFamilyUrl(withBase = config.baseUrl, config.namespace, table, query, columnFamily)
     logger.info(s"Requesting [$url] from HBase REST.")
 
     baseRequest(url).withHeaders(ACCEPT -> JSON).get().map {
@@ -139,8 +139,7 @@ class HBaseRestRepository @Inject() (
   private def checkAndUpdate(table: String, rowKey: RowKey, checkField: Field, updateField: Field): Future[UpdateResult] = {
     val url = HBase.checkedPutUrl(withBase = config.baseUrl, config.namespace, table, rowKey)
     logger.info(s"Requesting update of [$url] via HBase REST.")
-    val checkAndUpdateJson = toJson(CheckAndUpdate(rowKey, checkField, updateField))(HBaseData.format)
-    baseRequest(url).withHeaders(CONTENT_TYPE -> JSON).put(checkAndUpdateJson).map {
+    putJson(url, toJson(CheckAndUpdate(rowKey, checkField, updateField))(HBaseData.format)).map {
       toUpdateResult
     }.recover {
       case _: Throwable => UpdateFailed
@@ -153,4 +152,23 @@ class HBaseRestRepository @Inject() (
       case NOT_MODIFIED => UpdateConflicted
       case _ => UpdateFailed
     }
+
+  override def createOrReplace(table: String, rowKey: RowKey, field: (String, String)): Future[CreateOrReplaceResult] = {
+    val url = HBase.rowKeyUrl(withBase = config.baseUrl, config.namespace, table, rowKey)
+    logger.info(s"Creating/replacing cell [${field._1}] at [$url] via HBase REST.")
+    putJson(url, toJson(CreateOrReplace(rowKey, field))(HBaseData.format)).map {
+      toCreateOrReplaceResult
+    }.recover {
+      case _: Throwable => CreateOrReplaceFailed
+    }
+  }
+
+  private def toCreateOrReplaceResult(response: WSResponse): CreateOrReplaceResult =
+    response.status match {
+      case OK => CreateOrReplaceApplied
+      case _ => CreateOrReplaceFailed
+    }
+
+  private def putJson(url: String, body: JsValue): Future[WSResponse] =
+    baseRequest(url).withHeaders(CONTENT_TYPE -> JSON).put(body)
 }

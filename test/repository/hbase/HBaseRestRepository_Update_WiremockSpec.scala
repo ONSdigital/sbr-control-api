@@ -14,7 +14,7 @@ import repository._
 import support.WithWireMockHBase
 import utils.BaseUrl
 
-class HBaseRestRepository_Edit_WiremockSpec extends org.scalatest.fixture.FreeSpec with WithWireMockHBase with Matchers with EitherValues with MockFactory with ScalaFutures with PatienceConfiguration {
+class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.FreeSpec with WithWireMockHBase with Matchers with EitherValues with MockFactory with ScalaFutures with PatienceConfiguration {
 
   private val Table = "table"
   private val RowKey = "rowKey"

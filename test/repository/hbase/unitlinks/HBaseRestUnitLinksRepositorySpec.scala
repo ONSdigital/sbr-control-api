@@ -6,7 +6,9 @@ import org.scalatest.{ EitherValues, FreeSpec, Matchers }
 import repository.RestRepository.Row
 import repository._
 import repository.hbase.unitlinks.HBaseRestUnitLinksRepository.ColumnFamily
+import services.{ UnitFound, UnitNotFound, UnitRegisterFailure, UnitRegisterService }
 import support.sample.SampleUnitLinks
+import uk.gov.ons.sbr.models.unitlinks.UnitType.toAcronym
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitLinksNoPeriod, UnitType }
 import uk.gov.ons.sbr.models.{ Period, UnitKey }
 
@@ -36,10 +38,11 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
     val restRepository = mock[RestRepository]
     val rowMapper = mock[RowMapper[UnitLinksNoPeriod]]
     val config = HBaseRestUnitLinksRepositoryConfig(TargetBaseTable)
-    val repository = new HBaseRestUnitLinksRepository(restRepository, config, rowMapper)
+    val unitRegisterService = mock[UnitRegisterService]
+    val repository = new HBaseRestUnitLinksRepository(restRepository, config, rowMapper, unitRegisterService)
   }
 
-  private trait EditFixture extends Fixture {
+  private trait EditParentFixture extends Fixture {
     val IncorrectLegalUnitId = UnitId("1230000000000100")
     val TargetLegalUnitId = UnitId("1230000000000200")
     val ColumnQualifier = "p_LEU"
@@ -47,6 +50,11 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
       parentType = UnitType.LegalUnit,
       fromParentId = IncorrectLegalUnitId, toParentId = TargetLegalUnitId
     )
+  }
+
+  private trait EditChildFixture extends Fixture {
+    val ChildUnitType = UnitType.ValueAddedTax
+    val ChildUnitId = UnitId("987654321012")
   }
 
   "A UnitLinks repository" - {
@@ -95,47 +103,95 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
     }
 
     "supports the update of a parent link" - {
-      "returning UpdateApplied when successful" in new EditFixture {
+      "returning UpdateApplied when successful" in new EditParentFixture {
         (restRepository.update _).expects(TargetPeriodTable, TargetRowKey,
           (s"$ColumnFamily:$ColumnQualifier", IncorrectLegalUnitId.value), (s"$ColumnFamily:$ColumnQualifier", TargetLegalUnitId.value)).returning(
             Future.successful(UpdateApplied)
           )
 
-        whenReady(repository.updateParentId(TargetUnitLinkId, UpdateDescriptor)) { result =>
+        whenReady(repository.updateParentLink(TargetUnitLinkId, UpdateDescriptor)) { result =>
           result shouldBe UpdateApplied
         }
       }
 
-      "returning UpdateConflicted when target link has been modified by another user" in new EditFixture {
+      "returning UpdateConflicted when target link has been modified by another user" in new EditParentFixture {
         (restRepository.update _).expects(TargetPeriodTable, TargetRowKey,
           (s"$ColumnFamily:$ColumnQualifier", IncorrectLegalUnitId.value), (s"$ColumnFamily:$ColumnQualifier", TargetLegalUnitId.value)).returning(
             Future.successful(UpdateConflicted)
           )
 
-        whenReady(repository.updateParentId(TargetUnitLinkId, UpdateDescriptor)) { result =>
+        whenReady(repository.updateParentLink(TargetUnitLinkId, UpdateDescriptor)) { result =>
           result shouldBe UpdateConflicted
         }
       }
 
-      "returning UpdateTargetNotFound when the target link does not exist" in new EditFixture {
+      "returning UpdateTargetNotFound when the target link does not exist" in new EditParentFixture {
         (restRepository.update _).expects(TargetPeriodTable, TargetRowKey,
           (s"$ColumnFamily:$ColumnQualifier", IncorrectLegalUnitId.value), (s"$ColumnFamily:$ColumnQualifier", TargetLegalUnitId.value)).returning(
             Future.successful(UpdateTargetNotFound)
           )
 
-        whenReady(repository.updateParentId(TargetUnitLinkId, UpdateDescriptor)) { result =>
+        whenReady(repository.updateParentLink(TargetUnitLinkId, UpdateDescriptor)) { result =>
           result shouldBe UpdateTargetNotFound
         }
       }
 
-      "returning UpdateFailed when the update is attempted but is unsuccessful" in new EditFixture {
+      "returning UpdateFailed when the update is attempted but is unsuccessful" in new EditParentFixture {
         (restRepository.update _).expects(TargetPeriodTable, TargetRowKey,
           (s"$ColumnFamily:$ColumnQualifier", IncorrectLegalUnitId.value), (s"$ColumnFamily:$ColumnQualifier", TargetLegalUnitId.value)).returning(
             Future.successful(UpdateFailed)
           )
 
-        whenReady(repository.updateParentId(TargetUnitLinkId, UpdateDescriptor)) { result =>
+        whenReady(repository.updateParentLink(TargetUnitLinkId, UpdateDescriptor)) { result =>
           result shouldBe UpdateFailed
+        }
+      }
+    }
+
+    "supports the creation of a child link" - {
+      "returning success when the target unit is known to the register and the create operation succeeds" in new EditChildFixture {
+        (unitRegisterService.isRegisteredUnit _).expects(TargetUnitLinkId).returning(
+          Future.successful(UnitFound)
+        )
+        (restRepository.createOrReplace _).expects(TargetPeriodTable, TargetRowKey, (s"$ColumnFamily:c_${ChildUnitId.value}", toAcronym(ChildUnitType))).returning(
+          Future.successful(CreateOrReplaceApplied)
+        )
+
+        whenReady(repository.createChildLink(TargetUnitLinkId, ChildUnitType, ChildUnitId)) { result =>
+          result shouldBe CreateChildLinkSuccess
+        }
+      }
+
+      "returning not found when the target unit does not have any links in the register" in new EditChildFixture {
+        (unitRegisterService.isRegisteredUnit _).expects(TargetUnitLinkId).returning(
+          Future.successful(UnitNotFound)
+        )
+
+        whenReady(repository.createChildLink(TargetUnitLinkId, ChildUnitType, ChildUnitId)) { result =>
+          result shouldBe LinkFromUnitNotFound
+        }
+      }
+
+      "returning failure when the attempt to identity whether the target unit has links in the register fails" in new EditChildFixture {
+        (unitRegisterService.isRegisteredUnit _).expects(TargetUnitLinkId).returning(
+          Future.successful(UnitRegisterFailure("lookup failed"))
+        )
+
+        whenReady(repository.createChildLink(TargetUnitLinkId, ChildUnitType, ChildUnitId)) { result =>
+          result shouldBe CreateChildLinkFailure
+        }
+      }
+
+      "returning failure when an attempt to create the value fails" in new EditChildFixture {
+        (unitRegisterService.isRegisteredUnit _).expects(TargetUnitLinkId).returning(
+          Future.successful(UnitFound)
+        )
+        (restRepository.createOrReplace _).expects(TargetPeriodTable, TargetRowKey, (s"$ColumnFamily:c_${ChildUnitId.value}", toAcronym(ChildUnitType))).returning(
+          Future.successful(CreateOrReplaceFailed)
+        )
+
+        whenReady(repository.createChildLink(TargetUnitLinkId, ChildUnitType, ChildUnitId)) { result =>
+          result shouldBe CreateChildLinkFailure
         }
       }
     }

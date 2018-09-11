@@ -2,7 +2,7 @@ package uk.gov.ons.sbr.models.patch
 
 import org.scalatest.{ FreeSpec, Matchers }
 import play.api.libs.json.{ JsError, JsNumber, JsString }
-import uk.gov.ons.sbr.models.patch.OperationTypes.{ Replace, Test }
+import uk.gov.ons.sbr.models.patch.OperationTypes.{ Add, Replace, Test }
 
 class ReadsOperationTypeSpec extends FreeSpec with Matchers {
   "An operation type specification" - {
@@ -13,6 +13,10 @@ class ReadsOperationTypeSpec extends FreeSpec with Matchers {
 
       "representing the replace type" in {
         JsString("replace").as[OperationType] shouldBe Replace
+      }
+
+      "representing the add type" in {
+        JsString("add").as[OperationType] shouldBe Add
       }
     }
 

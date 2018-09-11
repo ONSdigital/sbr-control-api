@@ -5,9 +5,10 @@ import com.typesafe.scalalogging.LazyLogging
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import repository.RestRepository.{ ErrorMessage, Row }
 import repository._
-import repository.hbase.unitlinks.HBaseRestUnitLinksRepository.ColumnFamily
+import repository.hbase.unitlinks.HBaseRestUnitLinksRepository.{ ColumnFamily, qualifiedColumn, toCreateChildLinkResult }
 import repository.hbase.{ Column, PeriodTableName }
-import uk.gov.ons.sbr.models.unitlinks.{ UnitLinks, UnitLinksNoPeriod }
+import services.{ UnitFound, UnitNotFound, UnitRegisterFailure, UnitRegisterService }
+import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitLinksNoPeriod, UnitType }
 import uk.gov.ons.sbr.models.{ Period, UnitKey }
 
 import scala.concurrent.Future
@@ -17,7 +18,8 @@ case class HBaseRestUnitLinksRepositoryConfig(tableName: String)
 class HBaseRestUnitLinksRepository @Inject() (
     restRepository: RestRepository,
     config: HBaseRestUnitLinksRepositoryConfig,
-    rowMapper: RowMapper[UnitLinksNoPeriod]
+    rowMapper: RowMapper[UnitLinksNoPeriod],
+    unitRegisterService: UnitRegisterService
 ) extends UnitLinksRepository with LazyLogging {
 
   override def retrieveUnitLinks(unitKey: UnitKey): Future[Either[ErrorMessage, Option[UnitLinks]]] = {
@@ -48,17 +50,43 @@ class HBaseRestUnitLinksRepository @Inject() (
     optUnitLinks.toRight("Unable to create Unit Links from row")
   }
 
-  override def updateParentId(unitKey: UnitKey, updateDescriptor: UpdateParentDescriptor): Future[UpdateResult] = {
-    val qualifiedColumn = Column(ColumnFamily, UnitLinksQualifier.toParent(updateDescriptor.parentType))
+  override def updateParentLink(unitKey: UnitKey, updateDescriptor: UpdateParentDescriptor): Future[UpdateResult] = {
+    val column = qualifiedColumn(UnitLinksQualifier.toParent(updateDescriptor.parentType))
     restRepository.update(
       tableName(unitKey.period),
       UnitLinksRowKey(unitKey.unitId, unitKey.unitType),
-      (qualifiedColumn, updateDescriptor.fromParentId.value),
-      (qualifiedColumn, updateDescriptor.toParentId.value)
+      checkField = (column, updateDescriptor.fromParentId.value),
+      updateField = (column, updateDescriptor.toParentId.value)
     )
   }
+
+  /*
+   * We only allow a new column to be created on an existing rowKey, and so must explicitly check first.
+   */
+  override def createChildLink(unitKey: UnitKey, childType: UnitType, childId: UnitId): Future[CreateChildLinkResult] =
+    unitRegisterService.isRegisteredUnit(unitKey).flatMap {
+      case UnitNotFound => Future.successful(LinkFromUnitNotFound)
+      case UnitFound => doCreateChildLink(unitKey, childType, childId)
+      case UnitRegisterFailure(_) => Future.successful(CreateChildLinkFailure)
+    }
+
+  private def doCreateChildLink(unitKey: UnitKey, childType: UnitType, childId: UnitId): Future[CreateChildLinkResult] =
+    restRepository.createOrReplace(
+      tableName(unitKey.period),
+      UnitLinksRowKey(unitKey.unitId, unitKey.unitType),
+      field = (qualifiedColumn(UnitLinksQualifier.toChild(childId)), UnitType.toAcronym(childType))
+    ).map(toCreateChildLinkResult)
 }
 
 object HBaseRestUnitLinksRepository {
   val ColumnFamily = "l"
+
+  def qualifiedColumn(qualifier: String): String =
+    Column(ColumnFamily, qualifier)
+
+  private def toCreateChildLinkResult(createResult: CreateOrReplaceResult): CreateChildLinkResult =
+    createResult match {
+      case CreateOrReplaceApplied => CreateChildLinkSuccess
+      case CreateOrReplaceFailed => CreateChildLinkFailure
+    }
 }

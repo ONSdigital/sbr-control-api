@@ -1,27 +1,25 @@
 package support
 
-import play.api.http.Status.{ NOT_MODIFIED, OK, SERVICE_UNAVAILABLE }
-import play.mvc.Http.MimeTypes.JSON
-import org.scalatest.Suite
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.client.{ MappingBuilder, ResponseDefinitionBuilder, WireMock }
+import com.github.tomakehurst.wiremock.client.{ MappingBuilder, WireMock }
+import org.scalatest.Suite
 import play.api.http.HeaderNames.{ ACCEPT, CONTENT_TYPE }
+import play.mvc.Http.MimeTypes.JSON
+import repository.hbase.HBase.{ DefaultColumnFamily, checkedPutUrl, rowKeyColFamilyUrl, rowKeyUrl }
+import repository.hbase.PeriodTableName
+import repository.hbase.enterprise.EnterpriseUnitRowKey
+import repository.hbase.legalunit.LegalUnitQuery
+import repository.hbase.localunit.LocalUnitQuery
+import repository.hbase.reportingunit.ReportingUnitQuery
+import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, UnitLinksRowKey }
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.legalunit.Ubrn
 import uk.gov.ons.sbr.models.localunit.Lurn
 import uk.gov.ons.sbr.models.reportingunit.Rurn
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
-import repository.hbase.HBase.{ checkedPutUrl, rowKeyUrl }
-import repository.hbase.enterprise.EnterpriseUnitRowKey
-import repository.hbase.localunit.LocalUnitQuery
-import repository.hbase.legalunit.LegalUnitQuery
-import repository.hbase.reportingunit.ReportingUnitQuery
-import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, UnitLinksRowKey }
-import repository.hbase.HBase.DefaultColumnFamily
-import repository.hbase.PeriodTableName
 
-trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBaseJsonBodyFixture { this: Suite =>
+trait WithWireMockHBase extends WithWireMock with ApiResponse with BasicAuthentication with HBaseJsonBodyFixture { this: Suite =>
   override val wireMockPort = 8075
 
   private val Namespace = "sbr_control_db"
@@ -65,18 +63,18 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
   }
 
   def aUnitLinksExactRowKeyRequest(withUnitId: UnitId, withUnitType: UnitType, withPeriod: Period): MappingBuilder = {
-    val tableName = PeriodTableName("unit_link", withPeriod)
-    val rowKey = UnitLinksRowKey(withUnitId, withUnitType)
-    getHBaseJson(
-      url = urlFor(tableName, rowKey, columnFamily = HBaseRestUnitLinksRepository.ColumnFamily),
-      auth = dummyAuthorization
-    )
+    val url = aUnitLinksUrlBuilder(urlFor(_, _, HBaseRestUnitLinksRepository.ColumnFamily))(withUnitType, withUnitId, withPeriod)
+    getHBaseJson(url, auth = dummyAuthorization)
   }
 
   def aCheckAndUpdateUnitLinkRequest(withUnitType: UnitType, withUnitId: UnitId, withPeriod: Period): MappingBuilder = {
-    val tableName = PeriodTableName("unit_link", withPeriod)
-    val rowKey = UnitLinksRowKey(withUnitId, withUnitType)
-    putHBaseJson(url = urlForCheckedPut(tableName, rowKey), auth = dummyAuthorization)
+    val url = aUnitLinksUrlBuilder(urlForCheckedPut)(withUnitType, withUnitId, withPeriod)
+    putHBaseJson(url, auth = dummyAuthorization)
+  }
+
+  def aCreateUnitLinkRequest(withUnitType: UnitType, withUnitId: UnitId, withPeriod: Period): MappingBuilder = {
+    val url = aUnitLinksUrlBuilder(urlForUncheckedPut)(withUnitType, withUnitId, withPeriod)
+    putHBaseJson(url, auth = dummyAuthorization)
   }
 
   def getHBaseJson(url: String, auth: Authorization): MappingBuilder =
@@ -89,20 +87,20 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
       withHeader(CONTENT_TYPE, equalTo(JSON)).
       withHeader(Authorization.Name, equalTo(Authorization.value(auth)))
 
+  private def aUnitLinksUrlBuilder(urlBuilder: (String, String) => String)(withUnitType: UnitType, withUnitId: UnitId, withPeriod: Period): String = {
+    val tableName = PeriodTableName("unit_link", withPeriod)
+    val rowKey = UnitLinksRowKey(withUnitId, withUnitType)
+    urlBuilder(tableName, rowKey)
+  }
+
   private def urlFor(tableName: String, rowKey: String, columnFamily: String): String =
-    "/" + rowKeyUrl(namespace = Namespace, tableName, rowKey, columnFamily)
+    "/" + rowKeyColFamilyUrl(namespace = Namespace, tableName, rowKey, columnFamily)
 
   private def urlForCheckedPut(tableName: String, rowKey: String): String =
     "/" + checkedPutUrl(namespace = Namespace, tableName, rowKey)
 
-  def anOkResponse(): ResponseDefinitionBuilder =
-    aResponse().withStatus(OK)
-
-  def aNotModifiedResponse(): ResponseDefinitionBuilder =
-    aResponse().withStatus(NOT_MODIFIED)
-
-  def aServiceUnavailableResponse(): ResponseDefinitionBuilder =
-    aResponse().withStatus(SERVICE_UNAVAILABLE)
+  private def urlForUncheckedPut(tableName: String, rowKey: String): String =
+    "/" + rowKeyUrl(namespace = Namespace, tableName, rowKey)
 
   val stubHBaseFor: MappingBuilder => Unit =
     WireMock.stubFor

@@ -7,11 +7,11 @@ import play.api.http.{ Status, Writeable }
 import play.api.libs.json.{ JsSuccess, JsValue, Json, Reads }
 import play.api.libs.ws.{ WSClient, WSRequest, WSResponse }
 import repository.RestRepository.Row
-import repository.UpdateFailed
+import repository.{ CreateOrReplaceFailed, UpdateFailed }
 import utils.BaseUrl
 
-import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration._
+import scala.concurrent.{ Await, Future }
 
 /*
  * This spec mocks the wsClient, which disregards the rule "don't mock types you don't own" (see "Growing
@@ -73,6 +73,10 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
       (readsRows.reads _).when(*).returns(JsSuccess(Seq(Row("rowKey", Map.empty))))
       () // explicitly return unit to avoid warning about disregarded return value
     }
+  }
+
+  private trait CreateFixture extends Fixture {
+    val CreateUrlSuffix = s"/$RowKey"
   }
 
   "A HBase REST repository" - {
@@ -153,6 +157,39 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         whenReady(restRepository.update(Table, RowKey, checkField = s"$ColumnFamily:$ColumnQualifier" -> "A",
           updateField = s"$ColumnFamily:$ColumnQualifier" -> "B")) { result =>
           result shouldBe UpdateFailed
+        }
+      }
+    }
+
+    "when creating data" - {
+      "specifies the configured client-side timeout when making a request" in new CreateFixture {
+        (wsClient.url _).when(where[String] { _.endsWith(CreateUrlSuffix) }).returns(wsRequest)
+        expectRequestHeadersAndAuth()
+        (wsRequest.withRequestTimeout _).expects(ClientTimeout.milliseconds).returning(wsRequest)
+        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
+
+        Await.result(restRepository.createOrReplace(Table, RowKey, field = s"$ColumnFamily:$ColumnQualifier" -> "A"), AwaitTime)
+      }
+
+      "targets the specified host and port when making a request" in new CreateFixture {
+        (wsClient.url _).when(where[String] { url => url.startsWith(s"$Protocol://$Host:$Port") && url.endsWith(CreateUrlSuffix) }).returning(wsRequest)
+        expectRequestHeadersAndAuth()
+        (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
+        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
+
+        Await.result(restRepository.createOrReplace(Table, RowKey, field = s"$ColumnFamily:$ColumnQualifier" -> "A"), AwaitTime)
+      }
+
+      "materialises an error into a failure" in new CreateFixture {
+        (wsClient.url _).when(where[String] { _.endsWith(CreateUrlSuffix) }).returns(wsRequest)
+        expectRequestHeadersAndAuth()
+        (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
+        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(
+          Future.failed(new Exception("Connection failed"))
+        )
+
+        whenReady(restRepository.createOrReplace(Table, RowKey, field = s"$ColumnFamily:$ColumnQualifier" -> "A")) { result =>
+          result shouldBe CreateOrReplaceFailed
         }
       }
     }
