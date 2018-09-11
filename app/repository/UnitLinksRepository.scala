@@ -1,11 +1,14 @@
 package repository
-import scala.concurrent.Future
-
-import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
 
 import repository.RestRepository.ErrorMessage
+import uk.gov.ons.sbr.models.UnitKey
+import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
+
+import scala.concurrent.Future
+
+case class UpdateParentDescriptor(parentType: UnitType, fromParentId: UnitId, toParentId: UnitId)
 
 trait UnitLinksRepository {
-  def retrieveUnitLinks(id: UnitId, unitType: UnitType, period: Period): Future[Either[ErrorMessage, Option[UnitLinks]]]
+  def retrieveUnitLinks(unitKey: UnitKey): Future[Either[ErrorMessage, Option[UnitLinks]]]
+  def updateParentId(unitKey: UnitKey, updateDescriptor: UpdateParentDescriptor): Future[UpdateResult]
 }

@@ -9,6 +9,7 @@ import repository.hbase.legalunit.{ HBaseRestLegalUnitRepository, HBaseRestLegal
 import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
 import repository.hbase.reportingunit.{ HBaseRestReportingUnitRepository, HBaseRestReportingUnitRepositoryConfig, ReportingUnitRowMapper }
 import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksNoPeriodRowMapper }
+import services.{ PatchService, UnitLinksPatchService, UnitRegisterService, UnitRepositoryRegisterService }
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 import uk.gov.ons.sbr.models.legalunit.LegalUnit
 import uk.gov.ons.sbr.models.localunit.LocalUnit
@@ -48,6 +49,8 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     bind(classOf[EnterpriseUnitRepository]).to(classOf[HBaseRestEnterpriseUnitRepository])
     bind(classOf[UnitLinksRepository]).to(classOf[HBaseRestUnitLinksRepository])
     bind(classOf[HBaseResponseReaderMaker]).toInstance(HBaseResponseReader)
+    bind(classOf[PatchService]).to(classOf[UnitLinksPatchService])
+    bind(classOf[UnitRegisterService]).to(classOf[UnitRepositoryRegisterService])
 
     bind(new TypeLiteral[RowMapper[ReportingUnit]]() {}).toInstance(ReportingUnitRowMapper)
     bind(new TypeLiteral[RowMapper[LocalUnit]]() {}).toInstance(LocalUnitRowMapper)

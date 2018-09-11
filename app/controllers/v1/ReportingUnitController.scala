@@ -31,8 +31,4 @@ class ReportingUnitController @Inject() (repository: ReportingUnitRepository) ex
   private def resultOnSuccessWithMaybeManyUnits(reportingUnits: Seq[ReportingUnit]): Result =
     if (reportingUnits.isEmpty) NotFound
     else Ok(toJson(reportingUnits))
-
-  def badRequest(ernStr: String, periodStr: String, rurnStrOpt: Option[String]): Action[AnyContent] = Action {
-    BadRequest
-  }
 }

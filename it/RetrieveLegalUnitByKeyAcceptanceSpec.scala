@@ -6,6 +6,7 @@ import fixture.ServerAcceptanceSpec
 import org.scalatest.OptionValues
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.mvc.Http.MimeTypes.JSON
+import repository.hbase.HBase.DefaultColumnFamily
 import repository.hbase.legalunit.LegalUnitColumns._
 import repository.hbase.legalunit.LegalUnitQuery
 import support.WithWireMockHBase
@@ -18,29 +19,30 @@ class RetrieveLegalUnitByKeyAcceptanceSpec extends ServerAcceptanceSpec with Wit
   private val TargetErn = Ern("1000000123")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
   private val TargetUbrn = Ubrn("0000000000111111")
+  private val Family = DefaultColumnFamily
 
   private val LegalUnitSingleMatchHBaseResponseBody =
     s"""{"Row": ${
       List(
         aRowWith(key = s"${LegalUnitQuery.byRowKey(TargetErn, TargetUbrn)}", columns =
-          aColumnWith(name = ubrn, value = TargetUbrn.value),
-          aColumnWith(name = crn, value = "01245960"),
-          aColumnWith(name = uprn, value = "10023450178"),
-          aColumnWith(name = name, value = "Big Box Cereal Ltd"),
-          aColumnWith(name = tradingStyle, value = "The Cereal Co"),
-          aColumnWith(name = address1, value = "(Rochdale)"),
-          aColumnWith(name = address2, value = "37 St Albans St"),
-          aColumnWith(name = address3, value = "Rochdale"),
-          aColumnWith(name = address4, value = "Lancs"),
-          aColumnWith(name = postcode, value = "OL16 1UT"),
-          aColumnWith(name = sic07, value = "10612"),
-          aColumnWith(name = payeJobs, value = "99"),
-          aColumnWith(name = turnover, value = "123"),
-          aColumnWith(name = legalStatus, value = "1"),
-          aColumnWith(name = tradingStatus, value = "A"),
-          aColumnWith(name = birthDate, value = "02/02/2017"),
-          aColumnWith(name = deathDate, value = "05/06/2018"),
-          aColumnWith(name = deathCode, value = "1"))
+          aColumnWith(Family, qualifier = ubrn, value = TargetUbrn.value),
+          aColumnWith(Family, qualifier = crn, value = "01245960"),
+          aColumnWith(Family, qualifier = uprn, value = "10023450178"),
+          aColumnWith(Family, qualifier = name, value = "Big Box Cereal Ltd"),
+          aColumnWith(Family, qualifier = tradingStyle, value = "The Cereal Co"),
+          aColumnWith(Family, qualifier = address1, value = "(Rochdale)"),
+          aColumnWith(Family, qualifier = address2, value = "37 St Albans St"),
+          aColumnWith(Family, qualifier = address3, value = "Rochdale"),
+          aColumnWith(Family, qualifier = address4, value = "Lancs"),
+          aColumnWith(Family, qualifier = postcode, value = "OL16 1UT"),
+          aColumnWith(Family, qualifier = sic07, value = "10612"),
+          aColumnWith(Family, qualifier = payeJobs, value = "99"),
+          aColumnWith(Family, qualifier = turnover, value = "123"),
+          aColumnWith(Family, qualifier = legalStatus, value = "1"),
+          aColumnWith(Family, qualifier = tradingStatus, value = "A"),
+          aColumnWith(Family, qualifier = birthDate, value = "02/02/2017"),
+          aColumnWith(Family, qualifier = deathDate, value = "05/06/2018"),
+          aColumnWith(Family, qualifier = deathCode, value = "1"))
       ).mkString("[", ",", "]")
     }}"""
 

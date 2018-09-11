@@ -1,17 +1,18 @@
 package support
 
-import play.api.http.Status.OK
+import play.api.http.Status.{ NOT_MODIFIED, OK, SERVICE_UNAVAILABLE }
 import play.mvc.Http.MimeTypes.JSON
 import org.scalatest.Suite
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.client.{ MappingBuilder, ResponseDefinitionBuilder, WireMock }
+import play.api.http.HeaderNames.{ ACCEPT, CONTENT_TYPE }
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.legalunit.Ubrn
 import uk.gov.ons.sbr.models.localunit.Lurn
 import uk.gov.ons.sbr.models.reportingunit.Rurn
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
-import repository.hbase.HBase.rowKeyUrl
+import repository.hbase.HBase.{ checkedPutUrl, rowKeyUrl }
 import repository.hbase.enterprise.EnterpriseUnitRowKey
 import repository.hbase.localunit.LocalUnitQuery
 import repository.hbase.legalunit.LegalUnitQuery
@@ -20,7 +21,7 @@ import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, UnitLinksRowKe
 import repository.hbase.HBase.DefaultColumnFamily
 import repository.hbase.PeriodTableName
 
-trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBaseResponseFixture { this: Suite =>
+trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBaseJsonBodyFixture { this: Suite =>
   override val wireMockPort = 8075
 
   private val Namespace = "sbr_control_db"
@@ -33,7 +34,7 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
 
   private def aLocalUnitQuery(withPeriod: Period, withQuery: String): MappingBuilder = {
     val tableName = PeriodTableName("local_unit", withPeriod)
-    createUrlAndThenGetHBaseJson(tableName, withQuery)
+    getHBaseJson(url = urlFor(tableName, withQuery, DefaultColumnFamily), auth = dummyAuthorization)
   }
 
   def anAllReportingUnitsForEnterpriseRequest(withErn: Ern, withPeriod: Period): MappingBuilder =
@@ -44,7 +45,7 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
 
   private def aReportingUnitQuery(withPeriod: Period, withQuery: String): MappingBuilder = {
     val tableName = PeriodTableName("reporting_unit", withPeriod)
-    createUrlAndThenGetHBaseJson(tableName, withQuery)
+    getHBaseJson(url = urlFor(tableName, withQuery, DefaultColumnFamily), auth = dummyAuthorization)
   }
 
   def anAllLegalUnitsForEnterpriseRequest(withErn: Ern, withPeriod: Period): MappingBuilder =
@@ -55,34 +56,57 @@ trait WithWireMockHBase extends WithWireMock with BasicAuthentication with HBase
 
   private def aLegalUnitQuery(withPeriod: Period, withQuery: String): MappingBuilder = {
     val tableName = PeriodTableName("legal_unit", withPeriod)
-    createUrlAndThenGetHBaseJson(tableName, withQuery)
+    getHBaseJson(url = urlFor(tableName, withQuery, DefaultColumnFamily), auth = dummyAuthorization)
   }
 
   def anEnterpriseUnitRequest(withErn: Ern, withPeriod: Period): MappingBuilder = {
     val tableName = PeriodTableName("enterprise", withPeriod)
-    createUrlAndThenGetHBaseJson(tableName, EnterpriseUnitRowKey(withErn))
+    getHBaseJson(url = urlFor(tableName, EnterpriseUnitRowKey(withErn), DefaultColumnFamily), auth = dummyAuthorization)
   }
 
-  def aUnitLinksExactRowKeyRequest(withStatUnit: UnitId, withUnitType: UnitType, withPeriod: Period): MappingBuilder = {
+  def aUnitLinksExactRowKeyRequest(withUnitId: UnitId, withUnitType: UnitType, withPeriod: Period): MappingBuilder = {
     val tableName = PeriodTableName("unit_link", withPeriod)
-    val rowKey = UnitLinksRowKey(withStatUnit, withUnitType)
-    createUrlAndThenGetHBaseJson(tableName, rowKey, columnFamily = HBaseRestUnitLinksRepository.ColumnFamily)
+    val rowKey = UnitLinksRowKey(withUnitId, withUnitType)
+    getHBaseJson(
+      url = urlFor(tableName, rowKey, columnFamily = HBaseRestUnitLinksRepository.ColumnFamily),
+      auth = dummyAuthorization
+    )
   }
 
-  private def createUrlAndThenGetHBaseJson(tableName: String, rowKey: String, columnFamily: String = DefaultColumnFamily): MappingBuilder =
-    getHBaseJson(
-      "/" + rowKeyUrl(namespace = Namespace, table = tableName, rowKey, columnFamily = columnFamily),
-      Authorization("", "")
-    )
+  def aCheckAndUpdateUnitLinkRequest(withUnitType: UnitType, withUnitId: UnitId, withPeriod: Period): MappingBuilder = {
+    val tableName = PeriodTableName("unit_link", withPeriod)
+    val rowKey = UnitLinksRowKey(withUnitId, withUnitType)
+    putHBaseJson(url = urlForCheckedPut(tableName, rowKey), auth = dummyAuthorization)
+  }
 
   def getHBaseJson(url: String, auth: Authorization): MappingBuilder =
     get(urlEqualTo(url)).
-      withHeader("Accept", equalTo(JSON)).
+      withHeader(ACCEPT, equalTo(JSON)).
       withHeader(Authorization.Name, equalTo(Authorization.value(auth)))
+
+  def putHBaseJson(url: String, auth: Authorization): MappingBuilder =
+    put(urlEqualTo(url)).
+      withHeader(CONTENT_TYPE, equalTo(JSON)).
+      withHeader(Authorization.Name, equalTo(Authorization.value(auth)))
+
+  private def urlFor(tableName: String, rowKey: String, columnFamily: String): String =
+    "/" + rowKeyUrl(namespace = Namespace, tableName, rowKey, columnFamily)
+
+  private def urlForCheckedPut(tableName: String, rowKey: String): String =
+    "/" + checkedPutUrl(namespace = Namespace, tableName, rowKey)
 
   def anOkResponse(): ResponseDefinitionBuilder =
     aResponse().withStatus(OK)
 
+  def aNotModifiedResponse(): ResponseDefinitionBuilder =
+    aResponse().withStatus(NOT_MODIFIED)
+
+  def aServiceUnavailableResponse(): ResponseDefinitionBuilder =
+    aResponse().withStatus(SERVICE_UNAVAILABLE)
+
   val stubHBaseFor: MappingBuilder => Unit =
     WireMock.stubFor
+
+  private val dummyAuthorization: Authorization =
+    Authorization("", "")
 }

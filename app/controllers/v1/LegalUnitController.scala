@@ -20,7 +20,6 @@ import repository.LegalUnitRepository
 /*
  * Note that we are relying on regex patterns in the routes definitions to apply argument validation.
  * Only requests with valid arguments should be routed to the retrieve... actions.
- * All other requests should be routed to the badRequest action.
  */
 @Api("Search")
 @Singleton
@@ -40,9 +39,5 @@ class LegalUnitController @Inject() (repository: LegalUnitRepository) extends Co
   private def resultOnSuccessWithMaybeManyUnits(legalUnits: Seq[LegalUnit]): Result =
     if (legalUnits.isEmpty) NotFound
     else Ok(toJson(legalUnits))
-
-  def badRequest(ernStr: String, periodStr: String, ubrnStrOpt: Option[String]): Action[AnyContent] = Action {
-    BadRequest
-  }
 }
 

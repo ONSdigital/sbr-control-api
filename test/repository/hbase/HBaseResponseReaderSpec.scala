@@ -3,12 +3,12 @@ package repository.hbase
 import org.scalatest.{ FreeSpec, Matchers }
 import play.api.libs.json.Json
 import repository.RestRepository.Row
-import support.HBaseResponseFixture
+import support.HBaseJsonBodyFixture
 
 class HBaseResponseReaderSpec extends FreeSpec with Matchers {
 
-  private trait Fixture extends HBaseResponseFixture {
-    val ColumnFamily = "cg"
+  private trait Fixture extends HBaseJsonBodyFixture {
+    val ColumnFamily = "cf"
     val UnusedRowKey = "some-key"
 
     def parse(hBaseResponseJsonStr: String): Seq[Row] =
