@@ -4,11 +4,24 @@ import org.scalatest.{ FreeSpec, Matchers }
 import utils.BaseUrl
 
 class HBaseSpec extends FreeSpec with Matchers {
-  "A HBase" - {
-    "REST url can be built" in {
-      val url = HBase.rowKeyUrl(BaseUrl(protocol = "http", host = "hostname", port = 1234, prefix = None), "namespace", "table", "rowKey", "columnFamily")
 
-      url shouldBe "http://hostname:1234/namespace:table/rowKey/columnFamily"
+  private trait Fixture {
+    val baseUrl = BaseUrl(protocol = "http", host = "hostname", port = 1234, prefix = None)
+  }
+
+  "A HBase" - {
+    "REST url can be built" - {
+      "that specifies a column family (used by GET requests)" in new Fixture {
+        val url = HBase.rowKeyUrl(baseUrl, "namespace", "table", "rowKey", "columnFamily")
+
+        url shouldBe "http://hostname:1234/namespace:table/rowKey/columnFamily"
+      }
+
+      "that specifies a checked put (and does not contain a column family)" in new Fixture {
+        val url = HBase.checkedPutUrl(baseUrl, "namespace", "table", "rowKey")
+
+        url shouldBe "http://hostname:1234/namespace:table/rowKey/?check=put"
+      }
     }
   }
 }

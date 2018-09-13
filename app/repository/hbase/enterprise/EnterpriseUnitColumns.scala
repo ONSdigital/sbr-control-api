@@ -21,4 +21,7 @@ object EnterpriseUnitColumns {
   val apportionedTurnover = "app_turnover"
   val enterpriseTurnover = "ent_turnover"
   val prn = "prn"
+  val workingProprietors = "working_props"
+  val employment = "employment"
+  val region = "region"
 }

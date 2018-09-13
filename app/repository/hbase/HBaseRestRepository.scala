@@ -2,16 +2,16 @@ package repository.hbase
 
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
-
-import play.api.http.HeaderNames.ACCEPT
+import play.api.http.HeaderNames.{ ACCEPT, CONTENT_TYPE }
 import play.api.http.MimeTypes.JSON
-import play.api.http.Status.{ NOT_FOUND, OK, UNAUTHORIZED }
+import play.api.http.Status.{ NOT_FOUND, NOT_MODIFIED, OK, UNAUTHORIZED }
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.Json.toJson
 import play.api.libs.json.{ JsValue, Reads }
 import play.api.libs.ws.WSAuthScheme.BASIC
 import play.api.libs.ws.{ WSClient, WSRequest, WSResponse }
-import repository.RestRepository
-import repository.RestRepository.{ ErrorMessage, Row }
+import repository.RestRepository.{ ErrorMessage, Field, Row, RowKey }
+import repository._
 import utils.{ BaseUrl, TrySupport }
 
 import scala.concurrent.duration._
@@ -44,15 +44,15 @@ class HBaseRestRepository @Inject() (
     val withRowReader = responseReaderMaker.forColumnFamily(columnFamily)
     val url = HBase.rowKeyUrl(withBase = config.baseUrl, config.namespace, table, query, columnFamily)
     logger.info(s"Requesting [$url] from HBase REST.")
-    requestFor(url).get().map {
+
+    baseRequest(url).withHeaders(ACCEPT -> JSON).get().map {
       (fromResponseToErrorOrJson _).andThen(convertToErrorOrRows(withRowReader))
     }.recover(withTranslationOfFailureToError)
   }
 
-  private def requestFor(url: String): WSRequest =
+  private def baseRequest(url: String): WSRequest =
     wsClient.
       url(url).
-      withHeaders(ACCEPT -> JSON).
       withAuth(config.username, config.password, scheme = BASIC).
       withRequestTimeout(config.timeout.milliseconds)
 
@@ -112,4 +112,45 @@ class HBaseRestRepository @Inject() (
       }
     }
   }
+
+  /*
+   * A HBase checkAndUpdate operation returns 304: Not Modified when:
+   * - the "check" is not satisfied (ie. the value has been changed by another user)
+   * - there is no such row with the target rowKey
+   *
+   * In order to provide a RESTful interface and distinguish Conflict from Not Found we therefore perform a GET first.
+   * In order to do a GET, we need to determine the relevant column family.
+   */
+  override def update(table: String, rowKey: RowKey, checkField: Field, updateField: Field): Future[UpdateResult] =
+    columnFamilyOf(checkField).fold[Future[UpdateResult]](Future.successful(UpdateRejected)) { columnFamily =>
+      findRow(table, rowKey, columnFamily).flatMap {
+        _.fold[Future[UpdateResult]](
+          _ => Future.successful(UpdateFailed),
+          _.fold[Future[UpdateResult]](Future.successful(UpdateTargetNotFound)) { _ =>
+            checkAndUpdate(table, rowKey, checkField, updateField)
+          }
+        )
+      }
+    }
+
+  private def columnFamilyOf(field: Field): Option[String] =
+    Column.unapply(field._1).map(_._1)
+
+  private def checkAndUpdate(table: String, rowKey: RowKey, checkField: Field, updateField: Field): Future[UpdateResult] = {
+    val url = HBase.checkedPutUrl(withBase = config.baseUrl, config.namespace, table, rowKey)
+    logger.info(s"Requesting update of [$url] via HBase REST.")
+    val checkAndUpdateJson = toJson(CheckAndUpdate(rowKey, checkField, updateField))(HBaseData.format)
+    baseRequest(url).withHeaders(CONTENT_TYPE -> JSON).put(checkAndUpdateJson).map {
+      toUpdateResult
+    }.recover {
+      case _: Throwable => UpdateFailed
+    }
+  }
+
+  private def toUpdateResult(response: WSResponse): UpdateResult =
+    response.status match {
+      case OK => UpdateApplied
+      case NOT_MODIFIED => UpdateConflicted
+      case _ => UpdateFailed
+    }
 }

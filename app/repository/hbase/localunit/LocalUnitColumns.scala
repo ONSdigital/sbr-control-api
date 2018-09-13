@@ -17,4 +17,7 @@ object LocalUnitColumns {
   val postcode = "postcode"
   val sic07 = "sic07"
   val employees = "employees"
+  val employment = "employment"
+  val prn = "prn"
+  val region = "region"
 }

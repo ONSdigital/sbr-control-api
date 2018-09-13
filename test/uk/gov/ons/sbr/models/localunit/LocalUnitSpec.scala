@@ -33,7 +33,12 @@ class LocalUnitSpec extends FreeSpec with Matchers {
          |  ${
         withValues(
           string("name", localUnit.name),
-          optionalString("tradingStyle", localUnit.tradingStyle)
+          optionalString("tradingStyle", localUnit.tradingStyle),
+          string("sic07", localUnit.sic07),
+          int("employees", localUnit.employees),
+          int("employment", localUnit.employment),
+          string("region", localUnit.region),
+          string("prn", localUnit.prn.toString())
         )
       },
          | "address": {${
@@ -45,13 +50,7 @@ class LocalUnitSpec extends FreeSpec with Matchers {
           optionalString("line5", localUnit.address.line5),
           string("postcode", localUnit.address.postcode)
         )
-      }},
-         | ${
-        withValues(
-          string("sic07", localUnit.sic07),
-          int("employees", localUnit.employees)
-        )
-      }}""".stripMargin
+      }}}""".stripMargin
   }
 
   "A LocalUnit" - {

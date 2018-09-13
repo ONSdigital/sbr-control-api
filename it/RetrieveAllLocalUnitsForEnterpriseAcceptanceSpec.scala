@@ -1,20 +1,19 @@
 import java.time.Month.MARCH
 
+import fixture.ReadsLocalUnit.localUnitReads
+import fixture.ServerAcceptanceSpec
+import org.scalatest.OptionValues
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK}
 import play.mvc.Http.MimeTypes.JSON
-import org.scalatest.OptionValues
-
+import repository.hbase.HBase.DefaultColumnFamily
+import repository.hbase.localunit.LocalUnitColumns._
+import repository.hbase.localunit.LocalUnitQuery
+import support.WithWireMockHBase
 import uk.gov.ons.sbr.models.enterprise.{EnterpriseLink, Ern}
 import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
 import uk.gov.ons.sbr.models.reportingunit.{ReportingUnitLink, Rurn}
 import uk.gov.ons.sbr.models.{Address, Period}
-
-import fixture.ServerAcceptanceSpec
-import fixture.ReadsLocalUnit.localUnitReads
-import repository.hbase.localunit.LocalUnitColumns._
-import repository.hbase.localunit.LocalUnitQuery
-import support.WithWireMockHBase
 
 class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
 
@@ -23,37 +22,45 @@ class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
   private val LurnOne = Lurn("900000010")
   private val LurnTwo = Lurn("900000020")
+  private val Family = DefaultColumnFamily
 
   private val LocalUnitMultipleMatchHBaseResponseBody =
     s"""{"Row": ${
       List(
         aRowWith(key = s"${LocalUnitQuery.byRowKey(TargetErn, LurnOne)}", columns =
-          aColumnWith(name = lurn, value = LurnOne.value),
-          aColumnWith(name = luref, value = s"one-luref"),
-          aColumnWith(name = ern, value = TargetErn.value),
-          aColumnWith(name = rurn, value = TargetRurn.value),
-          aColumnWith(name = name, value = "one-name"),
-          aColumnWith(name = address1, value = "one-address1"),
-          aColumnWith(name = address2, value = "one-address2"),
-          aColumnWith(name = address3, value = "one-address3"),
-          aColumnWith(name = address4, value = "one-address4"),
-          aColumnWith(name = postcode, value = "one-postcode"),
-          aColumnWith(name = sic07, value = "one-sic07"),
-          aColumnWith(name = employees, value = "42")),
+          aColumnWith(Family, qualifier = lurn, value = LurnOne.value),
+          aColumnWith(Family, qualifier = luref, value = s"one-luref"),
+          aColumnWith(Family, qualifier = ern, value = TargetErn.value),
+          aColumnWith(Family, qualifier = rurn, value = TargetRurn.value),
+          aColumnWith(Family, qualifier = name, value = "one-name"),
+          aColumnWith(Family, qualifier = address1, value = "one-address1"),
+          aColumnWith(Family, qualifier = address2, value = "one-address2"),
+          aColumnWith(Family, qualifier = address3, value = "one-address3"),
+          aColumnWith(Family, qualifier = address4, value = "one-address4"),
+          aColumnWith(Family, qualifier = postcode, value = "one-postcode"),
+          aColumnWith(Family, qualifier = sic07, value = "one-sic07"),
+          aColumnWith(Family, qualifier = employees, value = "42"),
+          aColumnWith(Family, qualifier = employment, value = "43"),
+          aColumnWith(Family, qualifier = region, value = "one-region"),
+          aColumnWith(Family, qualifier = prn, value = "0.127698473")
+        ),
         aRowWith(key = s"${LocalUnitQuery.byRowKey(TargetErn, LurnTwo)}", columns =
-          aColumnWith(name = lurn, value = LurnTwo.value),
-          aColumnWith(name = ern, value = TargetErn.value),
-          aColumnWith(name = entref, value = "two-entref"),
-          aColumnWith(name = rurn, value = TargetRurn.value),
-          aColumnWith(name = ruref, value = "two-ruref"),
-          aColumnWith(name = name, value = "two-name"),
-          aColumnWith(name = tradingStyle, value = "two-tradingstyle"),
-          aColumnWith(name = address1, value = "two-address1"),
-          aColumnWith(name = address2, value = "two-address2"),
-          aColumnWith(name = address5, value = "two-address5"),
-          aColumnWith(name = postcode, value = "two-postcode"),
-          aColumnWith(name = sic07, value = "two-sic07"),
-          aColumnWith(name = employees, value = "36"))
+          aColumnWith(Family, qualifier = lurn, value = LurnTwo.value),
+          aColumnWith(Family, qualifier = ern, value = TargetErn.value),
+          aColumnWith(Family, qualifier = entref, value = "two-entref"),
+          aColumnWith(Family, qualifier = rurn, value = TargetRurn.value),
+          aColumnWith(Family, qualifier = ruref, value = "two-ruref"),
+          aColumnWith(Family, qualifier = name, value = "two-name"),
+          aColumnWith(Family, qualifier = tradingStyle, value = "two-tradingstyle"),
+          aColumnWith(Family, qualifier = address1, value = "two-address1"),
+          aColumnWith(Family, qualifier = address2, value = "two-address2"),
+          aColumnWith(Family, qualifier = address5, value = "two-address5"),
+          aColumnWith(Family, qualifier = postcode, value = "two-postcode"),
+          aColumnWith(Family, qualifier = sic07, value = "two-sic07"),
+          aColumnWith(Family, qualifier = employees, value = "36"),
+          aColumnWith(Family, qualifier = employment, value = "37"),
+          aColumnWith(Family, qualifier = region, value = "two-region"),
+          aColumnWith(Family, qualifier = prn, value = "0.238709584"))
       ).mkString("[", ",", "]")
     }}"""
 
@@ -76,15 +83,21 @@ class RetrieveAllLocalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceS
       response.header(CONTENT_TYPE).value shouldBe JSON
       response.json.as[Seq[LocalUnit]] should contain theSameElementsAs Seq(
         LocalUnit(LurnOne, luref = Some("one-luref"), name = "one-name", tradingStyle = None,
-          sic07 = "one-sic07", employees = 42, enterprise = EnterpriseLink(TargetErn, entref = None),
+          sic07 = "one-sic07", employees = 42, employment = 43,
+          enterprise = EnterpriseLink(TargetErn, entref = None),
           reportingUnit = ReportingUnitLink(TargetRurn, ruref = None),
           address = Address(line1 = "one-address1", line2 = Some("one-address2"), line3 = Some("one-address3"),
-            line4 = Some("one-address4"), line5 = None, postcode = "one-postcode")),
+            line4 = Some("one-address4"), line5 = None, postcode = "one-postcode"),
+          region = "one-region", prn = BigDecimal("0.127698473")
+        ),
         LocalUnit(LurnTwo, luref = None, name = "two-name", tradingStyle = Some("two-tradingstyle"),
-          sic07 = "two-sic07", employees = 36, enterprise = EnterpriseLink(TargetErn, entref = Some("two-entref")),
+          sic07 = "two-sic07", employees = 36, employment = 37,
+          enterprise = EnterpriseLink(TargetErn, entref = Some("two-entref")),
           reportingUnit = ReportingUnitLink(TargetRurn, ruref = Some("two-ruref")),
           address = Address(line1 = "two-address1", line2 = Some("two-address2"), line3 = None,
-            line4 = None, line5 = Some("two-address5"), postcode = "two-postcode"))
+            line4 = None, line5 = Some("two-address5"), postcode = "two-postcode"),
+          region = "two-region", prn = BigDecimal("0.238709584")
+        )
       )
     }
 

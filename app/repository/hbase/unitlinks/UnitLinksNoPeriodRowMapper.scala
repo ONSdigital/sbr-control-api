@@ -3,7 +3,7 @@ package repository.hbase.unitlinks
 import com.typesafe.scalalogging.LazyLogging
 import repository.{ RestRepository, RowMapper }
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinksNoPeriod, UnitType }
-import repository.hbase.unitlinks.UnitLinksPrefix.{ Child, Parent }
+import repository.hbase.unitlinks.UnitLinksQualifier.{ ChildPrefix, ParentPrefix }
 import utils.TrySupport
 
 import scala.util.Try
@@ -32,20 +32,20 @@ object UnitLinksNoPeriodRowMapper extends RowMapper[UnitLinksNoPeriod] with Lazy
   }
 
   private def partitionMap(rawMap: Map[String, String]): (Map[String, String], Map[String, String]) =
-    rawMap.partition { case (k, _) => k.startsWith(Parent) }
+    rawMap.partition { case (k, _) => k.startsWith(ParentPrefix) }
 
   private def returnNoneIfAllNotPrefixedAsChild(rawMap: Map[String, String]): Boolean =
-    rawMap.forall { case (k, _) => k.startsWith(Child) }
+    rawMap.forall { case (k, _) => k.startsWith(ChildPrefix) }
 
   private def toChildField(childMap: Map[String, String]): Option[Map[UnitId, UnitType]] =
-    toFamilyMap(childMap, Child) { (key: String, value: String) =>
+    toFamilyMap(childMap, ChildPrefix) { (key: String, value: String) =>
       toUnitType(value).map(unitType =>
-        UnitId(key.drop(Child.length)) -> unitType)
+        UnitId(key.drop(ChildPrefix.length)) -> unitType)
     }
 
   private def toParentField(parentMap: Map[String, String]): Option[Map[UnitType, UnitId]] =
-    toFamilyMap(parentMap, Parent) { (key: String, value: String) =>
-      toUnitType(key.drop(Parent.length)).map(unitType =>
+    toFamilyMap(parentMap, ParentPrefix) { (key: String, value: String) =>
+      toUnitType(key.drop(ParentPrefix.length)).map(unitType =>
         unitType -> UnitId(value))
     }
 

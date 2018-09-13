@@ -1,0 +1,92 @@
+@startuml
+title Move VAT Unit to an Existing Legal Unit
+
+actor EditUser order 0
+participant "sbr-api" order 10
+participant "sbr-control-api" order 20
+database HBase order 30
+
+EditUser -> "sbr-api": POST /v1/periods/201808/edit/VAT/VAT-01
+note left
+  {
+   "parent": {
+     "from": {
+       "UBRN-01": "LEU"
+     }
+     "to": {
+       "UBRN-02": "LEU"
+     }
+   }
+   "audit": {
+     "username": "euser"
+   }
+  }
+end note
+
+== Update Parent ==
+
+"sbr-api" -> "sbr-control-api": PATCH /v1/periods/201808/types/VAT/units/VAT-01
+note left
+  [{"op": "test", "path": "/parents/LEU", "value": "UBRN-01"},
+   {"op": "replace", "path": "/parents/LEU", "value": "UBRN-02"}]
+end note
+
+"sbr-control-api" -> HBase: PUT /sbr_control_db:unit_links_201808/VAT-01~VAT/?check=put
+note left
+  {"Row":[
+    {"key":"${hbaseEncode("VAT-01~VAT")}",
+     "Cell":[
+       {"column":"${hbaseEncode(s"l:p_LEU")}", "$":"${hbaseEncode("UBRN-02")}"},
+       {"column":"${hbaseEncode(s"l:p_LEU")}", "$":"${hbaseEncode("UBRN-01")}"}
+     ]}
+   ]}
+end note
+
+"sbr-control-api" <- HBase: 200 OK
+"sbr-api" <- "sbr-control-api": 204 No Content
+
+== Create Child ==
+
+"sbr-api" -> "sbr-control-api": PATCH /v1/periods/201808/types/LEU/units/UBRN-02
+note left
+  [{"op": "add", "path": "/children/VAT-01", "value": "VAT"}]
+end note
+
+"sbr-control-api" -> HBase: PUT /sbr_control_db:unit_links_201808/UBRN-02~LEU/l
+note left
+  {"Row":[
+    {"key":"${hbaseEncode("UBRN-02~LEU")}",
+     "Cell":[
+       {"column":"${hbaseEncode(s"l:c_VAT-01")}", "$":"${hbaseEncode("VAT")}"}
+     ]}
+   ]}"""
+end note
+
+"sbr-control-api" <- HBase: 200 OK
+"sbr-api" <- "sbr-control-api": 204 No Content
+
+== Delete Child ==
+
+"sbr-api" -> "sbr-control-api": PATCH /v1/periods/201808/types/LEU/units/UBRN-01
+note left
+  [{"op": "test", "path": "/children/VAT-01", "value": "VAT"},
+   {"op": "remove", "path": "/children/VAT-01"}]
+end note
+
+"sbr-control-api" -> HBase: DELETE /sbr_control_db:unit_links_201808/UBRN-01~LEU/l:c_VAT-01/?check=delete
+note left
+  {"Row":[
+    {"key":"${hbaseEncode("UBRN-01~LEU")}",
+     "Cell":[
+       {"column":"${hbaseEncode(s"l:c_VAT-01")}", "$":"${hbaseEncode("VAT")}"}
+     ]}
+   ]}"""
+end note
+
+"sbr-control-api" <- HBase: 200 OK
+"sbr-api" <- "sbr-control-api": 204 No Content
+
+== ==
+
+EditUser <- "sbr-api": 201 Created
+@enduml

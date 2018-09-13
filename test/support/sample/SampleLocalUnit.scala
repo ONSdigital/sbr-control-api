@@ -10,7 +10,9 @@ trait SampleLocalUnit {
     line4 = None, line5 = None, postcode = "postcode-value")
   val SampleAllValuesAddress = SampleMandatoryValuesAddress.copy(
     line2 = Some("line2-value"),
-    line3 = Some("line3-value"), line4 = Some("line4-value"), line5 = Some("line5-value")
+    line3 = Some("line3-value"),
+    line4 = Some("line4-value"),
+    line5 = Some("line5-value")
   )
 
   val SampleMandatoryValuesEnterpriseLink = EnterpriseLink(Ern("1000000012"), entref = None)
@@ -19,10 +21,20 @@ trait SampleLocalUnit {
   val SampleMandatoryValuesReportUnitLink = ReportingUnitLink(Rurn("91000000012"), ruref = None)
   val SampleAllValuesReportingUnitLink = SampleMandatoryValuesReportUnitLink.copy(ruref = Some("ruref-value"))
 
-  val SampleMandatoryValuesLocalUnit = LocalUnit(Lurn("900000011"), luref = None, name = "COMPANY X",
-    tradingStyle = None, sic07 = "sic07-value", employees = 42,
-    enterprise = SampleMandatoryValuesEnterpriseLink, reportingUnit = SampleMandatoryValuesReportUnitLink,
-    address = SampleMandatoryValuesAddress)
+  val SampleMandatoryValuesLocalUnit = LocalUnit(
+    Lurn("900000011"),
+    luref = None,
+    name = "COMPANY X",
+    tradingStyle = None,
+    sic07 = "sic07-value",
+    employees = 42,
+    employment = 43,
+    enterprise = SampleMandatoryValuesEnterpriseLink,
+    reportingUnit = SampleMandatoryValuesReportUnitLink,
+    address = SampleMandatoryValuesAddress,
+    region = "E12000001",
+    prn = BigDecimal("0.016587362")
+  )
 
   val SampleAllValuesLocalUnit = SampleMandatoryValuesLocalUnit.copy(
     luref = Some("luref-value"),

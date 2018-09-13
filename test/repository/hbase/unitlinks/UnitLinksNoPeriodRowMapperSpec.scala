@@ -4,21 +4,21 @@ import org.scalatest.{ FreeSpec, Matchers }
 import repository.RestRepository.Row
 import support.sample.SampleUnitLinks
 import uk.gov.ons.sbr.models.unitlinks.UnitType
-import repository.hbase.unitlinks.UnitLinksPrefix.{ Child, Parent }
+import repository.hbase.unitlinks.UnitLinksQualifier.{ ChildPrefix, ParentPrefix }
 
 class UnitLinksNoPeriodRowMapperSpec extends FreeSpec with Matchers {
 
   private trait Fixture extends SampleUnitLinks {
     val UnitIdStr = SampleUnitId.value
     val UnitTypeStr = UnitType.toAcronym(SampleUnitType)
-    val RowKey = s"$UnitIdStr~$UnitTypeStr"
+    val RowKey = s"$UnitTypeStr~$UnitIdStr"
 
     val ParentsMapStr = Map(
-      Parent + Enterprise -> SampleEnterpriseParentId
+      ParentPrefix + Enterprise -> SampleEnterpriseParentId
     )
     val ChildrenMapStr = Map(
-      Child + SampleCompaniesHouseChildId -> CompaniesHouse,
-      Child + SamplePayAsYouEarnChildId -> PayAsYouEarnTax
+      ChildPrefix + SampleCompaniesHouseChildId -> CompaniesHouse,
+      ChildPrefix + SamplePayAsYouEarnChildId -> PayAsYouEarnTax
     )
     val FamilyMapStr = ParentsMapStr ++ ChildrenMapStr
   }
@@ -59,7 +59,7 @@ class UnitLinksNoPeriodRowMapperSpec extends FreeSpec with Matchers {
         }
 
         "because it contains an unrecognised unit type" in new Fixture {
-          val row = Row(rowKey = s"$UnitIdStr~UNKNOWN", fields = FamilyMapStr)
+          val row = Row(rowKey = s"UNKNOWN~$UnitIdStr", fields = FamilyMapStr)
 
           UnitLinksNoPeriodRowMapper.fromRow(row) shouldBe None
         }
@@ -67,7 +67,7 @@ class UnitLinksNoPeriodRowMapperSpec extends FreeSpec with Matchers {
 
       "when a child" - {
         "has an invalid unit type" in new Fixture {
-          val invalidUnitTypeInChildField = FamilyMapStr.updated(Child + SampleCompaniesHouseChildId, "UNKNOWN")
+          val invalidUnitTypeInChildField = FamilyMapStr.updated(ChildPrefix + SampleCompaniesHouseChildId, "UNKNOWN")
 
           UnitLinksNoPeriodRowMapper.fromRow(Row(RowKey, fields = invalidUnitTypeInChildField)) shouldBe None
         }
@@ -75,7 +75,7 @@ class UnitLinksNoPeriodRowMapperSpec extends FreeSpec with Matchers {
 
       "when a parent" - {
         "has an invalid unit type" in new Fixture {
-          val invalidUnitTypeInParentField = ChildrenMapStr + (Parent + "UNKNOWN" -> "111100003434")
+          val invalidUnitTypeInParentField = ChildrenMapStr + (ParentPrefix + "UNKNOWN" -> "111100003434")
 
           UnitLinksNoPeriodRowMapper.fromRow(Row(RowKey, fields = invalidUnitTypeInParentField)) shouldBe None
         }

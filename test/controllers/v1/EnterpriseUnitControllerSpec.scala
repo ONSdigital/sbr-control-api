@@ -75,22 +75,5 @@ class EnterpriseUnitControllerSpec extends FreeSpec with Matchers with MockFacto
         status(response) shouldBe INTERNAL_SERVER_ERROR
       }
     }
-
-    /*
-     * This just tests the action.
-     * See EnterpriseUnitRoutingSpec for tests that requests are routed correctly between the available actions.
-     *
-     * No mocking - no underlying repository needed stops at controller
-     */
-    "containing invalid arguments" - {
-      "receives a BAD_REQUEST status response" in new Fixture {
-        val request = controller.badRequest(TargetErn.value, Period.asString(TargetPeriod))
-        val response = request.apply(FakeRequest())
-
-        status(response) shouldBe BAD_REQUEST
-      }
-    }
-
   }
-
 }
