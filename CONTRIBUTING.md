@@ -13,8 +13,6 @@ For naming values, methods and objects in this project we follow the official na
 
 ### Scala Annotations
 
-### Git Workflow
-
 #### Branching and Merges
 
 #### Pull Requests
