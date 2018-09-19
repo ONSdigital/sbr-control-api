@@ -14,20 +14,20 @@ import repository._
 import support.WithWireMockHBase
 import utils.BaseUrl
 
-class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.FreeSpec with WithWireMockHBase with Matchers with EitherValues with MockFactory with ScalaFutures with PatienceConfiguration {
+class HBaseRestRepository_Delete_WiremockSpec extends org.scalatest.fixture.FreeSpec with WithWireMockHBase with Matchers with EitherValues with MockFactory with ScalaFutures with PatienceConfiguration {
 
   private val Table = "table"
   private val RowKey = "rowKey"
   private val ColumnFamily = "columnFamily"
-  private val ColumnQualifier = "columnQualifier"
-  private val ColumnName = Column(ColumnFamily, ColumnQualifier)
-  private val NewValue = "newValue"
-  private val OldValue = "oldValue"
-  private val CheckAndUpdateRequestBody =
+  private val ColumnName = "columnName"
+  private val QualifiedColumn = Column(ColumnFamily, ColumnName)
+  private val CurrentValue = "currentValue"
+  private val DeleteField = Map(ColumnName -> CurrentValue)
+  private val MissingDeleteField = Map("foo" -> "bar")
+  private val CheckAndDeleteRequestBody =
     s"""{"Row": ${
       List(aRowWith(key = s"$RowKey", columns =
-        aColumnWith(family = ColumnFamily, qualifier = ColumnQualifier, value = NewValue, timestamp = None),
-        aColumnWith(family = ColumnFamily, qualifier = ColumnQualifier, value = OldValue, timestamp = None))).mkString("[", ",", "]")
+        aColumnWith(family = ColumnFamily, qualifier = ColumnName, value = CurrentValue, timestamp = None))).mkString("[", ",", "]")
     }}"""
 
   // test timeout must exceed the configured HBaseRest timeout to properly test client-side timeout handling
@@ -39,7 +39,7 @@ class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.Free
       repository: HBaseRestRepository,
       responseReaderMaker: HBaseResponseReaderMaker
   ) {
-    val targetUrl = s"/${config.namespace}:$Table/$RowKey/?check=put"
+    val targetUrl = s"/${config.namespace}:$Table/$RowKey/$ColumnFamily:$ColumnName/?check=delete"
   }
 
   override protected def withFixture(test: OneArgTest): Outcome = {
@@ -60,9 +60,10 @@ class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.Free
   private def stubTargetEntityIsFound(
     config: HBaseRestRepositoryConfig,
     authorization: Authorization,
-    responseReaderMaker: HBaseResponseReaderMaker
+    responseReaderMaker: HBaseResponseReaderMaker,
+    withFields: Map[String, String] = DeleteField
   ): Unit = {
-    val bodyParseResult = JsSuccess(Seq(Row(rowKey = "UnusedRowKey", fields = Map("key1" -> "value1"))))
+    val bodyParseResult = JsSuccess(Seq(Row(rowKey = "UnusedRowKey", withFields)))
     stubTargetEntityRetrieves(config, authorization, responseReaderMaker, bodyParseResult)
   }
 
@@ -91,53 +92,70 @@ class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.Free
   }
 
   "A HBase REST Repository" - {
-    "successfully applies an update" - {
-      "when the value has not been modified by another user" in { fixture =>
+    "successfully applies a delete" - {
+      "when the column exists and its value has not been modified by another user" in { fixture =>
         stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndUpdateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndDeleteRequestBody)).willReturn(
           anOkResponse()
         ))
 
-        whenReady(fixture.repository.updateField(Table, RowKey, (ColumnName, OldValue), (ColumnName, NewValue))) { result =>
+        whenReady(fixture.repository.deleteField(Table, RowKey, checkField = (QualifiedColumn, CurrentValue), columnName = QualifiedColumn)) { result =>
+          result shouldBe EditApplied
+        }
+      }
+
+      /*
+       * In this case we assume that either a previous attempt or someone else got their first.
+       * To be idempotent (and thus a safe to retry operation) we need to treat this as a success scenario.
+       */
+      "when the column does not exist" in { fixture =>
+        stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker, withFields = MissingDeleteField)
+        // a put call should NOT be made in this scenario
+        // this is here to avoid a false positive - as the test framework currently retains prior stubbing between tests ...
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndDeleteRequestBody)).willReturn(
+          aServiceUnavailableResponse()
+        ))
+
+        whenReady(fixture.repository.deleteField(Table, RowKey, checkField = (QualifiedColumn, CurrentValue), columnName = QualifiedColumn)) { result =>
           result shouldBe EditApplied
         }
       }
     }
 
-    "prevents an update" - {
+    "prevents a delete" - {
       "when the value has been modified by another user" in { fixture =>
         stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndUpdateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndDeleteRequestBody)).willReturn(
           aNotModifiedResponse()
         ))
 
-        whenReady(fixture.repository.updateField(Table, RowKey, (ColumnName, OldValue), (ColumnName, NewValue))) { result =>
+        whenReady(fixture.repository.deleteField(Table, RowKey, checkField = (QualifiedColumn, CurrentValue), columnName = QualifiedColumn)) { result =>
           result shouldBe EditConflicted
         }
       }
     }
 
-    "rejects an update" - {
+    "rejects a delete" - {
       "when the target entity does not exist" in { fixture =>
         stubTargetEntityIsNotFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
 
-        whenReady(fixture.repository.updateField(Table, RowKey, (ColumnName, OldValue), (ColumnName, NewValue))) { result =>
+        whenReady(fixture.repository.deleteField(Table, RowKey, checkField = (QualifiedColumn, CurrentValue), columnName = QualifiedColumn)) { result =>
           result shouldBe EditTargetNotFound
         }
       }
     }
 
-    "fails an update" - {
+    "fails a delete" - {
       /*
        * Test patienceConfig must exceed the fixedDelay for this to work...
        */
       "when the server takes longer to respond than the configured client-side timeout" in { fixture =>
         stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndUpdateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndDeleteRequestBody)).willReturn(
           anOkResponse().withFixedDelay((fixture.config.timeout + 100).toInt)
         ))
 
-        whenReady(fixture.repository.updateField(Table, RowKey, (ColumnName, OldValue), (ColumnName, NewValue))) { result =>
+        whenReady(fixture.repository.deleteField(Table, RowKey, checkField = (QualifiedColumn, CurrentValue), columnName = QualifiedColumn)) { result =>
           result shouldBe EditFailed
         }
       }
@@ -147,40 +165,40 @@ class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.Free
           aServiceUnavailableResponse()
         ))
 
-        whenReady(fixture.repository.updateField(Table, RowKey, (ColumnName, OldValue), (ColumnName, NewValue))) { result =>
+        whenReady(fixture.repository.deleteField(Table, RowKey, checkField = (QualifiedColumn, CurrentValue), columnName = QualifiedColumn)) { result =>
           result shouldBe EditFailed
         }
       }
 
       "when the configured user credentials are not accepted" in { fixture =>
         stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndUpdateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndDeleteRequestBody)).willReturn(
           aResponse().withStatus(UNAUTHORIZED)
         ))
 
-        whenReady(fixture.repository.updateField(Table, RowKey, (ColumnName, OldValue), (ColumnName, NewValue))) { result =>
+        whenReady(fixture.repository.deleteField(Table, RowKey, checkField = (QualifiedColumn, CurrentValue), columnName = QualifiedColumn)) { result =>
           result shouldBe EditFailed
         }
       }
 
       "when the response is a client error" in { fixture =>
         stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndUpdateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndDeleteRequestBody)).willReturn(
           aResponse().withStatus(BAD_REQUEST)
         ))
 
-        whenReady(fixture.repository.updateField(Table, RowKey, (ColumnName, OldValue), (ColumnName, NewValue))) { result =>
+        whenReady(fixture.repository.deleteField(Table, RowKey, checkField = (QualifiedColumn, CurrentValue), columnName = QualifiedColumn)) { result =>
           result shouldBe EditFailed
         }
       }
 
       "when the response is a server error" in { fixture =>
         stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndUpdateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndDeleteRequestBody)).willReturn(
           aServiceUnavailableResponse()
         ))
 
-        whenReady(fixture.repository.updateField(Table, RowKey, (ColumnName, OldValue), (ColumnName, NewValue))) { result =>
+        whenReady(fixture.repository.deleteField(Table, RowKey, checkField = (QualifiedColumn, CurrentValue), columnName = QualifiedColumn)) { result =>
           result shouldBe EditFailed
         }
       }

@@ -8,7 +8,7 @@ import org.scalatest.{ EitherValues, Matchers, Outcome }
 import play.api.http.Port
 import play.api.http.Status.{ BAD_REQUEST, UNAUTHORIZED }
 import play.api.test.WsTestClient
-import repository.{ CreateOrReplaceApplied, CreateOrReplaceFailed }
+import repository.{ EditApplied, EditFailed }
 import support.WithWireMockHBase
 import utils.BaseUrl
 
@@ -16,13 +16,12 @@ class HBaseRestRepository_CreateOrReplace_WiremockSpec extends org.scalatest.fix
 
   private val Table = "table"
   private val RowKey = "rowKey"
-  private val ColumnFamily = "columnFamily"
-  private val ColumnName = "columnName"
+  private val ColumnName = Column("columnFamily", "columnQualifier")
   private val CellValue = "cellValue"
   private val CreateRequestBody =
     s"""{"Row": ${
       List(aRowWith(key = s"$RowKey", columns =
-        aColumnWith(family = ColumnFamily, qualifier = ColumnName, value = CellValue, timestamp = None))).mkString("[", ",", "]")
+        aColumnWith(family = ColumnName.family, qualifier = ColumnName.qualifier, value = CellValue, timestamp = None))).mkString("[", ",", "]")
     }}"""
 
   // test timeout must exceed the configured HBaseRest timeout to properly test client-side timeout handling
@@ -58,8 +57,8 @@ class HBaseRestRepository_CreateOrReplace_WiremockSpec extends org.scalatest.fix
         anOkResponse()
       ))
 
-      whenReady(fixture.repository.createOrReplace(Table, RowKey, (s"$ColumnFamily:$ColumnName", CellValue))) { result =>
-        result shouldBe CreateOrReplaceApplied
+      whenReady(fixture.repository.createOrReplace(Table, RowKey, (ColumnName, CellValue))) { result =>
+        result shouldBe EditApplied
       }
     }
 
@@ -72,8 +71,8 @@ class HBaseRestRepository_CreateOrReplace_WiremockSpec extends org.scalatest.fix
           anOkResponse().withFixedDelay((fixture.config.timeout + 100).toInt)
         ))
 
-        whenReady(fixture.repository.createOrReplace(Table, RowKey, (s"$ColumnFamily:$ColumnName", CellValue))) { result =>
-          result shouldBe CreateOrReplaceFailed
+        whenReady(fixture.repository.createOrReplace(Table, RowKey, (ColumnName, CellValue))) { result =>
+          result shouldBe EditFailed
         }
       }
 
@@ -82,8 +81,8 @@ class HBaseRestRepository_CreateOrReplace_WiremockSpec extends org.scalatest.fix
           aResponse().withStatus(UNAUTHORIZED)
         ))
 
-        whenReady(fixture.repository.createOrReplace(Table, RowKey, (s"$ColumnFamily:$ColumnName", CellValue))) { result =>
-          result shouldBe CreateOrReplaceFailed
+        whenReady(fixture.repository.createOrReplace(Table, RowKey, (ColumnName, CellValue))) { result =>
+          result shouldBe EditFailed
         }
       }
 
@@ -92,8 +91,8 @@ class HBaseRestRepository_CreateOrReplace_WiremockSpec extends org.scalatest.fix
           aResponse().withStatus(BAD_REQUEST)
         ))
 
-        whenReady(fixture.repository.createOrReplace(Table, RowKey, (s"$ColumnFamily:$ColumnName", CellValue))) { result =>
-          result shouldBe CreateOrReplaceFailed
+        whenReady(fixture.repository.createOrReplace(Table, RowKey, (ColumnName, CellValue))) { result =>
+          result shouldBe EditFailed
         }
       }
 
@@ -102,8 +101,8 @@ class HBaseRestRepository_CreateOrReplace_WiremockSpec extends org.scalatest.fix
           aServiceUnavailableResponse()
         ))
 
-        whenReady(fixture.repository.createOrReplace(Table, RowKey, (s"$ColumnFamily:$ColumnName", CellValue))) { result =>
-          result shouldBe CreateOrReplaceFailed
+        whenReady(fixture.repository.createOrReplace(Table, RowKey, (ColumnName, CellValue))) { result =>
+          result shouldBe EditFailed
         }
       }
     }

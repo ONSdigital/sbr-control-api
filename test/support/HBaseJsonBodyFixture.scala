@@ -22,7 +22,7 @@ trait HBaseJsonBodyFixture {
    * A timestamp will exist on a read, but not on a write.
    */
   def aColumnWith(family: String, qualifier: String, value: String, timestamp: Option[Long] = Some(1520333985745L)): String = {
-    val name = Column(family, qualifier)
+    val name = Column.name(Column(family, qualifier))
     timestamp.fold(
       s"""|{"column": "${hbaseEncode(name)}",
           | "$$": "${hbaseEncode(value)}"

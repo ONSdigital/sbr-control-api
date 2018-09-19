@@ -130,10 +130,11 @@ class HBaseDataSpec extends FreeSpec with Matchers {
 
   "A HBaseCell" - {
     "can be created from a columnName, fieldValue tuple" in new Fixture {
-      val column = s"$ColumnFamily:qualifier"
+      val qualifier = "qualifier"
+      val column = Column(ColumnFamily, qualifier)
       val value = "some-value"
 
-      HBaseCell.fromField(column -> value) shouldBe HBaseCell(column, value)
+      HBaseCell.fromField(column -> value) shouldBe HBaseCell(s"$ColumnFamily:$qualifier", value)
     }
   }
 }

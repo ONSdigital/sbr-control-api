@@ -16,8 +16,7 @@ import play.api.test.Helpers._
 import play.mvc.Http.MimeTypes.JSON
 import repository.UnitLinksRepository
 import support.sample.SampleUnitLinks
-import uk.gov.ons.sbr.models.patch.Operation
-import uk.gov.ons.sbr.models.patch.OperationTypes.{ Add, Replace, Test }
+import uk.gov.ons.sbr.models.patch.{ AddOperation, ReplaceOperation, TestOperation }
 import uk.gov.ons.sbr.models.unitlinks.UnitId
 import uk.gov.ons.sbr.models.unitlinks.UnitType.{ LegalUnit, ValueAddedTax, toAcronym }
 import uk.gov.ons.sbr.models.{ Period, UnitKey }
@@ -47,8 +46,8 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
   private trait EditParentFixture extends EditFixture {
     val ExpectedUnitKey = UnitKey(UnitId(VatRef), ValueAddedTax, SamplePeriod)
     val ExpectedPatch = Seq(
-      Operation(Test, "/parents/LEU", JsString(IncorrectLegalUnitId.value)),
-      Operation(Replace, "/parents/LEU", JsString(TargetLegalUnitId.value))
+      TestOperation("/parents/LEU", JsString(IncorrectLegalUnitId.value)),
+      ReplaceOperation("/parents/LEU", JsString(TargetLegalUnitId.value))
     )
     val PatchBody = s"""[{"op": "test", "path": "/parents/LEU", "value": "${IncorrectLegalUnitId.value}"},
                          {"op": "replace", "path": "/parents/LEU", "value": "${TargetLegalUnitId.value}"}]"""
@@ -56,7 +55,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
 
   private trait CreateChildFixture extends EditFixture {
     val ExpectedUnitKey = UnitKey(TargetLegalUnitId, LegalUnit, SamplePeriod)
-    val ExpectedPatch = Seq(Operation(Add, s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))))
+    val ExpectedPatch = Seq(AddOperation(s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))))
     val PatchBody = s"""[{"op": "add", "path": "/children/$VatRef", "value": "${toAcronym(ValueAddedTax)}"}]"""
   }
 

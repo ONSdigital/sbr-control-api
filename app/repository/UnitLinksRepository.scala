@@ -16,6 +16,7 @@ object CreateChildLinkFailure extends CreateChildLinkResult
 trait UnitLinksRepository {
   def retrieveUnitLinks(unitKey: UnitKey): Future[Either[ErrorMessage, Option[UnitLinks]]]
 
-  def updateParentLink(unitKey: UnitKey, updateDescriptor: UpdateParentDescriptor): Future[UpdateResult]
+  def updateParentLink(unitKey: UnitKey, updateDescriptor: UpdateParentDescriptor): Future[OptimisticEditResult]
   def createChildLink(unitKey: UnitKey, childType: UnitType, childId: UnitId): Future[CreateChildLinkResult]
+  def deleteChildLink(unitKey: UnitKey, childType: UnitType, childId: UnitId): Future[OptimisticEditResult]
 }

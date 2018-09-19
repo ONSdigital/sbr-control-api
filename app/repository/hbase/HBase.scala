@@ -30,6 +30,12 @@ object HBase {
   def checkedPutUrl(namespace: String, table: String, rowKey: String): String =
     s"${rowKeyUrl(namespace, table, rowKey)}/?check=put"
 
+  def checkedDeleteUrl(withBase: BaseUrl, namespace: String, table: String, rowKey: String, column: Column): String =
+    s"${BaseUrl.asUrlString(withBase)}/${checkedDeleteUrl(namespace, table, rowKey, column)}"
+
+  def checkedDeleteUrl(namespace: String, table: String, rowKey: String, column: Column): String =
+    s"${rowKeyUrl(namespace, table, rowKey)}/${Column.name(column)}/?check=delete"
+
   def rowKeyUrl(withBase: BaseUrl, namespace: String, table: String, rowKey: String): String =
     s"${BaseUrl.asUrlString(withBase)}/${rowKeyUrl(namespace, table, rowKey)}"
 

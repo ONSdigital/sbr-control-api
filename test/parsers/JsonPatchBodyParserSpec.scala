@@ -11,8 +11,7 @@ import play.api.libs.json.{ JsNumber, JsString }
 import play.api.test.FakeRequest
 import play.mvc.Http.HeaderNames.CONTENT_TYPE
 import play.mvc.Http.MimeTypes.JSON
-import uk.gov.ons.sbr.models.patch.Operation
-import uk.gov.ons.sbr.models.patch.OperationTypes.{ Replace, Test }
+import uk.gov.ons.sbr.models.patch.{ ReplaceOperation, TestOperation }
 
 /*
  * See https://github.com/playframework/playframework/blob/master/framework/src/play/src/test/scala/play/mvc/RawBodyParserSpec.scala
@@ -34,8 +33,8 @@ class JsonPatchBodyParserSpec extends FreeSpec with Matchers with GuiceOneAppPer
 
       whenReady(JsonPatchBodyParser(request).run(body)) { result =>
         result.right.value shouldBe Seq(
-          Operation(Test, "/a/b/c", JsString("foo")),
-          Operation(Replace, "/a/b/c", JsNumber(42))
+          TestOperation("/a/b/c", JsString("foo")),
+          ReplaceOperation("/a/b/c", JsNumber(42))
         )
       }
     }
