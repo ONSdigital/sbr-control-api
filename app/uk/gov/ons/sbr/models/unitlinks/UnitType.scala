@@ -28,7 +28,7 @@ object UnitType {
   }
 
   /*
-   * If a Try is not whan you want, fromAcronym is now a PartialFunction - so you can lift this to get an Option[UnitType].
+   * If a Try is not what you want, fromAcronym is now a PartialFunction - so you can lift this to get an Option[UnitType].
    */
   def fromString(unitTypeStr: String): Try[UnitType] =
     Try(fromAcronym(unitTypeStr))
