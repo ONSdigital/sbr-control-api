@@ -248,7 +248,7 @@ pipeline {
                     sh "mv ${distDir}*.zip ${distDir}${env.SVC_NAME}.zip"
                 }
                 dir('config') {
-                    git url: "${GITLAB_URL}/StatBusReg/${env.SVC_NAME}.git", credentialsId: 'sion.williams__gitlab'
+                    git url: "${GITLAB_URL}/StatBusReg/${env.SVC_NAME}.git", credentialsId: 'JenkinsSBR__gitlab'
                 }
                 script {
                     cfDeploy {
