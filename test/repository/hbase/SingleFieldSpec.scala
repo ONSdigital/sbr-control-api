@@ -3,7 +3,7 @@ package repository.hbase
 import org.scalatest.{ FreeSpec, Matchers }
 import repository.hbase.HBaseData.{ HBaseCell, HBaseRow }
 
-class SingleValueSpec extends FreeSpec with Matchers {
+class SingleFieldSpec extends FreeSpec with Matchers {
 
   private trait Fixture {
     val RowKey = "LEU~1234567890123456"
@@ -13,7 +13,7 @@ class SingleValueSpec extends FreeSpec with Matchers {
 
   "A single value specification" - {
     "defines the target cell value" in new Fixture {
-      SingleValue(rowKey = RowKey, field = ColumnName -> TargetValue) shouldBe Seq(
+      SingleField(rowKey = RowKey, field = ColumnName -> TargetValue) shouldBe Seq(
         HBaseRow(key = RowKey, cells = Seq(
           HBaseCell(column = "family:qualifier", value = TargetValue)
         ))

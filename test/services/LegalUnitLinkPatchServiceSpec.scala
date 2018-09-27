@@ -204,6 +204,18 @@ class LegalUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFact
           }
         }
 
+        "a patch that contains multiple test operations (even if they represent the same test)" in new DeleteFixture {
+          val invalidPatch = Seq(
+            TestOperation(s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))),
+            TestOperation(s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))),
+            RemoveOperation(s"/children/$VatRef")
+          )
+
+          whenReady(patchService.applyPatchTo(LegalUnitKey, invalidPatch)) { result =>
+            result shouldBe PatchRejected
+          }
+        }
+
         "a patch where the paths for the 'test' and 'remove' operations differ" in new DeleteFixture {
           val invalidPatch = Seq(
             TestOperation(s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))),

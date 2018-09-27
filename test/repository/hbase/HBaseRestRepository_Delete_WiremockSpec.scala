@@ -105,7 +105,9 @@ class HBaseRestRepository_Delete_WiremockSpec extends org.scalatest.fixture.Free
       }
 
       /*
-       * In this case we assume that either a previous attempt or someone else got their first.
+       * In this case we assume that the delete is part of a compound action that is being retried for some reason,
+       * when the delete step had in fact succeeded on that previous attempt; or simply that another user has managed
+       * to delete the column ahead of us.
        * To be idempotent (and thus a safe to retry operation) we need to treat this as a success scenario.
        */
       "when the column does not exist" in { fixture =>

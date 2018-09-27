@@ -118,14 +118,14 @@ class HBaseRestRepository @Inject() (
   override def createOrReplace(table: String, rowKey: RowKey, field: Field): Future[CreateOrReplaceResult] = {
     val url = HBase.rowKeyUrl(withBase = config.baseUrl, config.namespace, table, rowKey)
     logger.info(s"Requesting creation/replacement of [${field._1}] at [$url] via HBase REST.")
-    asCreateOrReplaceResult(putEdit(url, SingleValue(rowKey, field)))
+    asCreateOrReplaceResult(putEdit(url, SingleField(rowKey, field)))
   }
 
   override def updateField(table: String, rowKey: RowKey, checkField: Field, updateField: Field): Future[OptimisticEditResult] =
     ifExists(table, rowKey, columnOf(checkField).family) { _ =>
-      val url = HBase.checkedPutUrl(withBase = config.baseUrl, config.namespace, table, rowKey)
-      logger.info(s"Requesting update of [${updateField._1}] at [$url] via HBase REST.")
-      doCheckedEdit(url, CheckAndUpdate(rowKey, checkField, updateField))
+      val updateUrl = HBase.checkedPutUrl(withBase = config.baseUrl, config.namespace, table, rowKey)
+      logger.info(s"Requesting update of [${updateField._1}] at [$updateUrl] via HBase REST.")
+      doCheckedEdit(updateUrl, CheckAndUpdate(rowKey, checkField, updateField))
     }
 
   /*
@@ -143,9 +143,9 @@ class HBaseRestRepository @Inject() (
     }
 
   private def checkAndDelete(table: String, rowKey: RowKey, checkField: Field, columnName: Column): Future[OptimisticEditResult] = {
-    val url = HBase.checkedDeleteUrl(withBase = config.baseUrl, config.namespace, table, rowKey, columnName)
-    logger.info(s"Requesting delete at [$url] via HBase REST")
-    doCheckedEdit(url, SingleValue(rowKey, checkField))
+    val deleteUrl = HBase.checkedDeleteUrl(withBase = config.baseUrl, config.namespace, table, rowKey, columnName)
+    logger.info(s"Requesting delete at [$deleteUrl] via HBase REST")
+    doCheckedEdit(deleteUrl, SingleField(rowKey, checkField))
   }
 
   private def doCheckedEdit(url: String, body: Seq[HBaseRow]): Future[OptimisticEditResult] =

@@ -5,11 +5,10 @@ import fixture.ServerAcceptanceSpec
 import parsers.JsonPatchBodyParser.JsonPatchMediaType
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status._
-import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.unitlinks.{HBaseRestUnitLinksRepository, UnitLinksQualifier, UnitLinksRowKey}
 import support.WithWireMockHBase
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.unitlinks.{UnitId, UnitType}
+import uk.gov.ons.sbr.models.unitlinks.UnitId
 import uk.gov.ons.sbr.models.unitlinks.UnitType.{CompaniesHouse, Enterprise, LegalUnit, ValueAddedTax, toAcronym}
 
 class DeleteChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWireMockHBase {
@@ -135,12 +134,15 @@ class DeleteChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWir
       response.status shouldBe NOT_FOUND
     }
 
-    scenario("when the specification of the deletion is valid but inappropriate for deleting a link to a child VAT unit") { wsClient =>
-      When(s"the deletion of the child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
+    scenario("when the specification of the deletion is valid but the requested deletion is unsupported") { wsClient =>
+      val childRef = VatRef
+      Given(s"that deletion of a child Companies House unit is not supported")
+
+      When(s"the deletion of the child link from $TargetUBRN to a Companies House unit is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
         withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
-        patch(s"""[{"op": "test", "path": "/children/$VatRef", "value": "$CompaniesHouseAcronym"},
-                  |{"op": "remove", "path": "/children/$VatRef"}]""".stripMargin))
+        patch(s"""[{"op": "test", "path": "/children/$childRef", "value": "$CompaniesHouseAcronym"},
+                  |{"op": "remove", "path": "/children/$childRef"}]""".stripMargin))
 
       Then(s"a Unprocessable Entity response is returned")
       response.status shouldBe UNPROCESSABLE_ENTITY
