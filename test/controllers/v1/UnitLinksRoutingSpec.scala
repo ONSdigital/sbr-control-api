@@ -34,12 +34,13 @@ import scala.concurrent.Future
 class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matchers {
 
   /*
-   * When valid arguments are routed to the retrieve... actions, an attempt will be made to connect to HBase.
-   * We do not prime HBase in this spec, as we are only concerned with routing.  We therefore override the timeout
-   * configuration to minimise the time this spec waits on connection attempts that we know will fail.
+   * When valid arguments are routed to the controller's actions an attempt will be made to connect to HBase
+   * (or in the case of a Legal Unit edit the Admin Data microservice).  We are not priming services in this
+   * spec, as we are only concerned with routing.  We therefore override the timeout configurations to minimise
+   * the time this spec waits on connection attempts that we know will fail.
    */
   override def fakeApplication(): Application =
-    new GuiceApplicationBuilder().configure(Map("db.hbase-rest.timeout" -> "100")).build()
+    new GuiceApplicationBuilder().configure(Map("db.hbase-rest.timeout" -> "100", "play.ws.timeout.request" -> "100")).build()
 
   private trait Fixture extends HttpServerErrorStatusCode with SampleUnitLinks {
     val ValidPeriod = Period.asString(SamplePeriod)
@@ -55,7 +56,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
     val ValidUnitType = UnitType.toAcronym(SampleUnitType)
   }
 
-  private trait EditFixture extends Fixture {
+  private trait EditVatFixture extends Fixture {
     val ValidVatRef = "123456789012"
 
     def fakeEditRequest(uri: String): Request[String] =
@@ -68,8 +69,19 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
       )
   }
 
-  "A request for retrieving Unit Links by period [yyyyMM], unit type and some unit id" - {
+  private trait EditLegalUnitFixture extends Fixture {
+    val ValidUbrn = "1234567890123456"
 
+    def fakeEditRequest(uri: String): Request[String] =
+      FakeRequest(
+        method = PATCH,
+        uri = uri,
+        headers = Headers(CONTENT_TYPE -> JsonPatchMediaType),
+        body = s"""[{"op": "add", "path": "/children/123456789012", "value": "VAT"}]"""
+      )
+  }
+
+  "A request for retrieving Unit Links by period [yyyyMM], unit type and some unit id" - {
     "accepted when" - {
       "the UnitId" - {
         "includes alpha numeric characters" in new QueryFixture {
@@ -251,7 +263,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
   }
 
   "A request to edit the links from a VAT unit is" - {
-    "accepted when valid" in new EditFixture {
+    "accepted when valid" in new EditVatFixture {
       val Year = "2018"
       val Months = Seq("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
       Months.foreach { month =>
@@ -268,7 +280,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
 
     "rejected when" - {
       "the Period" - {
-        "has fewer than six digits" in new EditFixture {
+        "has fewer than six digits" in new EditVatFixture {
           val request = fakeEditRequest(s"/v1/periods/${ValidPeriod.drop(1)}/types/VAT/units/$ValidVatRef")
 
           val Some(result) = route(app, request)
@@ -276,7 +288,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
           status(result) shouldBe BAD_REQUEST
         }
 
-        "has more than six digits" in new EditFixture {
+        "has more than six digits" in new EditVatFixture {
           val request = fakeEditRequest(s"/v1/periods/${ValidPeriod + "1"}/types/VAT/units/$ValidVatRef")
 
           val Some(result) = route(app, request)
@@ -284,7 +296,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
           status(result) shouldBe BAD_REQUEST
         }
 
-        "is non-numeric" in new EditFixture {
+        "is non-numeric" in new EditVatFixture {
           val request = fakeEditRequest(s"/v1/periods/${new String(Array.fill(6)('A'))}/types/VAT/units/$ValidVatRef")
 
           val Some(result) = route(app, request)
@@ -292,7 +304,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
           status(result) shouldBe BAD_REQUEST
         }
 
-        "is negative" in new EditFixture {
+        "is negative" in new EditVatFixture {
           val request = fakeEditRequest(s"/v1/periods/-01801/types/VAT/units/$ValidVatRef")
 
           val Some(result) = route(app, request)
@@ -301,7 +313,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
         }
 
         "has an invalid month value" - {
-          "that is too low" in new EditFixture {
+          "that is too low" in new EditVatFixture {
             val request = fakeEditRequest(s"/v1/periods/201800/types/VAT/units/$ValidVatRef")
 
             val Some(result) = route(app, request)
@@ -309,7 +321,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
             status(result) shouldBe BAD_REQUEST
           }
 
-          "that is too high" in new EditFixture {
+          "that is too high" in new EditVatFixture {
             val request = fakeEditRequest(s"/v1/periods/201813/types/VAT/units/$ValidVatRef")
 
             val Some(result) = route(app, request)
@@ -320,7 +332,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
       }
 
       "the VAT reference" - {
-        "has fewer than twelve digits" in new EditFixture {
+        "has fewer than twelve digits" in new EditVatFixture {
           val request = fakeEditRequest(s"/v1/periods/$ValidPeriod/types/VAT/units/${ValidVatRef.drop(1)}")
 
           val Some(result) = route(app, request)
@@ -328,7 +340,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
           status(result) shouldBe BAD_REQUEST
         }
 
-        "has more than twelve digits" in new EditFixture {
+        "has more than twelve digits" in new EditVatFixture {
           val request = fakeEditRequest(s"/v1/periods/$ValidPeriod/types/VAT/units/${ValidVatRef + "9"}")
 
           val Some(result) = route(app, request)
@@ -336,8 +348,106 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
           status(result) shouldBe BAD_REQUEST
         }
 
-        "is non-numeric" in new EditFixture {
+        "is non-numeric" in new EditVatFixture {
           val request = fakeEditRequest(s"/v1/periods/$ValidPeriod/types/VAT/units/${new String(Array.fill(12)('A'))}")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+      }
+    }
+  }
+
+  "A request to edit the links from a Legal Unit is" - {
+    "accepted when valid" in new EditLegalUnitFixture {
+      val Year = "2018"
+      //val Months = Seq("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
+      val Months = Seq("01")
+      Months.foreach { month =>
+        withClue(s"for month $month") {
+          val validPeriod = Year + month
+          val request = fakeEditRequest(s"/v1/periods/$validPeriod/types/LEU/units/$ValidUbrn")
+
+          val Some(result) = route(app, request)
+
+          status(result) should be(aServerError)
+        }
+      }
+    }
+
+    "rejected when" - {
+      "the Period" - {
+        "has fewer than six digits" in new EditLegalUnitFixture {
+          val request = fakeEditRequest(s"/v1/periods/${ValidPeriod.drop(1)}/types/LEU/units/$ValidUbrn")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+
+        "has more than six digits" in new EditLegalUnitFixture {
+          val request = fakeEditRequest(s"/v1/periods/${ValidPeriod + "1"}/types/LEU/units/$ValidUbrn")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+
+        "is non-numeric" in new EditLegalUnitFixture {
+          val request = fakeEditRequest(s"/v1/periods/${new String(Array.fill(6)('A'))}/types/LEU/units/$ValidUbrn")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+
+        "is negative" in new EditLegalUnitFixture {
+          val request = fakeEditRequest(s"/v1/periods/-01801/types/LEU/units/$ValidUbrn")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+
+        "has an invalid month value" - {
+          "that is too low" in new EditLegalUnitFixture {
+            val request = fakeEditRequest(s"/v1/periods/201800/types/LEU/units/$ValidUbrn")
+
+            val Some(result) = route(app, request)
+
+            status(result) shouldBe BAD_REQUEST
+          }
+
+          "that is too high" in new EditLegalUnitFixture {
+            val request = fakeEditRequest(s"/v1/periods/201813/types/LEU/units/$ValidUbrn")
+
+            val Some(result) = route(app, request)
+
+            status(result) shouldBe BAD_REQUEST
+          }
+        }
+      }
+
+      "the UBRN" - {
+        "has fewer than sixteen digits" in new EditLegalUnitFixture {
+          val request = fakeEditRequest(s"/v1/periods/$ValidPeriod/types/LEU/units/${ValidUbrn.drop(1)}")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+
+        "has more than sixteen digits" in new EditLegalUnitFixture {
+          val request = fakeEditRequest(s"/v1/periods/$ValidPeriod/types/LEU/units/${ValidUbrn + "9"}")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+
+        "is non-numeric" in new EditLegalUnitFixture {
+          val request = fakeEditRequest(s"/v1/periods/$ValidPeriod/types/LEU/units/${new String(Array.fill(16)('A'))}")
 
           val Some(result) = route(app, request)
 

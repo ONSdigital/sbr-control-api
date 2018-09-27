@@ -9,6 +9,9 @@ GET     /v1/periods/:period/types/:type/units/:unit                             
 PATCH   /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/VAT/units/$vatref<\d{12}>                                       controllers.v1.UnitLinksController.patchVatUnitLinks(vatref, period)
 PATCH   /v1/periods/:period/types/VAT/units/:vatref                                                                     controllers.BadRequestController.badRequest(vatref, period)
 
+PATCH   /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/LEU/units/$ubrn<\d{16}>                                         controllers.v1.UnitLinksController.patchLeuUnitLinks(ubrn, period)
+PATCH   /v1/periods/:period/types/LEU/units/:ubrn                                                                       controllers.BadRequestController.badRequest(ubrn, period)
+
 # Enterprises
 GET     /v1/periods/$period<\d{4}((0[1-9]|(1[0-2])))>/enterprises/$ern<\d{10}>                                          controllers.v1.EnterpriseUnitController.retrieveEnterpriseUnit(ern, period)
 GET     /v1/periods/:period/enterprises/:ern                                                                            controllers.BadRequestController.badRequest(ern, period)

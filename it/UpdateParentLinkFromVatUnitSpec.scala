@@ -43,7 +43,7 @@ class UpdateParentLinkFromVatUnitSpec extends ServerAcceptanceSpec with WithWire
   private val HBaseCheckAndUpdateRequestBody =
     s"""{"Row": ${
       List(
-        aRowWith(key = s"$VatUnitAcronym~$VatRef", columns =
+        aRowWith(key = s"${UnitLinksRowKey(VatUnitId, ValueAddedTax)}", columns =
           aColumnWith(Family, qualifier = "p_LEU", value = s"$TargetUBRN", timestamp = None),
           aColumnWith(Family, qualifier = "p_LEU", value = s"$IncorrectUBRN", timestamp = None))
       ).mkString("[", ",", "]")
@@ -100,6 +100,7 @@ class UpdateParentLinkFromVatUnitSpec extends ServerAcceptanceSpec with WithWire
 
     scenario("when the specification of the modification does not have the Json Patch media type") { wsClient =>
       Given(s"the media type for Json Patch is $JsonPatchMediaType")
+
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef with a media type of $JSON")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
         withHeaders(CONTENT_TYPE-> JSON).
@@ -111,8 +112,8 @@ class UpdateParentLinkFromVatUnitSpec extends ServerAcceptanceSpec with WithWire
     }
 
     scenario("when the specification of the modification does not represent valid Json") { wsClient =>
-      When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef")
-      val invalidJson = s"[}"
+      When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef with invalid json")
+      val invalidJson = "[}"
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
         withHeaders(CONTENT_TYPE-> JsonPatchMediaType).
         patch(invalidJson))
@@ -123,6 +124,7 @@ class UpdateParentLinkFromVatUnitSpec extends ServerAcceptanceSpec with WithWire
 
     scenario("when the specification of the modification does not comply with the Json Patch specification") { wsClient =>
       Given("that the Json Patch specification (RFC6902) does not define an 'update' operation (replace exists for this purpose)")
+
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef")
       val invalidPatch = s"""[{"op": "update", "path": "/parents/LEU", "value": "$TargetUBRN"}]"""
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
@@ -135,6 +137,7 @@ class UpdateParentLinkFromVatUnitSpec extends ServerAcceptanceSpec with WithWire
 
     scenario("when the specification of the modification is valid but inappropriate for modifying the parent link of a VAT unit") { wsClient =>
       Given("that a patch specification containing a replace operation without a test operation is not supported by the API")
+
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
         withHeaders(CONTENT_TYPE-> JsonPatchMediaType).
