@@ -22,12 +22,21 @@ class UpdateParentLinkFromVatUnitSpec extends ServerAcceptanceSpec with WithWire
   private val TargetUBRN = "1000012345000999"
   private val TargetLegalUnitId = UnitId(TargetUBRN)
   private val Family = HBaseRestUnitLinksRepository.ColumnFamily
+  private val EditedColumn = aColumnWith(Family, qualifier = "edited", value = "Y", timestamp = None)
+  private val VatUnitLinkColumns = Seq(
+    aColumnWith(Family, qualifier = UnitLinksQualifier.toParent(LegalUnit), value = IncorrectUBRN)
+  )
 
-  private val UnitLinksForVatHBaseResponseBody =
+  private val UnitLinksForVatNoClericalEditsHBaseResponseBody =
+    unitLinksForVatHBaseResponseBody(VatUnitLinkColumns)
+
+  private val UnitLinksForVatWithClericalEditsHBaseResponseBody =
+    unitLinksForVatHBaseResponseBody(EditedColumn +: VatUnitLinkColumns)
+
+  private def unitLinksForVatHBaseResponseBody(columns: Seq[String]): String =
     s"""{ "Row": ${
       List(
-        aRowWith(key = s"${UnitLinksRowKey(VatUnitId, ValueAddedTax)}", columns =
-          aColumnWith(Family, qualifier = UnitLinksQualifier.toParent(LegalUnit), value = IncorrectUBRN))
+        aRowWith(key = s"${UnitLinksRowKey(VatUnitId, ValueAddedTax)}", columns: _*)
       ).mkString("[", ",", "]")
     }}"""
 
@@ -45,6 +54,7 @@ class UpdateParentLinkFromVatUnitSpec extends ServerAcceptanceSpec with WithWire
       List(
         aRowWith(key = s"${UnitLinksRowKey(VatUnitId, ValueAddedTax)}", columns =
           aColumnWith(Family, qualifier = "p_LEU", value = s"$TargetUBRN", timestamp = None),
+          EditedColumn,
           aColumnWith(Family, qualifier = "p_LEU", value = s"$IncorrectUBRN", timestamp = None))
       ).mkString("[", ",", "]")
     }}"""
@@ -54,10 +64,32 @@ class UpdateParentLinkFromVatUnitSpec extends ServerAcceptanceSpec with WithWire
   info("So that I can improve the quality of the business register")
 
   feature("update the parent Legal Unit link from a VAT unit") {
-    scenario("when the target Legal Unit already exists in the register") { wsClient =>
+    scenario("when the VAT unit has no clerically edited links and the target Legal Unit already exists in the register") { wsClient =>
       Given(s"there exists a VAT unit with reference $VatRef")
       stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = VatUnitId, withUnitType = ValueAddedTax, withPeriod = RegisterPeriod).
-        willReturn(anOkResponse().withBody(UnitLinksForVatHBaseResponseBody)))
+        willReturn(anOkResponse().withBody(UnitLinksForVatNoClericalEditsHBaseResponseBody)))
+      And(s"there exists a Legal Unit identified by UBRN $TargetUBRN")
+      stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLegalUnitId, withUnitType = LegalUnit, withPeriod = RegisterPeriod).
+        willReturn(anOkResponse().withBody(UnitLinksForTargetUbrnHBaseResponseBody)))
+      And(s"a database request to update the parent value from $IncorrectUBRN to $TargetUBRN will succeed")
+      stubHBaseFor(aCheckAndUpdateUnitLinkRequest(withUnitType = ValueAddedTax, withUnitId = VatUnitId, withPeriod = RegisterPeriod).
+        withRequestBody(equalToJson(HBaseCheckAndUpdateRequestBody)).
+        willReturn(anOkResponse()))
+
+      When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef")
+      val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
+        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        patch(s"""[{"op": "test", "path": "/parents/LEU", "value": "$IncorrectUBRN"},
+                          {"op": "replace", "path": "/parents/LEU", "value": "$TargetUBRN"}]"""))
+
+      Then(s"a Success response is returned")
+      response.status shouldBe NO_CONTENT
+    }
+
+    scenario("when the VAT unit has clerically edited links and the target Legal Unit already exists in the register") { wsClient =>
+      Given(s"there exists a VAT unit with reference $VatRef")
+      stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = VatUnitId, withUnitType = ValueAddedTax, withPeriod = RegisterPeriod).
+        willReturn(anOkResponse().withBody(UnitLinksForVatWithClericalEditsHBaseResponseBody)))
       And(s"there exists a Legal Unit identified by UBRN $TargetUBRN")
       stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLegalUnitId, withUnitType = LegalUnit, withPeriod = RegisterPeriod).
         willReturn(anOkResponse().withBody(UnitLinksForTargetUbrnHBaseResponseBody)))
@@ -79,7 +111,7 @@ class UpdateParentLinkFromVatUnitSpec extends ServerAcceptanceSpec with WithWire
     scenario("when another user has concurrently modified the link") { wsClient =>
       Given(s"there exists a VAT unit with reference $VatRef")
       stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = VatUnitId, withUnitType = ValueAddedTax, withPeriod = RegisterPeriod).
-        willReturn(anOkResponse().withBody(UnitLinksForVatHBaseResponseBody)))
+        willReturn(anOkResponse().withBody(UnitLinksForVatNoClericalEditsHBaseResponseBody)))
       And(s"there exists a Legal Unit identified by UBRN $TargetUBRN")
       stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLegalUnitId, withUnitType = LegalUnit, withPeriod = RegisterPeriod).
         willReturn(anOkResponse().withBody(UnitLinksForTargetUbrnHBaseResponseBody)))
@@ -150,7 +182,7 @@ class UpdateParentLinkFromVatUnitSpec extends ServerAcceptanceSpec with WithWire
     scenario("when the target Legal Unit does not exist in the register") { wsClient =>
       Given(s"there exists a VAT unit with reference $VatRef")
       stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = VatUnitId, withUnitType = ValueAddedTax, withPeriod = RegisterPeriod).
-        willReturn(anOkResponse().withBody(UnitLinksForVatHBaseResponseBody)))
+        willReturn(anOkResponse().withBody(UnitLinksForVatNoClericalEditsHBaseResponseBody)))
       And(s"there does not exist a Legal Unit identified by UBRN $TargetUBRN")
       stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLegalUnitId, withUnitType = LegalUnit, withPeriod = RegisterPeriod).
         willReturn(anOkResponse().withBody(NoMatchFoundResponse)))

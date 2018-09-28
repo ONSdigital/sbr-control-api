@@ -17,8 +17,8 @@ trait RestRepository {
   def findRow(table: String, rowKey: RowKey, columnFamily: String): Future[Either[ErrorMessage, Option[Row]]]
   def findRows(table: String, query: String, columnFamily: String): Future[Either[ErrorMessage, Seq[Row]]]
 
-  def createOrReplace(table: String, rowKey: RowKey, field: Field): Future[CreateOrReplaceResult]
-  def updateField(table: String, rowKey: RowKey, checkField: Field, updateField: Field): Future[OptimisticEditResult]
+  def createOrReplace(table: String, rowKey: RowKey, field: Field, otherFields: Field*): Future[CreateOrReplaceResult]
+  def updateField(table: String, rowKey: RowKey, checkField: Field, updateField: Field, otherUpdateFields: Field*): Future[OptimisticEditResult]
   def deleteField(table: String, rowKey: RowKey, checkField: Field, columnName: Column): Future[OptimisticEditResult]
 }
 

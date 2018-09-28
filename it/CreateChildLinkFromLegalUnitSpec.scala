@@ -29,33 +29,66 @@ class CreateChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWir
   private val TargetLegalUnitId = UnitId(TargetUBRN)
   private val Family = HBaseRestUnitLinksRepository.ColumnFamily
   private val EnterpriseAcronym = toAcronym(Enterprise)
+  private val EditedColumn = aColumnWith(Family, qualifier = "edited", value = "Y", timestamp = None)
 
   private val HBaseCreateColumnRequestBody =
     s"""{"Row": ${
       List(
         aRowWith(key = s"${UnitLinksRowKey(TargetLegalUnitId, LegalUnit)}", columns =
-          aColumnWith(Family, qualifier = UnitLinksQualifier.toChild(VatUnitId), value = VatUnitAcronym, timestamp = None))
+          aColumnWith(Family, qualifier = UnitLinksQualifier.toChild(VatUnitId), value = VatUnitAcronym, timestamp = None),
+          EditedColumn
+        )
       ).mkString("[", ",", "]")
     }}"""
 
-  private val UnitLinksForLegalUnitHBaseResponseBody =
+  private def unitLinksForLegalUnitHBaseResponseBody(columns: Seq[String]): String =
     s"""{ "Row": ${
       List(
-        aRowWith(key = s"${UnitLinksRowKey(TargetLegalUnitId, LegalUnit)}", columns =
-          aColumnWith(Family, qualifier = UnitLinksQualifier.toParent(Enterprise), value = "1234567890"),
-          aColumnWith(Family, qualifier = UnitLinksQualifier.toChild(UnitId("87654321")), value = toAcronym(CompaniesHouse)))
+        aRowWith(key = s"${UnitLinksRowKey(TargetLegalUnitId, LegalUnit)}", columns: _*)
       ).mkString("[", ",", "]")
     }}"""
+
+  private val UnitLinkColumns = List(
+    aColumnWith(Family, qualifier = UnitLinksQualifier.toParent(Enterprise), value = "1234567890"),
+    aColumnWith(Family, qualifier = UnitLinksQualifier.toChild(UnitId("87654321")), value = toAcronym(CompaniesHouse))
+  )
+
+  private val UnitLinksForLegalUnitNoClericalEditsHBaseResponseBody =
+    unitLinksForLegalUnitHBaseResponseBody(UnitLinkColumns)
+
+  private val UnitLinksForLegalUnitWithClericalEditsHBaseResponseBody =
+    unitLinksForLegalUnitHBaseResponseBody(EditedColumn :: UnitLinkColumns)
+
 
   info("As a business register subject matter expert")
   info("I want to move an incorrectly linked VAT to a different Legal Unit")
   info("So that I can improve the quality of the business register")
 
   feature("create a link to a child VAT unit from a Legal Unit") {
-    scenario("when then Legal Unit exists in the register and the VAT unit exists in the admin data") { wsClient =>
-      Given(s"there exists a Legal Unit with UBRN $TargetUBRN")
+    scenario("when a Legal Unit exists in the register (with no clerically edited links) and the VAT unit exists in the admin data") { wsClient =>
+      Given(s"there exists a Legal Unit with UBRN $TargetUBRN and no clerical edits")
       stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLegalUnitId, withUnitType = LegalUnit, withPeriod = RegisterPeriod).
-        willReturn(anOkResponse().withBody(UnitLinksForLegalUnitHBaseResponseBody)))
+        willReturn(anOkResponse().withBody(UnitLinksForLegalUnitNoClericalEditsHBaseResponseBody)))
+      And(s"the admin data does contain a VAT unit with reference $VatRef")
+      stubAdminDataApiFor(aVatRefLookupRequest(VatUnitId, RegisterPeriod).willReturn(anOkResponse()))
+      And(s"a database request to create a child link from $TargetUBRN to the VAT unit with reference $VatRef will succeed")
+      stubHBaseFor(aCreateUnitLinkRequest(withUnitType = LegalUnit, withUnitId = TargetLegalUnitId, withPeriod = RegisterPeriod).
+        withRequestBody(equalToJson(HBaseCreateColumnRequestBody)).
+        willReturn(anOkResponse()))
+
+      When(s"the creation of a child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
+      val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
+        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        patch(s"""[{"op": "add", "path": "/children/$VatRef", "value": "$VatUnitAcronym"}]"""))
+
+      Then("a Success response is returned")
+      response.status shouldBe NO_CONTENT
+    }
+
+    scenario("when a Legal Unit exists in the register (with clerically edited links) and the VAT unit exists in the admin data") { wsClient =>
+      Given(s"there exists a Legal Unit with UBRN $TargetUBRN and clerical edits")
+      stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLegalUnitId, withUnitType = LegalUnit, withPeriod = RegisterPeriod).
+        willReturn(anOkResponse().withBody(UnitLinksForLegalUnitWithClericalEditsHBaseResponseBody)))
       And(s"the admin data does contain a VAT unit with reference $VatRef")
       stubAdminDataApiFor(aVatRefLookupRequest(VatUnitId, RegisterPeriod).willReturn(anOkResponse()))
       And(s"a database request to create a child link from $TargetUBRN to the VAT unit with reference $VatRef will succeed")
@@ -91,7 +124,7 @@ class CreateChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWir
     scenario("when the VAT unit does not exist in the admin data") { wsClient =>
       Given(s"there exists a Legal Unit with UBRN $TargetUBRN")
       stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLegalUnitId, withUnitType = LegalUnit, withPeriod = RegisterPeriod).
-        willReturn(anOkResponse().withBody(UnitLinksForLegalUnitHBaseResponseBody)))
+        willReturn(anOkResponse().withBody(UnitLinksForLegalUnitNoClericalEditsHBaseResponseBody)))
       And(s"the admin data does not contain a VAT unit with reference $VatRef")
       stubAdminDataApiFor(aVatRefLookupRequest(VatUnitId, RegisterPeriod).willReturn(aNotFoundResponse()))
 

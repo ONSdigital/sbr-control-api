@@ -23,11 +23,21 @@ class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.Free
   private val ColumnName = Column(ColumnFamily, ColumnQualifier)
   private val NewValue = "newValue"
   private val OldValue = "oldValue"
-  private val CheckAndUpdateRequestBody =
+  private val OtherColumnName = Column("otherColumnFamily", "otherColumnQualifier")
+  private val OtherCellValue = "otherCellValue"
+  private val SingleValueCheckAndUpdateRequestBody = requestBodyFor(
+    aColumnWith(family = ColumnFamily, qualifier = ColumnQualifier, value = NewValue, timestamp = None),
+    aColumnWith(family = ColumnFamily, qualifier = ColumnQualifier, value = OldValue, timestamp = None)
+  )
+  private val MultipleValueCheckAndUpdateRequestBody = requestBodyFor(
+    aColumnWith(family = ColumnFamily, qualifier = ColumnQualifier, value = NewValue, timestamp = None),
+    aColumnWith(family = OtherColumnName.family, qualifier = OtherColumnName.qualifier, value = OtherCellValue, timestamp = None),
+    aColumnWith(family = ColumnFamily, qualifier = ColumnQualifier, value = OldValue, timestamp = None)
+  )
+
+  private def requestBodyFor(columns: String*): String =
     s"""{"Row": ${
-      List(aRowWith(key = s"$RowKey", columns =
-        aColumnWith(family = ColumnFamily, qualifier = ColumnQualifier, value = NewValue, timestamp = None),
-        aColumnWith(family = ColumnFamily, qualifier = ColumnQualifier, value = OldValue, timestamp = None))).mkString("[", ",", "]")
+      List(aRowWith(key = s"$RowKey", columns: _*)).mkString("[", ",", "]")
     }}"""
 
   // test timeout must exceed the configured HBaseRest timeout to properly test client-side timeout handling
@@ -91,14 +101,32 @@ class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.Free
   }
 
   "A HBase REST Repository" - {
-    "successfully applies an update" - {
-      "when the value has not been modified by another user" in { fixture =>
+    "successfully applies an update to a row that has not been modified by another user" - {
+      "when the update affects a single field" in { fixture =>
         stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndUpdateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(SingleValueCheckAndUpdateRequestBody)).willReturn(
           anOkResponse()
         ))
 
         whenReady(fixture.repository.updateField(Table, RowKey, (ColumnName, OldValue), (ColumnName, NewValue))) { result =>
+          result shouldBe EditApplied
+        }
+      }
+
+      "when the update affects multiple fields" in { fixture =>
+        stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
+        /*
+         * this should never be called - but is required to prevent the expectation from the single field scenario from
+         * allowing this test to pass with an incorrect implementation (we can remove this once the test framework is fixed)
+         */
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(SingleValueCheckAndUpdateRequestBody)).willReturn(
+          aServiceUnavailableResponse()
+        ))
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(MultipleValueCheckAndUpdateRequestBody)).willReturn(
+          anOkResponse()
+        ))
+
+        whenReady(fixture.repository.updateField(Table, RowKey, (ColumnName, OldValue), (ColumnName, NewValue), (OtherColumnName, OtherCellValue))) { result =>
           result shouldBe EditApplied
         }
       }
@@ -107,7 +135,7 @@ class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.Free
     "prevents an update" - {
       "when the value has been modified by another user" in { fixture =>
         stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndUpdateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(SingleValueCheckAndUpdateRequestBody)).willReturn(
           aNotModifiedResponse()
         ))
 
@@ -133,7 +161,7 @@ class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.Free
        */
       "when the server takes longer to respond than the configured client-side timeout" in { fixture =>
         stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndUpdateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(SingleValueCheckAndUpdateRequestBody)).willReturn(
           anOkResponse().withFixedDelay((fixture.config.timeout + 100).toInt)
         ))
 
@@ -154,7 +182,7 @@ class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.Free
 
       "when the configured user credentials are not accepted" in { fixture =>
         stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndUpdateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(SingleValueCheckAndUpdateRequestBody)).willReturn(
           aResponse().withStatus(UNAUTHORIZED)
         ))
 
@@ -165,7 +193,7 @@ class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.Free
 
       "when the response is a client error" in { fixture =>
         stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndUpdateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(SingleValueCheckAndUpdateRequestBody)).willReturn(
           aResponse().withStatus(BAD_REQUEST)
         ))
 
@@ -176,7 +204,7 @@ class HBaseRestRepository_Update_WiremockSpec extends org.scalatest.fixture.Free
 
       "when the response is a server error" in { fixture =>
         stubTargetEntityIsFound(fixture.config, fixture.auth, fixture.responseReaderMaker)
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CheckAndUpdateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(SingleValueCheckAndUpdateRequestBody)).willReturn(
           aServiceUnavailableResponse()
         ))
 
