@@ -5,8 +5,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import repository._
 import services.VatUnitLinkPatchService.{ ParentLegalUnit, toPatchStatus }
 import uk.gov.ons.sbr.models.UnitKey
-import uk.gov.ons.sbr.models.patch.OperationTypes.{ Replace, Test }
-import uk.gov.ons.sbr.models.patch.{ Operation, Patch }
+import uk.gov.ons.sbr.models.patch.{ Patch, ReplaceOperation, TestOperation }
 import uk.gov.ons.sbr.models.unitlinks.UnitType.LegalUnit
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
 import utils.JsResultSupport
@@ -16,7 +15,7 @@ import scala.concurrent.Future
 class VatUnitLinkPatchService @Inject() (repository: UnitLinksRepository, unitRegisterService: UnitRegisterService) extends PatchService {
   override def applyPatchTo(unitKey: UnitKey, patch: Patch): Future[PatchStatus] =
     patch match {
-      case Operation(Test, ParentLegalUnit, fromValue) :: Operation(Replace, ParentLegalUnit, toValue) :: Nil =>
+      case TestOperation(ParentLegalUnit, fromValue) :: ReplaceOperation(ParentLegalUnit, toValue) :: Nil =>
         JsResultSupport.map2(fromValue.validate[UnitId], toValue.validate[UnitId])(_ -> _).fold(
           invalid = _ => Future.successful(PatchRejected),
           valid = {
@@ -49,12 +48,11 @@ class VatUnitLinkPatchService @Inject() (repository: UnitLinksRepository, unitRe
 private object VatUnitLinkPatchService {
   val ParentLegalUnit = "/parents/" + UnitType.toAcronym(LegalUnit)
 
-  def toPatchStatus(updateResult: UpdateResult): PatchStatus =
-    updateResult match {
-      case UpdateApplied => PatchApplied
-      case UpdateConflicted => PatchConflicted
-      case UpdateTargetNotFound => PatchTargetNotFound
-      case UpdateFailed => PatchFailed
-      case UpdateRejected => PatchFailed // there is nothing the client can do about this, so treat as a failure
+  def toPatchStatus(editResult: OptimisticEditResult): PatchStatus =
+    editResult match {
+      case EditApplied => PatchApplied
+      case EditConflicted => PatchConflicted
+      case EditTargetNotFound => PatchTargetNotFound
+      case EditFailed => PatchFailed
     }
 }

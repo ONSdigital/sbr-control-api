@@ -5,13 +5,13 @@ import com.github.tomakehurst.wiremock.client.{ MappingBuilder, WireMock }
 import org.scalatest.Suite
 import play.api.http.HeaderNames.{ ACCEPT, CONTENT_TYPE }
 import play.mvc.Http.MimeTypes.JSON
-import repository.hbase.HBase.{ DefaultColumnFamily, checkedPutUrl, rowKeyColFamilyUrl, rowKeyUrl }
-import repository.hbase.PeriodTableName
+import repository.hbase.HBase.{ DefaultColumnFamily, checkedDeleteUrl, checkedPutUrl, rowKeyColFamilyUrl, rowKeyUrl }
+import repository.hbase.{ Column, PeriodTableName }
 import repository.hbase.enterprise.EnterpriseUnitRowKey
 import repository.hbase.legalunit.LegalUnitQuery
 import repository.hbase.localunit.LocalUnitQuery
 import repository.hbase.reportingunit.ReportingUnitQuery
-import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, UnitLinksRowKey }
+import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, UnitLinksQualifier, UnitLinksRowKey }
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.legalunit.Ubrn
@@ -77,6 +77,12 @@ trait WithWireMockHBase extends WithWireMock with ApiResponse with BasicAuthenti
     putHBaseJson(url, auth = dummyAuthorization)
   }
 
+  def aCheckAndDeleteChildUnitLinkRequest(withUnitType: UnitType, withUnitId: UnitId, withPeriod: Period, withChildId: UnitId): MappingBuilder = {
+    val columnName = HBaseRestUnitLinksRepository.columnNameFor(UnitLinksQualifier.toChild(withChildId))
+    val url = aUnitLinksUrlBuilder(urlForCheckedDelete(_, _, columnName))(withUnitType, withUnitId, withPeriod)
+    putHBaseJson(url, auth = dummyAuthorization)
+  }
+
   def getHBaseJson(url: String, auth: Authorization): MappingBuilder =
     get(urlEqualTo(url)).
       withHeader(ACCEPT, equalTo(JSON)).
@@ -101,6 +107,9 @@ trait WithWireMockHBase extends WithWireMock with ApiResponse with BasicAuthenti
 
   private def urlForUncheckedPut(tableName: String, rowKey: String): String =
     "/" + rowKeyUrl(namespace = Namespace, tableName, rowKey)
+
+  private def urlForCheckedDelete(tableName: String, rowKey: String, columnName: Column): String =
+    "/" + checkedDeleteUrl(namespace = Namespace, tableName, rowKey, columnName)
 
   val stubHBaseFor: MappingBuilder => Unit =
     WireMock.stubFor

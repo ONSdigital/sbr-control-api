@@ -7,8 +7,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ FreeSpec, Matchers }
 import play.api.libs.json.{ JsNumber, JsString }
 import repository._
-import uk.gov.ons.sbr.models.patch.Operation
-import uk.gov.ons.sbr.models.patch.OperationTypes.{ Replace, Test }
+import uk.gov.ons.sbr.models.patch.{ ReplaceOperation, TestOperation }
 import uk.gov.ons.sbr.models.unitlinks.UnitId
 import uk.gov.ons.sbr.models.unitlinks.UnitType.{ LegalUnit, ValueAddedTax }
 import uk.gov.ons.sbr.models.{ Period, UnitKey }
@@ -26,8 +25,8 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
     val TargetVatUnitKey = UnitKey(VatUnitId, ValueAddedTax, RegisterPeriod)
     val UpdateDescriptor = UpdateParentDescriptor(LegalUnit, IncorrectLegalUnitId, TargetLegalUnitId)
     val UpdateParentPatch = Seq(
-      Operation(Test, "/parents/LEU", JsString(IncorrectLegalUnitId.value)),
-      Operation(Replace, "/parents/LEU", JsString(TargetLegalUnitId.value))
+      TestOperation("/parents/LEU", JsString(IncorrectLegalUnitId.value)),
+      ReplaceOperation("/parents/LEU", JsString(TargetLegalUnitId.value))
     )
 
     val repository = mock[UnitLinksRepository]
@@ -41,7 +40,7 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
         Future.successful(UnitFound)
       )
       (repository.updateParentLink _).expects(TargetVatUnitKey, UpdateDescriptor).returning(
-        Future.successful(UpdateApplied)
+        Future.successful(EditApplied)
       )
 
       whenReady(service.applyPatchTo(TargetVatUnitKey, UpdateParentPatch)) { result =>
@@ -54,7 +53,7 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
         Future.successful(UnitFound)
       )
       (repository.updateParentLink _).expects(TargetVatUnitKey, UpdateDescriptor).returning(
-        Future.successful(UpdateConflicted)
+        Future.successful(EditConflicted)
       )
 
       whenReady(service.applyPatchTo(TargetVatUnitKey, UpdateParentPatch)) { result =>
@@ -67,24 +66,11 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
         Future.successful(UnitFound)
       )
       (repository.updateParentLink _).expects(TargetVatUnitKey, UpdateDescriptor).returning(
-        Future.successful(UpdateTargetNotFound)
+        Future.successful(EditTargetNotFound)
       )
 
       whenReady(service.applyPatchTo(TargetVatUnitKey, UpdateParentPatch)) { result =>
         result shouldBe PatchTargetNotFound
-      }
-    }
-
-    "can signal an internal problem where a patch was accepted and submitted for update, but was then rejected" in new Fixture {
-      (unitRegisterService.isRegisteredUnit _).expects(TargetLegalUnitKey).returning(
-        Future.successful(UnitFound)
-      )
-      (repository.updateParentLink _).expects(TargetVatUnitKey, UpdateDescriptor).returning(
-        Future.successful(UpdateRejected)
-      )
-
-      whenReady(service.applyPatchTo(TargetVatUnitKey, UpdateParentPatch)) { result =>
-        result shouldBe PatchFailed
       }
     }
 
@@ -93,7 +79,7 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
         Future.successful(UnitFound)
       )
       (repository.updateParentLink _).expects(TargetVatUnitKey, UpdateDescriptor).returning(
-        Future.successful(UpdateFailed)
+        Future.successful(EditFailed)
       )
 
       whenReady(service.applyPatchTo(TargetVatUnitKey, UpdateParentPatch)) { result =>
@@ -103,8 +89,8 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
 
     "rejects a patch for any path other than '/parents/LEU'" in new Fixture {
       val invalidPathPatch = Seq(
-        Operation(Test, "/parents/ENT", JsString("test-ern")),
-        Operation(Replace, "/parents/ENT", JsString("replace-ern"))
+        TestOperation("/parents/ENT", JsString("test-ern")),
+        ReplaceOperation("/parents/ENT", JsString("replace-ern"))
       )
 
       whenReady(service.applyPatchTo(TargetVatUnitKey, invalidPathPatch)) { result =>
@@ -118,7 +104,7 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
      */
     "rejects a patch that does not contain both a 'test' and a 'replace' operation" in new Fixture {
       val noTestPatch = Seq(
-        Operation(Replace, "/parents/LEU", JsString(TargetLegalUnitId.value))
+        ReplaceOperation("/parents/LEU", JsString(TargetLegalUnitId.value))
       )
 
       whenReady(service.applyPatchTo(TargetVatUnitKey, noTestPatch)) { result =>
@@ -128,8 +114,8 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
 
     "rejects a patch containing a test value that is not a string and so cannot be a UBRN" in new Fixture {
       val invalidUbrnPatch = Seq(
-        Operation(Test, "/parents/LEU", JsNumber(42)),
-        Operation(Replace, "/parents/LEU", JsString(TargetLegalUnitId.value))
+        TestOperation("/parents/LEU", JsNumber(42)),
+        ReplaceOperation("/parents/LEU", JsString(TargetLegalUnitId.value))
       )
 
       whenReady(service.applyPatchTo(TargetVatUnitKey, invalidUbrnPatch)) { result =>
@@ -139,8 +125,8 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
 
     "rejects a patch containing a replacement value that is not a string and so cannot be a UBRN" in new Fixture {
       val invalidUbrnPatch = Seq(
-        Operation(Test, "/parents/LEU", JsString(IncorrectLegalUnitId.value)),
-        Operation(Replace, "/parents/LEU", JsNumber(42))
+        TestOperation("/parents/LEU", JsString(IncorrectLegalUnitId.value)),
+        ReplaceOperation("/parents/LEU", JsNumber(42))
       )
 
       whenReady(service.applyPatchTo(TargetVatUnitKey, invalidUbrnPatch)) { result =>

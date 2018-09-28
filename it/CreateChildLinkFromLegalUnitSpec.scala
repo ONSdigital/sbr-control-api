@@ -68,7 +68,7 @@ class CreateChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWir
         withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "add", "path": "/children/$VatRef", "value": "$VatUnitAcronym"}]"""))
 
-      Then(s"a Success response is returned")
+      Then("a Success response is returned")
       response.status shouldBe NO_CONTENT
     }
 

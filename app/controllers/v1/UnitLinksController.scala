@@ -20,6 +20,8 @@ import scala.concurrent.Future
  * Note that the Swagger annotations for edit have been moved from the trait, as this seems to cause issues for the
  * generator.  However, the example below still does not generate a useful example of the expected request payload.
  * This seems to be a known problem with the version of the annotations we are using.
+ * Note also that annotation values must be constants, and so any attempt to format values such as 'notes' nicely
+ * results in exceptions at runtime.
  */
 @Api("Search")
 class UnitLinksController @Inject() (repository: UnitLinksRepository, handlePatch: PatchHandler[Future[Result]]) extends Controller with UnitLinksApi {
@@ -32,7 +34,7 @@ class UnitLinksController @Inject() (repository: UnitLinksRepository, handlePatc
 
   @ApiOperation(
     value = "Supports restricted editing of the links from a VAT unit",
-    notes = """Use the following template: [{"op": "test", "path": "/parents/LEU", "value": "1234567890111111"},{"op": "replace", "path": "/parents/LEU", "value": "1234567890999999"}]""",
+    notes = "Use the following template:\n  [{\"op\": \"test\", \"path\": \"/parents/LEU\", \"value\": \"1234567890111111\"},\n {\"op\": \"replace\", \"path\": \"/parents/LEU\", \"value\": \"1234567890999999\"}]",
     consumes = "application/json-patch+json",
     code = 204,
     httpMethod = "PATCH"
@@ -69,7 +71,7 @@ class UnitLinksController @Inject() (repository: UnitLinksRepository, handlePatc
 
   @ApiOperation(
     value = "Supports restricted editing of the links from a Legal Unit",
-    notes = """Use the following template: [{"op": "add", "path": "/children/123456789012", "value": "VAT"}]""",
+    notes = "Use the following template to create a child:\n  [{\"op\": \"add\", \"path\": \"/children/123456789012\", \"value\": \"VAT\"}]\n\nUse the following template to delete a child:\n  [{\"op\": \"test\", \"path\": \"/children/123456789012\", \"value\": \"VAT\"},\n {\"op\": \"remove\", \"path\": \"/children/123456789012\"}]",
     consumes = "application/json-patch+json",
     code = 204,
     httpMethod = "PATCH"

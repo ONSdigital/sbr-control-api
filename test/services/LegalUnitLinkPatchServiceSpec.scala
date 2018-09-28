@@ -6,11 +6,10 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{ FreeSpec, Matchers }
 import play.api.libs.json.{ JsNumber, JsString }
-import repository.{ CreateChildLinkFailure, CreateChildLinkSuccess, LinkFromUnitNotFound, UnitLinksRepository }
-import uk.gov.ons.sbr.models.patch.Operation
-import uk.gov.ons.sbr.models.patch.OperationTypes.{ Add, Test }
+import repository._
+import uk.gov.ons.sbr.models.patch.{ AddOperation, RemoveOperation, ReplaceOperation, TestOperation }
 import uk.gov.ons.sbr.models.unitlinks.UnitId
-import uk.gov.ons.sbr.models.unitlinks.UnitType.{ LegalUnit, ValueAddedTax, toAcronym }
+import uk.gov.ons.sbr.models.unitlinks.UnitType.{ CompaniesHouse, LegalUnit, PayAsYouEarnTax, ValueAddedTax, toAcronym }
 import uk.gov.ons.sbr.models.{ Period, UnitKey }
 
 import scala.concurrent.Future
@@ -24,113 +23,253 @@ class LegalUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFact
     val VatRef = "123456789012"
     val VatUnitId = UnitId(VatRef)
     val VatUnitKey = UnitKey(VatUnitId, ValueAddedTax, RegisterPeriod)
-    val CreateChildPatch = Seq(Operation(Add, s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))))
+    val OtherVatRef = "987654321012"
 
     val repository = mock[UnitLinksRepository]
     val vatRegisterService = mock[UnitRegisterService]
     val patchService = new LegalUnitLinkPatchService(repository, vatRegisterService)
   }
 
+  private trait CreateFixture extends Fixture {
+    val CreateChildPatch = Seq(AddOperation(s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))))
+  }
+
+  private trait DeleteFixture extends Fixture {
+    val DeleteChildPatch = Seq(
+      TestOperation(s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))),
+      RemoveOperation(s"/children/$VatRef")
+    )
+  }
+
   "A Legal Unit Link PatchService" - {
-    "can apply a patch that specifies that a link to a child VAT unit should be created" in new Fixture {
-      (vatRegisterService.isRegisteredUnit _).expects(VatUnitKey).returning(
-        Future.successful(UnitFound)
-      )
-      (repository.createChildLink _).expects(LegalUnitKey, ValueAddedTax, VatUnitId).returning(
-        Future.successful(CreateChildLinkSuccess)
-      )
+    "can process a patch specifying that a child VAT unit should be created" - {
+      "signalling success when the patch is successfully applied" in new CreateFixture {
+        (vatRegisterService.isRegisteredUnit _).expects(VatUnitKey).returning(
+          Future.successful(UnitFound)
+        )
+        (repository.createChildLink _).expects(LegalUnitKey, ValueAddedTax, VatUnitId).returning(
+          Future.successful(CreateChildLinkSuccess)
+        )
 
-      whenReady(patchService.applyPatchTo(LegalUnitKey, CreateChildPatch)) { result =>
-        result shouldBe PatchApplied
+        whenReady(patchService.applyPatchTo(LegalUnitKey, CreateChildPatch)) { result =>
+          result shouldBe PatchApplied
+        }
+      }
+
+      "signalling when the target Legal Unit cannot be found" in new CreateFixture {
+        (vatRegisterService.isRegisteredUnit _).expects(VatUnitKey).returning(
+          Future.successful(UnitFound)
+        )
+        (repository.createChildLink _).expects(LegalUnitKey, ValueAddedTax, VatUnitId).returning(
+          Future.successful(LinkFromUnitNotFound)
+        )
+
+        whenReady(patchService.applyPatchTo(LegalUnitKey, CreateChildPatch)) { result =>
+          result shouldBe PatchTargetNotFound
+        }
+      }
+
+      "signalling when the application of the patch fails" in new CreateFixture {
+        (vatRegisterService.isRegisteredUnit _).expects(VatUnitKey).returning(
+          Future.successful(UnitFound)
+        )
+        (repository.createChildLink _).expects(LegalUnitKey, ValueAddedTax, VatUnitId).returning(
+          Future.successful(CreateChildLinkFailure)
+        )
+
+        whenReady(patchService.applyPatchTo(LegalUnitKey, CreateChildPatch)) { result =>
+          result shouldBe PatchFailed
+        }
+      }
+
+      "signalling failure when an error is encountered while attempting to confirm that the target VAT reference is known to the Admin Data" in new CreateFixture {
+        (vatRegisterService.isRegisteredUnit _).expects(VatUnitKey).returning(
+          Future.successful(UnitRegisterFailure("operation failed"))
+        )
+
+        whenReady(patchService.applyPatchTo(LegalUnitKey, CreateChildPatch)) { result =>
+          result shouldBe PatchFailed
+        }
+      }
+
+      "rejecting" - {
+        "a patch specifying a target VAT reference that does not exist in the admin data" in new CreateFixture {
+          (vatRegisterService.isRegisteredUnit _).expects(VatUnitKey).returning(
+            Future.successful(UnitNotFound)
+          )
+
+          whenReady(patchService.applyPatchTo(LegalUnitKey, CreateChildPatch)) { result =>
+            result shouldBe PatchRejected
+          }
+        }
+
+        "a patch that attempts to add multiple values" in new Fixture {
+          val invalidPatch = Seq(
+            AddOperation(s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))),
+            AddOperation("/children/210987654321", JsString(toAcronym(ValueAddedTax)))
+          )
+
+          whenReady(patchService.applyPatchTo(LegalUnitKey, invalidPatch)) { result =>
+            result shouldBe PatchRejected
+          }
+        }
+
+        "a patch that attempts to add a path other than '/children/<some-id>'" in new Fixture {
+          val invalidPathPatch = Seq(AddOperation(s"/child/$VatRef", JsString(toAcronym(ValueAddedTax))))
+
+          whenReady(patchService.applyPatchTo(LegalUnitKey, invalidPathPatch)) { result =>
+            result shouldBe PatchRejected
+          }
+        }
+
+        "a patch containing a value that is not a string (and so cannot be a unit type acronym)" in new Fixture {
+          val invalidValuePatch = Seq(AddOperation(s"/children/$VatRef", JsNumber(42)))
+
+          whenReady(patchService.applyPatchTo(LegalUnitKey, invalidValuePatch)) { result =>
+            result shouldBe PatchRejected
+          }
+        }
+
+        "a patch containing a value that is not the acronym for the VAT unit type" in new Fixture {
+          val invalidValuePatch = Seq(AddOperation(s"/children/$VatRef", JsString(toAcronym(LegalUnit))))
+
+          whenReady(patchService.applyPatchTo(LegalUnitKey, invalidValuePatch)) { result =>
+            result shouldBe PatchRejected
+          }
+        }
       }
     }
 
-    "can signal that the target Legal Unit could not be found" in new Fixture {
-      (vatRegisterService.isRegisteredUnit _).expects(VatUnitKey).returning(
-        Future.successful(UnitFound)
-      )
-      (repository.createChildLink _).expects(LegalUnitKey, ValueAddedTax, VatUnitId).returning(
-        Future.successful(LinkFromUnitNotFound)
-      )
+    "can process a patch specifying that a child VAT unit should be deleted" - {
+      "signalling success when the patch is successfully applied" in new DeleteFixture {
+        (repository.deleteChildLink _).expects(LegalUnitKey, ValueAddedTax, VatUnitId).returning(
+          Future.successful(EditApplied)
+        )
 
-      whenReady(patchService.applyPatchTo(LegalUnitKey, CreateChildPatch)) { result =>
-        result shouldBe PatchTargetNotFound
+        whenReady(patchService.applyPatchTo(LegalUnitKey, DeleteChildPatch)) { result =>
+          result shouldBe PatchApplied
+        }
+      }
+
+      "signalling when a patch cannot be applied as a result of a conflicting change" in new DeleteFixture {
+        (repository.deleteChildLink _).expects(LegalUnitKey, ValueAddedTax, VatUnitId).returning(
+          Future.successful(EditConflicted)
+        )
+
+        whenReady(patchService.applyPatchTo(LegalUnitKey, DeleteChildPatch)) { result =>
+          result shouldBe PatchConflicted
+        }
+      }
+
+      "signalling when the target Legal Unit cannot be found" in new DeleteFixture {
+        (repository.deleteChildLink _).expects(LegalUnitKey, ValueAddedTax, VatUnitId).returning(
+          Future.successful(EditTargetNotFound)
+        )
+
+        whenReady(patchService.applyPatchTo(LegalUnitKey, DeleteChildPatch)) { result =>
+          result shouldBe PatchTargetNotFound
+        }
+      }
+
+      "signalling when the application of the patch fails" in new DeleteFixture {
+        (repository.deleteChildLink _).expects(LegalUnitKey, ValueAddedTax, VatUnitId).returning(
+          Future.successful(EditFailed)
+        )
+
+        whenReady(patchService.applyPatchTo(LegalUnitKey, DeleteChildPatch)) { result =>
+          result shouldBe PatchFailed
+        }
+      }
+
+      "rejecting" - {
+        /*
+         * Permitting an outright 'remove' operation would not allow us to use a 'checkAndDelete' operation,
+         * and would run the risk of overwriting another user's concurrent changes.
+         */
+        "a patch that does not pair a 'test' operation with the 'remove' operation" in new DeleteFixture {
+          whenReady(patchService.applyPatchTo(LegalUnitKey, Seq(RemoveOperation(s"/children/$VatRef")))) { result =>
+            result shouldBe PatchRejected
+          }
+        }
+
+        "a patch that attempts to remove multiple values" in new DeleteFixture {
+          val invalidPatch = Seq(
+            TestOperation(s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))),
+            RemoveOperation(s"/children/$VatRef"),
+            RemoveOperation(s"/children/$OtherVatRef")
+          )
+
+          whenReady(patchService.applyPatchTo(LegalUnitKey, invalidPatch)) { result =>
+            result shouldBe PatchRejected
+          }
+        }
+
+        "a patch that contains multiple test operations (even if they represent the same test)" in new DeleteFixture {
+          val invalidPatch = Seq(
+            TestOperation(s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))),
+            TestOperation(s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))),
+            RemoveOperation(s"/children/$VatRef")
+          )
+
+          whenReady(patchService.applyPatchTo(LegalUnitKey, invalidPatch)) { result =>
+            result shouldBe PatchRejected
+          }
+        }
+
+        "a patch where the paths for the 'test' and 'remove' operations differ" in new DeleteFixture {
+          val invalidPatch = Seq(
+            TestOperation(s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))),
+            RemoveOperation(s"/children/$OtherVatRef")
+          )
+
+          whenReady(patchService.applyPatchTo(LegalUnitKey, invalidPatch)) { result =>
+            result shouldBe PatchRejected
+          }
+        }
+
+        "a patch that attempts to delete a path other than '/children/<some-id>'" in new DeleteFixture {
+          val invalidPatch = Seq(
+            TestOperation(s"/child/$VatRef", JsString(toAcronym(ValueAddedTax))),
+            RemoveOperation(s"/child/$VatRef")
+          )
+
+          whenReady(patchService.applyPatchTo(LegalUnitKey, invalidPatch)) { result =>
+            result shouldBe PatchRejected
+          }
+        }
+
+        "a patch containing a 'test' value that is not a string (and so cannot be a unit type acronym)" in new Fixture {
+          val invalidValuePatch = Seq(
+            TestOperation(s"/children/$VatRef", JsNumber(42)),
+            RemoveOperation(s"/children/$VatRef")
+          )
+
+          whenReady(patchService.applyPatchTo(LegalUnitKey, invalidValuePatch)) { result =>
+            result shouldBe PatchRejected
+          }
+        }
+
+        "a patch containing a 'test' value that is not the acronym for the VAT unit type" in new Fixture {
+          val invalidValuePatch = Seq(
+            TestOperation(s"/children/$VatRef", JsString(toAcronym(CompaniesHouse))),
+            RemoveOperation(s"/children/$VatRef")
+          )
+
+          whenReady(patchService.applyPatchTo(LegalUnitKey, invalidValuePatch)) { result =>
+            result shouldBe PatchRejected
+          }
+        }
       }
     }
 
-    "can signal that a patch was accepted and attempted, but that the operation failed" in new Fixture {
-      (vatRegisterService.isRegisteredUnit _).expects(VatUnitKey).returning(
-        Future.successful(UnitFound)
-      )
-      (repository.createChildLink _).expects(LegalUnitKey, ValueAddedTax, VatUnitId).returning(
-        Future.successful(CreateChildLinkFailure)
+    "rejects a patch that does not represent either an add operation or a delete operation" in new Fixture {
+      val updatePatch = Seq(
+        TestOperation(s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))),
+        ReplaceOperation(s"/children/$VatRef", JsString(toAcronym(PayAsYouEarnTax)))
       )
 
-      whenReady(patchService.applyPatchTo(LegalUnitKey, CreateChildPatch)) { result =>
-        result shouldBe PatchFailed
-      }
-    }
-
-    "rejects a patch specifying a target VAT reference that does not exist in the admin data" in new Fixture {
-      (vatRegisterService.isRegisteredUnit _).expects(VatUnitKey).returning(
-        Future.successful(UnitNotFound)
-      )
-
-      whenReady(patchService.applyPatchTo(LegalUnitKey, CreateChildPatch)) { result =>
+      whenReady(patchService.applyPatchTo(LegalUnitKey, updatePatch)) { result =>
         result shouldBe PatchRejected
-      }
-    }
-
-    "rejects a patch that is not an add operation" in new Fixture {
-      val invalidPatch = Seq(Operation(Test, s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))))
-
-      whenReady(patchService.applyPatchTo(LegalUnitKey, invalidPatch)) { result =>
-        result shouldBe PatchRejected
-      }
-    }
-
-    "rejects a patch that is not a single operation" in new Fixture {
-      val invalidPatch = Seq(
-        Operation(Add, s"/children/$VatRef", JsString(toAcronym(ValueAddedTax))),
-        Operation(Add, "/children/210987654321", JsString(toAcronym(ValueAddedTax)))
-      )
-
-      whenReady(patchService.applyPatchTo(LegalUnitKey, invalidPatch)) { result =>
-        result shouldBe PatchRejected
-      }
-    }
-
-    "rejects a patch for any path other than '/children/<some-id>'" in new Fixture {
-      val invalidPathPatch = Seq(Operation(Add, s"/child/$VatRef", JsString(toAcronym(ValueAddedTax))))
-
-      whenReady(patchService.applyPatchTo(LegalUnitKey, invalidPathPatch)) { result =>
-        result shouldBe PatchRejected
-      }
-    }
-
-    "rejects a patch containing a value that is not a string and so cannot be a unit type acronym" in new Fixture {
-      val invalidValuePatch = Seq(Operation(Add, s"/children/$VatRef", JsNumber(42)))
-
-      whenReady(patchService.applyPatchTo(LegalUnitKey, invalidValuePatch)) { result =>
-        result shouldBe PatchRejected
-      }
-    }
-
-    "rejects a patch containing a value that is not the acronym for the VAT unit type" in new Fixture {
-      val invalidValuePatch = Seq(Operation(Add, s"/children/$VatRef", JsString(toAcronym(LegalUnit))))
-
-      whenReady(patchService.applyPatchTo(LegalUnitKey, invalidValuePatch)) { result =>
-        result shouldBe PatchRejected
-      }
-    }
-
-    "fails when an error is encountered while attempting to confirm that the target VAT reference is known to the Admin Data" in new Fixture {
-      (vatRegisterService.isRegisteredUnit _).expects(VatUnitKey).returning(
-        Future.successful(UnitRegisterFailure("operation failed"))
-      )
-
-      whenReady(patchService.applyPatchTo(LegalUnitKey, CreateChildPatch)) { result =>
-        result shouldBe PatchFailed
       }
     }
   }
