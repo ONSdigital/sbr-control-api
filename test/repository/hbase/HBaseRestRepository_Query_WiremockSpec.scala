@@ -8,12 +8,13 @@ import org.scalatest.{ EitherValues, Matchers, OneInstancePerTest, Outcome }
 import play.api.http.Port
 import play.api.http.Status.{ BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, UNAUTHORIZED }
 import play.api.libs.json.{ JsError, JsSuccess, Json, Reads }
+import play.api.libs.ws.WSClient
 import play.api.test.WsTestClient
 import repository.RestRepository.Row
-import support.WithWireMockHBase
+import support.wiremock.WireMockHBase
 import utils.BaseUrl
 
-class HBaseRestRepository_Query_WiremockSpec extends org.scalatest.fixture.FreeSpec with WithWireMockHBase with Matchers with EitherValues with MockFactory with ScalaFutures with PatienceConfiguration with OneInstancePerTest {
+class HBaseRestRepository_Query_WiremockSpec extends org.scalatest.fixture.FreeSpec with WireMockHBase with Matchers with EitherValues with MockFactory with ScalaFutures with PatienceConfiguration with OneInstancePerTest {
 
   private val DummyJsonResponseStr = """{"some":"json"}"""
   private val Table = "table"
@@ -33,24 +34,28 @@ class HBaseRestRepository_Query_WiremockSpec extends org.scalatest.fixture.FreeS
     val targetUrl = s"/${config.namespace}:$Table/$RowKey/$ColumnFamily"
   }
 
-  override protected def withFixture(test: OneArgTest): Outcome = {
+  private def makeFixtureParam(wsClient: WSClient): FixtureParam = {
     val config = HBaseRestRepositoryConfig(
-      BaseUrl(protocol = "http", host = "localhost", port = wireMockPort, prefix = None),
+      BaseUrl(protocol = "http", host = "localhost", port = DefaultHBasePort, prefix = None),
       "namespace", "username", "password", timeout = 1000L
     )
     val auth = Authorization(config.username, config.password)
     val responseReaderMaker = mock[HBaseResponseReaderMaker]
     val readsRows = mock[Reads[Seq[Row]]]
-
-    // OneInstancePerTest is required for this common expectation to work across all of the individual tests
-    (responseReaderMaker.forColumnFamily _).expects(ColumnFamily).returning(readsRows)
-
-    WsTestClient.withClient { wsClient =>
-      withFixture(test.toNoArgTest(FixtureParam(
-        config, auth, new HBaseRestRepository(config, wsClient, responseReaderMaker), responseReaderMaker, readsRows
-      )))
-    }(new Port(wireMockPort))
+    FixtureParam(config, auth, new HBaseRestRepository(config, wsClient, responseReaderMaker), responseReaderMaker, readsRows)
   }
+
+  override protected def withFixture(test: OneArgTest): Outcome =
+    withWireMockHBase { () =>
+      WsTestClient.withClient { wsClient =>
+        val fixture = makeFixtureParam(wsClient)
+        // OneInstancePerTest is required for this common expectation to work across all of the individual tests
+        (fixture.responseReaderMaker.forColumnFamily _).expects(ColumnFamily).returning(fixture.readsRows)
+        withFixture(
+          test.toNoArgTest(fixture)
+        )
+      }(new Port(DefaultHBasePort))
+    }
 
   private def toRow(variables: Map[String, String]): Row =
     Row(rowKey = "UnusedRowKey", fields = variables)

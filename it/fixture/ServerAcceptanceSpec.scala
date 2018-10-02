@@ -1,11 +1,6 @@
 package fixture
 
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.http.Port
+import org.scalatestplus.play.guice.GuiceOneServerPerTest
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-import support.WsClientFixture
 
-class ServerAcceptanceSpec extends AcceptanceSpec with WsClientFixture with GuiceOneServerPerSuite with DefaultAwaitTimeout with FutureAwaits {
-  override def wsPort: Port =
-    new Port(port)
-}
+trait ServerAcceptanceSpec extends AcceptanceSpec with GuiceOneServerPerTest with DefaultAwaitTimeout with FutureAwaits

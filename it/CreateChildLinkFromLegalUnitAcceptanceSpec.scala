@@ -1,24 +1,19 @@
 import java.time.Month.MARCH
 
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
-import fixture.ServerAcceptanceSpec
+import fixture.AbstractServerAcceptanceSpec
+import org.scalatest.Outcome
 import parsers.JsonPatchBodyParser.JsonPatchMediaType
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status._
 import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.unitlinks.{HBaseRestUnitLinksRepository, UnitLinksQualifier, UnitLinksRowKey}
-import support.{WireMockAdminDataApi, WithWireMockHBase}
+import support.wiremock.WireMockAdminDataApi
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.unitlinks.UnitId
 import uk.gov.ons.sbr.models.unitlinks.UnitType.{CompaniesHouse, Enterprise, LegalUnit, ValueAddedTax, toAcronym}
 
-/*
- * For now both the fake HBase and the fake VAT admin data service share the same wiremock.
- * This implies that the VAT admin data service must be configured in application.conf to run on the wiremock port.
- * To address this, the wiremock support needs to be reworked as per sbr-api so that each fake server has an
- * independent wiremock instance.
- */
-class CreateChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWireMockHBase with WireMockAdminDataApi {
+class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanceSpec with WireMockAdminDataApi {
 
   private val RegisterPeriod = Period.fromYearMonth(2018, MARCH)
   private val VatUnitAcronym = toAcronym(ValueAddedTax)
@@ -59,6 +54,10 @@ class CreateChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWir
   private val UnitLinksForLegalUnitWithClericalEditsHBaseResponseBody =
     unitLinksForLegalUnitHBaseResponseBody(EditedColumn :: UnitLinkColumns)
 
+  override protected def withFixture(test: OneArgTest): Outcome =
+    withWireMockAdminDataApi { () =>
+      super.withFixture(test)
+    }
 
   info("As a business register subject matter expert")
   info("I want to move an incorrectly linked VAT to a different Legal Unit")
