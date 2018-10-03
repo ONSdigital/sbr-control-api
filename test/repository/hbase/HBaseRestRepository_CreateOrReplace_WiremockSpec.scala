@@ -18,10 +18,19 @@ class HBaseRestRepository_CreateOrReplace_WiremockSpec extends org.scalatest.fix
   private val RowKey = "rowKey"
   private val ColumnName = Column("columnFamily", "columnQualifier")
   private val CellValue = "cellValue"
-  private val CreateRequestBody =
+  private val OtherColumnName = Column("otherColumnFamily", "otherColumnQualifier")
+  private val OtherCellValue = "otherCellValue"
+
+  private val SingleColumn = Seq(
+    aColumnWith(family = ColumnName.family, qualifier = ColumnName.qualifier, value = CellValue, timestamp = None)
+  )
+  private val MultipleColumns = SingleColumn :+ aColumnWith(family = OtherColumnName.family, qualifier = OtherColumnName.qualifier, value = OtherCellValue, timestamp = None)
+  private val CreateSingleColumnRequestBody = requestBodyFor(SingleColumn)
+  private val CreateMultipleColumnsRequestBody = requestBodyFor(MultipleColumns)
+
+  private def requestBodyFor(columns: Seq[String]): String =
     s"""{"Row": ${
-      List(aRowWith(key = s"$RowKey", columns =
-        aColumnWith(family = ColumnName.family, qualifier = ColumnName.qualifier, value = CellValue, timestamp = None))).mkString("[", ",", "]")
+      List(aRowWith(key = s"$RowKey", columns: _*)).mkString("[", ",", "]")
     }}"""
 
   // test timeout must exceed the configured HBaseRest timeout to properly test client-side timeout handling
@@ -52,13 +61,32 @@ class HBaseRestRepository_CreateOrReplace_WiremockSpec extends org.scalatest.fix
   }
 
   "A HBase REST Repository" - {
-    "can successfully create or replace a new cell" in { fixture =>
-      stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CreateRequestBody)).willReturn(
-        anOkResponse()
-      ))
+    "can successfully" - {
+      "create or replace a single cell" in { fixture =>
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CreateSingleColumnRequestBody)).willReturn(
+          anOkResponse()
+        ))
 
-      whenReady(fixture.repository.createOrReplace(Table, RowKey, (ColumnName, CellValue))) { result =>
-        result shouldBe EditApplied
+        whenReady(fixture.repository.createOrReplace(Table, RowKey, (ColumnName, CellValue))) { result =>
+          result shouldBe EditApplied
+        }
+      }
+
+      "create or replace multiple cells" in { fixture =>
+        /*
+         * this should never be called - but is required to prevent the expectation from the single cell scenario from
+         * allowing this test to pass with an incorrect implementation (we can remove this once the test framework is fixed)
+         */
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CreateSingleColumnRequestBody)).willReturn(
+          aServiceUnavailableResponse()
+        ))
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CreateMultipleColumnsRequestBody)).willReturn(
+          anOkResponse()
+        ))
+
+        whenReady(fixture.repository.createOrReplace(Table, RowKey, (ColumnName, CellValue), (OtherColumnName, OtherCellValue))) { result =>
+          result shouldBe EditApplied
+        }
       }
     }
 
@@ -67,7 +95,7 @@ class HBaseRestRepository_CreateOrReplace_WiremockSpec extends org.scalatest.fix
        * Test patienceConfig must exceed the fixedDelay for this to work...
        */
       "when the server takes longer to respond than the configured client-side timeout" in { fixture =>
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CreateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CreateSingleColumnRequestBody)).willReturn(
           anOkResponse().withFixedDelay((fixture.config.timeout + 100).toInt)
         ))
 
@@ -77,7 +105,7 @@ class HBaseRestRepository_CreateOrReplace_WiremockSpec extends org.scalatest.fix
       }
 
       "when the configured user credentials are not accepted" in { fixture =>
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CreateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CreateSingleColumnRequestBody)).willReturn(
           aResponse().withStatus(UNAUTHORIZED)
         ))
 
@@ -87,7 +115,7 @@ class HBaseRestRepository_CreateOrReplace_WiremockSpec extends org.scalatest.fix
       }
 
       "when the response is a client error" in { fixture =>
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CreateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CreateSingleColumnRequestBody)).willReturn(
           aResponse().withStatus(BAD_REQUEST)
         ))
 
@@ -97,7 +125,7 @@ class HBaseRestRepository_CreateOrReplace_WiremockSpec extends org.scalatest.fix
       }
 
       "when the response is a server error" in { fixture =>
-        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CreateRequestBody)).willReturn(
+        stubHBaseFor(putHBaseJson(fixture.targetUrl, fixture.auth).withRequestBody(equalToJson(CreateSingleColumnRequestBody)).willReturn(
           aServiceUnavailableResponse()
         ))
 

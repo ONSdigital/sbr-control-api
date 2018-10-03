@@ -43,7 +43,12 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
     val repository = new HBaseRestUnitLinksRepository(restRepository, config, rowMapper, unitRegisterService)
   }
 
-  private trait EditParentFixture extends Fixture {
+  private trait EditFixture extends Fixture {
+    val EditedColumnName = Column(ColumnFamily, "edited")
+    val EditedValue = "Y"
+  }
+
+  private trait EditParentFixture extends EditFixture {
     val IncorrectLegalUnitId = UnitId("1230000000000100")
     val TargetLegalUnitId = UnitId("1230000000000200")
     val ColumnName = Column(ColumnFamily, "p_LEU")
@@ -53,7 +58,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
     )
   }
 
-  private trait EditChildFixture extends Fixture {
+  private trait EditChildFixture extends EditFixture {
     val ChildUnitType = UnitType.ValueAddedTax
     val ChildUnitId = UnitId("987654321012")
     val ColumnName = Column(ColumnFamily, s"c_${ChildUnitId.value}")
@@ -104,10 +109,10 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
       }
     }
 
-    "supports the update of a parent link" - {
+    "supports the update of a parent link (setting the clerically edited flag)" - {
       "returning EditApplied when successful" in new EditParentFixture {
         (restRepository.updateField _).expects(TargetPeriodTable, TargetRowKey,
-          (ColumnName, IncorrectLegalUnitId.value), (ColumnName, TargetLegalUnitId.value)).returning(
+          (ColumnName, IncorrectLegalUnitId.value), (ColumnName, TargetLegalUnitId.value), Seq(EditedColumnName -> EditedValue)).returning(
             Future.successful(EditApplied)
           )
 
@@ -118,7 +123,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
 
       "returning EditConflicted when target link has been modified by another user" in new EditParentFixture {
         (restRepository.updateField _).expects(TargetPeriodTable, TargetRowKey,
-          (ColumnName, IncorrectLegalUnitId.value), (ColumnName, TargetLegalUnitId.value)).returning(
+          (ColumnName, IncorrectLegalUnitId.value), (ColumnName, TargetLegalUnitId.value), Seq(EditedColumnName -> EditedValue)).returning(
             Future.successful(EditConflicted)
           )
 
@@ -129,7 +134,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
 
       "returning EditTargetNotFound when the target link does not exist" in new EditParentFixture {
         (restRepository.updateField _).expects(TargetPeriodTable, TargetRowKey,
-          (ColumnName, IncorrectLegalUnitId.value), (ColumnName, TargetLegalUnitId.value)).returning(
+          (ColumnName, IncorrectLegalUnitId.value), (ColumnName, TargetLegalUnitId.value), Seq(EditedColumnName -> EditedValue)).returning(
             Future.successful(EditTargetNotFound)
           )
 
@@ -140,7 +145,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
 
       "returning EditFailed when the update is attempted but is unsuccessful" in new EditParentFixture {
         (restRepository.updateField _).expects(TargetPeriodTable, TargetRowKey,
-          (ColumnName, IncorrectLegalUnitId.value), (ColumnName, TargetLegalUnitId.value)).returning(
+          (ColumnName, IncorrectLegalUnitId.value), (ColumnName, TargetLegalUnitId.value), Seq(EditedColumnName -> EditedValue)).returning(
             Future.successful(EditFailed)
           )
 
@@ -150,14 +155,15 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
       }
     }
 
-    "supports the creation of a child link" - {
+    "supports the creation of a child link (setting the clerically edited flag)" - {
       "returning success when the target unit is known to the register and the create operation succeeds" in new EditChildFixture {
         (unitRegisterService.isRegisteredUnit _).expects(TargetUnitLinkKey).returning(
           Future.successful(UnitFound)
         )
-        (restRepository.createOrReplace _).expects(TargetPeriodTable, TargetRowKey, (ColumnName, toAcronym(ChildUnitType))).returning(
-          Future.successful(EditApplied)
-        )
+        (restRepository.createOrReplace _).expects(TargetPeriodTable, TargetRowKey,
+          (ColumnName, toAcronym(ChildUnitType)), Seq(EditedColumnName -> EditedValue)).returning(
+            Future.successful(EditApplied)
+          )
 
         whenReady(repository.createChildLink(TargetUnitLinkKey, ChildUnitType, ChildUnitId)) { result =>
           result shouldBe CreateChildLinkSuccess
@@ -188,9 +194,10 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
         (unitRegisterService.isRegisteredUnit _).expects(TargetUnitLinkKey).returning(
           Future.successful(UnitFound)
         )
-        (restRepository.createOrReplace _).expects(TargetPeriodTable, TargetRowKey, (ColumnName, toAcronym(ChildUnitType))).returning(
-          Future.successful(EditFailed)
-        )
+        (restRepository.createOrReplace _).expects(TargetPeriodTable, TargetRowKey,
+          (ColumnName, toAcronym(ChildUnitType)), Seq(EditedColumnName -> EditedValue)).returning(
+            Future.successful(EditFailed)
+          )
 
         whenReady(repository.createChildLink(TargetUnitLinkKey, ChildUnitType, ChildUnitId)) { result =>
           result shouldBe CreateChildLinkFailure
@@ -198,9 +205,12 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
       }
     }
 
-    "supports the deletion of a child link" - {
+    "supports the deletion of a child link (setting the clerically edited flag)" - {
       "returning success when the operation is successful" in new EditChildFixture {
         (restRepository.deleteField _).expects(TargetPeriodTable, TargetRowKey, (ColumnName, toAcronym(ChildUnitType)), ColumnName).returning(
+          Future.successful(EditApplied)
+        )
+        (restRepository.createOrReplace _).expects(TargetPeriodTable, TargetRowKey, EditedColumnName -> EditedValue, Seq()).returning(
           Future.successful(EditApplied)
         )
 
@@ -235,6 +245,19 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
 
       "returning failure when an attempt to delete the value fails" in new EditChildFixture {
         (restRepository.deleteField _).expects(TargetPeriodTable, TargetRowKey, (ColumnName, toAcronym(ChildUnitType)), ColumnName).returning(
+          Future.successful(EditFailed)
+        )
+
+        whenReady(repository.deleteChildLink(TargetUnitLinkKey, ChildUnitType, ChildUnitId)) { result =>
+          result shouldBe EditFailed
+        }
+      }
+
+      "returning failure when the value is successfully deleted but the attempt to set the edited flag fails" in new EditChildFixture {
+        (restRepository.deleteField _).expects(TargetPeriodTable, TargetRowKey, (ColumnName, toAcronym(ChildUnitType)), ColumnName).returning(
+          Future.successful(EditApplied)
+        )
+        (restRepository.createOrReplace _).expects(TargetPeriodTable, TargetRowKey, EditedColumnName -> EditedValue, Seq()).returning(
           Future.successful(EditFailed)
         )
 

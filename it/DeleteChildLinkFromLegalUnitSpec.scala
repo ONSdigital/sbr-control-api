@@ -22,6 +22,7 @@ class DeleteChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWir
   private val VatUnitAcronym = toAcronym(ValueAddedTax)
   private val CompaniesHouseAcronym = toAcronym(CompaniesHouse)
   private val Family = HBaseRestUnitLinksRepository.ColumnFamily
+  private val EditedColumn = aColumnWith(Family, qualifier = "edited", value = "Y", timestamp = None)
 
   private val UnitLinksForTargetUbrnWithChildVatHBaseResponseBody =
     s"""{ "Row": ${
@@ -48,6 +49,13 @@ class DeleteChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWir
       ).mkString("[", ",", "]")
     }}"""
 
+  private val HBaseSetEditedFlagRequestBody =
+    s"""{"Row": ${
+      List(
+        aRowWith(key = s"${UnitLinksRowKey(TargetLegalUnitId, LegalUnit)}", columns = EditedColumn)
+      ).mkString("[", ",", "]")
+    }}"""
+
   info("As a business register subject matter expert")
   info("I want to move an incorrectly linked VAT to a different Legal Unit")
   info("So that I can improve the quality of the business register")
@@ -61,6 +69,10 @@ class DeleteChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWir
       stubHBaseFor(aCheckAndDeleteChildUnitLinkRequest(withUnitType = LegalUnit, withUnitId = TargetLegalUnitId, withPeriod = RegisterPeriod,
         withChildId = VatUnitId).
         withRequestBody(equalToJson(HBaseCheckAndDeleteRequestBody)).
+        willReturn(anOkResponse()))
+      And(s"a database request to set the clerically edited flag for the Legal Unit identified by $TargetUBRN will succeed")
+      stubHBaseFor(aCreateUnitLinkRequest(withUnitType = LegalUnit, withUnitId = TargetLegalUnitId, withPeriod = RegisterPeriod).
+        withRequestBody(equalToJson(HBaseSetEditedFlagRequestBody)).
         willReturn(anOkResponse()))
 
       When(s"the deletion of the child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
@@ -146,6 +158,30 @@ class DeleteChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWir
 
       Then(s"a Unprocessable Entity response is returned")
       response.status shouldBe UNPROCESSABLE_ENTITY
+    }
+
+    scenario("when setting the clerically edited flag on the Legal Unit fails") { wsClient =>
+      Given(s"there exists a Legal Unit identified by UBRN $TargetUBRN having a child link to the VAT unit with reference $VatRef")
+      stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLegalUnitId, withUnitType = LegalUnit, withPeriod = RegisterPeriod).
+        willReturn(anOkResponse().withBody(UnitLinksForTargetUbrnWithChildVatHBaseResponseBody)))
+      And(s"a database request to delete the child link from $TargetUBRN to the VAT unit with reference $VatRef will succeed")
+      stubHBaseFor(aCheckAndDeleteChildUnitLinkRequest(withUnitType = LegalUnit, withUnitId = TargetLegalUnitId, withPeriod = RegisterPeriod,
+        withChildId = VatUnitId).
+        withRequestBody(equalToJson(HBaseCheckAndDeleteRequestBody)).
+        willReturn(anOkResponse()))
+      And(s"a database request to set the clerically edited flag for the Legal Unit identified by $TargetUBRN will fail")
+      stubHBaseFor(aCreateUnitLinkRequest(withUnitType = LegalUnit, withUnitId = TargetLegalUnitId, withPeriod = RegisterPeriod).
+        withRequestBody(equalToJson(HBaseSetEditedFlagRequestBody)).
+        willReturn(aServiceUnavailableResponse()))
+
+      When(s"the deletion of the child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
+      val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
+        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        patch(s"""[{"op": "test", "path": "/children/$VatRef", "value": "$VatUnitAcronym"},
+                 |{"op": "remove", "path": "/children/$VatRef"}]""".stripMargin))
+
+      Then("a failure response is returned")
+      response.status shouldBe INTERNAL_SERVER_ERROR
     }
   }
 }
