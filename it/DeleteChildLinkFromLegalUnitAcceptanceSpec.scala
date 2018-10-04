@@ -1,17 +1,16 @@
 import java.time.Month.MARCH
 
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
-import fixture.ServerAcceptanceSpec
+import fixture.AbstractServerAcceptanceSpec
 import parsers.JsonPatchBodyParser.JsonPatchMediaType
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status._
 import repository.hbase.unitlinks.{HBaseRestUnitLinksRepository, UnitLinksQualifier, UnitLinksRowKey}
-import support.WithWireMockHBase
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.unitlinks.UnitId
 import uk.gov.ons.sbr.models.unitlinks.UnitType.{CompaniesHouse, Enterprise, LegalUnit, ValueAddedTax, toAcronym}
 
-class DeleteChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWireMockHBase {
+class DeleteChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanceSpec {
 
   private val RegisterPeriod = Period.fromYearMonth(2018, MARCH)
   private val TargetUBRN = "1000012345000000"
@@ -117,6 +116,10 @@ class DeleteChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWir
       Given(s"there exists a Legal Unit identified by UBRN $TargetUBRN having no child link to the VAT unit with reference $VatRef")
       stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLegalUnitId, withUnitType = LegalUnit, withPeriod = RegisterPeriod).
         willReturn(anOkResponse().withBody(UnitLinksForTargetUbrnWithoutChildVatHBaseResponseBody)))
+      And(s"a database request to set the clerically edited flag for the Legal Unit identified by $TargetUBRN will succeed")
+      stubHBaseFor(aCreateUnitLinkRequest(withUnitType = LegalUnit, withUnitId = TargetLegalUnitId, withPeriod = RegisterPeriod).
+        withRequestBody(equalToJson(HBaseSetEditedFlagRequestBody)).
+        willReturn(anOkResponse()))
 
       When(s"the deletion of the child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
@@ -178,7 +181,7 @@ class DeleteChildLinkFromLegalUnitSpec extends ServerAcceptanceSpec with WithWir
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
         withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "test", "path": "/children/$VatRef", "value": "$VatUnitAcronym"},
-                 |{"op": "remove", "path": "/children/$VatRef"}]""".stripMargin))
+                  |{"op": "remove", "path": "/children/$VatRef"}]""".stripMargin))
 
       Then("a failure response is returned")
       response.status shouldBe INTERNAL_SERVER_ERROR
