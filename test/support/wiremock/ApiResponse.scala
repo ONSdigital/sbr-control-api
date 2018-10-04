@@ -1,4 +1,4 @@
-package support
+package support.wiremock
 
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse

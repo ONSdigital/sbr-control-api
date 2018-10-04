@@ -1,17 +1,18 @@
-package support
+package support.wiremock
 
-import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.client.{ MappingBuilder, WireMock }
-import org.scalatest.Suite
+import com.github.tomakehurst.wiremock.client.MappingBuilder
+import com.github.tomakehurst.wiremock.client.WireMock.{ equalTo, get, put, urlEqualTo }
+import com.typesafe.scalalogging.LazyLogging
 import play.api.http.HeaderNames.{ ACCEPT, CONTENT_TYPE }
 import play.mvc.Http.MimeTypes.JSON
-import repository.hbase.HBase.{ DefaultColumnFamily, checkedDeleteUrl, checkedPutUrl, rowKeyColFamilyUrl, rowKeyUrl }
+import repository.hbase.HBase._
 import repository.hbase.{ Column, PeriodTableName }
 import repository.hbase.enterprise.EnterpriseUnitRowKey
 import repository.hbase.legalunit.LegalUnitQuery
 import repository.hbase.localunit.LocalUnitQuery
 import repository.hbase.reportingunit.ReportingUnitQuery
 import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, UnitLinksQualifier, UnitLinksRowKey }
+import support.{ BasicAuthentication, HBaseJsonBodyFixture }
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.legalunit.Ubrn
@@ -19,8 +20,36 @@ import uk.gov.ons.sbr.models.localunit.Lurn
 import uk.gov.ons.sbr.models.reportingunit.Rurn
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
 
-trait WithWireMockHBase extends WithWireMock with ApiResponse with BasicAuthentication with HBaseJsonBodyFixture { this: Suite =>
-  override val wireMockPort = 8075
+trait WireMockHBase extends ApiResponse with BasicAuthentication with HBaseJsonBodyFixture with LazyLogging {
+  /*
+   * Note that the default value in application.conf is overridden to this value for tests (in build.sbt)
+   */
+  val DefaultHBasePort = 8075
+  private var wireMockSupportContainer: Option[WireMockSupport] = None
+
+  def startMockHBase(port: Int = DefaultHBasePort): Unit = {
+    logger.debug(s"Starting WireMockHBase on port [$port].")
+    wireMockSupportContainer = Some(WireMockSupport.start(port))
+  }
+
+  def stopMockHBase(): Unit = {
+    wireMockSupportContainer.foreach { wm =>
+      logger.debug(s"Stopping WireMockHBase on port [${WireMockSupport.port(wm)}].")
+      WireMockSupport.stop(wm)
+    }
+    wireMockSupportContainer = None
+  }
+
+  def withWireMockHBase[A](fn: () => A): A = {
+    startMockHBase()
+    try fn()
+    finally stopMockHBase()
+  }
+
+  def stubHBaseFor(mappingBuilder: MappingBuilder): Unit = {
+    require(wireMockSupportContainer.isDefined, "WireMockHBase must be started before it can be stubbed")
+    wireMockSupportContainer.foreach(wm => WireMockSupport.registerMapping(wm)(mappingBuilder))
+  }
 
   private val Namespace = "sbr_control_db"
 
@@ -110,9 +139,6 @@ trait WithWireMockHBase extends WithWireMock with ApiResponse with BasicAuthenti
 
   private def urlForCheckedDelete(tableName: String, rowKey: String, columnName: Column): String =
     "/" + checkedDeleteUrl(namespace = Namespace, tableName, rowKey, columnName)
-
-  val stubHBaseFor: MappingBuilder => Unit =
-    WireMock.stubFor
 
   private val dummyAuthorization: Authorization =
     Authorization("", "")
