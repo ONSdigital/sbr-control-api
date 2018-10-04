@@ -1,17 +1,16 @@
 import java.time.Month.MARCH
 
+import fixture.AbstractServerAcceptanceSpec
 import fixture.ReadsUnitLinks._
-import fixture.ServerAcceptanceSpec
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.unitlinks.{HBaseRestUnitLinksRepository, UnitLinksQualifier, UnitLinksRowKey}
-import support.WithWireMockHBase
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.unitlinks._
 
-class UnitLinksAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase {
+class UnitLinksAcceptanceSpec extends AbstractServerAcceptanceSpec {
 
   private val TargetLeuUnitId = UnitId("1000000000000012")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
