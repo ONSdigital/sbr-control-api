@@ -1,7 +1,7 @@
 import java.time.Month.MARCH
 
+import fixture.AbstractServerAcceptanceSpec
 import fixture.ReadsEnterpriseUnit.enterpriseReads
-import fixture.ServerAcceptanceSpec
 import org.scalatest.OptionValues
 import play.api.http.ContentTypes.JSON
 import play.api.http.HeaderNames.CONTENT_TYPE
@@ -10,12 +10,11 @@ import repository.hbase.HBase.DefaultColumnFamily
 import repository.hbase.enterprise.EnterpriseUnitColumns._
 import repository.hbase.enterprise.EnterpriseUnitRowKey
 import repository.hbase.localunit.LocalUnitColumns.{address1, address2, address5, postcode, sic07}
-import support.WithWireMockHBase
 import support.sample.SampleEnterpriseUnit
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern, Turnover}
 
-class EnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues with SampleEnterpriseUnit {
+class EnterpriseAcceptanceSpec extends AbstractServerAcceptanceSpec with OptionValues with SampleEnterpriseUnit {
 
   private val TargetErn = Ern("1000000012")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)

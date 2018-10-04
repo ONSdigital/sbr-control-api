@@ -1,18 +1,17 @@
 import java.time.Month.MARCH
 
 import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
-import fixture.ServerAcceptanceSpec
+import fixture.AbstractServerAcceptanceSpec
 import parsers.JsonPatchBodyParser.JsonPatchMediaType
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status._
 import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.unitlinks.{HBaseRestUnitLinksRepository, UnitLinksQualifier, UnitLinksRowKey}
-import support.WithWireMockHBase
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.unitlinks.UnitId
 import uk.gov.ons.sbr.models.unitlinks.UnitType.{CompaniesHouse, Enterprise, LegalUnit, ValueAddedTax, toAcronym}
 
-class UpdateParentLinkFromVatUnitSpec extends ServerAcceptanceSpec with WithWireMockHBase {
+class UpdateParentLinkFromVatUnitAcceptanceSpec extends AbstractServerAcceptanceSpec {
 
   private val RegisterPeriod = Period.fromYearMonth(2018, MARCH)
   private val VatUnitAcronym = toAcronym(ValueAddedTax)
