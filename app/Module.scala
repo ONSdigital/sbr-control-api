@@ -1,3 +1,4 @@
+import Module.Names.{ Paye, UnitLink, Vat }
 import com.google.inject.{ AbstractModule, Provides, TypeLiteral }
 import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, _ }
 import handlers.PatchHandler
@@ -66,13 +67,19 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     Kamon.loadReportersFromConfig()
   }
 
-  @Provides @Named("vat")
+  @Provides @Named(Vat)
   def providesVatRegisterService(@Inject() wsClient: WSClient): UnitRegisterService = {
-    val vatAdminDataBaseUrl = BaseUrlConfigLoader.load(configuration.underlying, "api.admin.data.vat")
-    new VatRegisterService(vatAdminDataBaseUrl, wsClient)
+    val vatAdminDataServiceUrl = BaseUrlConfigLoader.load(configuration.underlying, "api.admin.data.vat")
+    new AdminUnitRegisterService(vatAdminDataServiceUrl, wsClient)
   }
 
-  @Provides @Named("unit-link")
+  @Provides @Named(Paye)
+  def providesPayeRegisterService(@Inject() wsClient: WSClient): UnitRegisterService = {
+    val payeAdminDataServiceUrl = BaseUrlConfigLoader.load(configuration.underlying, "api.admin.data.paye")
+    new AdminUnitRegisterService(payeAdminDataServiceUrl, wsClient)
+  }
+
+  @Provides @Named(UnitLink)
   def providesUnitLinkRegisterService(
     @Inject() restRepository: RestRepository,
     unitLinksRepositoryConfig: HBaseRestUnitLinksRepositoryConfig
@@ -84,18 +91,28 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     @Inject() restRepository: RestRepository,
     unitLinksRepositoryConfig: HBaseRestUnitLinksRepositoryConfig,
     rowMapper: RowMapper[UnitLinksNoPeriod],
-    @Named("unit-link") unitLinkRegisterService: UnitRegisterService
+    @Named(UnitLink) unitLinkRegisterService: UnitRegisterService
   ): UnitLinksRepository =
     new HBaseRestUnitLinksRepository(restRepository, unitLinksRepositoryConfig, rowMapper, unitLinkRegisterService)
 
   @Provides
   def providesPatchService(
     @Inject() unitLinksRepository: UnitLinksRepository,
-    @Named("vat") vatRegisterService: UnitRegisterService,
-    @Named("unit-link") unitLinkRegisterService: UnitRegisterService
+    @Named(Vat) vatRegisterService: UnitRegisterService,
+    @Named(Paye) payeRegisterService: UnitRegisterService,
+    @Named(UnitLink) unitLinkRegisterService: UnitRegisterService
   ): PatchService = {
-    val vatUnitLinkPatchService = new VatUnitLinkPatchService(unitLinksRepository, unitLinkRegisterService)
-    val legalUnitLinkPatchService = new LegalUnitLinkPatchService(unitLinksRepository, vatRegisterService)
-    new UnitLinksPatchService(vatUnitLinkPatchService, legalUnitLinkPatchService)
+    val adminDataUnitLinkPatchService = new AdminUnitLinkPatchService(unitLinksRepository, unitLinkRegisterService)
+    val adminDataRegisterService = new CompositeAdminUnitRegisterService(vatRegisterService, payeRegisterService)
+    val legalUnitLinkPatchService = new LegalUnitLinkPatchService(unitLinksRepository, adminDataRegisterService)
+    new UnitLinksPatchService(adminDataUnitLinkPatchService, legalUnitLinkPatchService)
+  }
+}
+
+private object Module {
+  object Names {
+    final val Paye = "paye"
+    final val UnitLink = "unit-link"
+    final val Vat = "vat"
   }
 }

@@ -9,7 +9,7 @@ sealed trait UnitType
 object UnitType {
   case object CompaniesHouse extends UnitType
   case object ValueAddedTax extends UnitType
-  case object PayAsYouEarnTax extends UnitType
+  case object PayAsYouEarn extends UnitType
 
   case object Enterprise extends UnitType
   case object LegalUnit extends UnitType
@@ -37,7 +37,7 @@ object UnitType {
     unitType match {
       case CompaniesHouse => Acronym.CompaniesHouse
       case ValueAddedTax => Acronym.ValueAddedTax
-      case PayAsYouEarnTax => Acronym.PayeAsYourEarnTax
+      case PayAsYouEarn => Acronym.PayeAsYourEarnTax
 
       case Enterprise => Acronym.Enterprise
       case LegalUnit => Acronym.LegalUnit
@@ -48,7 +48,7 @@ object UnitType {
   def fromAcronym: PartialFunction[String, UnitType] = {
     case Acronym.CompaniesHouse => CompaniesHouse
     case Acronym.ValueAddedTax => ValueAddedTax
-    case Acronym.PayeAsYourEarnTax => PayAsYouEarnTax
+    case Acronym.PayeAsYourEarnTax => PayAsYouEarn
 
     case Acronym.Enterprise => Enterprise
     case Acronym.LegalUnit => LegalUnit

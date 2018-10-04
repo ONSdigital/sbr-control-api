@@ -1,19 +1,27 @@
 package controllers.v1
 
+import java.time.Month.AUGUST
+
+import com.google.inject.{ AbstractModule, TypeLiteral }
 import controllers.v1.fixture.HttpServerErrorStatusCode
-import org.scalatest.{ FreeSpec, Matchers }
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import handlers.PatchHandler
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{ FreeSpec, Matchers, TestData }
+import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import parsers.JsonPatchBodyParser.JsonPatchMediaType
 import play.api.Application
 import play.api.http.HttpVerbs.{ GET, PATCH }
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.mvc.Results.NoContent
 import play.api.mvc.{ Headers, Request, Result }
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.mvc.Http.HeaderNames.CONTENT_TYPE
+import repository.UnitLinksRepository
 import support.sample.SampleUnitLinks
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.unitlinks.UnitType
+import uk.gov.ons.sbr.models.unitlinks.UnitType.Enterprise
+import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
 
 import scala.concurrent.Future
 
@@ -31,16 +39,33 @@ import scala.concurrent.Future
  * For example, in order to fully test the period regex, we test that each and every possible month is considered
  * valid.  These are downsides of this "router based validation" approach ...
  */
-class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matchers {
+class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerTest with Matchers with MockFactory {
 
   /*
-   * When valid arguments are routed to the controller's actions an attempt will be made to connect to HBase
-   * (or in the case of a Legal Unit edit the Admin Data microservice).  We are not priming services in this
-   * spec, as we are only concerned with routing.  We therefore override the timeout configurations to minimise
-   * the time this spec waits on connection attempts that we know will fail.
+   * We stub dependencies of the controller here to return "happy path" results, regardless of input.
+   * This is fine for the purposes of this test, as we are only interested in routing.  Only those
+   * requests that are considered valid by the router will make it through to the controller action.
    */
-  override def fakeApplication(): Application =
-    new GuiceApplicationBuilder().configure(Map("db.hbase-rest.timeout" -> "100", "play.ws.timeout.request" -> "100")).build()
+  override def newAppForTest(testData: TestData): Application = {
+    // valid patch requests always succeed
+    val patchHandler = stub[PatchHandler[Future[Result]]]
+    (patchHandler.apply _).when(*, *).returns(Future.successful(NoContent))
+
+    // valid queries always find a result (the values do not matter - just that it is a Right(Some(...)))
+    val unitLinksRepository = stub[UnitLinksRepository]
+    (unitLinksRepository.retrieveUnitLinks _).when(*).returns(Future.successful(Right(Some(
+      UnitLinks(UnitId("1234"), Period.fromYearMonth(2018, AUGUST), None, None, Enterprise)
+    ))))
+
+    val fakeModule = new AbstractModule {
+      override def configure(): Unit = {
+        bind(new TypeLiteral[PatchHandler[Future[Result]]]() {}).toInstance(patchHandler)
+        bind(classOf[UnitLinksRepository]).toInstance(unitLinksRepository)
+      }
+    }
+
+    new GuiceApplicationBuilder().overrides(fakeModule).build()
+  }
 
   private trait Fixture extends HttpServerErrorStatusCode with SampleUnitLinks {
     val ValidPeriod = Period.asString(SamplePeriod)
@@ -56,9 +81,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
     val ValidUnitType = UnitType.toAcronym(SampleUnitType)
   }
 
-  private trait EditVatFixture extends Fixture {
-    val ValidVatRef = "123456789012"
-
+  private trait EditParentFixture extends Fixture {
     def fakeEditRequest(uri: String): Request[String] =
       FakeRequest(
         method = PATCH,
@@ -67,6 +90,16 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
         body = s"""|[{"op": "test", "path": "/parents/LEU", "value": "old-ubrn"},
                    | {"op": "replace", "path": "/parents/LEU", "value": "new-ubrn"}]""".stripMargin
       )
+  }
+
+  private trait EditVatFixture extends EditParentFixture {
+    val ValidVatRef = "123456789012"
+  }
+
+  private trait EditPayeFixture extends EditParentFixture {
+    val ValidMinLengthPayeRef = "125H"
+    val ValidMaxLengthPayeRef = "125H7A716207"
+    val ValidPayeRef = ValidMaxLengthPayeRef.drop(3)
   }
 
   private trait EditLegalUnitFixture extends Fixture {
@@ -89,7 +122,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
 
           val Some(result) = routeRequest(url = s"/v1/periods/$ValidPeriod/types/$ValidUnitType/units/$alphaNumericUnitId")
 
-          status(result) should be(aServerError)
+          status(result) shouldBe OK
         }
 
         "includes special characters" in new QueryFixture {
@@ -97,19 +130,19 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
 
           val Some(result) = routeRequest(url = s"/v1/periods/$ValidPeriod/types/$ValidUnitType/units/$unitIdWithSpecialCharacters")
 
-          status(result) should be(aServerError)
+          status(result) shouldBe OK
         }
 
         "has the minimum length" in new QueryFixture {
           val Some(result) = routeRequest(url = s"/v1/periods/$ValidPeriod/types/$ValidUnitType/units/$MinLengthUnitId")
 
-          status(result) should be(aServerError)
+          status(result) shouldBe OK
         }
 
         "has the maximum length" in new QueryFixture {
           val Some(result) = routeRequest(url = s"/v1/periods/$ValidPeriod/types/$ValidUnitType/units/$MaxLengthUnitId")
 
-          status(result) should be(aServerError)
+          status(result) shouldBe OK
         }
       }
 
@@ -120,7 +153,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
             withClue(s"for the UnitType [$unitType]") {
               val Some(result) = routeRequest(url = s"/v1/periods/$ValidPeriod/types/$unitType/units/$ValidUnitId")
 
-              status(result) should be(aServerError)
+              status(result) shouldBe OK
             }
           }
         }
@@ -142,7 +175,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
 
               val Some(result) = routeRequest(url = s"/v1/periods/$validPeriod/types/$ValidUnitType/units/$ValidUnitId")
 
-              status(result) should be(aServerError)
+              status(result) shouldBe OK
             }
           }
         }
@@ -273,7 +306,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
 
           val Some(result) = route(app, request)
 
-          status(result) should be(aServerError)
+          status(result) shouldBe NO_CONTENT
         }
       }
     }
@@ -359,6 +392,124 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
     }
   }
 
+  "A request to edit the links from a PAYE Unit is" - {
+    "accepted" - {
+      "for all valid periods of a year" in new EditPayeFixture {
+        val Year = "2018"
+        val Months = Seq("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
+        Months.foreach { month =>
+          withClue(s"for month $month") {
+            val validPeriod = Year + month
+            val request = fakeEditRequest(s"/v1/periods/$validPeriod/types/PAYE/units/$ValidPayeRef")
+
+            val Some(result) = route(app, request)
+
+            status(result) shouldBe NO_CONTENT
+          }
+        }
+      }
+
+      "when the PAYE reference has the minimum length" in new EditPayeFixture {
+        val request = fakeEditRequest(s"/v1/periods/$ValidPeriod/types/PAYE/units/$ValidMinLengthPayeRef")
+
+        val Some(result) = route(app, request)
+
+        status(result) shouldBe NO_CONTENT
+      }
+
+      "when the PAYE reference has the maximum length" in new EditPayeFixture {
+        val request = fakeEditRequest(s"/v1/periods/$ValidPeriod/types/PAYE/units/$ValidMaxLengthPayeRef")
+
+        val Some(result) = route(app, request)
+
+        status(result) shouldBe NO_CONTENT
+      }
+    }
+
+    "rejected when" - {
+      "the Period" - {
+        "has fewer than six digits" in new EditPayeFixture {
+          val request = fakeEditRequest(s"/v1/periods/${ValidPeriod.drop(1)}/types/PAYE/units/$ValidPayeRef")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+
+        "has more than six digits" in new EditPayeFixture {
+          val request = fakeEditRequest(s"/v1/periods/${ValidPeriod + "1"}/types/PAYE/units/$ValidPayeRef")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+
+        "is non-numeric" in new EditPayeFixture {
+          val request = fakeEditRequest(s"/v1/periods/${new String(Array.fill(6)('A'))}/types/PAYE/units/$ValidPayeRef")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+
+        "is negative" in new EditPayeFixture {
+          val request = fakeEditRequest(s"/v1/periods/-01801/types/PAYE/units/$ValidPayeRef")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+
+        "has an invalid month value" - {
+          "that is too low" in new EditPayeFixture {
+            val request = fakeEditRequest(s"/v1/periods/201800/types/PAYE/units/$ValidPayeRef")
+
+            val Some(result) = route(app, request)
+
+            status(result) shouldBe BAD_REQUEST
+          }
+
+          "that is too high" in new EditPayeFixture {
+            val request = fakeEditRequest(s"/v1/periods/201813/types/PAYE/units/$ValidPayeRef")
+
+            val Some(result) = route(app, request)
+
+            status(result) shouldBe BAD_REQUEST
+          }
+        }
+      }
+
+      "the PAYE reference" - {
+        "has fewer than four characters" in new EditPayeFixture {
+          val PayeRefTooFewChars = ValidMinLengthPayeRef.drop(1)
+          val request = fakeEditRequest(s"/v1/periods/$ValidPeriod/types/PAYE/units/$PayeRefTooFewChars")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+
+        "has more than twelve characters" in new EditPayeFixture {
+          val PayeRefTooManyChars = ValidMaxLengthPayeRef + "9"
+          val request = fakeEditRequest(s"/v1/periods/$ValidPeriod/types/PAYE/units/$PayeRefTooManyChars")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+
+        "contains a non alphanumeric character" in new EditPayeFixture {
+          val PayeRefNonAlphanumeric = "-" + ValidMaxLengthPayeRef.drop(1)
+          val request = fakeEditRequest(s"/v1/periods/$ValidPeriod/types/PAYE/units/$PayeRefNonAlphanumeric")
+
+          val Some(result) = route(app, request)
+
+          status(result) shouldBe BAD_REQUEST
+        }
+      }
+    }
+  }
+
   "A request to edit the links from a Legal Unit is" - {
     "accepted when valid" in new EditLegalUnitFixture {
       val Year = "2018"
@@ -371,7 +522,7 @@ class UnitLinksRoutingSpec extends FreeSpec with GuiceOneAppPerSuite with Matche
 
           val Some(result) = route(app, request)
 
-          status(result) should be(aServerError)
+          status(result) shouldBe NO_CONTENT
         }
       }
     }
