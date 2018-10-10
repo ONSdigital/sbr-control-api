@@ -110,6 +110,10 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 }
 
 private object Module {
+  /*
+   * final is required for Scala to emit bytecode that will be considered "constant",
+   * so that it can be used in @Named annotations.
+   */
   object Names {
     final val Paye = "paye"
     final val UnitLink = "unit-link"
