@@ -7,32 +7,35 @@ import play.api.http.Status.{NOT_FOUND, OK}
 import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.unitlinks.{HBaseRestUnitLinksRepository, UnitLinksQualifier, UnitLinksRowKey}
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.Ern
+import uk.gov.ons.sbr.models.unitlinks.UnitType.{CompaniesHouse, Enterprise, LegalUnit, ValueAddedTax, toAcronym}
 import uk.gov.ons.sbr.models.unitlinks._
 
 class UnitLinksAcceptanceSpec extends AbstractServerAcceptanceSpec {
 
-  private val TargetLeuUnitId = UnitId("1000000000000012")
+  private val TargetUBRN = UnitId("1000000000000012")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)
-  private val TargetLegalUnitType = UnitType.LegalUnit
-
-  private val ErnParent = Ern("1000000123")
-  private val VatId = UnitId("401347263289")
-  private val CHId = UnitId("01752564")
-  private val EntParentUnitType = UnitType.Enterprise
-  private val vatUnitType = UnitType.CompaniesHouse
-  private val chUnitType = UnitType.CompaniesHouse
-  private val CHChildUnitTypeAsString = UnitType.toAcronym(chUnitType)
-  private val VATChildUnitTypeAsString = UnitType.toAcronym(vatUnitType)
+  private val LegalUnitAcronym = toAcronym(LegalUnit)
   private val Family = HBaseRestUnitLinksRepository.ColumnFamily
+  private val EnterpriseUnitId = UnitId("1000000123")
+  private val VatUnitId = UnitId("401347263289")
+  private val CompaniesHouseUnitId = UnitId("01752564")
+  private val EditedFlag = aColumnWith(Family, qualifier = "edited", value = "Y")
+  private val RelatedUnitColumns = Seq(
+    aColumnWith(Family, qualifier = UnitLinksQualifier.toParent(Enterprise), value = EnterpriseUnitId.value),
+    aColumnWith(Family, qualifier = UnitLinksQualifier.toChild(VatUnitId), value = toAcronym(ValueAddedTax)),
+    aColumnWith(Family, qualifier = UnitLinksQualifier.toChild(CompaniesHouseUnitId), value = toAcronym(CompaniesHouse))
+  )
 
-  private val UnitLinksSingleMatchHBaseResponseBody =
+  private val UnitLinksForTargetUbrnWithNoClericalEditsHBaseResponseBody =
+    unitLinksForTargetUbrnHBaseResponseBody(columns = RelatedUnitColumns)
+
+  private val UnitLinksForTargetUbrnWithClericalEditsHBaseResponseBody =
+    unitLinksForTargetUbrnHBaseResponseBody(EditedFlag +: RelatedUnitColumns)
+
+  private def unitLinksForTargetUbrnHBaseResponseBody(columns: Seq[String]): String =
     s"""{ "Row": ${
       List(
-        aRowWith(key = s"${UnitLinksRowKey(TargetLeuUnitId, TargetLegalUnitType)}", columns =
-          aColumnWith(Family, qualifier = UnitLinksQualifier.toParent(EntParentUnitType), value = ErnParent.value),
-          aColumnWith(Family, qualifier = UnitLinksQualifier.toChild(VatId), value = VATChildUnitTypeAsString),
-          aColumnWith(Family, qualifier = UnitLinksQualifier.toChild(CHId), value = CHChildUnitTypeAsString))
+        aRowWith(key = s"${UnitLinksRowKey(TargetUBRN, LegalUnit)}", columns: _*)
       ).mkString("[", ",", "]")
     }}"""
 
@@ -40,39 +43,88 @@ class UnitLinksAcceptanceSpec extends AbstractServerAcceptanceSpec {
   info("I want to retrieve the Unit Link that matches the given unit id, unit type and specific period")
   info("So that I can than view Unit Link details via the user interface")
 
-  feature("retrieve units links for an existing statistical unit") {
-    scenario("by the exact statistical unit identifier, statistical unit type and period") { wsClient =>
-      Given(s"a unit links exists with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod")
-      stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLeuUnitId, withUnitType = TargetLegalUnitType, withPeriod = TargetPeriod).willReturn(
-        anOkResponse().withBody(UnitLinksSingleMatchHBaseResponseBody)
+  feature("retrieve units links for a statistical unit") {
+    scenario("when the unit does not have clerically edited links") { wsClient =>
+      Given(s"unit links exist from the Legal Unit identified by $TargetUBRN for $TargetPeriod (that have not been clerically edited)")
+      stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetUBRN, withUnitType = LegalUnit, withPeriod = TargetPeriod).willReturn(
+        anOkResponse().withBody(UnitLinksForTargetUbrnWithNoClericalEditsHBaseResponseBody)
       ))
 
-      When(s"the Unit Links with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod are requested")
-      val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/types/${UnitType.toAcronym(TargetLegalUnitType)}/units/${TargetLeuUnitId.value}").get())
+      When(s"the unit links from the Legal Unit identified by $TargetUBRN for $TargetPeriod are requested")
+      val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/types/$LegalUnitAcronym/units/${TargetUBRN.value}").get())
 
-      Then(s"the details of the Unit Links identified by $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod are returned")
+      Then(s"the details of the unit links from the Legal Unit identified by $TargetUBRN for $TargetPeriod are returned")
       response.status shouldBe OK
       response.header(CONTENT_TYPE) shouldBe Some(JSON)
       response.json.as[UnitLinks] shouldBe
-        UnitLinks(id = TargetLeuUnitId, period = TargetPeriod,
-          parents = Some(Map(EntParentUnitType -> UnitId(ErnParent.value))),
-          children = Some(Map(VatId -> vatUnitType, CHId -> chUnitType)),
-          unitType = TargetLegalUnitType)
+        UnitLinks(
+          id = TargetUBRN,
+          unitType = LegalUnit,
+          period = TargetPeriod,
+          parents = Some(Map(Enterprise -> EnterpriseUnitId)),
+          children = Some(Map(
+            VatUnitId -> ValueAddedTax,
+            CompaniesHouseUnitId -> CompaniesHouse)))
     }
-  }
 
-  feature("respond to a request to retrieve unit links that do not exist") {
-    scenario("by the exact statistical unit identifier, statistical unit type and period") { wsClient =>
-      Given(s"unit links do not exist with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod")
-      stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetLeuUnitId, withUnitType = TargetLegalUnitType, withPeriod = TargetPeriod).willReturn(
+    /*
+     * Note that we do not currently expose edited status / history as part of the "unit links model".
+     */
+    scenario("when the unit has clerically edited links") { wsClient =>
+      Given(s"unit links exist from the Legal Unit identified by $TargetUBRN for $TargetPeriod (that have been clerically edited)")
+      stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetUBRN, withUnitType = LegalUnit, withPeriod = TargetPeriod).willReturn(
+        anOkResponse().withBody(UnitLinksForTargetUbrnWithClericalEditsHBaseResponseBody)
+      ))
+
+      When(s"the unit links from the Legal Unit identified by $TargetUBRN for $TargetPeriod are requested")
+      val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/types/$LegalUnitAcronym/units/${TargetUBRN.value}").get())
+
+      Then(s"the details of the unit links from the Legal Unit identified by $TargetUBRN for $TargetPeriod are returned")
+      response.status shouldBe OK
+      response.header(CONTENT_TYPE) shouldBe Some(JSON)
+      response.json.as[UnitLinks] shouldBe
+        UnitLinks(
+          id = TargetUBRN,
+          unitType = LegalUnit,
+          period = TargetPeriod,
+          parents = Some(Map(Enterprise -> EnterpriseUnitId)),
+          children = Some(Map(
+            VatUnitId -> ValueAddedTax,
+            CompaniesHouseUnitId -> CompaniesHouse)))
+    }
+
+    scenario("when the unit does not exist") { wsClient =>
+      Given(s"unit links do not exist for a Legal Unit identified by $TargetUBRN for $TargetPeriod")
+      stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetUBRN, withUnitType = LegalUnit, withPeriod = TargetPeriod).willReturn(
         anOkResponse().withBody(NoMatchFoundResponse)
       ))
 
-      When(s"the Unit links with $TargetLeuUnitId, $TargetLegalUnitType and $TargetPeriod are requested")
-      val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/types/${UnitType.toAcronym(TargetLegalUnitType)}/units/${TargetLeuUnitId.value}").get())
+      When(s"the unit links from a Legal Unit identified by $TargetUBRN for $TargetPeriod are requested")
+      val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/types/$LegalUnitAcronym/units/${TargetUBRN.value}").get())
 
       Then("a NOT_FOUND response is returned")
       response.status shouldBe NOT_FOUND
+    }
+
+    scenario("when the unit has no links (an 'orphaned unit')") { wsClient =>
+      Given(s"neither parent or child links exist from a Legal Unit identified by $TargetUBRN for $TargetPeriod (which has been clerically edited)")
+      stubHBaseFor(aUnitLinksExactRowKeyRequest(withUnitId = TargetUBRN, withUnitType = LegalUnit, withPeriod = TargetPeriod).willReturn(
+        anOkResponse().withBody(unitLinksForTargetUbrnHBaseResponseBody(columns = Seq(EditedFlag)))
+      ))
+
+      When(s"the unit links from a Legal Unit identified by $TargetUBRN for $TargetPeriod are requested")
+      val response = await(wsClient.url(s"/v1/periods/${Period.asString(TargetPeriod)}/types/$LegalUnitAcronym/units/${TargetUBRN.value}").get())
+
+      Then("the response should contain neither parents or children")
+      response.status shouldBe OK
+      response.header(CONTENT_TYPE) shouldBe Some(JSON)
+      response.json.as[UnitLinks] shouldBe
+        UnitLinks(
+          id = TargetUBRN,
+          unitType = LegalUnit,
+          period = TargetPeriod,
+          parents = None,
+          children = None)
     }
   }
 }

@@ -40,7 +40,6 @@ trait SampleUnitLinks {
   val SampleUnitLinksWithAllFields: UnitLinks =
     SampleUnitLinksWithOnlyMandatoryFields.copy(parents = Some(SampleParents), children = Some(SampleChildren))
 
-  // TODO - USE template as the default values
   def aUnitLinksSample(unitId: UnitId = SampleUnitId, parents: Option[Map[UnitType, UnitId]] = Some(SampleParents),
     children: Option[Map[UnitId, UnitType]] = Some(SampleChildren),
     template: UnitLinks = SampleUnitLinksWithOnlyMandatoryFields): UnitLinks =
