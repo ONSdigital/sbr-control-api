@@ -34,6 +34,6 @@ trait WireMockAdminDataApi extends ApiResponse with LazyLogging {
     wireMockSupportContainer.foreach(wm => WireMockSupport.registerMapping(wm)(mappingBuilder))
   }
 
-  def aVatRefLookupRequest(withVatUnitId: UnitId, withPeriod: Period): MappingBuilder =
-    head(urlEqualTo(s"/v1/records/${withVatUnitId.value}/periods/${Period.asString(withPeriod)}"))
+  def anAdminDataLookupRequest(withUnitId: UnitId, withPeriod: Period): MappingBuilder =
+    head(urlEqualTo(s"/v1/records/${withUnitId.value}/periods/${Period.asString(withPeriod)}"))
 }

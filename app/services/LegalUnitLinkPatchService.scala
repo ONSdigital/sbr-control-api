@@ -1,4 +1,5 @@
 package services
+
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -7,27 +8,31 @@ import repository._
 import services.LegalUnitLinkPatchService._
 import uk.gov.ons.sbr.models.UnitKey
 import uk.gov.ons.sbr.models.patch.{ AddOperation, Patch, RemoveOperation, TestOperation }
-import uk.gov.ons.sbr.models.unitlinks.UnitType.ValueAddedTax
+import uk.gov.ons.sbr.models.unitlinks.UnitType.{ PayAsYouEarn, ValueAddedTax }
 import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
 
 import scala.concurrent.Future
 
-class LegalUnitLinkPatchService @Inject() (repository: UnitLinksRepository, vatRegisterService: UnitRegisterService) extends PatchService with LazyLogging {
+class LegalUnitLinkPatchService @Inject() (repository: UnitLinksRepository, unitRegisterService: UnitRegisterService) extends PatchService with LazyLogging {
   override def applyPatchTo(unitKey: UnitKey, patch: Patch): Future[PatchStatus] =
     patch match {
       case AddOperation(path, Vat) :: Nil if isChildPath(path) =>
-        createVatChild(unitKey, childUnitIdFrom(path))
+        createChild(unitKey, childUnitIdFrom(path), ValueAddedTax)
+      case AddOperation(path, Paye) :: Nil if isChildPath(path) =>
+        createChild(unitKey, childUnitIdFrom(path), PayAsYouEarn)
       case TestOperation(testPath, Vat) :: RemoveOperation(removePath) :: Nil if (testPath == removePath) && isChildPath(testPath) =>
-        deleteVatChild(unitKey, childUnitIdFrom(testPath))
+        deleteChild(unitKey, childUnitIdFrom(testPath), ValueAddedTax)
+      case TestOperation(testPath, Paye) :: RemoveOperation(removePath) :: Nil if (testPath == removePath) && isChildPath(testPath) =>
+        deleteChild(unitKey, childUnitIdFrom(testPath), PayAsYouEarn)
       case _ =>
         Future.successful(PatchRejected)
     }
 
-  private def createVatChild(unitKey: UnitKey, vatUnitId: UnitId): Future[PatchStatus] = {
-    logger.debug(s"Requested creation of VAT child [$vatUnitId] linked from unit [$unitKey]")
-    vatRegisterService.isRegisteredUnit(UnitKey(vatUnitId, ChildUnitType, unitKey.period)).flatMap {
+  private def createChild(unitKey: UnitKey, childUnitId: UnitId, childUnitType: UnitType): Future[PatchStatus] = {
+    logger.debug(s"Requested creation of child with id=[$childUnitId] and type=[$childUnitType] linked from unit [$unitKey]")
+    unitRegisterService.isRegisteredUnit(UnitKey(childUnitId, childUnitType, unitKey.period)).flatMap {
       case UnitFound =>
-        repository.createChildLink(unitKey, ChildUnitType, vatUnitId).map(toCreateChildPatchStatus)
+        repository.createChildLink(unitKey, childUnitType, childUnitId).map(toCreateChildPatchStatus)
       case UnitNotFound =>
         Future.successful(PatchRejected)
       case UnitRegisterFailure(_) =>
@@ -35,13 +40,16 @@ class LegalUnitLinkPatchService @Inject() (repository: UnitLinksRepository, vatR
     }
   }
 
-  private def deleteVatChild(unitKey: UnitKey, vatUnitId: UnitId): Future[PatchStatus] =
-    repository.deleteChildLink(unitKey, ChildUnitType, vatUnitId).map(toDeleteChildPatchStatus)
+  private def deleteChild(unitKey: UnitKey, childUnitId: UnitId, childUnitType: UnitType): Future[PatchStatus] = {
+    logger.debug(s"Requested deletion of child with id=[$childUnitId] and type=[$childUnitType] linked from unit [$unitKey]")
+    repository.deleteChildLink(unitKey, childUnitType, childUnitId).map(toDeleteChildPatchStatus)
+  }
 }
 
 private object LegalUnitLinkPatchService {
-  val ChildUnitType = ValueAddedTax
-  val Vat = JsString(UnitType.toAcronym(ChildUnitType))
+  val Vat = JsString(UnitType.toAcronym(ValueAddedTax))
+  val Paye = JsString(UnitType.toAcronym(PayAsYouEarn))
+
   private val ChildPathPrefix = "/children/"
 
   def isChildPath(path: String): Boolean =
