@@ -20,29 +20,29 @@ import scala.concurrent.{ Await, Future }
  * where possible.  This was introduced to allow us to assert that the configured host / port are used,
  * as the wsTestClient used by the acceptance test overrides these.
  */
-class VatRegisterService_MockClientSpec extends FreeSpec with Matchers with MockFactory with ScalaFutures {
+class AdminUnitRegisterService_MockClientSpec extends FreeSpec with Matchers with MockFactory with ScalaFutures {
 
   private trait Fixture {
     val Protocol = "http"
     val Host = "somehost"
     val Port = 2345
-    val VatBaseUrl = BaseUrl(Protocol, Host, Port, prefix = None)
-    val VatUnitKey = UnitKey(UnitId("123456789012"), ValueAddedTax, Period.fromYearMonth(2018, AUGUST))
+    val AdminServiceBaseUrl = BaseUrl(Protocol, Host, Port, prefix = None)
+    val TargetUnitKey = UnitKey(UnitId("123456789012"), ValueAddedTax, Period.fromYearMonth(2018, AUGUST))
     val AwaitTime = 500.milliseconds
 
     val wsClient = stub[WSClient]
     val wsResponse = stub[WSResponse]
     val wsRequest = mock[WSRequest]
-    val vatRegisterService = new VatRegisterService(VatBaseUrl, wsClient)
+    val adminUnitRegisterService = new AdminUnitRegisterService(AdminServiceBaseUrl, wsClient)
   }
 
-  "A VAT RegisterService" - {
+  "An AdminUnit RegisterService" - {
     "targets the specified host and port when making a request" in new Fixture {
       (wsClient.url _).when(where[String](_.startsWith(s"$Protocol://$Host:$Port"))).returning(wsRequest)
       (wsRequest.withHeaders _).expects(*).returning(wsRequest)
       (wsRequest.head _).expects().returning(Future.successful(wsResponse))
 
-      Await.result(vatRegisterService.isRegisteredUnit(VatUnitKey), AwaitTime)
+      Await.result(adminUnitRegisterService.isRegisteredUnit(TargetUnitKey), AwaitTime)
     }
 
     /*
@@ -55,7 +55,7 @@ class VatRegisterService_MockClientSpec extends FreeSpec with Matchers with Mock
       (wsRequest.withHeaders _).expects(*).returning(wsRequest)
       (wsRequest.head _).expects().returning(Future.failed(new Exception(errorMessage)))
 
-      whenReady(vatRegisterService.isRegisteredUnit(VatUnitKey)) { result =>
+      whenReady(adminUnitRegisterService.isRegisteredUnit(TargetUnitKey)) { result =>
         result shouldBe UnitRegisterFailure(errorMessage)
       }
     }

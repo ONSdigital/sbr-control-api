@@ -14,15 +14,15 @@ import uk.gov.ons.sbr.models.{ Period, UnitKey }
 
 import scala.concurrent.Future
 
-class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactory with ScalaFutures {
+class AdminUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactory with ScalaFutures {
 
   private trait Fixture {
-    val VatUnitId = UnitId("123456789012")
+    val AdminUnitId = UnitId("123456789012")
     val RegisterPeriod = Period.fromYearMonth(2018, MARCH)
     val IncorrectLegalUnitId = UnitId("1111111111111111")
     val TargetLegalUnitId = UnitId("9999999999999999")
     val TargetLegalUnitKey = UnitKey(TargetLegalUnitId, LegalUnit, RegisterPeriod)
-    val TargetVatUnitKey = UnitKey(VatUnitId, ValueAddedTax, RegisterPeriod)
+    val TargetAdminUnitKey = UnitKey(AdminUnitId, ValueAddedTax, RegisterPeriod)
     val UpdateDescriptor = UpdateParentDescriptor(LegalUnit, IncorrectLegalUnitId, TargetLegalUnitId)
     val UpdateParentPatch = Seq(
       TestOperation("/parents/LEU", JsString(IncorrectLegalUnitId.value)),
@@ -31,19 +31,19 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
 
     val repository = mock[UnitLinksRepository]
     val unitRegisterService = mock[UnitRegisterService]
-    val service = new VatUnitLinkPatchService(repository, unitRegisterService)
+    val service = new AdminUnitLinkPatchService(repository, unitRegisterService)
   }
 
-  "A VAT Unit Link PatchService" - {
-    "can apply a patch that specifies a checked update of a VAT unit's parent UBRN to a Legal Unit that already exists in the register" in new Fixture {
+  "An admin data Unit Link PatchService" - {
+    "can apply a patch that specifies a checked update of an admin unit's parent UBRN to a Legal Unit that already exists in the register" in new Fixture {
       (unitRegisterService.isRegisteredUnit _).expects(TargetLegalUnitKey).returning(
         Future.successful(UnitFound)
       )
-      (repository.updateParentLink _).expects(TargetVatUnitKey, UpdateDescriptor).returning(
+      (repository.updateParentLink _).expects(TargetAdminUnitKey, UpdateDescriptor).returning(
         Future.successful(EditApplied)
       )
 
-      whenReady(service.applyPatchTo(TargetVatUnitKey, UpdateParentPatch)) { result =>
+      whenReady(service.applyPatchTo(TargetAdminUnitKey, UpdateParentPatch)) { result =>
         result shouldBe PatchApplied
       }
     }
@@ -52,11 +52,11 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
       (unitRegisterService.isRegisteredUnit _).expects(TargetLegalUnitKey).returning(
         Future.successful(UnitFound)
       )
-      (repository.updateParentLink _).expects(TargetVatUnitKey, UpdateDescriptor).returning(
+      (repository.updateParentLink _).expects(TargetAdminUnitKey, UpdateDescriptor).returning(
         Future.successful(EditConflicted)
       )
 
-      whenReady(service.applyPatchTo(TargetVatUnitKey, UpdateParentPatch)) { result =>
+      whenReady(service.applyPatchTo(TargetAdminUnitKey, UpdateParentPatch)) { result =>
         result shouldBe PatchConflicted
       }
     }
@@ -65,11 +65,11 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
       (unitRegisterService.isRegisteredUnit _).expects(TargetLegalUnitKey).returning(
         Future.successful(UnitFound)
       )
-      (repository.updateParentLink _).expects(TargetVatUnitKey, UpdateDescriptor).returning(
+      (repository.updateParentLink _).expects(TargetAdminUnitKey, UpdateDescriptor).returning(
         Future.successful(EditTargetNotFound)
       )
 
-      whenReady(service.applyPatchTo(TargetVatUnitKey, UpdateParentPatch)) { result =>
+      whenReady(service.applyPatchTo(TargetAdminUnitKey, UpdateParentPatch)) { result =>
         result shouldBe PatchTargetNotFound
       }
     }
@@ -78,11 +78,11 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
       (unitRegisterService.isRegisteredUnit _).expects(TargetLegalUnitKey).returning(
         Future.successful(UnitFound)
       )
-      (repository.updateParentLink _).expects(TargetVatUnitKey, UpdateDescriptor).returning(
+      (repository.updateParentLink _).expects(TargetAdminUnitKey, UpdateDescriptor).returning(
         Future.successful(EditFailed)
       )
 
-      whenReady(service.applyPatchTo(TargetVatUnitKey, UpdateParentPatch)) { result =>
+      whenReady(service.applyPatchTo(TargetAdminUnitKey, UpdateParentPatch)) { result =>
         result shouldBe PatchFailed
       }
     }
@@ -93,7 +93,7 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
         ReplaceOperation("/parents/ENT", JsString("replace-ern"))
       )
 
-      whenReady(service.applyPatchTo(TargetVatUnitKey, invalidPathPatch)) { result =>
+      whenReady(service.applyPatchTo(TargetAdminUnitKey, invalidPathPatch)) { result =>
         result shouldBe PatchRejected
       }
     }
@@ -107,7 +107,7 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
         ReplaceOperation("/parents/LEU", JsString(TargetLegalUnitId.value))
       )
 
-      whenReady(service.applyPatchTo(TargetVatUnitKey, noTestPatch)) { result =>
+      whenReady(service.applyPatchTo(TargetAdminUnitKey, noTestPatch)) { result =>
         result shouldBe PatchRejected
       }
     }
@@ -118,7 +118,7 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
         ReplaceOperation("/parents/LEU", JsString(TargetLegalUnitId.value))
       )
 
-      whenReady(service.applyPatchTo(TargetVatUnitKey, invalidUbrnPatch)) { result =>
+      whenReady(service.applyPatchTo(TargetAdminUnitKey, invalidUbrnPatch)) { result =>
         result shouldBe PatchRejected
       }
     }
@@ -129,7 +129,7 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
         ReplaceOperation("/parents/LEU", JsNumber(42))
       )
 
-      whenReady(service.applyPatchTo(TargetVatUnitKey, invalidUbrnPatch)) { result =>
+      whenReady(service.applyPatchTo(TargetAdminUnitKey, invalidUbrnPatch)) { result =>
         result shouldBe PatchRejected
       }
     }
@@ -139,7 +139,7 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
         Future.successful(UnitNotFound)
       )
 
-      whenReady(service.applyPatchTo(TargetVatUnitKey, UpdateParentPatch)) { result =>
+      whenReady(service.applyPatchTo(TargetAdminUnitKey, UpdateParentPatch)) { result =>
         result shouldBe PatchRejected
       }
     }
@@ -149,7 +149,7 @@ class VatUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactor
         Future.successful(UnitRegisterFailure("some error messsage"))
       )
 
-      whenReady(service.applyPatchTo(TargetVatUnitKey, UpdateParentPatch)) { result =>
+      whenReady(service.applyPatchTo(TargetAdminUnitKey, UpdateParentPatch)) { result =>
         result shouldBe PatchFailed
       }
     }

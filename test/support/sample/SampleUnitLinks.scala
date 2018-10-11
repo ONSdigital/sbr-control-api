@@ -9,7 +9,7 @@ trait SampleUnitLinks {
 
   val CompaniesHouse = UnitType.toAcronym(UnitType.CompaniesHouse)
   val ValueAddedTax = UnitType.toAcronym(UnitType.ValueAddedTax)
-  val PayAsYouEarnTax = UnitType.toAcronym(UnitType.PayAsYouEarnTax)
+  val PayAsYouEarnTax = UnitType.toAcronym(UnitType.PayAsYouEarn)
   val Enterprise = UnitType.toAcronym(UnitType.Enterprise)
   val LegalUnit = UnitType.toAcronym(UnitType.LegalUnit)
   val LocalUnit = UnitType.toAcronym(UnitType.LocalUnit)
