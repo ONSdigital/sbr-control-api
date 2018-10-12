@@ -24,4 +24,6 @@ object EnterpriseUnitColumns {
   val workingProprietors = "working_props"
   val employment = "employment"
   val region = "region"
+  val imputedEmployees = "imp_empees"
+  val imputedTurnover = "imp_turnover"
 }
