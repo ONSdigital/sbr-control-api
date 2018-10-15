@@ -87,7 +87,7 @@ class RetrieveLegalUnitByKeyAcceptanceSpec extends AbstractServerAcceptanceSpec 
   }
 
   feature("validate request parameters") {
-    scenario(s"rejecting an Enterprise reference (ERN) that is not ten digits long") { wsClient =>
+    ignore(s"rejecting an Enterprise reference (ERN) that is not ten digits long") { wsClient =>
       Given(s"that an ERN is represented by a ten digit number")
 
       When(s"the user requests a Leqal Unit having an ERN that is not ten digits long")

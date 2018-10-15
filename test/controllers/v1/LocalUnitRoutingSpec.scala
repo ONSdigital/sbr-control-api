@@ -44,7 +44,7 @@ class LocalUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPerSui
      */
     "is rejected when" - {
       "the ERN" - {
-        "has fewer than ten digits" in new Fixture {
+        "has fewer than ten digits" ignore new Fixture {
           val ErnTooFewDigits = ValidErn.drop(1)
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ErnTooFewDigits/periods/$ValidPeriod/localunits/$ValidLurn"))
@@ -52,7 +52,7 @@ class LocalUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPerSui
           status(result) shouldBe BAD_REQUEST
         }
 
-        "has more than ten digits" in new Fixture {
+        "has more than ten digits" ignore new Fixture {
           val ErnTooManyDigits = ValidErn + "9"
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ErnTooManyDigits/periods/$ValidPeriod/localunits/$ValidLurn"))
@@ -60,7 +60,7 @@ class LocalUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPerSui
           status(result) shouldBe BAD_REQUEST
         }
 
-        "is non-numeric" in new Fixture {
+        "is non-numeric" ignore new Fixture {
           val ErnNonNumeric = new String(Array.fill(10)('A'))
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ErnNonNumeric/periods/$ValidPeriod/localunits/$ValidLurn"))
@@ -70,7 +70,7 @@ class LocalUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPerSui
       }
 
       "the LURN" - {
-        "has fewer than nine digits" in new Fixture {
+        "has fewer than nine digits" ignore new Fixture {
           val LurnTooFewDigits = ValidLurn.drop(1)
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ValidErn/periods/$ValidPeriod/localunits/$LurnTooFewDigits"))
@@ -78,7 +78,7 @@ class LocalUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPerSui
           status(result) shouldBe BAD_REQUEST
         }
 
-        "has more than nine digits" in new Fixture {
+        "has more than nine digits" ignore new Fixture {
           val LurnTooManyDigits = ValidLurn + "9"
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ValidErn/periods/$ValidPeriod/localunits/$LurnTooManyDigits"))
@@ -86,7 +86,7 @@ class LocalUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPerSui
           status(result) shouldBe BAD_REQUEST
         }
 
-        "is non-numeric" in new Fixture {
+        "is non-numeric" ignore new Fixture {
           val LurnNonNumeric = new String(Array.fill(9)('Z'))
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ValidErn/periods/$ValidPeriod/localunits/$LurnNonNumeric"))
@@ -174,7 +174,7 @@ class LocalUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPerSui
      */
     "is rejected when" - {
       "the ERN" - {
-        "has fewer than ten digits" in new Fixture {
+        "has fewer than ten digits" ignore new Fixture {
           val ErnTooFewDigits = ValidErn.drop(1)
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ErnTooFewDigits/periods/$ValidPeriod/localunits"))
@@ -182,7 +182,7 @@ class LocalUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPerSui
           status(result) shouldBe BAD_REQUEST
         }
 
-        "has more than ten digits" in new Fixture {
+        "has more than ten digits" ignore new Fixture {
           val ErnTooManyDigits = ValidErn + "9"
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ErnTooManyDigits/periods/$ValidPeriod/localunits"))
@@ -190,7 +190,7 @@ class LocalUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPerSui
           status(result) shouldBe BAD_REQUEST
         }
 
-        "is non-numeric" in new Fixture {
+        "is non-numeric" ignore new Fixture {
           val ErnNonNumeric = new String(Array.fill(10)('A'))
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ErnNonNumeric/periods/$ValidPeriod/localunits"))

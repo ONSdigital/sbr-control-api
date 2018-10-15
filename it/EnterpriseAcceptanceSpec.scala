@@ -118,7 +118,7 @@ class EnterpriseAcceptanceSpec extends AbstractServerAcceptanceSpec with OptionV
   }
 
   feature("responds to an invalid request") {
-    scenario("rejects request due to Enterprise reference number (ERN) being too short") { wsClient =>
+    ignore("rejects request due to Enterprise reference number (ERN) being too short") { wsClient =>
       Given(s"that an ERN is represented by a ten digit number")
 
       When(s"the user requests an enterprise having an ERN that is not ten digits long")
