@@ -37,7 +37,9 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
         standardTurnover -> SampleStandardTurnover.toString,
         groupTurnover -> SampleGroupTurnover.toString,
         apportionedTurnover -> SampleApportionedTurnover.toString,
-        enterpriseTurnover -> SampleEnterpriseTurnover.toString
+        enterpriseTurnover -> SampleEnterpriseTurnover.toString,
+        imputedEmployees -> SampleImputedEmployees.toString,
+        imputedTurnover -> SampleImputedTurnover.toString
       )
 
     val allVariables: Map[String, String] =
@@ -52,8 +54,29 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
         EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables)) shouldBe Some(SampleEnterpriseWithAllFields)
       }
 
+      /*
+       * In this scenario - the optional sub-objects for turnover & imputed will be omitted completely
+       */
       "when only mandatory fields are given" in new Fixture {
         EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = mandatoryVariables)) shouldBe Some(SampleEnterpriseWithNoOptionalFields)
+      }
+
+      "with partially populated turnover values" in new Fixture {
+        val variablesWithPartialTurnover = allVariables -- Seq(standardTurnover, containedTurnover)
+        val expectedEnterprise = SampleEnterpriseWithAllFields.copy(turnover = Some(
+          SampleTurnoverWithAllFields.copy(standardTurnover = None, containedTurnover = None)
+        ))
+
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = variablesWithPartialTurnover)) shouldBe Some(expectedEnterprise)
+      }
+
+      "with partially populated imputed values" in new Fixture {
+        val variablesWithPartialImputation = allVariables - imputedTurnover
+        val expectedEnterprise = SampleEnterpriseWithAllFields.copy(imputed = Some(
+          SampleImputedWithAllFields.copy(turnover = None)
+        ))
+
+        EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = variablesWithPartialImputation)) shouldBe Some(expectedEnterprise)
       }
     }
 
@@ -107,6 +130,14 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
         "employment" in new Fixture {
           EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(employment, "invalid_int"))) shouldBe None
         }
+
+        "imputed employees" in new Fixture {
+          EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(imputedEmployees, "invalid_int"))) shouldBe None
+        }
+
+        "imputed turnover" in new Fixture {
+          EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(imputedTurnover, "invalid_int"))) shouldBe None
+        }
       }
 
       "a non-integral value is found for" - {
@@ -144,6 +175,14 @@ class EnterpriseUnitRowMapperSpec extends FreeSpec with Matchers {
 
         "employment" in new Fixture {
           EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(employment, "100.5"))) shouldBe None
+        }
+
+        "imputed employees" in new Fixture {
+          EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(imputedEmployees, "5.5"))) shouldBe None
+        }
+
+        "imputed turnover" in new Fixture {
+          EnterpriseUnitRowMapper.fromRow(Row(rowKey = UnusedRowKey, fields = allVariables.updated(imputedTurnover, "4999.99"))) shouldBe None
         }
       }
     }
