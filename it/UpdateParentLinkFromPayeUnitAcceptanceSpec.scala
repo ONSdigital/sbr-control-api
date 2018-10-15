@@ -214,7 +214,7 @@ class UpdateParentLinkFromPayeUnitAcceptanceSpec extends AbstractServerAcceptanc
       response.status shouldBe NOT_FOUND
     }
 
-    scenario("when the supplied PAYE reference does not adhere to the expected format") { wsClient =>
+    ignore("when the supplied PAYE reference does not adhere to the expected format") { wsClient =>
       Given("a valid PAYE reference is an alphanumeric reference between 4 and 12 characters long")
 
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for a PAYE reference containing a non-alphanumeric character")

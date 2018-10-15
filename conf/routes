@@ -1,38 +1,51 @@
 # Routes
 # This file defines all application routes (Higher priority routes first)
+
+# Regex patterns for ID validation temporarily removed until the pipeline allocation of correct ID types is in place
 # ~~~~
 
 # Unit Links
-GET     /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/$type<(ENT|LEU|LOU|REU|CH|VAT|PAYE)>/units/$unit<.{4,16}>       controllers.v1.UnitLinksController.retrieveUnitLinks(unit, period, type)
+#GET     /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/$type<(ENT|LEU|LOU|REU|CH|VAT|PAYE)>/units/$unit<.{4,16}>       controllers.v1.UnitLinksController.retrieveUnitLinks(unit, period, type)
+GET     /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/$type<(ENT|LEU|LOU|REU|CH|VAT|PAYE)>/units/:unit                controllers.v1.UnitLinksController.retrieveUnitLinks(unit, period, type)
 GET     /v1/periods/:period/types/:type/units/:unit                                                                     controllers.BadRequestController.badRequest2(unit, period, type)
 
-PATCH   /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/VAT/units/$vatref<\d{12}>                                       controllers.v1.UnitLinksController.patchVatUnitLinks(vatref, period)
+#PATCH   /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/VAT/units/$vatref<\d{12}>                                       controllers.v1.UnitLinksController.patchVatUnitLinks(vatref, period)
+PATCH   /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/VAT/units/:vatref                                               controllers.v1.UnitLinksController.patchVatUnitLinks(vatref, period)
 PATCH   /v1/periods/:period/types/VAT/units/:vatref                                                                     controllers.BadRequestController.badRequest(vatref, period)
-PATCH   /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/PAYE/units/$payeref<[0-9a-zA-Z]{4,12}>                          controllers.v1.UnitLinksController.patchPayeUnitLinks(payeref, period)
+#PATCH   /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/PAYE/units/$payeref<[0-9a-zA-Z]{4,12}>                          controllers.v1.UnitLinksController.patchPayeUnitLinks(payeref, period)
+PATCH   /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/PAYE/units/:payeref                                             controllers.v1.UnitLinksController.patchPayeUnitLinks(payeref, period)
 PATCH   /v1/periods/:period/types/PAYE/units/:payeref                                                                   controllers.BadRequestController.badRequest(payeref, period)
-PATCH   /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/LEU/units/$ubrn<\d{16}>                                         controllers.v1.UnitLinksController.patchLeuUnitLinks(ubrn, period)
+#PATCH   /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/LEU/units/$ubrn<\d{16}>                                         controllers.v1.UnitLinksController.patchLeuUnitLinks(ubrn, period)
+PATCH   /v1/periods/$period<\d{4}(0[1-9]|1[0-2])>/types/LEU/units/:ubrn                                                 controllers.v1.UnitLinksController.patchLeuUnitLinks(ubrn, period)
 PATCH   /v1/periods/:period/types/LEU/units/:ubrn                                                                       controllers.BadRequestController.badRequest(ubrn, period)
 
 # Enterprises
-GET     /v1/periods/$period<\d{4}((0[1-9]|(1[0-2])))>/enterprises/$ern<\d{10}>                                          controllers.v1.EnterpriseUnitController.retrieveEnterpriseUnit(ern, period)
+#GET     /v1/periods/$period<\d{4}((0[1-9]|(1[0-2])))>/enterprises/$ern<\d{10}>                                          controllers.v1.EnterpriseUnitController.retrieveEnterpriseUnit(ern, period)
+GET     /v1/periods/$period<\d{4}((0[1-9]|(1[0-2])))>/enterprises/:ern                                                  controllers.v1.EnterpriseUnitController.retrieveEnterpriseUnit(ern, period)
 GET     /v1/periods/:period/enterprises/:ern                                                                            controllers.BadRequestController.badRequest(ern, period)
 
 # Local Units
-GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/localunits/$lurn<\d{9}>                    controllers.v1.LocalUnitController.retrieveLocalUnit(ern, period, lurn)
+#GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/localunits/$lurn<\d{9}>                    controllers.v1.LocalUnitController.retrieveLocalUnit(ern, period, lurn)
+GET     /v1/enterprises/:ern/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/localunits/:lurn                                   controllers.v1.LocalUnitController.retrieveLocalUnit(ern, period, lurn)
 GET     /v1/enterprises/:ern/periods/:period/localunits/:lurn                                                           controllers.BadRequestController.badRequest3(ern, period, lurn: Option[String])
-GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/localunits                                 controllers.v1.LocalUnitController.retrieveAllLocalUnitsForEnterprise(ern, period)
+#GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/localunits                                 controllers.v1.LocalUnitController.retrieveAllLocalUnitsForEnterprise(ern, period)
+GET     /v1/enterprises/:ern/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/localunits                                         controllers.v1.LocalUnitController.retrieveAllLocalUnitsForEnterprise(ern, period)
 GET     /v1/enterprises/:ern/periods/:period/localunits                                                                 controllers.BadRequestController.badRequest3(ern, period, None: Option[String])
 
 # Legal Units
-GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/legalunits/$ubrn<\d{16}>                   controllers.v1.LegalUnitController.retrieveLegalUnit(ern, period, ubrn)
+#GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/legalunits/$ubrn<\d{16}>                   controllers.v1.LegalUnitController.retrieveLegalUnit(ern, period, ubrn)
+GET     /v1/enterprises/:ern/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/legalunits/:ubrn                                   controllers.v1.LegalUnitController.retrieveLegalUnit(ern, period, ubrn)
 GET     /v1/enterprises/:ern/periods/:period/legalunits/:ubrn                                                           controllers.BadRequestController.badRequest3(ern, period, ubrn: Option[String])
-GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/legalunits                                 controllers.v1.LegalUnitController.retrieveAllLegalUnitsForEnterprise(ern, period)
+#GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/legalunits                                 controllers.v1.LegalUnitController.retrieveAllLegalUnitsForEnterprise(ern, period)
+GET     /v1/enterprises/:ern/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/legalunits                                         controllers.v1.LegalUnitController.retrieveAllLegalUnitsForEnterprise(ern, period)
 GET     /v1/enterprises/:ern/periods/:period/legalunits                                                                 controllers.BadRequestController.badRequest3(ern, period, None: Option[String])
 
 # Reporting Units
-GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|1[0-2])>/reportingunits/$rurn<\d{11}>                 controllers.v1.ReportingUnitController.retrieveReportingUnit(ern, period, rurn)
+#GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|1[0-2])>/reportingunits/$rurn<\d{11}>                 controllers.v1.ReportingUnitController.retrieveReportingUnit(ern, period, rurn)
+GET     /v1/enterprises/:ern/periods/$period<\d{4}(0[1-9]|1[0-2])>/reportingunits/:rurn                                 controllers.v1.ReportingUnitController.retrieveReportingUnit(ern, period, rurn)
 GET     /v1/enterprises/:ern/periods/:period/reportingunits/:rurn                                                       controllers.BadRequestController.badRequest3(ern, period, rurn: Option[String])
-GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|1[0-2])>/reportingunits                               controllers.v1.ReportingUnitController.retrieveAllReportingUnitsForEnterprise(ern, period)
+#GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|1[0-2])>/reportingunits                               controllers.v1.ReportingUnitController.retrieveAllReportingUnitsForEnterprise(ern, period)
+GET     /v1/enterprises/:ern/periods/$period<\d{4}(0[1-9]|1[0-2])>/reportingunits                                       controllers.v1.ReportingUnitController.retrieveAllReportingUnitsForEnterprise(ern, period)
 GET     /v1/enterprises/:ern/periods/:period/reportingunits                                                             controllers.BadRequestController.badRequest3(ern, period, None: Option[String])
 
 # Other Routes
