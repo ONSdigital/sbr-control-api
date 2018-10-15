@@ -29,7 +29,7 @@ class ReportingUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPe
      */
     "is rejected when" - {
       "the ERN" - {
-        "has fewer than ten digits" in new Fixture {
+        "has fewer than ten digits" ignore new Fixture {
           val ErnTooFewDigits = ValidErn.drop(1)
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ErnTooFewDigits/periods/$ValidPeriod/reportingunits/$ValidRurn"))
@@ -37,7 +37,7 @@ class ReportingUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPe
           status(result) shouldBe BAD_REQUEST
         }
 
-        "has more than ten digits" in new Fixture {
+        "has more than ten digits" ignore new Fixture {
           val ErnTooManyDigits = ValidErn + "9"
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ErnTooManyDigits/periods/$ValidPeriod/reportingunits/$ValidRurn"))
@@ -45,7 +45,7 @@ class ReportingUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPe
           status(result) shouldBe BAD_REQUEST
         }
 
-        "is non-numeric" in new Fixture {
+        "is non-numeric" ignore new Fixture {
           val ErnNonNumeric = new String(Array.fill(10)('A'))
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ErnNonNumeric/periods/$ValidPeriod/reportingunits/$ValidRurn"))
@@ -55,7 +55,7 @@ class ReportingUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPe
       }
 
       "the RURN" - {
-        "has fewer than eleven digits" in new Fixture {
+        "has fewer than eleven digits" ignore new Fixture {
           val RurnTooFewDigits = ValidRurn.drop(1)
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ValidErn/periods/$ValidPeriod/reportingunits/$RurnTooFewDigits"))
@@ -63,7 +63,7 @@ class ReportingUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPe
           status(result) shouldBe BAD_REQUEST
         }
 
-        "has more than eleven digits" in new Fixture {
+        "has more than eleven digits" ignore new Fixture {
           val RurnTooManyDigits = ValidRurn + "9"
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ValidErn/periods/$ValidPeriod/reportingunits/$RurnTooManyDigits"))
@@ -71,7 +71,7 @@ class ReportingUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPe
           status(result) shouldBe BAD_REQUEST
         }
 
-        "is non-numeric" in new Fixture {
+        "is non-numeric" ignore new Fixture {
           val RurnNonNumeric = new String(Array.fill(11)('Z'))
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ValidErn/periods/$ValidPeriod/reportingunits/$RurnNonNumeric"))
@@ -159,7 +159,7 @@ class ReportingUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPe
      */
     "is rejected when" - {
       "the ERN" - {
-        "has fewer than ten digits" in new Fixture {
+        "has fewer than ten digits" ignore new Fixture {
           val ErnTooFewDigits = ValidErn.drop(1)
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ErnTooFewDigits/periods/$ValidPeriod/reportingunits"))
@@ -167,7 +167,7 @@ class ReportingUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPe
           status(result) shouldBe BAD_REQUEST
         }
 
-        "has more than ten digits" in new Fixture {
+        "has more than ten digits" ignore new Fixture {
           val ErnTooManyDigits = ValidErn + "9"
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ErnTooManyDigits/periods/$ValidPeriod/reportingunits"))
@@ -175,7 +175,7 @@ class ReportingUnitRoutingSpec extends FreeSpec with Matchers with GuiceOneAppPe
           status(result) shouldBe BAD_REQUEST
         }
 
-        "is non-numeric" in new Fixture {
+        "is non-numeric" ignore new Fixture {
           val ErnNonNumeric = new String(Array.fill(10)('A'))
 
           val Some(result) = route(app, FakeRequest(GET, s"/v1/enterprises/$ErnNonNumeric/periods/$ValidPeriod/reportingunits"))

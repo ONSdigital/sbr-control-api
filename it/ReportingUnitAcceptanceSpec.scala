@@ -162,7 +162,7 @@ class ReportingUnitAcceptanceSpec extends AbstractServerAcceptanceSpec with Opti
   }
 
   feature("validate request parameters") {
-    scenario(s"rejecting a Reporting Unit id (RURN) that is not eleven digits long") { wsClient =>
+    ignore(s"rejecting a Reporting Unit id (RURN) that is not eleven digits long") { wsClient =>
       Given(s"that an RURN is represented by an eleven digit number")
 
       When(s"the user requests a Reporting Unit having an RURN that is not eleven digits long")
@@ -172,7 +172,7 @@ class ReportingUnitAcceptanceSpec extends AbstractServerAcceptanceSpec with Opti
       response.status shouldBe BAD_REQUEST
     }
 
-    scenario(s"rejecting an Enterprise reference number (ERN) that is not ten digits long") { wsClient =>
+    ignore(s"rejecting an Enterprise reference number (ERN) that is not ten digits long") { wsClient =>
       Given(s"that an ERN is represented by a ten digit number")
 
       When(s"the user requests a Reporting Unit having an ERN that is not ten digits long")
