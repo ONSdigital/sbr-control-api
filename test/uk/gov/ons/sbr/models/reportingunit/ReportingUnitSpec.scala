@@ -13,27 +13,39 @@ class ReportingUnitSpec extends FreeSpec with Matchers {
          |{${
         withValues(
           string("rurn", reportingUnit.rurn.value),
-          optionalString("ruref", reportingUnit.ruref),
-          string("ern", reportingUnit.ern.value),
-          optionalString("entref", reportingUnit.entref),
+          optionalString("ruref", reportingUnit.ruref)
+        )
+      },
+         | "enterprise": {${
+        withValues(
+          string("ern", reportingUnit.enterprise.ern.value),
+          optionalString("entref", reportingUnit.enterprise.entref)
+        )
+      }
+         | }, "address": {${
+        withValues(
+          string("line1", reportingUnit.address.line1),
+          optionalString("line2", reportingUnit.address.line2),
+          optionalString("line3", reportingUnit.address.line3),
+          optionalString("line4", reportingUnit.address.line4),
+          optionalString("line5", reportingUnit.address.line5),
+          string("postcode", reportingUnit.address.postcode)
+        )
+      }
+         | }, ${
+        withValues(
           string("name", reportingUnit.name),
           optionalString("tradingStyle", reportingUnit.tradingStyle),
-          optionalString("legalStatus", reportingUnit.legalStatus),
-          string("address1", reportingUnit.address1),
-          optionalString("address2", reportingUnit.address2),
-          optionalString("address3", reportingUnit.address3),
-          optionalString("address4", reportingUnit.address4),
-          optionalString("address5", reportingUnit.address5),
-          string("postcode", reportingUnit.postcode),
+          string("legalStatus", reportingUnit.legalStatus),
           string("sic07", reportingUnit.sic07),
           int("employees", reportingUnit.employees),
           int("employment", reportingUnit.employment),
           int("turnover", reportingUnit.turnover),
-          string("prn", reportingUnit.prn.toString()),
-          string("region", reportingUnit.region)
+          string("region", reportingUnit.region),
+          string("prn", reportingUnit.prn.toString())
         )
       }
-         |}""".stripMargin
+      }""".stripMargin
   }
 
   "A Reporting Unit" - {
