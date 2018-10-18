@@ -10,9 +10,11 @@ import play.api.libs.json.Json.toJson
 import play.api.libs.json.{ JsValue, Reads }
 import play.api.libs.ws.WSAuthScheme.BASIC
 import play.api.libs.ws.{ WSClient, WSRequest, WSResponse }
-import repository.RestRepository.{ ErrorMessage, Field, Row, RowKey }
+import repository.RestRepository._
 import repository._
-import utils.{ BaseUrl, TrySupport }
+import repository.hbase.HBaseData.HBaseRow
+import repository.hbase.HBaseRestRepository._
+import utils.{ BaseUrl, ResponseHandler, TrySupport }
 
 import scala.concurrent.duration._
 import scala.concurrent.{ Future, TimeoutException }
@@ -42,7 +44,7 @@ class HBaseRestRepository @Inject() (
 
   override def findRows(table: String, query: String, columnFamily: String): Future[Either[ErrorMessage, Seq[Row]]] = {
     val withRowReader = responseReaderMaker.forColumnFamily(columnFamily)
-    val url = HBase.rowKeyUrl(withBase = config.baseUrl, config.namespace, table, query, columnFamily)
+    val url = HBase.rowKeyColFamilyUrl(withBase = config.baseUrl, config.namespace, table, query, columnFamily)
     logger.info(s"Requesting [$url] from HBase REST.")
 
     baseRequest(url).withHeaders(ACCEPT -> JSON).get().map {
@@ -113,44 +115,92 @@ class HBaseRestRepository @Inject() (
     }
   }
 
-  /*
-   * A HBase checkAndUpdate operation returns 304: Not Modified when:
-   * - the "check" is not satisfied (ie. the value has been changed by another user)
-   * - there is no such row with the target rowKey
-   *
-   * In order to provide a RESTful interface and distinguish Conflict from Not Found we therefore perform a GET first.
-   * In order to do a GET, we need to determine the relevant column family.
-   */
-  override def update(table: String, rowKey: RowKey, checkField: Field, updateField: Field): Future[UpdateResult] =
-    columnFamilyOf(checkField).fold[Future[UpdateResult]](Future.successful(UpdateRejected)) { columnFamily =>
-      findRow(table, rowKey, columnFamily).flatMap {
-        _.fold[Future[UpdateResult]](
-          _ => Future.successful(UpdateFailed),
-          _.fold[Future[UpdateResult]](Future.successful(UpdateTargetNotFound)) { _ =>
-            checkAndUpdate(table, rowKey, checkField, updateField)
-          }
-        )
-      }
-    }
-
-  private def columnFamilyOf(field: Field): Option[String] =
-    Column.unapply(field._1).map(_._1)
-
-  private def checkAndUpdate(table: String, rowKey: RowKey, checkField: Field, updateField: Field): Future[UpdateResult] = {
-    val url = HBase.checkedPutUrl(withBase = config.baseUrl, config.namespace, table, rowKey)
-    logger.info(s"Requesting update of [$url] via HBase REST.")
-    val checkAndUpdateJson = toJson(CheckAndUpdate(rowKey, checkField, updateField))(HBaseData.format)
-    baseRequest(url).withHeaders(CONTENT_TYPE -> JSON).put(checkAndUpdateJson).map {
-      toUpdateResult
-    }.recover {
-      case _: Throwable => UpdateFailed
-    }
+  override def createOrReplace(table: String, rowKey: RowKey, field: Field, otherFields: Field*): Future[CreateOrReplaceResult] = {
+    val url = HBase.rowKeyUrl(withBase = config.baseUrl, config.namespace, table, rowKey)
+    logger.info(s"Requesting creation/replacement of [${columnNamesOf(field, otherFields).mkString}] at [$url] via HBase REST.")
+    asCreateOrReplaceResult(putEdit(url, RowFields(rowKey, field, otherFields)))
   }
 
-  private def toUpdateResult(response: WSResponse): UpdateResult =
+  override def updateField(table: String, rowKey: RowKey, checkField: Field, updateField: Field, otherUpdateFields: Field*): Future[OptimisticEditResult] =
+    ifExists(table, rowKey, columnOf(checkField).family) { _ =>
+      val updateUrl = HBase.checkedPutUrl(withBase = config.baseUrl, config.namespace, table, rowKey)
+      logger.info(s"Requesting update of [${columnNamesOf(updateField, otherUpdateFields).mkString}] at [$updateUrl] via HBase REST.")
+      doCheckedEdit(updateUrl, CheckAndUpdate(rowKey, checkField, updateField, otherUpdateFields))
+    }
+
+  /*
+   * Note that if the target column does not exist, we take no action and report a successful deletion.
+   * This is the correct behaviour for an idempotent delete operation, and ensures that the operation can be retried
+   * in the event of any failure.
+   * However, it was probably a mistake to handle this here.  The client request is actually a patch containing
+   * test & remove operations.  If the test condition does not hold, the patch operation should be aborted.  In
+   * focusing on the delete operation we have failed to correctly adhere to the expected semantics of patch.
+   */
+  override def deleteField(table: String, rowKey: RowKey, checkField: Field, columnName: Column): Future[OptimisticEditResult] =
+    ifExists(table, rowKey, columnName.family) { row =>
+      if (row.fields.contains(columnName.qualifier)) checkAndDelete(table, rowKey, checkField, columnName)
+      else Future.successful(EditApplied)
+    }
+
+  private def checkAndDelete(table: String, rowKey: RowKey, checkField: Field, columnName: Column): Future[OptimisticEditResult] = {
+    val deleteUrl = HBase.checkedDeleteUrl(withBase = config.baseUrl, config.namespace, table, rowKey, columnName)
+    logger.info(s"Requesting delete at [$deleteUrl] via HBase REST")
+    doCheckedEdit(deleteUrl, RowFields(rowKey, checkField))
+  }
+
+  private def doCheckedEdit(url: String, body: Seq[HBaseRow]): Future[OptimisticEditResult] =
+    asOptimisticEditResult(putEdit(url, body))
+
+  private def putEdit(url: String, body: Seq[HBaseRow]): Future[WSResponse] =
+    putJson(url, toJson(body)(HBaseData.format))
+
+  private def putJson(url: String, body: JsValue): Future[WSResponse] =
+    baseRequest(url).withHeaders(CONTENT_TYPE -> JSON).put(body)
+
+  /*
+   * A HBase "checked action" (either an update or delete) simply returns 304: Not Modified when no action is taken.
+   * This can be because the "check" is not satisfied (i.e. the value has been changed by another user), but may
+   * simply be because there is no such row with the target key.
+   *
+   * In order for us to provide a proper RESTful interface for our clients, we need to distinguish between the
+   * Conflict and Not Found cases.  In order to do this, we perform a GET operation first.
+   */
+  private def ifExists(table: String, rowKey: RowKey, columnFamily: String)(edit: Row => Future[OptimisticEditResult]): Future[OptimisticEditResult] =
+    findRow(table, rowKey, columnFamily).flatMap {
+      _.fold(
+        _ => Future.successful(EditFailed),
+        _.fold[Future[OptimisticEditResult]](Future.successful(EditTargetNotFound))(edit(_))
+      )
+    }
+}
+
+private object HBaseRestRepository {
+  def columnOf(field: Field): Column =
+    field._1
+
+  private def columnNamesOf(field: Field, otherFields: Seq[Field]): Seq[String] =
+    (field +: otherFields).map(columnOf).map(Column.name)
+
+  val asOptimisticEditResult: Future[WSResponse] => Future[OptimisticEditResult] =
+    ResponseHandler.make(toOptimisticEditResult) {
+      case _: Throwable => EditFailed
+    }
+
+  private def toOptimisticEditResult(response: WSResponse): OptimisticEditResult =
     response.status match {
-      case OK => UpdateApplied
-      case NOT_MODIFIED => UpdateConflicted
-      case _ => UpdateFailed
+      case OK => EditApplied
+      case NOT_MODIFIED => EditConflicted
+      case _ => EditFailed
+    }
+
+  val asCreateOrReplaceResult: Future[WSResponse] => Future[CreateOrReplaceResult] =
+    ResponseHandler.make(toCreateOrReplaceResult) {
+      case _: Throwable => EditFailed
+    }
+
+  private def toCreateOrReplaceResult(response: WSResponse): CreateOrReplaceResult =
+    response.status match {
+      case OK => EditApplied
+      case _ => EditFailed
     }
 }

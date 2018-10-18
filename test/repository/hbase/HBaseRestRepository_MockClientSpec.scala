@@ -6,12 +6,12 @@ import org.scalatest.{ EitherValues, FreeSpec, Matchers, OneInstancePerTest }
 import play.api.http.{ Status, Writeable }
 import play.api.libs.json.{ JsSuccess, JsValue, Json, Reads }
 import play.api.libs.ws.{ WSClient, WSRequest, WSResponse }
+import repository.EditFailed
 import repository.RestRepository.Row
-import repository.UpdateFailed
 import utils.BaseUrl
 
-import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration._
+import scala.concurrent.{ Await, Future }
 
 /*
  * This spec mocks the wsClient, which disregards the rule "don't mock types you don't own" (see "Growing
@@ -32,6 +32,9 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
     val RowKey = "rowKey"
     val ColumnFamily = "columnFamily"
     val ColumnQualifier = "columnQualifier"
+    val ColumnName = Column(ColumnFamily, ColumnQualifier)
+    val OldValue = "A"
+    val NewValue = "B"
 
     val wsClient = stub[WSClient]
     val wsResponse = stub[WSResponse]
@@ -49,12 +52,6 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
       (wsRequest.withAuth _).expects(*, *, *).returning(wsRequest)
       () // explicitly return unit to avoid warning about disregarded return value
     }
-  }
-
-  private trait QueryFixture extends Fixture
-
-  private trait EditFixture extends Fixture {
-    val EditUrlSuffix = "/?check=put"
 
     def stubTargetRowExists(): Unit = {
       val getRequest = stub[WSRequest]
@@ -70,9 +67,23 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
       (getResponse.status _).when().returns(Status.OK)
       (getResponse.json _).when().returns(body)
       (hbaseResponseReaderMaker.forColumnFamily _).when(*).returns(readsRows)
-      (readsRows.reads _).when(*).returns(JsSuccess(Seq(Row("rowKey", Map.empty))))
+      (readsRows.reads _).when(*).returns(JsSuccess(Seq(Row("rowKey", Map(ColumnQualifier -> OldValue)))))
       () // explicitly return unit to avoid warning about disregarded return value
     }
+  }
+
+  private trait QueryFixture extends Fixture
+
+  private trait EditFixture extends Fixture {
+    val EditUrlSuffix = "/?check=put"
+  }
+
+  private trait CreateFixture extends Fixture {
+    val CreateUrlSuffix = s"/$RowKey"
+  }
+
+  private trait DeleteFixture extends EditFixture {
+    val DeleteUrlSuffix = "/?check=delete"
   }
 
   "A HBase REST repository" - {
@@ -119,8 +130,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         (wsRequest.withRequestTimeout _).expects(ClientTimeout.milliseconds).returning(wsRequest)
         (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
 
-        Await.result(restRepository.update(Table, RowKey, checkField = s"$ColumnFamily:$ColumnQualifier" -> "A",
-          updateField = s"$ColumnFamily:$ColumnQualifier" -> "B"), AwaitTime)
+        Await.result(restRepository.updateField(Table, RowKey, checkField = ColumnName -> OldValue, updateField = ColumnName -> NewValue), AwaitTime)
       }
 
       "targets the specified host and port when making a request" in new EditFixture {
@@ -133,8 +143,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
         (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
 
-        Await.result(restRepository.update(Table, RowKey, checkField = s"$ColumnFamily:$ColumnQualifier" -> "A",
-          updateField = s"$ColumnFamily:$ColumnQualifier" -> "B"), AwaitTime)
+        Await.result(restRepository.updateField(Table, RowKey, checkField = ColumnName -> OldValue, updateField = ColumnName -> NewValue), AwaitTime)
       }
 
       /*
@@ -150,9 +159,77 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
           Future.failed(new Exception("Connection failed"))
         )
 
-        whenReady(restRepository.update(Table, RowKey, checkField = s"$ColumnFamily:$ColumnQualifier" -> "A",
-          updateField = s"$ColumnFamily:$ColumnQualifier" -> "B")) { result =>
-          result shouldBe UpdateFailed
+        whenReady(restRepository.updateField(Table, RowKey, checkField = ColumnName -> OldValue, updateField = ColumnName -> NewValue)) { result =>
+          result shouldBe EditFailed
+        }
+      }
+    }
+
+    "when creating data" - {
+      "specifies the configured client-side timeout when making a request" in new CreateFixture {
+        (wsClient.url _).when(where[String] { _.endsWith(CreateUrlSuffix) }).returns(wsRequest)
+        expectRequestHeadersAndAuth()
+        (wsRequest.withRequestTimeout _).expects(ClientTimeout.milliseconds).returning(wsRequest)
+        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
+
+        Await.result(restRepository.createOrReplace(Table, RowKey, field = ColumnName -> NewValue), AwaitTime)
+      }
+
+      "targets the specified host and port when making a request" in new CreateFixture {
+        (wsClient.url _).when(where[String] { url => url.startsWith(s"$Protocol://$Host:$Port") && url.endsWith(CreateUrlSuffix) }).returning(wsRequest)
+        expectRequestHeadersAndAuth()
+        (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
+        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
+
+        Await.result(restRepository.createOrReplace(Table, RowKey, field = ColumnName -> NewValue), AwaitTime)
+      }
+
+      "materialises an error into a failure" in new CreateFixture {
+        (wsClient.url _).when(where[String] { _.endsWith(CreateUrlSuffix) }).returns(wsRequest)
+        expectRequestHeadersAndAuth()
+        (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
+        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(
+          Future.failed(new Exception("Connection failed"))
+        )
+
+        whenReady(restRepository.createOrReplace(Table, RowKey, field = ColumnName -> NewValue)) { result =>
+          result shouldBe EditFailed
+        }
+      }
+    }
+
+    "when deleting data" - {
+      "specifies the configured client-side timeout when making a request" in new DeleteFixture {
+        stubTargetRowExists()
+        (wsClient.url _).when(where[String] { _.endsWith(DeleteUrlSuffix) }).returns(wsRequest)
+        expectRequestHeadersAndAuth()
+        (wsRequest.withRequestTimeout _).expects(ClientTimeout.milliseconds).returning(wsRequest)
+        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
+
+        Await.result(restRepository.deleteField(Table, RowKey, checkField = ColumnName -> OldValue, ColumnName), AwaitTime)
+      }
+
+      "targets the specified host and port when making a request" in new DeleteFixture {
+        stubTargetRowExists()
+        (wsClient.url _).when(where[String] { url => url.startsWith(s"$Protocol://$Host:$Port") && url.endsWith(DeleteUrlSuffix) }).returning(wsRequest)
+        expectRequestHeadersAndAuth()
+        (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
+        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
+
+        Await.result(restRepository.deleteField(Table, RowKey, checkField = ColumnName -> OldValue, ColumnName), AwaitTime)
+      }
+
+      "materialises an error into a failure" in new DeleteFixture {
+        stubTargetRowExists()
+        (wsClient.url _).when(where[String] { _.endsWith(DeleteUrlSuffix) }).returns(wsRequest)
+        expectRequestHeadersAndAuth()
+        (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
+        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(
+          Future.failed(new Exception("Connection failed"))
+        )
+
+        whenReady(restRepository.deleteField(Table, RowKey, checkField = ColumnName -> OldValue, ColumnName)) { result =>
+          result shouldBe EditFailed
         }
       }
     }

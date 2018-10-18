@@ -17,14 +17,20 @@ object HBaseRestRepositoryConfigLoader extends HBaseRestConfigLoader[HBaseRestRe
   override def load(rootConfig: Config, path: String): HBaseRestRepositoryConfig = {
     val config = rootConfig.getConfig(path)
     HBaseRestRepositoryConfig(
-      baseUrl = BaseUrl(config.getString("protocol"), config.getString("host"), config.getInt("port"), NoneEmptyString(config.getString("prefix"))),
+      baseUrl = BaseUrl(config.getString("protocol"), config.getString("host"), config.getInt("port"),
+        noneEmptyString(config.getString("prefix"))),
       namespace = config.getString("namespace"),
       username = config.getString("username"),
       password = config.getString("password"),
       timeout = config.getLong("timeout")
     )
   }
-  // Convert to None if string is empty or null
-  private def NoneEmptyString(x: String): Option[String] = if (x.trim.isEmpty) None else Some(x)
+
+  /*
+   * TODO consider using config.hasPath to check for presence of value first.
+   * This would allow us to treat the absence of a value as None, rather than the empty value as None.
+   */
+  private def noneEmptyString(str: String): Option[String] =
+    if (str.trim.isEmpty) None else Some(str)
 }
 

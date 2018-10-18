@@ -7,7 +7,7 @@ import repository.RestRepository.Row
 import repository.RowMapper
 import repository.hbase.enterprise.EnterpriseUnitColumns._
 import uk.gov.ons.sbr.models.Address
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern, Turnover }
+import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern, Imputed, Turnover }
 
 import scala.util.Try
 
@@ -36,8 +36,9 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] with LazyLogging {
       turnoverOpt <- tryToTurnover(fields).toOption
       prn <- mandatoryBigDecimalNamed(prn).apply(fields).toOption
       region <- mandatoryStringNamed(region).apply(fields)
+      imputedOpt <- tryToImputed(fields).toOption
     } yield Enterprise(Ern(ern), entrefOpt, name, tradingStyleOpt, address, sic07, legalStatus, headCount.employeesOpt,
-      headCount.jobsOpt, turnoverOpt, prn, headCount.workingProprietors, headCount.employment, region)
+      headCount.jobsOpt, turnoverOpt, prn, headCount.workingProprietors, headCount.employment, region, imputedOpt)
   }
 
   private def toAddress(fields: Map[String, String]): Option[Address] =
@@ -71,5 +72,15 @@ object EnterpriseUnitRowMapper extends RowMapper[Enterprise] with LazyLogging {
       ).orElse(enterpriseTurnoverOpt)
     } yield anyTurnoverOpt.map { _ =>
       Turnover(containedTurnoverOpt, standardTurnoverOpt, groupTurnoverOpt, apportionedTurnoverOpt, enterpriseTurnoverOpt)
+    }
+
+  private def tryToImputed(fields: Map[String, String]): Try[Option[Imputed]] =
+    for {
+      employeesOpt <- optionalIntNamed(imputedEmployees).apply(fields)
+      turnoverOpt <- optionalIntNamed(imputedTurnover).apply(fields)
+      // a single option containing the first Some; else None
+      anyImputedOpt = employeesOpt.orElse(turnoverOpt)
+    } yield anyImputedOpt.map { _ =>
+      Imputed(employeesOpt, turnoverOpt)
     }
 }

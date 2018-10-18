@@ -52,7 +52,7 @@ note left
   [{"op": "add", "path": "/children/VAT-01", "value": "VAT"}]
 end note
 
-"sbr-control-api" -> HBase: PUT /sbr_control_db:unit_links_201808/UBRN-02~LEU/l
+"sbr-control-api" -> HBase: PUT /sbr_control_db:unit_links_201808/UBRN-02~LEU
 note left
   {"Row":[
     {"key":"${hbaseEncode("UBRN-02~LEU")}",

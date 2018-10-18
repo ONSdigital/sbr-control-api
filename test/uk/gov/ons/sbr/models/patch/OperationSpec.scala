@@ -3,28 +3,41 @@ package uk.gov.ons.sbr.models.patch
 import org.scalatest.{ FreeSpec, Matchers }
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
-import uk.gov.ons.sbr.models.patch.OperationTypes.{ Replace, Test }
 
-class ReadsOperationSpec extends FreeSpec with Matchers {
+class OperationSpec extends FreeSpec with Matchers {
 
   "An operation specification" - {
     "can be parsed (when valid)" - {
+      "when it represents a path add operation" in {
+        val jsonOperation = Json.parse("""{"op": "add", "path": "/a/b/c", "value": ["foo", "bar"]}""")
+
+        jsonOperation.as[Operation] shouldBe AddOperation(path = "/a/b/c", value = JsArray(
+          Seq(JsString("foo"), JsString("bar"))
+        ))
+      }
+
+      "when it represents a path remove operation" in {
+        val jsonOperation = Json.parse("""{"op": "remove", "path": "/c/d/e"}""")
+
+        jsonOperation.as[Operation] shouldBe RemoveOperation(path = "/c/d/e")
+      }
+
+      "when it represents a path replace operation" in {
+        val jsonOperation = Json.parse("""{"op": "replace", "path": "/a/b/c", "value": 42}""")
+
+        jsonOperation.as[Operation] shouldBe ReplaceOperation(path = "/a/b/c", value = JsNumber(42))
+      }
+
       "when it represents a path test operation" in {
         val jsonOperation = Json.parse("""{"op": "test", "path": "/a/b/c", "value": "foo"}""")
 
-        jsonOperation.as[Operation] shouldBe Operation(Test, "/a/b/c", JsString("foo"))
-      }
-
-      "when it represents a path replacement operation" in {
-        val jsonOperation = Json.parse("""{"op": "replace", "path": "/c/d/e", "value": 42}""")
-
-        jsonOperation.as[Operation] shouldBe Operation(Replace, "/c/d/e", JsNumber(42))
+        jsonOperation.as[Operation] shouldBe TestOperation(path = "/a/b/c", value = JsString("foo"))
       }
     }
 
-    "is rejected" - {
+    "cannot be parsed" - {
       "when it has an incorrect type" in {
-        val jsonOperation = Json.parse("""["replace", "/c/d/e", "foo"]""")
+        val jsonOperation = Json.parse("""["remove", "/c/d/e"]""")
 
         jsonOperation.validate[Operation] shouldBe a[JsError]
       }
@@ -58,14 +71,6 @@ class ReadsOperationSpec extends FreeSpec with Matchers {
 
         "is of an incorrect type" in {
           val jsonOperation = Json.parse("""{"op": "test", "path": 42, "value": "foo"}""")
-
-          jsonOperation.validate[Operation] shouldBe a[JsError]
-        }
-      }
-
-      "when the 'value' field" - {
-        "is missing" in {
-          val jsonOperation = Json.parse("""{"op": "test", "path": "/a/b/c"}""")
 
           jsonOperation.validate[Operation] shouldBe a[JsError]
         }

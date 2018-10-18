@@ -11,8 +11,7 @@ project/project/
 
 .cache
 .history
-
 .gradle/
 build/
-
 .vscode
+scalastyle-config.xml

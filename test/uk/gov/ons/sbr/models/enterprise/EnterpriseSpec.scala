@@ -1,27 +1,26 @@
 package uk.gov.ons.sbr.models.enterprise
 
-import play.api.libs.json.Json
 import org.scalatest.{ FreeSpec, Matchers, OptionValues }
-
-import support.sample.SampleEnterpriseUnit
+import play.api.libs.json.Json
 import support.JsonString._
+import support.sample.SampleEnterpriseUnit
 
 class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
 
   private trait Fixture extends SampleEnterpriseUnit {
 
-    private def writeAsJsonTurnover(turnover: Turnover) =
-      s"""
-         |, "turnover":{ ${
-        withValues(
-          optionalInt(name = "containedTurnover", optValue = turnover.containedTurnover),
-          optionalInt(name = "standardTurnover", optValue = turnover.standardTurnover),
-          optionalInt(name = "groupTurnover", optValue = turnover.groupTurnover),
-          optionalInt(name = "apportionedTurnover", optValue = turnover.apportionedTurnover),
-          optionalInt(name = "enterpriseTurnover", optValue = turnover.enterpriseTurnover)
-        )
-      }}
-      """
+    private def writeTurnoverAsJson(turnover: Turnover): String =
+      ", " + withObject("turnover", values =
+        optionalInt(name = "containedTurnover", optValue = turnover.containedTurnover),
+        optionalInt(name = "standardTurnover", optValue = turnover.standardTurnover),
+        optionalInt(name = "groupTurnover", optValue = turnover.groupTurnover),
+        optionalInt(name = "apportionedTurnover", optValue = turnover.apportionedTurnover),
+        optionalInt(name = "enterpriseTurnover", optValue = turnover.enterpriseTurnover))
+
+    private def writeImputedAsJson(imputed: Imputed): String =
+      ", " + withObject("imputed", values =
+        optionalInt("employees", imputed.employees),
+        optionalInt("turnover", imputed.turnover))
 
     def expectedJsonOutput(ent: Enterprise): String =
       s"""
@@ -56,10 +55,16 @@ class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
         )
       }
         ${
-        ent.turnover.fold("") { turnover =>
-          writeAsJsonTurnover(turnover = turnover)
+        ent.turnover.fold("") {
+          writeTurnoverAsJson
         }
-      }}""".stripMargin
+      }
+        ${
+        ent.imputed.fold("") {
+          writeImputedAsJson
+        }
+      }
+        }""".stripMargin
   }
 
   "A enterprise" - {
@@ -68,8 +73,27 @@ class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
         Json.toJson(SampleEnterpriseWithAllFields) shouldBe Json.parse(expectedJsonOutput(SampleEnterpriseWithAllFields))
       }
 
+      /*
+       * In this scenario - the optional sub-objects for turnover & imputed will be missing entirely
+       */
       "when only mandatory field are given - i.e. excluding optional" in new Fixture {
         Json.toJson(SampleEnterpriseWithNoOptionalFields) shouldBe Json.parse(expectedJsonOutput(SampleEnterpriseWithNoOptionalFields))
+      }
+
+      "when turnover is partially populated" in new Fixture {
+        val sampleEnterpriseWithPartialTurnover = SampleEnterpriseWithAllFields.copy(
+          turnover = Some(SampleTurnoverWithAllFields.copy(groupTurnover = None, apportionedTurnover = None))
+        )
+
+        Json.toJson(sampleEnterpriseWithPartialTurnover) shouldBe Json.parse(expectedJsonOutput(sampleEnterpriseWithPartialTurnover))
+      }
+
+      "when the imputed variables are partially populated" in new Fixture {
+        val sampleEnterpriseWithPartialImputation = SampleEnterpriseWithAllFields.copy(
+          imputed = Some(SampleImputedWithAllFields.copy(employees = None))
+        )
+
+        Json.toJson(sampleEnterpriseWithPartialImputation) shouldBe Json.parse(expectedJsonOutput(sampleEnterpriseWithPartialImputation))
       }
     }
   }

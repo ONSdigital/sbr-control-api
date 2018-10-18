@@ -1,7 +1,7 @@
 import java.time.Month.MARCH
 
+import fixture.AbstractServerAcceptanceSpec
 import fixture.ReadsLegalUnit.legalUnitReads
-import fixture.ServerAcceptanceSpec
 import org.scalatest.OptionValues
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK}
@@ -9,12 +9,11 @@ import play.mvc.Http.MimeTypes.JSON
 import repository.hbase.HBase.DefaultColumnFamily
 import repository.hbase.legalunit.LegalUnitColumns._
 import repository.hbase.legalunit.LegalUnitQuery
-import support.WithWireMockHBase
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.legalunit.{Crn, LegalUnit, Ubrn, Uprn}
 import uk.gov.ons.sbr.models.{Address, Period}
 
-class RetrieveAllLegalUnitsForEnterpriseAcceptanceSpec extends ServerAcceptanceSpec with WithWireMockHBase with OptionValues {
+class RetrieveAllLegalUnitsForEnterpriseAcceptanceSpec extends AbstractServerAcceptanceSpec with OptionValues {
 
   private val TargetErn = Ern("1000000123")
   private val TargetPeriod = Period.fromYearMonth(2018, MARCH)

@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 
 import play.api.libs.json.{ Format, JsResult, JsValue, Json }
+import repository.RestRepository.Field
 
 /*
  * HBase only stores bytes, and so all data sent to / read from HBase is Base64 encoded.
@@ -19,6 +20,14 @@ import play.api.libs.json.{ Format, JsResult, JsValue, Json }
 object HBaseData {
   case class HBaseRow(key: String, cells: Seq[HBaseCell])
   case class HBaseCell(column: String, value: String)
+
+  object HBaseCell {
+    val fromField: ((String, String)) => HBaseCell =
+      (apply _).tupled
+
+    def fromField(field: Field): HBaseCell =
+      HBaseCell(column = Column.name(field._1), value = field._2)
+  }
 
   /*
    * These types model the underlying HBase representation.
