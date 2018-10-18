@@ -18,7 +18,7 @@ import repository.UnitLinksRepository
 import support.sample.SampleUnitLinks
 import uk.gov.ons.sbr.models.patch.{ AddOperation, ReplaceOperation, TestOperation }
 import uk.gov.ons.sbr.models.unitlinks.UnitId
-import uk.gov.ons.sbr.models.unitlinks.UnitType.{ LegalUnit, ValueAddedTax, toAcronym }
+import uk.gov.ons.sbr.models.unitlinks.UnitType.{ LegalUnit, PayAsYouEarn, ValueAddedTax, toAcronym }
 import uk.gov.ons.sbr.models.{ Period, UnitKey }
 
 import scala.concurrent.Future
@@ -37,6 +37,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
 
   private trait EditFixture extends Fixture {
     val VatRef = "862764963000"
+    val PayeRef = "915H7Z74262"
     val IncorrectLegalUnitId = UnitId("1230000000000100")
     val TargetLegalUnitId = UnitId("1230000000000200")
     val SamplePeriod = Period.fromYearMonth(2018, AUGUST)
@@ -44,13 +45,18 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
   }
 
   private trait EditParentFixture extends EditFixture {
-    val ExpectedUnitKey = UnitKey(UnitId(VatRef), ValueAddedTax, SamplePeriod)
+    val VatUnitKey = UnitKey(UnitId(VatRef), ValueAddedTax, SamplePeriod)
+    val PayeUnitKey = UnitKey(UnitId(PayeRef), PayAsYouEarn, SamplePeriod)
     val ExpectedPatch = Seq(
       TestOperation("/parents/LEU", JsString(IncorrectLegalUnitId.value)),
       ReplaceOperation("/parents/LEU", JsString(TargetLegalUnitId.value))
     )
     val PatchBody = s"""[{"op": "test", "path": "/parents/LEU", "value": "${IncorrectLegalUnitId.value}"},
                          {"op": "replace", "path": "/parents/LEU", "value": "${TargetLegalUnitId.value}"}]"""
+    // semicolons instead of commas ...
+    val InvalidJson = s"""[{"op": "test"; "path": "/parents/LEU"; "value": "${IncorrectLegalUnitId.value}"}]"""
+    // missing path
+    val InvalidPatch = s"""[{"op": "test", "value": "${IncorrectLegalUnitId.value}"}]"""
   }
 
   private trait CreateChildFixture extends EditFixture {
@@ -120,9 +126,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
 
       "returns BAD REQUEST when the patch is not a valid Json document" in new EditParentFixture {
         val action = controller.patchVatUnitLinks(VatRef, Period.asString(SamplePeriod))
-        // semicolons instead of commas ...
-        val invalidJson = s"""[{"op": "test"; "path": "/parents/LEU"; "value": "${IncorrectLegalUnitId.value}"}]"""
-        val request = FakeRequest().withHeaders(CONTENT_TYPE -> JsonPatchMediaType).withBody(invalidJson)
+        val request = FakeRequest().withHeaders(CONTENT_TYPE -> JsonPatchMediaType).withBody(InvalidJson)
 
         val response = call(action, request)
 
@@ -131,8 +135,7 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
 
       "returns BAD REQUEST when the patch does not comply with the Json Patch specification (RFC6902)" in new EditParentFixture {
         val action = controller.patchVatUnitLinks(VatRef, Period.asString(SamplePeriod))
-        val invalidPatch = s"""[{"op": "test", "value": "${IncorrectLegalUnitId.value}"}]""" // missing path
-        val request = FakeRequest().withHeaders(CONTENT_TYPE -> JsonPatchMediaType).withBody(invalidPatch)
+        val request = FakeRequest().withHeaders(CONTENT_TYPE -> JsonPatchMediaType).withBody(InvalidPatch)
 
         val response = call(action, request)
 
@@ -140,10 +143,51 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
       }
 
       "is handled by the patch handler when a valid Json Patch" in new EditParentFixture {
-        (patchHandler.apply _).expects(ExpectedUnitKey, ExpectedPatch).returning(
+        (patchHandler.apply _).expects(VatUnitKey, ExpectedPatch).returning(
           Future.successful(NoContent)
         )
         val action = controller.patchVatUnitLinks(VatRef, Period.asString(SamplePeriod))
+        val request = FakeRequest().withHeaders(CONTENT_TYPE -> JsonPatchMediaType).withBody(PatchBody)
+
+        val response = call(action, request)
+
+        status(response) shouldBe NO_CONTENT
+      }
+    }
+
+    "to patch PAYE unit links" - {
+      "returns UNSUPPORTED MEDIA TYPE when the patch does not have the Json Patch Content-Type" in new EditParentFixture {
+        val action = controller.patchPayeUnitLinks(PayeRef, Period.asString(SamplePeriod))
+        val request = FakeRequest().withHeaders(CONTENT_TYPE -> JSON).withBody(PatchBody)
+
+        val response = call(action, request)
+
+        status(response) shouldBe UNSUPPORTED_MEDIA_TYPE
+      }
+
+      "returns BAD REQUEST when the patch is not a valid Json document" in new EditParentFixture {
+        val action = controller.patchPayeUnitLinks(PayeRef, Period.asString(SamplePeriod))
+        val request = FakeRequest().withHeaders(CONTENT_TYPE -> JsonPatchMediaType).withBody(InvalidJson)
+
+        val response = call(action, request)
+
+        status(response) shouldBe BAD_REQUEST
+      }
+
+      "returns BAD REQUEST when the patch does not comply with the Json Patch specification (RFC6902)" in new EditParentFixture {
+        val action = controller.patchPayeUnitLinks(PayeRef, Period.asString(SamplePeriod))
+        val request = FakeRequest().withHeaders(CONTENT_TYPE -> JsonPatchMediaType).withBody(InvalidPatch)
+
+        val response = call(action, request)
+
+        status(response) shouldBe BAD_REQUEST
+      }
+
+      "is handled by the patch handler when a valid Json Patch" in new EditParentFixture {
+        (patchHandler.apply _).expects(PayeUnitKey, ExpectedPatch).returning(
+          Future.successful(NoContent)
+        )
+        val action = controller.patchPayeUnitLinks(PayeRef, Period.asString(SamplePeriod))
         val request = FakeRequest().withHeaders(CONTENT_TYPE -> JsonPatchMediaType).withBody(PatchBody)
 
         val response = call(action, request)

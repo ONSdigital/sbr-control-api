@@ -3,7 +3,7 @@ package services
 import javax.inject.Inject
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import repository._
-import services.VatUnitLinkPatchService.{ ParentLegalUnit, toPatchStatus }
+import services.AdminUnitLinkPatchService.{ ParentLegalUnit, toPatchStatus }
 import uk.gov.ons.sbr.models.UnitKey
 import uk.gov.ons.sbr.models.patch.{ Patch, ReplaceOperation, TestOperation }
 import uk.gov.ons.sbr.models.unitlinks.UnitType.LegalUnit
@@ -12,7 +12,7 @@ import utils.JsResultSupport
 
 import scala.concurrent.Future
 
-class VatUnitLinkPatchService @Inject() (repository: UnitLinksRepository, unitRegisterService: UnitRegisterService) extends PatchService {
+class AdminUnitLinkPatchService @Inject() (repository: UnitLinksRepository, unitRegisterService: UnitRegisterService) extends PatchService {
   override def applyPatchTo(unitKey: UnitKey, patch: Patch): Future[PatchStatus] =
     patch match {
       case TestOperation(ParentLegalUnit, fromValue) :: ReplaceOperation(ParentLegalUnit, toValue) :: Nil =>
@@ -45,7 +45,7 @@ class VatUnitLinkPatchService @Inject() (repository: UnitLinksRepository, unitRe
     }
 }
 
-private object VatUnitLinkPatchService {
+private object AdminUnitLinkPatchService {
   val ParentLegalUnit = "/parents/" + UnitType.toAcronym(LegalUnit)
 
   def toPatchStatus(editResult: OptimisticEditResult): PatchStatus =

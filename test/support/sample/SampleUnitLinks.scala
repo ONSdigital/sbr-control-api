@@ -9,7 +9,7 @@ trait SampleUnitLinks {
 
   val CompaniesHouse = UnitType.toAcronym(UnitType.CompaniesHouse)
   val ValueAddedTax = UnitType.toAcronym(UnitType.ValueAddedTax)
-  val PayAsYouEarnTax = UnitType.toAcronym(UnitType.PayAsYouEarnTax)
+  val PayAsYouEarnTax = UnitType.toAcronym(UnitType.PayAsYouEarn)
   val Enterprise = UnitType.toAcronym(UnitType.Enterprise)
   val LegalUnit = UnitType.toAcronym(UnitType.LegalUnit)
   val LocalUnit = UnitType.toAcronym(UnitType.LocalUnit)
@@ -40,7 +40,6 @@ trait SampleUnitLinks {
   val SampleUnitLinksWithAllFields: UnitLinks =
     SampleUnitLinksWithOnlyMandatoryFields.copy(parents = Some(SampleParents), children = Some(SampleChildren))
 
-  // TODO - USE template as the default values
   def aUnitLinksSample(unitId: UnitId = SampleUnitId, parents: Option[Map[UnitType, UnitId]] = Some(SampleParents),
     children: Option[Map[UnitId, UnitType]] = Some(SampleChildren),
     template: UnitLinks = SampleUnitLinksWithOnlyMandatoryFields): UnitLinks =

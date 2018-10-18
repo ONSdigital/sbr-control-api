@@ -1,7 +1,7 @@
 package support.sample
 
 import uk.gov.ons.sbr.models.Address
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern, Turnover }
+import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern, Imputed, Turnover }
 
 trait SampleEnterpriseUnit {
 
@@ -11,7 +11,7 @@ trait SampleEnterpriseUnit {
   val SampleEnterpriseReference = "someEnterpriseRef"
   val SampleEnterpriseName = "Company Name Plc"
   val SamplePostcode = "NP0 XXX"
-  val SampleLegalStatus = "some-LegalUnit"
+  val SampleLegalStatus = "some-LegalStatus"
   val SampleAddressLine1 = "addressLine-1"
   val SampleAddressLine2 = "addressLine-2"
   val SampleAddressLine3 = "addressLine-3"
@@ -28,6 +28,8 @@ trait SampleEnterpriseUnit {
   val SampleWorkingProprietors = 1
   val SampleEmployment = 101
   val SampleRegion = "E12000001"
+  val SampleImputedEmployees = 10
+  val SampleImputedTurnover = 5000
 
   val SampleFullAddress: Address = Address(line1 = SampleAddressLine1, line2 = Some(SampleAddressLine2),
     line3 = Some(SampleAddressLine3), line4 = Some(SampleAddressLine4), line5 = Some(SampleAddressLine5),
@@ -36,22 +38,43 @@ trait SampleEnterpriseUnit {
   val SamplePartialAddress: Address = Address(line1 = SampleAddressLine1, line2 = None, line3 = None, line4 = None,
     line5 = None, postcode = SamplePostcode)
 
-  val SampleCompleteTurnover = Turnover(containedTurnover = Some(SampleContainedTurnover), standardTurnover = Some(SampleStandardTurnover),
-    groupTurnover = Some(SampleGroupTurnover), apportionedTurnover = Some(SampleApportionedTurnover),
-    enterpriseTurnover = Some(SampleEnterpriseTurnover))
+  val SampleTurnoverWithAllFields = Turnover(
+    containedTurnover = Some(SampleContainedTurnover),
+    standardTurnover = Some(SampleStandardTurnover),
+    groupTurnover = Some(SampleGroupTurnover),
+    apportionedTurnover = Some(SampleApportionedTurnover),
+    enterpriseTurnover = Some(SampleEnterpriseTurnover)
+  )
+
+  val SampleImputedWithAllFields = Imputed(
+    employees = Some(SampleImputedEmployees),
+    turnover = Some(SampleImputedTurnover)
+  )
 
   val SampleEnterpriseWithAllFields: Enterprise =
-    Enterprise(SampleEnterpriseId, entref = Some(SampleEnterpriseReference), name = SampleEnterpriseName,
-      tradingStyle = Some(SampleTradingStyle), address = SampleFullAddress, sic07 = SampleSIC07,
-      legalStatus = SampleLegalStatus, employees = Some(SampleNumberOfEmployees), jobs = Some(SampleJobs),
-      turnover = Some(SampleCompleteTurnover), prn = SamplePrn, workingProprietors = SampleWorkingProprietors,
-      employment = SampleEmployment, region = SampleRegion)
+    Enterprise(
+      SampleEnterpriseId,
+      entref = Some(SampleEnterpriseReference),
+      name = SampleEnterpriseName,
+      tradingStyle = Some(SampleTradingStyle),
+      address = SampleFullAddress,
+      sic07 = SampleSIC07,
+      legalStatus = SampleLegalStatus,
+      employees = Some(SampleNumberOfEmployees),
+      jobs = Some(SampleJobs),
+      turnover = Some(SampleTurnoverWithAllFields),
+      prn = SamplePrn,
+      workingProprietors = SampleWorkingProprietors,
+      employment = SampleEmployment,
+      region = SampleRegion,
+      imputed = Some(SampleImputedWithAllFields)
+    )
 
   val SampleEnterpriseWithNoOptionalFields: Enterprise =
     SampleEnterpriseWithAllFields.copy(entref = None, tradingStyle = None, address = SamplePartialAddress,
-      employees = None, jobs = None, turnover = None)
+      employees = None, jobs = None, turnover = None, imputed = None)
 
-  def aEnterpriseSample(ern: Ern, turnover: Option[Turnover] = Some(SampleCompleteTurnover),
+  def aEnterpriseSample(ern: Ern, turnover: Option[Turnover] = Some(SampleTurnoverWithAllFields),
     template: Enterprise = SampleEnterpriseWithAllFields, address: Address = SampleFullAddress): Enterprise =
     template.copy(ern = ern, turnover = turnover, address = address)
 
