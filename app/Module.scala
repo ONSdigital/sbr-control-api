@@ -3,6 +3,7 @@ import com.google.inject.{ AbstractModule, Provides, TypeLiteral }
 import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, _ }
 import handlers.PatchHandler
 import handlers.http.HttpPatchHandler
+import io.ino.solrs.{ CloudSolrServers, LoadBalancer, RoundRobinLB }
 import javax.inject.{ Inject, Named }
 import kamon.Kamon
 import play.api.libs.ws.WSClient
@@ -106,6 +107,15 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     val adminDataRegisterService = new CompositeAdminUnitRegisterService(vatRegisterService, payeRegisterService)
     val legalUnitLinkPatchService = new LegalUnitLinkPatchService(unitLinksRepository, adminDataRegisterService)
     new UnitLinksPatchService(adminDataUnitLinkPatchService, legalUnitLinkPatchService)
+  }
+
+  // solr
+  import io.ino.solrs.future.ScalaFutureFactory.Implicit
+
+  @Provides
+  def providesSolrLoadBalancer(): LoadBalancer = {
+    val servers = new CloudSolrServers(zkHost = "localhost:9983")
+    RoundRobinLB(servers)
   }
 }
 
