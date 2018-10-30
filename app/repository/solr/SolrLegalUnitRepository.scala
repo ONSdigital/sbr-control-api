@@ -4,7 +4,7 @@ import java.util
 
 import com.typesafe.scalalogging.LazyLogging
 import io.ino.solrs.future.ScalaFutureFactory.Implicit
-import io.ino.solrs.{ AsyncSolrClient, LoadBalancer }
+import io.ino.solrs.{ AsyncSolrClient, LoadBalancer, RetryPolicy }
 import javax.inject.Inject
 import org.apache.solr.client.solrj.SolrQuery
 import org.apache.solr.client.solrj.response.QueryResponse
@@ -22,7 +22,7 @@ import scala.concurrent.Future
 class SolrLegalUnitRepository @Inject() (loadBalancer: LoadBalancer) extends LegalUnitRepository with LazyLogging {
 
   def find(ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
-    val solrClient: AsyncSolrClient[Future] = AsyncSolrClient.Builder(loadBalancer).build
+    val solrClient: AsyncSolrClient[Future] = AsyncSolrClient.Builder(loadBalancer).withRetryPolicy(RetryPolicy.TryAvailableServers).build
 
     val futQueryResponse: Future[QueryResponse] = solrClient.query(collection = "leu", new SolrQuery(s"ubrn:$ubrn"))
 
