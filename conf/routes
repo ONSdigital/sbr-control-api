@@ -40,6 +40,9 @@ GET     /v1/enterprises/:ern/periods/:period/legalunits/:ubrn                   
 GET     /v1/enterprises/:ern/periods/$period<\d{4}(0[1-9]|(1[0-2]))>/legalunits                                         controllers.v1.LegalUnitController.retrieveAllLegalUnitsForEnterprise(ern, period)
 GET     /v1/enterprises/:ern/periods/:period/legalunits                                                                 controllers.BadRequestController.badRequest3(ern, period, None: Option[String])
 
+# solr
+GET     /v1/legalunits/:ubrn                                                                                            controllers.v1.SolrLegalUnitController.retrieveLegalUnit(ubrn)
+
 # Reporting Units
 #GET     /v1/enterprises/$ern<\d{10}>/periods/$period<\d{4}(0[1-9]|1[0-2])>/reportingunits/$rurn<\d{11}>                 controllers.v1.ReportingUnitController.retrieveReportingUnit(ern, period, rurn)
 GET     /v1/enterprises/:ern/periods/$period<\d{4}(0[1-9]|1[0-2])>/reportingunits/:rurn                                 controllers.v1.ReportingUnitController.retrieveReportingUnit(ern, period, rurn)

@@ -139,7 +139,9 @@ lazy val api = (project in file("."))
       // Hadoop & HBase (for creating the tableName)
       "org.apache.hadoop" % "hadoop-common" % "2.6.0",
       "org.apache.hbase" % "hbase-common" % "1.0.0",
-      "org.apache.hbase" % "hbase-client" % "1.0.0" excludeAll ExclusionRule("commons-logging", "commons-logging")
+      "org.apache.hbase" % "hbase-client" % "1.0.0" excludeAll ExclusionRule("commons-logging", "commons-logging"),
+      // solr
+      "org.apache.solr" % "solr-solrj" % "7.5.0"
     ),
     // Assembly
     assemblyJarName in assembly := s"${name.value}-${version.value}.jar",
