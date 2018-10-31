@@ -1,6 +1,7 @@
 import java.util.Optional
 
 import Module.Names.{ Paye, UnitLink, Vat }
+import akka.actor.ActorSystem
 import com.google.inject.{ AbstractModule, Provides, TypeLiteral }
 import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, _ }
 import handlers.PatchHandler
@@ -18,6 +19,7 @@ import repository.hbase.legalunit.{ HBaseRestLegalUnitRepository, HBaseRestLegal
 import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
 import repository.hbase.reportingunit.{ HBaseRestReportingUnitRepository, HBaseRestReportingUnitRepositoryConfig, ReportingUnitRowMapper }
 import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksNoPeriodRowMapper }
+import repository.solr.SolrLegalUnitRepository
 import services._
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 import uk.gov.ons.sbr.models.legalunit.LegalUnit
@@ -113,11 +115,17 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
   // solr
   @Provides
-  def foo(): CloudSolrClient.Builder = {
+  def providesSolrClientBuilder(): CloudSolrClient.Builder = {
     import scala.collection.JavaConverters._
 
     val zkHosts = List("localhost:9983")
     new CloudSolrClient.Builder(zkHosts.asJava, Optional.empty())
+  }
+
+  @Provides
+  def providesSolrLegalUnitRepository(@Inject() actorSystem: ActorSystem, solrClientBuilder: CloudSolrClient.Builder): SolrLegalUnitRepository = {
+    val solrExecutionContext = actorSystem.dispatchers.lookup("solr-context")
+    new SolrLegalUnitRepository(solrClientBuilder)(solrExecutionContext)
   }
 }
 

@@ -15,10 +15,51 @@ import uk.gov.ons.sbr.models.legalunit.{ Crn, LegalUnit, Ubrn, Uprn }
 import uk.gov.ons.sbr.models.{ Address, Period }
 
 import scala.collection.mutable
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
-class SolrLegalUnitRepository @Inject() (solrClientBuilder: CloudSolrClient.Builder) extends LegalUnitRepository with LazyLogging {
-  def solrRetrieveLegalUnit(ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
+// TODO: is solrClientBuilder threadSafe?
+class SolrLegalUnitRepository @Inject() (solrClientBuilder: CloudSolrClient.Builder)(implicit solrExecutionContext: ExecutionContext) extends LegalUnitRepository with LazyLogging {
+
+  def solrRetrieveLegalUnit(ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] =
+    Future(doRetrieveLegalUnit(ubrn))
+
+  /*
+   * NOTE: an alternative approach would be to simply let any exceptions be raised, which will fail the Future.
+   * This could then be handled by Future recovery, generating a Future.successful(Left(ErrorMessage))
+   */
+  private def doRetrieveLegalUnit(ubrn: Ubrn): Either[ErrorMessage, Option[LegalUnit]] = {
+    val client = solrClientBuilder.build()
+    try {
+      val queryResponse = client.query("leu", new SolrQuery(s"ubrn:$ubrn"))
+      logger.info(s"Received response [$queryResponse]")
+
+      fromQueryResponse(queryResponse) match {
+        case Nil => Right(None)
+        case single :: Nil => Right(Some(single))
+        case _ => Left("Found too many rows for lookup by id")
+      }
+    } catch {
+      case ioe: IOException => handleRetrieveError(ioe)
+      case sse: SolrServerException => handleRetrieveError(sse)
+    } finally {
+      try {
+        client.close()
+      } catch {
+        case ioe: IOException =>
+          logger.warn(s"Failed to close SolrClient [${ioe.getMessage}].  Ignoring ...")
+      }
+    }
+  }
+
+  private def handleRetrieveError(cause: Exception): Either[ErrorMessage, Nothing] = {
+    logger.error(s"Solr lookup failed [${cause.getMessage}]", cause)
+    Left(cause.getMessage)
+  }
+
+  /*
+   * Initial implementation using blocking I/O just to proven Solr connectivity.
+   */
+  def synchronousSolrRetrieveLegalUnit(ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
     val client = solrClientBuilder.build()
     try {
       val queryResponse = client.query("leu", new SolrQuery(s"ubrn:$ubrn"))
