@@ -1,9 +1,10 @@
 package repository.solr
 
+import java.io.IOException
 import java.util.Optional
 
 import com.typesafe.scalalogging.LazyLogging
-import org.apache.solr.client.solrj.SolrQuery
+import org.apache.solr.client.solrj.{ SolrQuery, SolrServerException }
 import org.apache.solr.client.solrj.impl.CloudSolrClient
 import org.apache.solr.client.solrj.response.QueryResponse
 import org.apache.solr.common.SolrDocument
@@ -33,12 +34,21 @@ class SolrLegalUnitRepository extends LegalUnitRepository with LazyLogging {
         case _ => Future.successful(Left("Found too many rows for lookup by id"))
       }
     } catch {
-      case e: Exception =>
-        logger.error(s"Solr lookup failed [${e.getMessage}]", e)
-        Future.successful(Left(e.getMessage))
+      case ioe: IOException => handleRetrievalError(ioe)
+      case sse: SolrServerException => handleRetrievalError(sse)
     } finally {
-      client.close()
+      try {
+        client.close()
+      } catch {
+        case ioe: IOException =>
+          logger.warn(s"Failed to close SolrClient [${ioe.getMessage}].  Ignoring ...")
+      }
     }
+  }
+
+  private def handleRetrievalError(cause: Exception): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
+    logger.error(s"Solr lookup failed [${cause.getMessage}]", cause)
+    Future.successful(Left(cause.getMessage))
   }
 
   // can use same code as solrs here - as it uses the solrj types in its query api
