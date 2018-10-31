@@ -1,5 +1,7 @@
 package repository.solr
 
+import java.util.Optional
+
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.solr.client.solrj.SolrQuery
 import org.apache.solr.client.solrj.impl.CloudSolrClient
@@ -7,9 +9,9 @@ import org.apache.solr.client.solrj.response.QueryResponse
 import org.apache.solr.common.SolrDocument
 import repository.LegalUnitRepository
 import repository.RestRepository.ErrorMessage
-import uk.gov.ons.sbr.models.{Address, Period}
+import uk.gov.ons.sbr.models.{ Address, Period }
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.legalunit.{Crn, LegalUnit, Ubrn, Uprn}
+import uk.gov.ons.sbr.models.legalunit.{ Crn, LegalUnit, Ubrn, Uprn }
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -18,7 +20,7 @@ import scala.concurrent.Future
 class SolrLegalUnitRepository extends LegalUnitRepository with LazyLogging {
   def solrRetrieveLegalUnit(ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
     val zkHosts = List("localhost:9983")
-    val clientBuilder = new CloudSolrClient.Builder(zkHosts.asJava)
+    val clientBuilder = new CloudSolrClient.Builder(zkHosts.asJava, Optional.empty())
 
     val client = clientBuilder.build()
     try {
@@ -40,6 +42,7 @@ class SolrLegalUnitRepository extends LegalUnitRepository with LazyLogging {
   }
 
   // can use same code as solrs here - as it uses the solrj types in its query api
+  // NOTE: for efficiency we could check the result count value rather than the length of the result list
   private def fromQueryResponse(queryResponse: QueryResponse): List[LegalUnit] = {
     val buffer = new mutable.ListBuffer[LegalUnit]
 

@@ -1,10 +1,11 @@
 package controllers.v1
 
-import javax.inject.Inject
-import play.api.mvc.{Action, AnyContent, Controller}
-import repository.solr.SolrLegalUnitRepository
-import uk.gov.ons.sbr.models.legalunit.{LegalUnit, Ubrn}
 import controllers.v1.ControllerResultProcessor._
+import javax.inject.Inject
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.mvc.{ Action, AnyContent, Controller }
+import repository.solr.SolrLegalUnitRepository
+import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, Ubrn }
 
 class SolrLegalUnitController @Inject() (solrLegalUnitRepository: SolrLegalUnitRepository) extends Controller {
   def retrieveLegalUnit(ubrnStr: String): Action[AnyContent] = Action.async {
