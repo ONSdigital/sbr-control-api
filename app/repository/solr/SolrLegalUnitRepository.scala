@@ -1,29 +1,25 @@
 package repository.solr
 
 import java.io.IOException
-import java.util.Optional
 
 import com.typesafe.scalalogging.LazyLogging
-import org.apache.solr.client.solrj.{ SolrQuery, SolrServerException }
+import javax.inject.Inject
 import org.apache.solr.client.solrj.impl.CloudSolrClient
 import org.apache.solr.client.solrj.response.QueryResponse
+import org.apache.solr.client.solrj.{ SolrQuery, SolrServerException }
 import org.apache.solr.common.SolrDocument
 import repository.LegalUnitRepository
 import repository.RestRepository.ErrorMessage
-import uk.gov.ons.sbr.models.{ Address, Period }
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.legalunit.{ Crn, LegalUnit, Ubrn, Uprn }
+import uk.gov.ons.sbr.models.{ Address, Period }
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.concurrent.Future
 
-class SolrLegalUnitRepository extends LegalUnitRepository with LazyLogging {
+class SolrLegalUnitRepository @Inject() (solrClientBuilder: CloudSolrClient.Builder) extends LegalUnitRepository with LazyLogging {
   def solrRetrieveLegalUnit(ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
-    val zkHosts = List("localhost:9983")
-    val clientBuilder = new CloudSolrClient.Builder(zkHosts.asJava, Optional.empty())
-
-    val client = clientBuilder.build()
+    val client = solrClientBuilder.build()
     try {
       val queryResponse = client.query("leu", new SolrQuery(s"ubrn:$ubrn"))
       logger.info(s"Received response [$queryResponse]")

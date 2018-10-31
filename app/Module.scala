@@ -1,3 +1,5 @@
+import java.util.Optional
+
 import Module.Names.{ Paye, UnitLink, Vat }
 import com.google.inject.{ AbstractModule, Provides, TypeLiteral }
 import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, _ }
@@ -5,6 +7,7 @@ import handlers.PatchHandler
 import handlers.http.HttpPatchHandler
 import javax.inject.{ Inject, Named }
 import kamon.Kamon
+import org.apache.solr.client.solrj.impl.CloudSolrClient
 import play.api.libs.ws.WSClient
 import play.api.mvc.Result
 import play.api.{ Configuration, Environment }
@@ -106,6 +109,15 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     val adminDataRegisterService = new CompositeAdminUnitRegisterService(vatRegisterService, payeRegisterService)
     val legalUnitLinkPatchService = new LegalUnitLinkPatchService(unitLinksRepository, adminDataRegisterService)
     new UnitLinksPatchService(adminDataUnitLinkPatchService, legalUnitLinkPatchService)
+  }
+
+  // solr
+  @Provides
+  def foo(): CloudSolrClient.Builder = {
+    import scala.collection.JavaConverters._
+
+    val zkHosts = List("localhost:9983")
+    new CloudSolrClient.Builder(zkHosts.asJava, Optional.empty())
   }
 }
 
