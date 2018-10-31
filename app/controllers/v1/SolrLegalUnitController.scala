@@ -1,12 +1,13 @@
 package controllers.v1
 
-import javax.inject.Inject
+import javax.inject.{ Inject, Singleton }
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.mvc.{ Action, AnyContent, Controller, Result }
 import repository.solr.SolrLegalUnitRepository
 import uk.gov.ons.sbr.models.legalunit.Ubrn
 
+@Singleton
 class SolrLegalUnitController @Inject() (repository: SolrLegalUnitRepository) extends Controller {
   def solrLegalUnit(ubrnStr: String): Action[AnyContent] = Action.async {
     repository.find(Ubrn(ubrnStr)).map {
