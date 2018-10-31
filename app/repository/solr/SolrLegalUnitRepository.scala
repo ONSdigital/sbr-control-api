@@ -17,7 +17,7 @@ import uk.gov.ons.sbr.models.{ Address, Period }
 import scala.collection.mutable
 import scala.concurrent.{ ExecutionContext, Future }
 
-// TODO: is solrClientBuilder threadSafe?
+// TODO: is solrClientBuilder threadSafe? (if not, can simply inject a factory function that creates a fresh instance each time)
 class SolrLegalUnitRepository @Inject() (solrClientBuilder: CloudSolrClient.Builder)(implicit solrExecutionContext: ExecutionContext) extends LegalUnitRepository with LazyLogging {
 
   def solrRetrieveLegalUnit(ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] =
