@@ -114,18 +114,28 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
   }
 
   // solr
-  @Provides
-  def providesSolrClientBuilder(): CloudSolrClient.Builder = {
-    import scala.collection.JavaConverters._
-
-    val zkHosts = List("localhost:9983")
-    new CloudSolrClient.Builder(zkHosts.asJava, Optional.empty())
-  }
+  //  @Provides
+  //  def providesSolrClientBuilder(): CloudSolrClient.Builder = {
+  //    import scala.collection.JavaConverters._
+  //
+  //    val zkHosts = List("localhost:9983")
+  //    new CloudSolrClient.Builder(zkHosts.asJava, Optional.empty())
+  //  }
 
   @Provides
   def providesSolrLegalUnitRepository(@Inject() actorSystem: ActorSystem, solrClientBuilder: CloudSolrClient.Builder): SolrLegalUnitRepository = {
+    import scala.collection.JavaConverters._
+
+    val zkHosts = List("localhost:9983").asJava
     val solrExecutionContext = actorSystem.dispatchers.lookup("solr-context")
-    new SolrLegalUnitRepository(solrClientBuilder)(solrExecutionContext)
+
+    // use a fresh builder for each client
+    def clientFactory(): CloudSolrClient = {
+      val builder = new CloudSolrClient.Builder(zkHosts, Optional.empty())
+      builder.build()
+    }
+
+    new SolrLegalUnitRepository(clientFactory)(solrExecutionContext)
   }
 }
 

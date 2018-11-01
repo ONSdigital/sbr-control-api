@@ -18,7 +18,7 @@ import scala.collection.mutable
 import scala.concurrent.{ ExecutionContext, Future }
 
 // TODO: is solrClientBuilder threadSafe? (if not, can simply inject a factory function that creates a fresh instance each time)
-class SolrLegalUnitRepository @Inject() (solrClientBuilder: CloudSolrClient.Builder)(implicit solrExecutionContext: ExecutionContext) extends LegalUnitRepository with LazyLogging {
+class SolrLegalUnitRepository @Inject() (clientFactory: () => CloudSolrClient)(implicit solrExecutionContext: ExecutionContext) extends LegalUnitRepository with LazyLogging {
 
   def solrRetrieveLegalUnit(ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] =
     Future(doRetrieveLegalUnit(ubrn))
@@ -28,7 +28,7 @@ class SolrLegalUnitRepository @Inject() (solrClientBuilder: CloudSolrClient.Buil
    * This could then be handled by Future recovery, generating a Future.successful(Left(ErrorMessage))
    */
   private def doRetrieveLegalUnit(ubrn: Ubrn): Either[ErrorMessage, Option[LegalUnit]] = {
-    val client = solrClientBuilder.build()
+    val client = clientFactory()
     try {
       val queryResponse = client.query("leu", new SolrQuery(s"ubrn:$ubrn"))
       logger.info(s"Received response [$queryResponse]")
@@ -56,37 +56,37 @@ class SolrLegalUnitRepository @Inject() (solrClientBuilder: CloudSolrClient.Buil
     Left(cause.getMessage)
   }
 
-  /*
-   * Initial implementation using blocking I/O just to proven Solr connectivity.
-   */
-  def synchronousSolrRetrieveLegalUnit(ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
-    val client = solrClientBuilder.build()
-    try {
-      val queryResponse = client.query("leu", new SolrQuery(s"ubrn:$ubrn"))
-      logger.info(s"Received response [$queryResponse]")
+  //  /*
+  //   * Initial implementation using blocking I/O just to proven Solr connectivity.
+  //   */
+  //  def synchronousSolrRetrieveLegalUnit(ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
+  //    val client = solrClientBuilder.build()
+  //    try {
+  //      val queryResponse = client.query("leu", new SolrQuery(s"ubrn:$ubrn"))
+  //      logger.info(s"Received response [$queryResponse]")
+  //
+  //      fromQueryResponse(queryResponse) match {
+  //        case Nil => Future.successful(Right(None))
+  //        case single :: Nil => Future.successful(Right(Some(single)))
+  //        case _ => Future.successful(Left("Found too many rows for lookup by id"))
+  //      }
+  //    } catch {
+  //      case ioe: IOException => handleRetrievalError(ioe)
+  //      case sse: SolrServerException => handleRetrievalError(sse)
+  //    } finally {
+  //      try {
+  //        client.close()
+  //      } catch {
+  //        case ioe: IOException =>
+  //          logger.warn(s"Failed to close SolrClient [${ioe.getMessage}].  Ignoring ...")
+  //      }
+  //    }
+  //  }
 
-      fromQueryResponse(queryResponse) match {
-        case Nil => Future.successful(Right(None))
-        case single :: Nil => Future.successful(Right(Some(single)))
-        case _ => Future.successful(Left("Found too many rows for lookup by id"))
-      }
-    } catch {
-      case ioe: IOException => handleRetrievalError(ioe)
-      case sse: SolrServerException => handleRetrievalError(sse)
-    } finally {
-      try {
-        client.close()
-      } catch {
-        case ioe: IOException =>
-          logger.warn(s"Failed to close SolrClient [${ioe.getMessage}].  Ignoring ...")
-      }
-    }
-  }
-
-  private def handleRetrievalError(cause: Exception): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
-    logger.error(s"Solr lookup failed [${cause.getMessage}]", cause)
-    Future.successful(Left(cause.getMessage))
-  }
+  //  private def handleRetrievalError(cause: Exception): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
+  //    logger.error(s"Solr lookup failed [${cause.getMessage}]", cause)
+  //    Future.successful(Left(cause.getMessage))
+  //  }
 
   // can use same code as solrs here - as it uses the solrj types in its query api
   // NOTE: for efficiency we could check the result count value rather than the length of the result list
