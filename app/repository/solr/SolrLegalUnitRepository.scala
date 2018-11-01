@@ -17,8 +17,7 @@ import uk.gov.ons.sbr.models.{ Address, Period }
 import scala.collection.mutable
 import scala.concurrent.{ ExecutionContext, Future }
 
-// TODO: is solrClientBuilder threadSafe? (if not, can simply inject a factory function that creates a fresh instance each time)
-class SolrLegalUnitRepository @Inject() (clientFactory: () => CloudSolrClient)(implicit solrExecutionContext: ExecutionContext) extends LegalUnitRepository with LazyLogging {
+class SolrLegalUnitRepository @Inject() (client: CloudSolrClient)(implicit solrExecutionContext: ExecutionContext) extends LegalUnitRepository with LazyLogging {
 
   def solrRetrieveLegalUnit(ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] =
     Future(doRetrieveLegalUnit(ubrn))
@@ -28,7 +27,7 @@ class SolrLegalUnitRepository @Inject() (clientFactory: () => CloudSolrClient)(i
    * This could then be handled by Future recovery, generating a Future.successful(Left(ErrorMessage))
    */
   private def doRetrieveLegalUnit(ubrn: Ubrn): Either[ErrorMessage, Option[LegalUnit]] = {
-    val client = clientFactory()
+    //    val client = clientFactory()
     try {
       val queryResponse = client.query("leu", new SolrQuery(s"ubrn:$ubrn"))
       logger.info(s"Received response [$queryResponse]")
@@ -41,14 +40,15 @@ class SolrLegalUnitRepository @Inject() (clientFactory: () => CloudSolrClient)(i
     } catch {
       case ioe: IOException => handleRetrieveError(ioe)
       case sse: SolrServerException => handleRetrieveError(sse)
-    } finally {
-      try {
-        client.close()
-      } catch {
-        case ioe: IOException =>
-          logger.warn(s"Failed to close SolrClient [${ioe.getMessage}].  Ignoring ...")
-      }
     }
+    //    } finally {
+    //      try {
+    //        client.close()
+    //      } catch {
+    //        case ioe: IOException =>
+    //          logger.warn(s"Failed to close SolrClient [${ioe.getMessage}].  Ignoring ...")
+    //      }
+    //    }
   }
 
   private def handleRetrieveError(cause: Exception): Either[ErrorMessage, Nothing] = {

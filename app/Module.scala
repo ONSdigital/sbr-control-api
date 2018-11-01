@@ -1,6 +1,7 @@
 import java.util.Optional
 
 import Module.Names.{ Paye, UnitLink, Vat }
+import Module.closeSilently
 import akka.actor.ActorSystem
 import com.google.inject.{ AbstractModule, Provides, TypeLiteral }
 import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, _ }
@@ -9,6 +10,8 @@ import handlers.http.HttpPatchHandler
 import javax.inject.{ Inject, Named }
 import kamon.Kamon
 import org.apache.solr.client.solrj.impl.CloudSolrClient
+import play.api.inject.ApplicationLifecycle
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WSClient
 import play.api.mvc.Result
 import play.api.{ Configuration, Environment }
@@ -123,19 +126,18 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
   //  }
 
   @Provides
-  def providesSolrLegalUnitRepository(@Inject() actorSystem: ActorSystem, solrClientBuilder: CloudSolrClient.Builder): SolrLegalUnitRepository = {
-    import scala.collection.JavaConverters._
-
-    val zkHosts = List("localhost:9983").asJava
+  def providesSolrLegalUnitRepository(@Inject() actorSystem: ActorSystem, applicationLifecycle: ApplicationLifecycle): SolrLegalUnitRepository = {
     val solrExecutionContext = actorSystem.dispatchers.lookup("solr-context")
 
-    // use a fresh builder for each client
-    def clientFactory(): CloudSolrClient = {
-      val builder = new CloudSolrClient.Builder(zkHosts, Optional.empty())
-      builder.build()
-    }
+    val zkHosts = List("localhost:9983")
+    import scala.collection.JavaConverters._
 
-    new SolrLegalUnitRepository(clientFactory)(solrExecutionContext)
+    // attempt using a single client for all concurrent requests
+    val clientBuilder = new CloudSolrClient.Builder(zkHosts.asJava, Optional.empty())
+    val client = clientBuilder.build()
+    applicationLifecycle.addStopHook(() => Future(closeSilently(client)))
+
+    new SolrLegalUnitRepository(client)(solrExecutionContext)
   }
 }
 
@@ -149,4 +151,11 @@ private object Module {
     final val UnitLink = "unit-link"
     final val Vat = "vat"
   }
+
+  private def closeSilently(closeable: AutoCloseable): Unit =
+    try {
+      closeable.close()
+    } catch {
+      case _: Exception => () // silently ignore
+    }
 }
