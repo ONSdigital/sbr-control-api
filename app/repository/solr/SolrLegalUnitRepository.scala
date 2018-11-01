@@ -3,26 +3,25 @@ package repository.solr
 import java.util
 
 import com.typesafe.scalalogging.LazyLogging
-import io.ino.solrs.future.ScalaFutureFactory.Implicit
-import io.ino.solrs.{ AsyncSolrClient, LoadBalancer, RetryPolicy }
+import io.ino.solrs.AsyncSolrClient
 import javax.inject.Inject
 import org.apache.solr.client.solrj.SolrQuery
 import org.apache.solr.client.solrj.response.QueryResponse
 import org.apache.solr.common.SolrDocument
 import repository.LegalUnitRepository
 import repository.RestRepository.ErrorMessage
-import uk.gov.ons.sbr.models.{ Address, Period }
 import uk.gov.ons.sbr.models.enterprise.Ern
 import uk.gov.ons.sbr.models.legalunit.{ Crn, LegalUnit, Ubrn, Uprn }
+import uk.gov.ons.sbr.models.{ Address, Period }
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SolrLegalUnitRepository @Inject() (loadBalancer: LoadBalancer) extends LegalUnitRepository with LazyLogging {
+class SolrLegalUnitRepository @Inject() (solrClient: AsyncSolrClient[Future]) extends LegalUnitRepository with LazyLogging {
 
   def find(ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
-    val solrClient: AsyncSolrClient[Future] = AsyncSolrClient.Builder(loadBalancer).withRetryPolicy(RetryPolicy.TryAvailableServers).build
+    //val solrClient: AsyncSolrClient[Future] = AsyncSolrClient.Builder(loadBalancer).withRetryPolicy(RetryPolicy.TryAvailableServers).build
 
     val futQueryResponse: Future[QueryResponse] = solrClient.query(collection = "leu", new SolrQuery(s"ubrn:$ubrn"))
 
@@ -74,10 +73,10 @@ class SolrLegalUnitRepository @Inject() (loadBalancer: LoadBalancer) extends Leg
       case t: Throwable => Left(t.getMessage)
     }
 
-    result.onComplete { _ =>
-      solrClient.shutdown()
-      logger.info("Shutdown solrClient")
-    }
+    //    result.onComplete { _ =>
+    //      solrClient.shutdown()
+    //      logger.info("Shutdown solrClient")
+    //    }
     result
   }
 

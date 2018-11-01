@@ -3,9 +3,11 @@ import com.google.inject.{ AbstractModule, Provides, TypeLiteral }
 import config.{ HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, _ }
 import handlers.PatchHandler
 import handlers.http.HttpPatchHandler
-import io.ino.solrs.{ CloudSolrServers, LoadBalancer, RoundRobinLB }
+import io.ino.solrs._
 import javax.inject.{ Inject, Named }
 import kamon.Kamon
+import play.api.inject.ApplicationLifecycle
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.ws.WSClient
 import play.api.mvc.Result
 import play.api.{ Configuration, Environment }
@@ -16,6 +18,7 @@ import repository.hbase.legalunit.{ HBaseRestLegalUnitRepository, HBaseRestLegal
 import repository.hbase.localunit.{ HBaseRestLocalUnitRepository, HBaseRestLocalUnitRepositoryConfig, LocalUnitRowMapper }
 import repository.hbase.reportingunit.{ HBaseRestReportingUnitRepository, HBaseRestReportingUnitRepositoryConfig, ReportingUnitRowMapper }
 import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepository, HBaseRestUnitLinksRepositoryConfig, UnitLinksNoPeriodRowMapper }
+import repository.solr.SolrLegalUnitRepository
 import services._
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 import uk.gov.ons.sbr.models.legalunit.LegalUnit
@@ -116,6 +119,14 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
   def providesSolrLoadBalancer(): LoadBalancer = {
     val servers = new CloudSolrServers(zkHost = "localhost:9983")
     RoundRobinLB(servers)
+  }
+
+  @Provides
+  def providesSolrLegalUnitRepository(@Inject() loadBalancer: LoadBalancer, applicationLifecycle: ApplicationLifecycle): SolrLegalUnitRepository = {
+    val solrClient: AsyncSolrClient[Future] = AsyncSolrClient.Builder(loadBalancer).withRetryPolicy(RetryPolicy.TryAvailableServers).build
+    applicationLifecycle.addStopHook(() => Future(solrClient.shutdown()))
+
+    new SolrLegalUnitRepository(solrClient)
   }
 }
 
