@@ -27,8 +27,7 @@ lazy val Constant = new {
 }
 
 lazy val Resolvers = Seq(
-  Resolver.typesafeRepo("releases"),
-  "Hadoop Releases" at "https://repository.cloudera.com/content/repositories/releases/"
+  Resolver.typesafeRepo("releases")
 )
 
 lazy val testSettings = Seq(
@@ -136,11 +135,7 @@ lazy val api = (project in file("."))
       "io.kamon"                     %%    "kamon-logback"       %    "1.0.3",
       // Swagger
       "io.swagger"                   %%    "swagger-play2"       %    "1.6.0",
-      "org.webjars"                  %     "swagger-ui"          %    "3.19.5",
-      // Hadoop & HBase (for creating the tableName)
-      "org.apache.hadoop" % "hadoop-common" % "3.1.1",
-      "org.apache.hbase" % "hbase-common" % "2.1.1",
-      "org.apache.hbase" % "hbase-client" % "2.1.1" excludeAll ExclusionRule("commons-logging", "commons-logging")
+      "org.webjars"                  %     "swagger-ui"          %    "3.19.5"
     ),
     // Assembly
     assemblyJarName in assembly := s"${name.value}-${version.value}.jar",
