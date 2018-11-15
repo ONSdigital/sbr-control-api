@@ -113,7 +113,7 @@ lazy val api = (project in file("."))
     }),
     javaOptions in Test += "-DSBR_DB_PORT=8075",
     javaOptions in Universal += "-Dorg.aspectj.tracing.factory=default",
-    javaAgents += "org.aspectj" % "aspectjweaver" % "1.8.13",
+    javaAgents += "org.aspectj" % "aspectjweaver" % "1.9.2",
     // di router -> swagger
     routesGenerator := InjectedRoutesGenerator,
     buildInfoOptions += BuildInfoOption.ToMap,
@@ -123,23 +123,23 @@ lazy val api = (project in file("."))
       filters,
       ws,
       "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "3.1.2"           % Test,
-      "org.scalatest"                %%    "scalatest"           %    "3.0.4"           % Test,
-      "com.github.tomakehurst"       %     "wiremock"            %    "1.58"            % Test,
+      "org.scalatest"                %%    "scalatest"           %    "3.0.5"           % Test,
+      "com.github.tomakehurst"       %     "wiremock"            %    "2.19.0"          % Test,
       "org.scalamock"                %%    "scalamock"           %    "4.1.0"           % Test,
-      "io.lemonlabs"                 %%    "scala-uri"           %    "0.5.0",
-      "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",
-      "com.typesafe"                 %     "config"              %    "1.3.1",
+      "io.lemonlabs"                 %%    "scala-uri"           %    "1.4.0",
+      "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.9.0",
+      "com.typesafe"                 %     "config"              %    "1.3.3",
       // kamon (for tracing)
       "io.kamon"                     %%    "kamon-play-2.6"      %    "1.1.1",
       "io.kamon"                     %%    "kamon-zipkin"        %    "1.0.0",
-      "io.kamon"                     %%    "kamon-logback"       %    "1.0.0",
+      "io.kamon"                     %%    "kamon-logback"       %    "1.0.3",
       // Swagger
       "io.swagger"                   %%    "swagger-play2"       %    "1.6.0",
-      "org.webjars"                  %     "swagger-ui"          %    "3.1.4",
+      "org.webjars"                  %     "swagger-ui"          %    "3.19.5",
       // Hadoop & HBase (for creating the tableName)
-      "org.apache.hadoop" % "hadoop-common" % "2.6.0",
-      "org.apache.hbase" % "hbase-common" % "1.0.0",
-      "org.apache.hbase" % "hbase-client" % "1.0.0" excludeAll ExclusionRule("commons-logging", "commons-logging")
+      "org.apache.hadoop" % "hadoop-common" % "3.1.1",
+      "org.apache.hbase" % "hbase-common" % "2.1.1",
+      "org.apache.hbase" % "hbase-client" % "2.1.1" excludeAll ExclusionRule("commons-logging", "commons-logging")
     ),
     // Assembly
     assemblyJarName in assembly := s"${name.value}-${version.value}.jar",
