@@ -3,12 +3,12 @@ addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.6.20")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.0")
 
-addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.7.0")
+addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.9.0")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-gzip" % "1.0.2")
 
 // Build
-addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.5")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.8")
 
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.9.2")
 
@@ -32,5 +32,5 @@ addSbtPlugin("org.scalastyle" % "scalastyle-sbt-plugin" % "1.0.0")
 
 // kamon (for tracing)
 resolvers += Resolver.bintrayIvyRepo("kamon-io", "sbt-plugins")
-addSbtPlugin("io.kamon" % "sbt-aspectj-play-runner" % "1.0.4")
+addSbtPlugin("io.kamon" % "sbt-aspectj-runner-play-2.6" % "1.1.0")
 addSbtPlugin("com.lightbend.sbt" % "sbt-javaagent" % "0.1.4")
