@@ -122,6 +122,7 @@ lazy val api = (project in file("."))
     libraryDependencies ++= Seq (
       filters,
       ws,
+      guice,
       "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "3.1.2"           % Test,
       "org.scalatest"                %%    "scalatest"           %    "3.0.5"           % Test,
       "com.github.tomakehurst"       %     "wiremock"            %    "2.19.0"          % Test,
