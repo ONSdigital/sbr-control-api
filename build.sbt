@@ -15,9 +15,8 @@ publishRepo := sys.props.getOrElse("publishRepo", default = "Unused transient re
 lazy val ITest = config("it") extend Test
 
 lazy val Versions = new {
-  val scala = "2.11.11"
+  val scala = "2.12.7"
   val appVersion = "0.1-SNAPSHOT"
-  val scapegoatVersion = "1.1.0"
 }
 
 lazy val Constant = new {
@@ -81,7 +80,8 @@ lazy val commonSettings = Seq (
     "-Ywarn-numeric-widen" // Warn when numerics are widened
   ),
   resolvers ++= Resolvers,
-  coverageExcludedPackages := ".*Routes.*;.*ReverseRoutes.*;.*javascript.*"
+  coverageExcludedPackages := ".*Routes.*;.*ReverseRoutes.*;.*javascript.*",
+  scapegoatVersion in ThisBuild := "1.3.8"
 )
 
 lazy val api = (project in file("."))
@@ -122,7 +122,7 @@ lazy val api = (project in file("."))
     libraryDependencies ++= Seq (
       filters,
       ws,
-      "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "2.0.0"           % Test,
+      "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "3.1.2"           % Test,
       "org.scalatest"                %%    "scalatest"           %    "3.0.4"           % Test,
       "com.github.tomakehurst"       %     "wiremock"            %    "1.58"            % Test,
       "org.scalamock"                %%    "scalamock"           %    "4.1.0"           % Test,
@@ -130,11 +130,11 @@ lazy val api = (project in file("."))
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",
       "com.typesafe"                 %     "config"              %    "1.3.1",
       // kamon (for tracing)
-      "io.kamon"                     %%    "kamon-play-2.5"      %    "1.0.1",
+      "io.kamon"                     %%    "kamon-play-2.6"      %    "1.1.1",
       "io.kamon"                     %%    "kamon-zipkin"        %    "1.0.0",
       "io.kamon"                     %%    "kamon-logback"       %    "1.0.0",
       // Swagger
-      "io.swagger"                   %%    "swagger-play2"       %    "1.5.3",
+      "io.swagger"                   %%    "swagger-play2"       %    "1.6.0",
       "org.webjars"                  %     "swagger-ui"          %    "3.1.4",
       // Hadoop & HBase (for creating the tableName)
       "org.apache.hadoop" % "hadoop-common" % "2.6.0",
