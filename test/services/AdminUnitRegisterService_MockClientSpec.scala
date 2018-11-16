@@ -39,7 +39,7 @@ class AdminUnitRegisterService_MockClientSpec extends FreeSpec with Matchers wit
   "An AdminUnit RegisterService" - {
     "targets the specified host and port when making a request" in new Fixture {
       (wsClient.url _).when(where[String](_.startsWith(s"$Protocol://$Host:$Port"))).returning(wsRequest)
-      (wsRequest.withHeaders _).expects(*).returning(wsRequest)
+      (wsRequest.withHttpHeaders _).expects(*).returning(wsRequest)
       (wsRequest.head _).expects().returning(Future.successful(wsResponse))
 
       Await.result(adminUnitRegisterService.isRegisteredUnit(TargetUnitKey), AwaitTime)
@@ -52,7 +52,7 @@ class AdminUnitRegisterService_MockClientSpec extends FreeSpec with Matchers wit
     "materialises an error into a failure" in new Fixture {
       val errorMessage = "Connection failed"
       (wsClient.url _).when(where[String](_.startsWith(s"$Protocol://$Host:$Port"))).returning(wsRequest)
-      (wsRequest.withHeaders _).expects(*).returning(wsRequest)
+      (wsRequest.withHttpHeaders _).expects(*).returning(wsRequest)
       (wsRequest.head _).expects().returning(Future.failed(new Exception(errorMessage)))
 
       whenReady(adminUnitRegisterService.isRegisteredUnit(TargetUnitKey)) { result =>

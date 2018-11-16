@@ -47,7 +47,7 @@ class HBaseRestRepository @Inject() (
     val url = HBase.rowKeyColFamilyUrl(withBase = config.baseUrl, config.namespace, table, query, columnFamily)
     logger.info(s"Requesting [$url] from HBase REST.")
 
-    baseRequest(url).withHeaders(ACCEPT -> JSON).get().map {
+    baseRequest(url).withHttpHeaders(ACCEPT -> JSON).get().map {
       (fromResponseToErrorOrJson _).andThen(convertToErrorOrRows(withRowReader))
     }.recover(withTranslationOfFailureToError)
   }
@@ -155,7 +155,7 @@ class HBaseRestRepository @Inject() (
     putJson(url, toJson(body)(HBaseData.format))
 
   private def putJson(url: String, body: JsValue): Future[WSResponse] =
-    baseRequest(url).withHeaders(CONTENT_TYPE -> JSON).put(body)
+    baseRequest(url).withHttpHeaders(CONTENT_TYPE -> JSON).put(body)
 
   /*
    * A HBase "checked action" (either an update or delete) simply returns 304: Not Modified when no action is taken.

@@ -19,7 +19,7 @@ import scala.concurrent.Future
 class AdminUnitRegisterService @Inject() (baseUrl: BaseUrl, wsClient: WSClient) extends UnitRegisterService {
 
   override def isRegisteredUnit(unitKey: UnitKey): Future[UnitRegisterResult] =
-    wsClient.url(urlFor(unitKey)).withHeaders(ACCEPT -> JSON).head().map {
+    wsClient.url(urlFor(unitKey)).withHttpHeaders(ACCEPT -> JSON).head().map {
       fromResponseToUnitRegisterResult
     }.recover {
       case cause: Throwable => UnitRegisterFailure(cause.getMessage)

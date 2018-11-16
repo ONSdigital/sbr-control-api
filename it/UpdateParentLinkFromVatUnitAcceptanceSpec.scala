@@ -77,7 +77,7 @@ class UpdateParentLinkFromVatUnitAcceptanceSpec extends AbstractServerAcceptance
 
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "test", "path": "/parents/LEU", "value": "$IncorrectUBRN"},
                           {"op": "replace", "path": "/parents/LEU", "value": "$TargetUBRN"}]"""))
 
@@ -99,7 +99,7 @@ class UpdateParentLinkFromVatUnitAcceptanceSpec extends AbstractServerAcceptance
 
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "test", "path": "/parents/LEU", "value": "$IncorrectUBRN"},
                           {"op": "replace", "path": "/parents/LEU", "value": "$TargetUBRN"}]"""))
 
@@ -121,7 +121,7 @@ class UpdateParentLinkFromVatUnitAcceptanceSpec extends AbstractServerAcceptance
 
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
-        withHeaders(CONTENT_TYPE-> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE-> JsonPatchMediaType).
         patch(s"""[{"op": "test", "path": "/parents/LEU", "value": "$IncorrectUBRN"},
                           {"op": "replace", "path": "/parents/LEU", "value": "$TargetUBRN"}]"""))
 
@@ -134,7 +134,7 @@ class UpdateParentLinkFromVatUnitAcceptanceSpec extends AbstractServerAcceptance
 
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef with a media type of $JSON")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
-        withHeaders(CONTENT_TYPE-> JSON).
+        withHttpHeaders(CONTENT_TYPE-> JSON).
         patch(s"""[{"op": "test", "path": "/parents/LEU", "value": "$IncorrectUBRN"},
                           {"op": "replace", "path": "/parents/LEU", "value": "$TargetUBRN"}]"""))
 
@@ -146,7 +146,7 @@ class UpdateParentLinkFromVatUnitAcceptanceSpec extends AbstractServerAcceptance
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef with invalid json")
       val invalidJson = "[}"
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
-        withHeaders(CONTENT_TYPE-> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE-> JsonPatchMediaType).
         patch(invalidJson))
 
       Then(s"a Bad Request response is returned")
@@ -159,7 +159,7 @@ class UpdateParentLinkFromVatUnitAcceptanceSpec extends AbstractServerAcceptance
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef")
       val invalidPatch = s"""[{"op": "update", "path": "/parents/LEU", "value": "$TargetUBRN"}]"""
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
-        withHeaders(CONTENT_TYPE-> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE-> JsonPatchMediaType).
         patch(invalidPatch))
 
       Then(s"a Bad Request response is returned")
@@ -171,7 +171,7 @@ class UpdateParentLinkFromVatUnitAcceptanceSpec extends AbstractServerAcceptance
 
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
-        withHeaders(CONTENT_TYPE-> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE-> JsonPatchMediaType).
         patch(s"""[{"op": "replace", "path": "/parents/LEU", "value": "$TargetUBRN"}]"""))
 
       Then(s"a Unprocessable Entity response is returned")
@@ -188,7 +188,7 @@ class UpdateParentLinkFromVatUnitAcceptanceSpec extends AbstractServerAcceptance
 
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "test", "path": "/parents/LEU", "value": "$IncorrectUBRN"},
                           {"op": "replace", "path": "/parents/LEU", "value": "$TargetUBRN"}]"""))
 
@@ -206,7 +206,7 @@ class UpdateParentLinkFromVatUnitAcceptanceSpec extends AbstractServerAcceptance
 
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference $VatRef")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/$VatRef").
-        withHeaders(CONTENT_TYPE-> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE-> JsonPatchMediaType).
         patch(s"""[{"op": "test", "path": "/parents/LEU", "value": "$IncorrectUBRN"},
                           {"op": "replace", "path": "/parents/LEU", "value": "$TargetUBRN"}]"""))
 
@@ -219,7 +219,7 @@ class UpdateParentLinkFromVatUnitAcceptanceSpec extends AbstractServerAcceptance
 
       When(s"an update of the parent Legal Unit from $IncorrectUBRN to $TargetUBRN is requested for the VAT unit with reference 12345678901 (which has only eleven digits)")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$VatUnitAcronym/units/12345678901").
-        withHeaders(CONTENT_TYPE-> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE-> JsonPatchMediaType).
         patch(s"""[{"op": "test", "path": "/parents/LEU", "value": "$IncorrectUBRN"},
                           {"op": "replace", "path": "/parents/LEU", "value": "$TargetUBRN"}]"""))
 

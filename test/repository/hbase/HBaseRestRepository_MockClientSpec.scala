@@ -51,7 +51,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
     val wsRequest = mock[WSRequest]
 
     def expectRequestHeadersAndAuth(): Unit = {
-      (wsRequest.withHeaders _).expects(*).returning(wsRequest)
+      (wsRequest.withHttpHeaders _).expects(*).returning(wsRequest)
       (wsRequest.withAuth _).expects(*, *, *).returning(wsRequest)
       () // explicitly return unit to avoid warning about disregarded return value
     }
@@ -61,7 +61,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
       val getResponse = stub[WSResponse]
       val body = Json.parse("{}")
       val readsRows = stub[Reads[Seq[Row]]]
-      (getRequest.withHeaders _).when(*).returns(getRequest)
+      (getRequest.withHttpHeaders _).when(*).returns(getRequest)
       (getRequest.withAuth _).when(*, *, *).returning(getRequest)
       (getRequest.withRequestTimeout _).when(*).returns(getRequest)
 
