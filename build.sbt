@@ -1,9 +1,8 @@
-import play.sbt.PlayScala
-import sbtbuildinfo.BuildInfoPlugin.autoImport._
-import sbtassembly.AssemblyPlugin.autoImport._
 import com.typesafe.sbt.SbtNativePackager.Universal
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.dockerExposedPorts
-import sbt.ExclusionRule
+import play.sbt.PlayScala
+import sbtassembly.AssemblyPlugin.autoImport._
+import sbtbuildinfo.BuildInfoPlugin.autoImport._
 
 val publishRepo = settingKey[String]("publishRepo")
 
@@ -45,10 +44,6 @@ lazy val publishingSettings = Seq(
   releaseCommitMessage := s"Setting Release tag to ${(version in ThisBuild).value}",
   // no commit - ignore zip and other package files
   releaseIgnoreUntrackedFiles := true
-)
-
-lazy val exTransDeps: Seq[ExclusionRule] = Seq(
-  ExclusionRule("org.webjars", "npm")
 )
 
 /*
@@ -118,7 +113,8 @@ lazy val api = (project in file("."))
     buildInfoOptions += BuildInfoOption.ToMap,
     buildInfoOptions += BuildInfoOption.ToJson,
     buildInfoOptions += BuildInfoOption.BuildTime,
-    libraryDependencies ++= Seq (
+    conflictManager := ConflictManager.strict,
+    libraryDependencies ++= Seq(
       filters,
       ws,
       guice,
@@ -126,7 +122,6 @@ lazy val api = (project in file("."))
       "org.scalatest"                %%    "scalatest"           %    "3.0.5"           % Test,
       "com.github.tomakehurst"       %     "wiremock"            %    "2.19.0"          % Test,
       "org.scalamock"                %%    "scalamock"           %    "4.1.0"           % Test,
-      "io.lemonlabs"                 %%    "scala-uri"           %    "1.4.0",
       "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.9.0",
       "com.typesafe"                 %     "config"              %    "1.3.3",
       // kamon (for tracing)
@@ -136,6 +131,34 @@ lazy val api = (project in file("."))
       // Swagger
       "io.swagger"                   %%    "swagger-play2"       %    "1.6.0",
       "org.webjars"                  %     "swagger-ui"          %    "3.19.5"
+    ),
+    dependencyOverrides ++= Seq(
+      "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.1.0",
+      "org.reactivestreams"         % "reactive-streams"         % "1.0.2",
+      "com.typesafe"                % "config"                   % "1.3.3",
+      "io.kamon"                   %% "kamon-core"               % "1.1.0",
+      "com.google.code.findbugs"    % "jsr305"                   % "3.0.2",
+      "org.apache.commons"          % "commons-lang3"            % "3.6",
+      "org.scalatest"              %% "scalatest"                % "3.0.5",
+      "com.google.guava"            % "guava"                    % "22.0",
+      "com.typesafe.play"          %% "play-test"                % "2.6.20",
+      "com.typesafe.play"          %% "play-ws"                  % "2.6.20",
+      "com.typesafe.play"          %% "play-ahc-ws"              % "2.6.20",
+      "com.fasterxml.jackson.core"  % "jackson-databind"         % "2.8.11.2",
+      "org.apache.httpcomponents"   % "httpclient"               % "4.5.5",
+
+      // wiremock requires jetty 9.2.24.v20180105 but play-test's selenium dependency is transitively pulling in a binary incompatible 9.4.5.v20170502
+      "org.eclipse.jetty" % "jetty-http" % "9.2.24.v20180105",
+      "org.eclipse.jetty" % "jetty-io"   % "9.2.24.v20180105",
+      "org.eclipse.jetty" % "jetty-util" % "9.2.24.v20180105",
+
+      // conflicts resulting from io.swagger:swagger-play2 (treat swagger as low priority and select latest versions)
+      "com.typesafe.play" %% "twirl-api"             % "1.3.15",
+      "com.typesafe.play" %% "play-server"           % "2.6.20",
+      "com.typesafe.play" %% "filters-helpers"       % "2.6.20",
+      "com.typesafe.play" %% "play-logback"          % "2.6.20",
+      "com.typesafe.play" %% "play-akka-http-server" % "2.6.20",
+      "org.slf4j"          % "slf4j-api"             % "1.7.25"
     ),
     // Assembly
     assemblyJarName in assembly := s"${name.value}-${version.value}.jar",
