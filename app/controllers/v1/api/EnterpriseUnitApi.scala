@@ -6,7 +6,6 @@ import io.swagger.annotations.{ ApiOperation, ApiParam, ApiResponse, ApiResponse
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 
 trait EnterpriseUnitApi {
-
   @ApiOperation(
     value = "Json representation of the Enterprise Unit with specified ERN and Period",
     notes = "Requires an exact match of ERN and Period",
@@ -25,5 +24,4 @@ trait EnterpriseUnitApi {
     @ApiParam(value = "Enterprise Reference Number (ERN)", example = "1000000012", required = true) ernStr: String,
     @ApiParam(value = "Period (unit load date)", example = "201803", required = true) periodStr: String
   ): Action[AnyContent]
-
 }

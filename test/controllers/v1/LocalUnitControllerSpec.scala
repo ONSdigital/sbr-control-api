@@ -3,10 +3,10 @@ package controllers.v1
 import java.time.Month.FEBRUARY
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{ FreeSpec, Matchers, OptionValues }
+import org.scalatest.{FreeSpec, Matchers, OptionValues}
 import play.api.libs.json.Json
-import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.api.test.{FakeRequest, StubControllerComponentsFactory}
 import play.mvc.Http.MimeTypes.JSON
 import repository.LocalUnitRepository
 import support.sample.SampleLocalUnit
@@ -18,14 +18,14 @@ import scala.concurrent.Future
 
 class LocalUnitControllerSpec extends FreeSpec with Matchers with MockFactory with OptionValues {
 
-  private trait Fixture extends SampleLocalUnit {
+  private trait Fixture extends StubControllerComponentsFactory with SampleLocalUnit {
     val TargetErn = Ern("1234567890")
     val TargetPeriod = Period.fromYearMonth(2018, FEBRUARY)
     val TargetLurn = Lurn("987654321")
     val TargetLocalUnit = aLocalUnit(TargetErn, TargetLurn)
 
     val repository: LocalUnitRepository = mock[LocalUnitRepository]
-    val controller = new LocalUnitController(repository)
+    val controller = new LocalUnitController(stubControllerComponents(), repository)
   }
 
   "A request" - {

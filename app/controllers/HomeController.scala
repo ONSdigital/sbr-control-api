@@ -1,12 +1,12 @@
 package controllers
 
-import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
-
-import play.api.mvc.{ Controller, Action }
+import io.swagger.annotations.{Api, ApiOperation, ApiResponse, ApiResponses}
+import javax.inject.{Inject, Singleton}
+import play.api.mvc.{BaseController, ControllerComponents}
 
 @Api("Utils")
-class HomeController extends Controller {
-
+@Singleton
+class HomeController @Inject() (val controllerComponents: ControllerComponents) extends BaseController {
   //public api
   @ApiOperation(
     value = "Swagger Documentation",
@@ -34,5 +34,4 @@ class HomeController extends Controller {
     val host = request.host
     Redirect(url = s"http://$host/health").flashing("redirect" -> "You are being redirected to health status", "status" -> "ok")
   }
-
 }

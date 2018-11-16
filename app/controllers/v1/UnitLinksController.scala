@@ -4,15 +4,15 @@ import controllers.v1.ControllerResultProcessor._
 import controllers.v1.api.UnitLinksApi
 import handlers.PatchHandler
 import io.swagger.annotations._
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import parsers.JsonPatchBodyParser
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import repository.UnitLinksRepository
 import uk.gov.ons.sbr.models.patch.Patch
-import uk.gov.ons.sbr.models.unitlinks.UnitType.{ LegalUnit, PayAsYouEarn, ValueAddedTax }
-import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import uk.gov.ons.sbr.models.unitlinks.UnitType.{LegalUnit, PayAsYouEarn, ValueAddedTax}
+import uk.gov.ons.sbr.models.unitlinks.{UnitId, UnitLinks, UnitType}
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 
 import scala.concurrent.Future
 
@@ -24,7 +24,10 @@ import scala.concurrent.Future
  * results in exceptions at runtime.
  */
 @Api("Search")
-class UnitLinksController @Inject() (repository: UnitLinksRepository, handlePatch: PatchHandler[Future[Result]]) extends Controller with UnitLinksApi {
+@Singleton
+class UnitLinksController @Inject() (val controllerComponents: ControllerComponents,
+                                     repository: UnitLinksRepository,
+                                     handlePatch: PatchHandler[Future[Result]]) extends BaseController with UnitLinksApi {
   override def retrieveUnitLinks(id: String, periodStr: String, unitTypeStr: String): Action[AnyContent] = Action.async {
     val unitKey = unitKeyFor(UnitType.fromAcronym(unitTypeStr), id, periodStr)
     repository.retrieveUnitLinks(unitKey).map { errorOrOptUnitLinks =>

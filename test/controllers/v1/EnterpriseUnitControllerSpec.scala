@@ -2,30 +2,28 @@ package controllers.v1
 
 import java.time.Month.FEBRUARY
 
-import scala.concurrent.Future
-
-import play.api.libs.json.Json
-import play.api.test.FakeRequest
-import play.api.test.Helpers.{ contentType, status, _ }
-import play.mvc.Http.MimeTypes.JSON
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{ FreeSpec, Matchers, OptionValues }
-
-import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
-
+import org.scalatest.{FreeSpec, Matchers, OptionValues}
+import play.api.libs.json.Json
+import play.api.test.Helpers.{contentType, status, _}
+import play.api.test.{FakeRequest, StubControllerComponentsFactory}
+import play.mvc.Http.MimeTypes.JSON
 import repository.EnterpriseUnitRepository
 import support.sample.SampleEnterpriseUnit
+import uk.gov.ons.sbr.models.Period
+import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern}
+
+import scala.concurrent.Future
 
 class EnterpriseUnitControllerSpec extends FreeSpec with Matchers with MockFactory with OptionValues {
 
-  trait Fixture extends SampleEnterpriseUnit {
-    val repository: EnterpriseUnitRepository = mock[EnterpriseUnitRepository]
+  trait Fixture extends StubControllerComponentsFactory with SampleEnterpriseUnit {
     val TargetErn = Ern("")
     val TargetPeriod: Period = Period.fromYearMonth(2018, FEBRUARY)
     val TargetEnterpriseUnit: Enterprise = aEnterpriseSample(TargetErn)
 
-    val controller = new EnterpriseUnitController(repository)
+    val repository: EnterpriseUnitRepository = mock[EnterpriseUnitRepository]
+    val controller = new EnterpriseUnitController(stubControllerComponents(), repository)
   }
 
   "A request" - {

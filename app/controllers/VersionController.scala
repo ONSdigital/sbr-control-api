@@ -1,17 +1,15 @@
 package controllers
 
-import javax.inject.Singleton
-import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
-
-import play.api.mvc.{ Action, Controller }
+import io.swagger.annotations.{Api, ApiOperation, ApiResponse, ApiResponses}
+import javax.inject.{Inject, Singleton}
+import play.api.mvc.{BaseController, ControllerComponents}
 
 /**
  * version listings is defined using the BuildInfo feature
  */
 @Api("Utils")
 @Singleton
-class VersionController extends Controller {
-
+class VersionController @Inject() (val controllerComponents: ControllerComponents) extends BaseController {
   // public api
   @ApiOperation(
     value = "Version List",

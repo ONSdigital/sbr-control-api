@@ -4,31 +4,31 @@ import java.time.Month.AUGUST
 
 import handlers.PatchHandler
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{ FreeSpec, Matchers, OptionValues }
+import org.scalatest.{FreeSpec, Matchers, OptionValues}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import parsers.JsonPatchBodyParser.JsonPatchMediaType
 import play.api.http.HeaderNames.CONTENT_TYPE
-import play.api.libs.json.{ JsString, Json }
+import play.api.libs.json.{JsString, Json}
 import play.api.mvc.Result
 import play.api.mvc.Results.NoContent
-import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.api.test.{FakeRequest, StubControllerComponentsFactory}
 import play.mvc.Http.MimeTypes.JSON
 import repository.UnitLinksRepository
 import support.sample.SampleUnitLinks
-import uk.gov.ons.sbr.models.patch.{ AddOperation, ReplaceOperation, TestOperation }
+import uk.gov.ons.sbr.models.patch.{AddOperation, ReplaceOperation, TestOperation}
 import uk.gov.ons.sbr.models.unitlinks.UnitId
-import uk.gov.ons.sbr.models.unitlinks.UnitType.{ LegalUnit, PayAsYouEarn, ValueAddedTax, toAcronym }
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import uk.gov.ons.sbr.models.unitlinks.UnitType.{LegalUnit, PayAsYouEarn, ValueAddedTax, toAcronym}
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 
 import scala.concurrent.Future
 
 class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPerSuite with MockFactory with OptionValues {
 
-  private trait Fixture {
+  private trait Fixture extends StubControllerComponentsFactory {
     val repository = mock[UnitLinksRepository]
     val patchHandler = mock[PatchHandler[Future[Result]]]
-    val controller = new UnitLinksController(repository, patchHandler)
+    val controller = new UnitLinksController(stubControllerComponents(), repository, patchHandler)
   }
 
   private trait ReadFixture extends Fixture with SampleUnitLinks {
