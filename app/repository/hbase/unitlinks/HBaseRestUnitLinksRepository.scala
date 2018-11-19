@@ -1,7 +1,7 @@
 package repository.hbase.unitlinks
 
-import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
+import javax.inject.Inject
 import repository.RestRepository.{ErrorMessage, Field, Row, RowKey}
 import repository._
 import repository.hbase.unitlinks.HBaseRestUnitLinksRepository._
