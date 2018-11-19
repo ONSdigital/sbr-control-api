@@ -2,14 +2,14 @@ package controllers
 
 import io.swagger.annotations.{Api, ApiOperation, ApiResponse, ApiResponses}
 import javax.inject.{Inject, Singleton}
-import play.api.mvc.{BaseController, ControllerComponents}
+import play.api.mvc.ControllerComponents
 
 /**
  * version listings is defined using the BuildInfo feature
  */
 @Api("Utils")
 @Singleton
-class VersionController @Inject() (val controllerComponents: ControllerComponents) extends BaseController {
+class VersionController @Inject() (controllerComponents: ControllerComponents) extends AbstractSbrController(controllerComponents) {
   // public api
   @ApiOperation(
     value = "Version List",

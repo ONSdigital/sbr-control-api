@@ -2,11 +2,11 @@ package controllers
 
 import io.swagger.annotations.{Api, ApiOperation, ApiResponse, ApiResponses}
 import javax.inject.{Inject, Singleton}
-import play.api.mvc.{BaseController, ControllerComponents}
+import play.api.mvc.ControllerComponents
 
 @Api("Utils")
 @Singleton
-class HomeController @Inject() (val controllerComponents: ControllerComponents) extends BaseController {
+class HomeController @Inject() (controllerComponents: ControllerComponents) extends AbstractSbrController(controllerComponents) {
   //public api
   @ApiOperation(
     value = "Swagger Documentation",

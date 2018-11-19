@@ -2,17 +2,19 @@ package repository.hbase
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.concurrent.{ PatienceConfiguration, ScalaFutures }
-import org.scalatest.time.{ Millis, Span }
-import org.scalatest.{ EitherValues, Matchers, OneInstancePerTest, Outcome }
+import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
+import org.scalatest.time.{Millis, Span}
+import org.scalatest.{EitherValues, Matchers, OneInstancePerTest, Outcome}
 import play.api.http.Port
-import play.api.http.Status.{ BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, UNAUTHORIZED }
-import play.api.libs.json.{ JsError, JsSuccess, Json, Reads }
+import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, UNAUTHORIZED}
+import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
 import play.api.libs.ws.WSClient
 import play.api.test.WsTestClient
 import repository.RestRepository.Row
 import support.wiremock.WireMockHBase
 import utils.BaseUrl
+
+import scala.concurrent.ExecutionContext
 
 class HBaseRestRepository_Query_WiremockSpec extends org.scalatest.fixture.FreeSpec with WireMockHBase with Matchers with EitherValues with MockFactory with ScalaFutures with PatienceConfiguration with OneInstancePerTest {
 
@@ -42,7 +44,7 @@ class HBaseRestRepository_Query_WiremockSpec extends org.scalatest.fixture.FreeS
     val auth = Authorization(config.username, config.password)
     val responseReaderMaker = mock[HBaseResponseReaderMaker]
     val readsRows = mock[Reads[Seq[Row]]]
-    FixtureParam(config, auth, new HBaseRestRepository(config, wsClient, responseReaderMaker), responseReaderMaker, readsRows)
+    FixtureParam(config, auth, new HBaseRestRepository(config, wsClient, responseReaderMaker)(ExecutionContext.global), responseReaderMaker, readsRows)
   }
 
   override protected def withFixture(test: OneArgTest): Outcome =

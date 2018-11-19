@@ -11,7 +11,7 @@ import repository.RestRepository.Row
 import utils.BaseUrl
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /*
  * This spec mocks the wsClient, which disregards the rule "don't mock types you don't own" (see "Growing
@@ -46,7 +46,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
       BaseUrl(protocol = Protocol, host = Host, port = Port, prefix = Some("HBase")),
       "namespace", "username", "password", timeout = ClientTimeout
     )
-    val restRepository = new HBaseRestRepository(config, wsClient, hbaseResponseReaderMaker)
+    val restRepository = new HBaseRestRepository(config, wsClient, hbaseResponseReaderMaker)(ExecutionContext.global)
 
     val wsRequest = mock[WSRequest]
 

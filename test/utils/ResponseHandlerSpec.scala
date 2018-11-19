@@ -1,10 +1,10 @@
 package utils
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatest.{FreeSpec, Matchers}
 import play.api.libs.ws.WSResponse
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 
 class ResponseHandlerSpec extends FreeSpec with Matchers with MockFactory {
@@ -26,7 +26,7 @@ class ResponseHandlerSpec extends FreeSpec with Matchers with MockFactory {
       override def apply(cause: Throwable): Result = recoveryDelegate(cause)
     }
 
-    val handler = ResponseHandler.make(successHandler)(recoveryHandler)
+    val handler = ResponseHandler.make(successHandler)(recoveryHandler)(ExecutionContext.global)
   }
 
   "make creates a response handler" - {

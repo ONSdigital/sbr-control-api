@@ -4,16 +4,16 @@ import java.time.Month.JANUARY
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ EitherValues, FreeSpec, Matchers }
+import org.scalatest.{EitherValues, FreeSpec, Matchers}
 import repository.RestRepository.Row
 import repository.hbase.HBase.DefaultColumnFamily
-import repository.{ RestRepository, RowMapper }
+import repository.{RestRepository, RowMapper}
 import support.sample.SampleLegalUnit
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, Ubrn }
+import uk.gov.ons.sbr.models.legalunit.{LegalUnit, Ubrn}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class HBaseRestLegalUnitRepositorySpec extends FreeSpec with Matchers with MockFactory with ScalaFutures with EitherValues {
 
@@ -26,7 +26,7 @@ class HBaseRestLegalUnitRepositorySpec extends FreeSpec with Matchers with MockF
     val restRepository: RestRepository = mock[RestRepository]
     val rowMapper: RowMapper[LegalUnit] = mock[RowMapper[LegalUnit]]
     val config = HBaseRestLegalUnitRepositoryConfig(TargetBaseTable)
-    val repository = new HBaseRestLegalUnitRepository(config, restRepository, rowMapper)
+    val repository = new HBaseRestLegalUnitRepository(config, restRepository, rowMapper)(ExecutionContext.global)
 
     private val UnusedRowKey = ""
     def toRow(variables: Map[String, String]) = Row(rowKey = UnusedRowKey, fields = variables)

@@ -1,10 +1,10 @@
 package controllers.v1
 
+import controllers.AbstractSbrController
 import controllers.v1.ControllerResultProcessor._
 import controllers.v1.api.EnterpriseUnitApi
 import io.swagger.annotations.Api
 import javax.inject.{Inject, Singleton}
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import repository.EnterpriseUnitRepository
 import uk.gov.ons.sbr.models.Period
@@ -16,8 +16,8 @@ import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern}
  */
 @Api("Search")
 @Singleton
-class EnterpriseUnitController @Inject() (val controllerComponents: ControllerComponents,
-                                          repository: EnterpriseUnitRepository) extends BaseController with EnterpriseUnitApi {
+class EnterpriseUnitController @Inject() (controllerComponents: ControllerComponents,
+                                          repository: EnterpriseUnitRepository) extends AbstractSbrController(controllerComponents) with EnterpriseUnitApi {
   def retrieveEnterpriseUnit(ernStr: String, periodStr: String): Action[AnyContent] = Action.async {
     repository.retrieveEnterpriseUnit(Ern(ernStr), Period.fromString(periodStr)).map { errorOrOptEnterprise =>
       errorOrOptEnterprise.fold(resultOnFailure, resultOnSuccessWithAtMostOneUnit[Enterprise])

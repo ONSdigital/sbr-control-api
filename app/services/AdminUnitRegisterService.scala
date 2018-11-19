@@ -1,22 +1,23 @@
 package services
 
 import javax.inject.Inject
-import play.api.http.Status.{ NOT_FOUND, OK }
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.ws.{ WSClient, WSResponse }
+import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.libs.ws.{WSClient, WSResponse}
 import play.mvc.Http.HeaderNames.ACCEPT
 import play.mvc.Http.MimeTypes.JSON
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 import utils.BaseUrl
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /*
  * We cannot rely on Unit Links to determine whether an Admin Data reference is valid, because we will only pull an
  * admin unit into the register if it already has a relationship to a Legal Unit.  We must therefore contact an admin
  * data service.  Note that we use a HEAD request as we are only interested in the status code, and not the body.
  */
-class AdminUnitRegisterService @Inject() (baseUrl: BaseUrl, wsClient: WSClient) extends UnitRegisterService {
+class AdminUnitRegisterService @Inject() (baseUrl: BaseUrl,
+                                          wsClient: WSClient)
+                                         (implicit ec: ExecutionContext) extends UnitRegisterService {
 
   override def isRegisteredUnit(unitKey: UnitKey): Future[UnitRegisterResult] =
     wsClient.url(urlFor(unitKey)).withHttpHeaders(ACCEPT -> JSON).head().map {

@@ -2,25 +2,23 @@ package repository.hbase.reportingunit
 
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import repository.RestRepository._
 import repository.hbase.HBase._
 import repository.hbase.PeriodTableName
-import repository.{ ReportingUnitRepository, RestRepository, RowMapper }
+import repository.{ReportingUnitRepository, RestRepository, RowMapper}
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnit, Rurn }
+import uk.gov.ons.sbr.models.reportingunit.{ReportingUnit, Rurn}
 import utils.EitherSupport
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class HBaseRestReportingUnitRepositoryConfig(tableName: String)
 
 class HBaseRestReportingUnitRepository @Inject() (
     config: HBaseRestReportingUnitRepositoryConfig,
     restRepository: RestRepository,
-    rowMapper: RowMapper[ReportingUnit]
-) extends ReportingUnitRepository with LazyLogging {
+    rowMapper: RowMapper[ReportingUnit])(implicit ec: ExecutionContext) extends ReportingUnitRepository with LazyLogging {
 
   def retrieveReportingUnit(ern: Ern, period: Period, rurn: Rurn): Future[Either[ErrorMessage, Option[ReportingUnit]]] = {
     logger.info(s"Retrieving Reporting Unit with [$ern] [$rurn] for [$period].")

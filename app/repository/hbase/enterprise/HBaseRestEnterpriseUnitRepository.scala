@@ -2,23 +2,21 @@ package repository.hbase.enterprise
 
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import repository.RestRepository.{ ErrorMessage, Row }
+import repository.RestRepository.{ErrorMessage, Row}
 import repository.hbase.HBase.DefaultColumnFamily
 import repository.hbase.PeriodTableName
-import repository.{ EnterpriseUnitRepository, RestRepository, RowMapper }
+import repository.{EnterpriseUnitRepository, RestRepository, RowMapper}
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
+import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class HBaseRestEnterpriseUnitRepositoryConfig(tableName: String)
 
 class HBaseRestEnterpriseUnitRepository @Inject() (
     restRepository: RestRepository,
     config: HBaseRestEnterpriseUnitRepositoryConfig,
-    rowMapper: RowMapper[Enterprise]
-) extends EnterpriseUnitRepository with LazyLogging {
+    rowMapper: RowMapper[Enterprise])(implicit ec: ExecutionContext) extends EnterpriseUnitRepository with LazyLogging {
 
   override def retrieveEnterpriseUnit(ern: Ern, period: Period): Future[Either[ErrorMessage, Option[Enterprise]]] = {
     logger.info(s"Retrieving Enterprise with [$ern] for [$period].")

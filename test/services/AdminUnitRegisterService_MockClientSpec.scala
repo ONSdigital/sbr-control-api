@@ -4,15 +4,15 @@ import java.time.Month.AUGUST
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ FreeSpec, Matchers }
-import play.api.libs.ws.{ WSClient, WSRequest, WSResponse }
+import org.scalatest.{FreeSpec, Matchers}
+import play.api.libs.ws.{WSClient, WSRequest, WSResponse}
 import uk.gov.ons.sbr.models.unitlinks.UnitId
 import uk.gov.ons.sbr.models.unitlinks.UnitType.ValueAddedTax
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 import utils.BaseUrl
 
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /*
  * This spec mocks the wsClient, which disregards the rule "don't mock types you don't own" (see "Growing
@@ -33,7 +33,7 @@ class AdminUnitRegisterService_MockClientSpec extends FreeSpec with Matchers wit
     val wsClient = stub[WSClient]
     val wsResponse = stub[WSResponse]
     val wsRequest = mock[WSRequest]
-    val adminUnitRegisterService = new AdminUnitRegisterService(AdminServiceBaseUrl, wsClient)
+    val adminUnitRegisterService = new AdminUnitRegisterService(AdminServiceBaseUrl, wsClient)(ExecutionContext.global)
   }
 
   "An AdminUnit RegisterService" - {

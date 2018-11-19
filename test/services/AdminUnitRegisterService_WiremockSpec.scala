@@ -3,14 +3,16 @@ package services
 import java.time.Month.AUGUST
 
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ Matchers, Outcome }
+import org.scalatest.{Matchers, Outcome}
 import play.api.http.Port
 import play.api.test.WsTestClient
 import support.wiremock.WireMockAdminDataApi
 import uk.gov.ons.sbr.models.unitlinks.UnitId
 import uk.gov.ons.sbr.models.unitlinks.UnitType.ValueAddedTax
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 import utils.BaseUrl
+
+import scala.concurrent.ExecutionContext
 
 class AdminUnitRegisterService_WiremockSpec extends org.scalatest.fixture.FreeSpec with WireMockAdminDataApi with Matchers with ScalaFutures {
 
@@ -24,7 +26,7 @@ class AdminUnitRegisterService_WiremockSpec extends org.scalatest.fixture.FreeSp
   override protected def withFixture(test: OneArgTest): Outcome = {
     withWireMockAdminDataApi { () =>
       WsTestClient.withClient { wsClient =>
-        withFixture(test.toNoArgTest(FixtureParam(new AdminUnitRegisterService(AdminDataServiceBaseUrl, wsClient))))
+        withFixture(test.toNoArgTest(FixtureParam(new AdminUnitRegisterService(AdminDataServiceBaseUrl, wsClient)(ExecutionContext.global))))
       }(new Port(DefaultAdminDataApiPort))
     }
   }

@@ -2,19 +2,17 @@ package repository.hbase.enterprise
 
 import java.time.Month.SEPTEMBER
 
-import scala.concurrent.Future
-
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ EitherValues, FreeSpec, Matchers }
-
+import org.scalatest.{EitherValues, FreeSpec, Matchers}
+import repository.RestRepository.Row
+import repository.hbase.HBase.DefaultColumnFamily
+import repository.{RestRepository, RowMapper}
+import support.sample.SampleEnterpriseUnit
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 
-import repository.RestRepository.Row
-import repository.hbase.HBase.DefaultColumnFamily
-import repository.{ RestRepository, RowMapper }
-import support.sample.SampleEnterpriseUnit
+import scala.concurrent.{ExecutionContext, Future}
 
 class HBaseRestEnterpriseUnitRepositorySpec extends FreeSpec with Matchers with MockFactory with ScalaFutures with EitherValues {
 
@@ -33,7 +31,7 @@ class HBaseRestEnterpriseUnitRepositorySpec extends FreeSpec with Matchers with 
     val restRepository: RestRepository = mock[RestRepository]
     val rowMapper: RowMapper[Enterprise] = mock[RowMapper[Enterprise]]
     val config = HBaseRestEnterpriseUnitRepositoryConfig(TargetBaseTable)
-    val repository = new HBaseRestEnterpriseUnitRepository(restRepository, config, rowMapper)
+    val repository = new HBaseRestEnterpriseUnitRepository(restRepository, config, rowMapper)(ExecutionContext.global)
   }
 
   "A Enterprise Unit Repository" - {

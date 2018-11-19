@@ -1,12 +1,12 @@
 package controllers.v1
 
+import controllers.AbstractSbrController
 import controllers.v1.ControllerResultProcessor._
 import controllers.v1.api.UnitLinksApi
 import handlers.PatchHandler
 import io.swagger.annotations._
 import javax.inject.{Inject, Singleton}
 import parsers.JsonPatchBodyParser
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
 import repository.UnitLinksRepository
 import uk.gov.ons.sbr.models.patch.Patch
@@ -25,9 +25,9 @@ import scala.concurrent.Future
  */
 @Api("Search")
 @Singleton
-class UnitLinksController @Inject() (val controllerComponents: ControllerComponents,
+class UnitLinksController @Inject() (controllerComponents: ControllerComponents,
                                      repository: UnitLinksRepository,
-                                     handlePatch: PatchHandler[Future[Result]]) extends BaseController with UnitLinksApi {
+                                     handlePatch: PatchHandler[Future[Result]]) extends AbstractSbrController(controllerComponents) with UnitLinksApi {
   override def retrieveUnitLinks(id: String, periodStr: String, unitTypeStr: String): Action[AnyContent] = Action.async {
     val unitKey = unitKeyFor(UnitType.fromAcronym(unitTypeStr), id, periodStr)
     repository.retrieveUnitLinks(unitKey).map { errorOrOptUnitLinks =>

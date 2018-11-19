@@ -5,7 +5,7 @@ import com.typesafe.scalalogging.LazyLogging
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsValue
 import play.api.libs.streams.Accumulator
-import play.api.mvc.Results.{ BadRequest, UnsupportedMediaType }
+import play.api.mvc.Results.{BadRequest, UnsupportedMediaType}
 import play.api.mvc._
 import uk.gov.ons.sbr.models.patch.Patch
 

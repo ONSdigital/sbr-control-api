@@ -1,26 +1,24 @@
 package repository.hbase.localunit
 
-import javax.inject.Inject
-
-import scala.concurrent.Future
 import com.typesafe.scalalogging.LazyLogging
+import javax.inject.Inject
+import repository.RestRepository.{ErrorMessage, Row}
+import repository.hbase.HBase.DefaultColumnFamily
+import repository.hbase.PeriodTableName
+import repository.{LocalUnitRepository, RestRepository, RowMapper}
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
+import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
 import utils.EitherSupport
-import repository.RestRepository.{ ErrorMessage, Row }
-import repository.hbase.HBase.DefaultColumnFamily
-import repository.{ LocalUnitRepository, RestRepository, RowMapper }
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import repository.hbase.PeriodTableName
+
+import scala.concurrent.{ExecutionContext, Future}
 
 case class HBaseRestLocalUnitRepositoryConfig(tableName: String)
 
 class HBaseRestLocalUnitRepository @Inject() (
     config: HBaseRestLocalUnitRepositoryConfig,
     restRepository: RestRepository,
-    rowMapper: RowMapper[LocalUnit]
-) extends LocalUnitRepository with LazyLogging {
+    rowMapper: RowMapper[LocalUnit])(implicit ec: ExecutionContext) extends LocalUnitRepository with LazyLogging {
 
   override def retrieveLocalUnit(ern: Ern, period: Period, lurn: Lurn): Future[Either[ErrorMessage, Option[LocalUnit]]] = {
     logger.info(s"Retrieving Local Unit with [$ern] [$lurn] for [$period].")

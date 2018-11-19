@@ -2,18 +2,18 @@ package repository.hbase.unitlinks
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ EitherValues, FreeSpec, Matchers }
+import org.scalatest.{EitherValues, FreeSpec, Matchers}
 import repository.RestRepository.Row
 import repository._
 import repository.hbase.Column
 import repository.hbase.unitlinks.HBaseRestUnitLinksRepository.ColumnFamily
-import services.{ UnitFound, UnitNotFound, UnitRegisterFailure, UnitRegisterService }
+import services.{UnitFound, UnitNotFound, UnitRegisterFailure, UnitRegisterService}
 import support.sample.SampleUnitLinks
 import uk.gov.ons.sbr.models.unitlinks.UnitType.toAcronym
-import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitLinksNoPeriod, UnitType }
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import uk.gov.ons.sbr.models.unitlinks.{UnitId, UnitLinks, UnitLinksNoPeriod, UnitType}
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockFactory with ScalaFutures with EitherValues {
 
@@ -40,7 +40,7 @@ class HBaseRestUnitLinksRepositorySpec extends FreeSpec with Matchers with MockF
     val rowMapper = mock[RowMapper[UnitLinksNoPeriod]]
     val config = HBaseRestUnitLinksRepositoryConfig(TargetBaseTable)
     val unitRegisterService = mock[UnitRegisterService]
-    val repository = new HBaseRestUnitLinksRepository(restRepository, config, rowMapper, unitRegisterService)
+    val repository = new HBaseRestUnitLinksRepository(restRepository, config, rowMapper, unitRegisterService)(ExecutionContext.global)
   }
 
   private trait EditFixture extends Fixture {

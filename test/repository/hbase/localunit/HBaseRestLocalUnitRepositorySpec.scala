@@ -4,17 +4,16 @@ import java.time.Month.JANUARY
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ EitherValues, FreeSpec, Matchers }
-
+import org.scalatest.{EitherValues, FreeSpec, Matchers}
+import repository.RestRepository.Row
 import repository.hbase.HBase.DefaultColumnFamily
-import repository.{ RestRepository, RowMapper }
+import repository.{RestRepository, RowMapper}
 import support.sample.SampleLocalUnit
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
-import scala.concurrent.Future
+import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
 
-import repository.RestRepository.Row
+import scala.concurrent.{ExecutionContext, Future}
 
 class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockFactory with ScalaFutures with EitherValues {
 
@@ -27,7 +26,7 @@ class HBaseRestLocalUnitRepositorySpec extends FreeSpec with Matchers with MockF
     val restRepository: RestRepository = mock[RestRepository]
     val rowMapper: RowMapper[LocalUnit] = mock[RowMapper[LocalUnit]]
     val config = HBaseRestLocalUnitRepositoryConfig(TargetBaseTable)
-    val repository = new HBaseRestLocalUnitRepository(config, restRepository, rowMapper)
+    val repository = new HBaseRestLocalUnitRepository(config, restRepository, rowMapper)(ExecutionContext.global)
 
     private val UnusedRowKey = ""
     def toRow(variables: Map[String, String]) = Row(rowKey = UnusedRowKey, fields = variables)

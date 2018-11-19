@@ -4,15 +4,15 @@ import java.time.Month.MARCH
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ FreeSpec, Matchers }
-import play.api.libs.json.{ JsNumber, JsString }
+import org.scalatest.{FreeSpec, Matchers}
+import play.api.libs.json.{JsNumber, JsString}
 import repository._
-import uk.gov.ons.sbr.models.patch.{ ReplaceOperation, TestOperation }
+import uk.gov.ons.sbr.models.patch.{ReplaceOperation, TestOperation}
 import uk.gov.ons.sbr.models.unitlinks.UnitId
-import uk.gov.ons.sbr.models.unitlinks.UnitType.{ LegalUnit, ValueAddedTax }
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import uk.gov.ons.sbr.models.unitlinks.UnitType.{LegalUnit, ValueAddedTax}
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class AdminUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactory with ScalaFutures {
 
@@ -31,7 +31,7 @@ class AdminUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFact
 
     val repository = mock[UnitLinksRepository]
     val unitRegisterService = mock[UnitRegisterService]
-    val service = new AdminUnitLinkPatchService(repository, unitRegisterService)
+    val service = new AdminUnitLinkPatchService(repository, unitRegisterService)(ExecutionContext.global)
   }
 
   "An admin data Unit Link PatchService" - {

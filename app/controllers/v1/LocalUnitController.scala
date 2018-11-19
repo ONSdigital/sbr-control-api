@@ -1,10 +1,10 @@
 package controllers.v1
 
+import controllers.AbstractSbrController
 import controllers.v1.ControllerResultProcessor._
 import controllers.v1.api.LocalUnitApi
 import io.swagger.annotations.Api
 import javax.inject.{Inject, Singleton}
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json.toJson
 import play.api.mvc._
 import repository.LocalUnitRepository
@@ -18,8 +18,8 @@ import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
  */
 @Api("Search")
 @Singleton
-class LocalUnitController @Inject() (val controllerComponents: ControllerComponents,
-                                     repository: LocalUnitRepository) extends BaseController with LocalUnitApi {
+class LocalUnitController @Inject() (controllerComponents: ControllerComponents,
+                                     repository: LocalUnitRepository) extends AbstractSbrController(controllerComponents) with LocalUnitApi {
   override def retrieveLocalUnit(ernStr: String, periodStr: String, lurnStr: String): Action[AnyContent] = Action.async {
     repository.retrieveLocalUnit(Ern(ernStr), Period.fromString(periodStr), Lurn(lurnStr)).map { errorOrLocalUnit =>
       errorOrLocalUnit.fold(resultOnFailure, resultOnSuccessWithAtMostOneUnit[LocalUnit])

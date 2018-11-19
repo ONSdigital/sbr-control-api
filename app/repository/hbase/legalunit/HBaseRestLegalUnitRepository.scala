@@ -2,16 +2,15 @@ package repository.hbase.legalunit
 
 import javax.inject.Inject
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import com.typesafe.scalalogging.LazyLogging
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, Ubrn }
+import uk.gov.ons.sbr.models.legalunit.{LegalUnit, Ubrn}
 import utils.EitherSupport
-import repository.RestRepository.{ ErrorMessage, Row }
+import repository.RestRepository.{ErrorMessage, Row}
 import repository.hbase.HBase.DefaultColumnFamily
-import repository.{ LegalUnitRepository, RestRepository, RowMapper }
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import repository.{LegalUnitRepository, RestRepository, RowMapper}
 import repository.hbase.PeriodTableName
 
 case class HBaseRestLegalUnitRepositoryConfig(tableName: String)
@@ -19,8 +18,7 @@ case class HBaseRestLegalUnitRepositoryConfig(tableName: String)
 class HBaseRestLegalUnitRepository @Inject() (
     config: HBaseRestLegalUnitRepositoryConfig,
     restRepository: RestRepository,
-    rowMapper: RowMapper[LegalUnit]
-) extends LegalUnitRepository with LazyLogging {
+    rowMapper: RowMapper[LegalUnit])(implicit ec: ExecutionContext) extends LegalUnitRepository with LazyLogging {
 
   override def retrieveLegalUnit(ern: Ern, period: Period, ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
     logger.info(s"Retrieving Legal Unit with [$ern] [$ubrn] for [$period].")

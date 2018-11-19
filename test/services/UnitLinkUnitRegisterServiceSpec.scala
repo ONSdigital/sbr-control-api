@@ -4,16 +4,16 @@ import java.time.Month.AUGUST
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatest.{FreeSpec, Matchers}
 import repository.RestRepository
 import repository.RestRepository.Row
 import repository.hbase.unitlinks.HBaseRestUnitLinksRepository.ColumnFamily
-import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepositoryConfig, UnitLinksRowKey }
+import repository.hbase.unitlinks.{HBaseRestUnitLinksRepositoryConfig, UnitLinksRowKey}
 import uk.gov.ons.sbr.models.unitlinks.UnitId
 import uk.gov.ons.sbr.models.unitlinks.UnitType.LegalUnit
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class UnitLinkUnitRegisterServiceSpec extends FreeSpec with Matchers with MockFactory with ScalaFutures {
 
@@ -29,7 +29,7 @@ class UnitLinkUnitRegisterServiceSpec extends FreeSpec with Matchers with MockFa
 
     val restRepository = mock[RestRepository]
     val config = HBaseRestUnitLinksRepositoryConfig(TargetBaseTable)
-    val registerService = new UnitLinkUnitRegisterService(restRepository, config)
+    val registerService = new UnitLinkUnitRegisterService(restRepository, config)(ExecutionContext.global)
   }
 
   "A UnitLink UnitRegisterService" - {
