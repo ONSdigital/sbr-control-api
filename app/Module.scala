@@ -3,10 +3,11 @@ import com.google.inject.{AbstractModule, Provides, TypeLiteral}
 import config.{HBaseRestEnterpriseUnitRepositoryConfigLoader, HBaseRestLegalUnitRepositoryConfigLoader, HBaseRestLocalUnitRepositoryConfigLoader, HBaseRestRepositoryConfigLoader, _}
 import handlers.PatchHandler
 import handlers.http.HttpPatchHandler
-import javax.inject.{Inject, Named}
+import javax.inject.{Inject, Named, Singleton}
 import kamon.Kamon
+import parsers.JsonPatchBodyParser
 import play.api.libs.ws.WSClient
-import play.api.mvc.Result
+import play.api.mvc.{BodyParser, PlayBodyParsers, Result}
 import play.api.{Configuration, Environment}
 import repository._
 import repository.hbase._
@@ -19,6 +20,7 @@ import services._
 import uk.gov.ons.sbr.models.enterprise.Enterprise
 import uk.gov.ons.sbr.models.legalunit.LegalUnit
 import uk.gov.ons.sbr.models.localunit.LocalUnit
+import uk.gov.ons.sbr.models.patch.Patch
 import uk.gov.ons.sbr.models.reportingunit.ReportingUnit
 import uk.gov.ons.sbr.models.unitlinks.UnitLinksNoPeriod
 
@@ -108,6 +110,11 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
     val legalUnitLinkPatchService = new LegalUnitLinkPatchService(unitLinksRepository, adminDataRegisterService)(ec)
     new UnitLinksPatchService(adminDataUnitLinkPatchService, legalUnitLinkPatchService)
   }
+
+  @Provides
+  @Singleton
+  def providesJsonPatchBodyParser(@Inject() bodyParsers: PlayBodyParsers, ec: ExecutionContext): BodyParser[Patch] =
+    new JsonPatchBodyParser(bodyParsers.tolerantJson)(ec)
 }
 
 private object Module {
