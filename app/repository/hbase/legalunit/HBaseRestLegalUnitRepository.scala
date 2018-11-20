@@ -34,8 +34,8 @@ class HBaseRestLegalUnitRepository @Inject() (
     PeriodTableName(config.tableName, period)
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[LegalUnit]] = {
-    val errorOrRows = errorOrRow.right.map(_.toSeq)
-    fromErrorOrRows(errorOrRows).right.map { legalUnits =>
+    val errorOrRows = errorOrRow.map(_.toSeq)
+    fromErrorOrRows(errorOrRows).map { legalUnits =>
       require(legalUnits.size <= 1)
       legalUnits.headOption
     }
@@ -47,7 +47,7 @@ class HBaseRestLegalUnitRepository @Inject() (
    */
   private def fromErrorOrRows(errorOrRows: Either[ErrorMessage, Seq[Row]]): Either[ErrorMessage, Seq[LegalUnit]] = {
     logger.debug(s"Legal Unit response is [$errorOrRows].")
-    errorOrRows.right.flatMap { rows =>
+    errorOrRows.flatMap { rows =>
       val errorOrLegalUnits = EitherSupport.sequence(rows.map(fromRow))
       logger.debug(s"From rows to Legal Units conversion result is [$errorOrLegalUnits].")
       errorOrLegalUnits

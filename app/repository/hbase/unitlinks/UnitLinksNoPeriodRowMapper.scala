@@ -60,8 +60,8 @@ object UnitLinksNoPeriodRowMapper extends RowMapper[UnitLinksNoPeriod] with Lazy
    */
   private def validatePair[A, B, X, Y](fa: A => Either[ErrorMessage, X], fb: B => Either[ErrorMessage, Y])(pair: (A, B)): Either[ErrorMessage, (X, Y)] =
     pair match {
-      case (a, b) => fa(a).right.flatMap { x =>
-        fb(b).right.map { y =>
+      case (a, b) => fa(a).flatMap { x =>
+        fb(b).map { y =>
           x -> y
         }
       }
@@ -89,7 +89,7 @@ object UnitLinksNoPeriodRowMapper extends RowMapper[UnitLinksNoPeriod] with Lazy
     errorOrPairs.left.foreach { errorMessage =>
       logger.error(s"Invalid unit links encountered for rowKey [$rowKey] - [$errorMessage]")
     }
-    errorOrPairs.right.toOption
+    errorOrPairs.toOption
   }
 
   private def toNonEmptyMap[K, V](pairs: Seq[(K, V)]): Option[Map[K, V]] =

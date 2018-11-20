@@ -78,7 +78,7 @@ class HBaseRestRepository @Inject() (config: HBaseRestRepositoryConfig,
     s"${response.statusText} (${response.status})"
 
   private def convertToErrorOrRows(withReader: Reads[Seq[Row]])(errorOrJson: Either[ErrorMessage, Option[JsValue]]): Either[ErrorMessage, Seq[Row]] =
-    errorOrJson.right.flatMap { optJson =>
+    errorOrJson.flatMap { optJson =>
       logger.debug(s"HBase REST response JSON is [$optJson]")
       optJson.fold[Either[ErrorMessage, Seq[Row]]](Right(Seq.empty)) { json =>
         parseJson(withReader)(json)
@@ -92,7 +92,7 @@ class HBaseRestRepository @Inject() (config: HBaseRestRepositoryConfig,
   }
 
   private def verifyAtMostOneRow(errorOrRows: Either[ErrorMessage, Seq[Row]]): Either[ErrorMessage, Option[Row]] =
-    errorOrRows.right.flatMap { rows =>
+    errorOrRows.flatMap { rows =>
       if (rows.size > 1) {
         logger.warn(s"At most one result was expected for query but found [$rows].")
         Left(s"At most one result was expected but found [${rows.size}]")

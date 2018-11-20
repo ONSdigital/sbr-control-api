@@ -34,8 +34,8 @@ class HBaseRestLocalUnitRepository @Inject() (
     PeriodTableName(config.tableName, period)
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[LocalUnit]] = {
-    val errorOrRows = errorOrRow.right.map(_.toSeq)
-    fromErrorOrRows(errorOrRows).right.map { localUnits =>
+    val errorOrRows = errorOrRow.map(_.toSeq)
+    fromErrorOrRows(errorOrRows).map { localUnits =>
       require(localUnits.size <= 1)
       localUnits.headOption
     }
@@ -47,7 +47,7 @@ class HBaseRestLocalUnitRepository @Inject() (
    */
   private def fromErrorOrRows(errorOrRows: Either[ErrorMessage, Seq[Row]]): Either[ErrorMessage, Seq[LocalUnit]] = {
     logger.debug(s"Local Unit response is [$errorOrRows].")
-    errorOrRows.right.flatMap { rows =>
+    errorOrRows.flatMap { rows =>
       val errorOrLocalUnits = EitherSupport.sequence(rows.map(fromRow))
       logger.debug(s"From rows to Local Units conversion result is [$errorOrLocalUnits].")
       errorOrLocalUnits

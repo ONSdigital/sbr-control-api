@@ -30,10 +30,10 @@ class HBaseRestUnitLinksRepository @Inject() (
 
   private def fromErrorOrRow(withPeriod: Period)(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[UnitLinks]] = {
     logger.debug(s"Unit Links response is [$errorOrRow]")
-    errorOrRow.right.flatMap { optRow =>
+    errorOrRow.flatMap { optRow =>
       optRow.map(fromRow).fold[Either[ErrorMessage, Option[UnitLinks]]](Right(None)) { errorOrUnitLinks =>
         logger.debug(s"From Row to Unit Links conversion is [$errorOrUnitLinks]")
-        errorOrUnitLinks.right.map { unitLinksNoPeriod =>
+        errorOrUnitLinks.map { unitLinksNoPeriod =>
           Some(UnitLinks.from(withPeriod, unitLinksNoPeriod))
         }
       }

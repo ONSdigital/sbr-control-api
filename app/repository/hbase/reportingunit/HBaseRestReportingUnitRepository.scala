@@ -34,8 +34,8 @@ class HBaseRestReportingUnitRepository @Inject() (
     PeriodTableName(config.tableName, period)
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[ReportingUnit]] = {
-    val errorOrRows = errorOrRow.right.map(_.toSeq)
-    fromErrorOrRows(errorOrRows).right.map { reportingUnits =>
+    val errorOrRows = errorOrRow.map(_.toSeq)
+    fromErrorOrRows(errorOrRows).map { reportingUnits =>
       require(reportingUnits.size <= 1)
       reportingUnits.headOption
     }
@@ -47,7 +47,7 @@ class HBaseRestReportingUnitRepository @Inject() (
  */
   private def fromErrorOrRows(errorOrRows: Either[ErrorMessage, Seq[Row]]): Either[ErrorMessage, Seq[ReportingUnit]] = {
     logger.debug(s"Reporting Unit response is [$errorOrRows].")
-    errorOrRows.right.flatMap { rows =>
+    errorOrRows.flatMap { rows =>
       val errorOrReportingUnits = EitherSupport.sequence(rows.map(fromRow))
       logger.debug(s"From rows to Reporting Units conversion result is [$errorOrReportingUnits].")
       errorOrReportingUnits

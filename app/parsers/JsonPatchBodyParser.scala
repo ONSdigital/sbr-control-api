@@ -26,7 +26,7 @@ class JsonPatchBodyParser @Inject() (jsonBodyParser: BodyParser[JsValue])(implic
   override def apply(rh: RequestHeader): JsonPatchBodyParserResult =
     rh.contentType.filter(_ == JsonPatchMediaType).fold[JsonPatchBodyParserResult](Accumulator.done(Left(UnsupportedMediaType))) { _ =>
       jsonBodyParser(rh).map { resultOrJsValue =>
-        resultOrJsValue.right.flatMap(jsonToBadRequestOrPatch)
+        resultOrJsValue.flatMap(jsonToBadRequestOrPatch)
       }
     }
 
