@@ -49,6 +49,11 @@ lazy val publishingSettings = Seq(
 /*
  * -Ywarn-unused-import was removed because otherwise a large number of warnings are generated for
  *                      sbr-control-api/conf/routes which is a Play issue we can do nothing about
+ *
+ * In the upgrade to Scala 2.12 we have unfortunately had to disable unused warnings completely with
+ * -Xlint:-unused (i.e enable Xlint except for unused).
+ * This is because in addition to some Play requirements that were being flagged as unused, private
+ * implicit vals were being flagged as unused even when used as a result of implicit resolution.
  */
 lazy val commonSettings = Seq (
   scalaVersion := Versions.scala,
@@ -64,13 +69,12 @@ lazy val commonSettings = Seq (
     "-deprecation", // warning and location for usages of deprecated APIs
     "-feature", // warning and location for usages of features that should be imported explicitly
     "-unchecked", // additional warnings where generated code depends on assumptions
-    "-Xlint", // recommended additional warnings
     "-Xcheckinit", // runtime error when a val is not initialized due to trait hierarchies (instead of NPE somewhere else)
+    "-Xlint:-unused", // recommended additional warnings
     "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver
     "-Ywarn-value-discard", // Warn when non-Unit expression results are unused
     "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures
     "-Ywarn-dead-code", // Warn when dead code is identified
-    "-Ywarn-unused", // Warn when local and private vals, vars, defs, and types are unused
     "-Ywarn-numeric-widen" // Warn when numerics are widened
   ),
   resolvers ++= Resolvers,
