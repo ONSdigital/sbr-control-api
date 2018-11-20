@@ -13,7 +13,7 @@ import repository.RestRepository._
 import repository._
 import repository.hbase.HBaseData.HBaseRow
 import repository.hbase.HBaseRestRepository._
-import utils.{BaseUrl, ResponseHandler, TrySupport}
+import utils.{BaseUrl, ResponseHandler}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
@@ -69,10 +69,10 @@ class HBaseRestRepository @Inject() (config: HBaseRestRepositoryConfig,
   }
 
   private def bodyAsJson(response: WSResponse): Either[ErrorMessage, Option[JsValue]] =
-    TrySupport.fold(Try(response.json))(
+    Try(response.json).fold(
       err => Left(s"Unable to create JsValue from HBase response [${err.getMessage}]"),
       json => Right(json)
-    ).right.map(Some(_))
+    ).map(Some(_))
 
   private def describeStatus(response: WSResponse): String =
     s"${response.statusText} (${response.status})"
