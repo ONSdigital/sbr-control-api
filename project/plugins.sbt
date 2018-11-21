@@ -32,5 +32,5 @@ addSbtPlugin("org.scalastyle" % "scalastyle-sbt-plugin" % "1.0.0")
 
 // kamon (for tracing)
 resolvers += Resolver.bintrayIvyRepo("kamon-io", "sbt-plugins")
-addSbtPlugin("io.kamon" % "sbt-aspectj-runner-play-2.6" % "1.1.0")
+addSbtPlugin("io.kamon" % "sbt-aspectj-runner-play-2.6" % "1.1.1")
 addSbtPlugin("com.lightbend.sbt" % "sbt-javaagent" % "0.1.4")
