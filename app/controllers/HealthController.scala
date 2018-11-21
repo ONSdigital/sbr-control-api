@@ -22,7 +22,7 @@ class HealthController @Inject() (controllerComponents: ControllerComponents) ex
     new ApiResponse(code = 200, message = "Success - Displays a json object of basic api health.")
   ))
   def health = Action {
-    Ok(s"{Status: Ok, Uptime: ${uptime.toMillis}ms, Date and Time: ${startLocalDateTime.format(ISO_LOCAL_DATE_TIME)}").as(JSON)
+    Ok(s"""{"Status": "Ok", "Uptime": "${uptime.toMillis}ms", "Date and Time": "${startLocalDateTime.format(ISO_LOCAL_DATE_TIME)}"}""").as(JSON)
   }
 
   private def uptime: Duration =
