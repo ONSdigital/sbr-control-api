@@ -44,7 +44,7 @@ class RouteSpec extends PlaySpec with GuiceOneAppPerSuite {
       val health = fakeRequest("/health")
       status(health) mustEqual OK
       contentType(health) mustBe Some("application/json")
-      contentAsString(health).toLowerCase must include("status: ok")
+      contentAsString(health).toLowerCase must include(s""""status": "ok"""")
     }
   }
 
