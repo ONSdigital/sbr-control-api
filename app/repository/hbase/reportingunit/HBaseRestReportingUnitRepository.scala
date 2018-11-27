@@ -1,7 +1,8 @@
 package repository.hbase.reportingunit
 
-import javax.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
+import javax.inject.Inject
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import repository.RestRepository._
 import repository.hbase.HBase._
 import repository.hbase.PeriodTableName
@@ -12,7 +13,6 @@ import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnit, Rurn }
 import utils.EitherSupport
 
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
 case class HBaseRestReportingUnitRepositoryConfig(tableName: String)
 
