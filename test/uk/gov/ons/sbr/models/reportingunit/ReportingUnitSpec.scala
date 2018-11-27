@@ -42,7 +42,7 @@ class ReportingUnitSpec extends FreeSpec with Matchers {
           int("employment", reportingUnit.employment),
           int("turnover", reportingUnit.turnover),
           string("region", reportingUnit.region),
-          string("prn", reportingUnit.prn.toString())
+          string("prn", reportingUnit.prn.bigDecimal.toPlainString)
         )
       }
       }""".stripMargin
@@ -56,6 +56,13 @@ class ReportingUnitSpec extends FreeSpec with Matchers {
 
       "when only the mandatory fields are defined" in new Fixture {
         Json.toJson(SampleMandatoryValuesReportingUnit) shouldBe Json.parse(expectedJsonStrOf(SampleMandatoryValuesReportingUnit))
+      }
+
+      // representation should contain the full value in non-scientific format
+      "when the prn is very small" in new Fixture {
+        val sampleReportingUnitWithVerySmallPrn = SampleAllValuesReportingUnit.copy(prn = BigDecimal("0.000000003"))
+
+        Json.toJson(sampleReportingUnitWithVerySmallPrn) shouldBe Json.parse(expectedJsonStrOf(sampleReportingUnitWithVerySmallPrn))
       }
     }
   }
