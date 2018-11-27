@@ -38,7 +38,7 @@ class LocalUnitSpec extends FreeSpec with Matchers {
           int("employees", localUnit.employees),
           int("employment", localUnit.employment),
           string("region", localUnit.region),
-          string("prn", localUnit.prn.toString())
+          string("prn", localUnit.prn.bigDecimal.toPlainString)
         )
       },
          | "address": {${
@@ -61,6 +61,13 @@ class LocalUnitSpec extends FreeSpec with Matchers {
 
       "when only the mandatory fields are defined" in new Fixture {
         Json.toJson(SampleMandatoryValuesLocalUnit) shouldBe Json.parse(expectedJsonStrOf(SampleMandatoryValuesLocalUnit))
+      }
+
+      // representation should contain the full value in non-scientific format
+      "when the prn is very small" in new Fixture {
+        val sampleLocalUnitWithVerySmallPrn = SampleAllValuesLocalUnit.copy(prn = BigDecimal("0.000000001"))
+
+        Json.toJson(sampleLocalUnitWithVerySmallPrn) shouldBe Json.parse(expectedJsonStrOf(sampleLocalUnitWithVerySmallPrn))
       }
     }
   }
