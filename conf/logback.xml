@@ -29,11 +29,9 @@
   <!-- default (but not used by anything using a named logger e.g. if LazyLogging is mixed-in to the logging class )-->
   <logger name="application" level="INFO"/>
 
-  <!-- Off these ones as they are annoying, and anyway we manage configuration ourselves -->
-  <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF"/>
-  <logger name="com.avaje.ebeaninternal.server.core.XmlConfigLoader" level="OFF"/>
-  <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF"/>
-  <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF"/>
+  <!-- quiet swagger -->
+  <logger name="io.swagger" level="WARN"/>
+  <logger name="swagger" level="WARN"/>
 
   <root level="INFO">
     <appender-ref ref="ASYNCSTDOUT"/>
