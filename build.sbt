@@ -57,26 +57,6 @@ lazy val publishingSettings = Seq(
  */
 lazy val commonSettings = Seq (
   scalaVersion := Versions.scala,
-  scalacOptions in ThisBuild ++= Seq(
-    "-language:experimental.macros",
-    "-target:jvm-1.8",
-    "-encoding", "UTF-8",
-    "-language:reflectiveCalls",
-    "-language:experimental.macros",
-    "-language:implicitConversions",
-    "-language:higherKinds",
-    "-language:postfixOps",
-    "-deprecation", // warning and location for usages of deprecated APIs
-    "-feature", // warning and location for usages of features that should be imported explicitly
-    "-unchecked", // additional warnings where generated code depends on assumptions
-    "-Xcheckinit", // runtime error when a val is not initialized due to trait hierarchies (instead of NPE somewhere else)
-    "-Xlint:-unused", // recommended additional warnings
-    "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver
-    "-Ywarn-value-discard", // Warn when non-Unit expression results are unused
-    "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures
-    "-Ywarn-dead-code", // Warn when dead code is identified
-    "-Ywarn-numeric-widen" // Warn when numerics are widened
-  ),
   resolvers ++= Resolvers,
   coverageExcludedPackages := ".*Routes.*;.*ReverseRoutes.*;.*javascript.*",
   scapegoatVersion in ThisBuild := "1.3.8"
