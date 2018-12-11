@@ -1,6 +1,7 @@
 package services
+
 import uk.gov.ons.sbr.models.UnitKey
-import uk.gov.ons.sbr.models.unitlinks.UnitType.{ PayAsYouEarn, ValueAddedTax }
+import uk.gov.ons.sbr.models.unitlinks.UnitType.{PayAsYouEarn, ValueAddedTax}
 
 import scala.concurrent.Future
 

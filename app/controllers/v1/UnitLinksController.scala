@@ -1,18 +1,17 @@
 package controllers.v1
 
+import controllers.AbstractSbrController
 import controllers.v1.ControllerResultProcessor._
 import controllers.v1.api.UnitLinksApi
 import handlers.PatchHandler
 import io.swagger.annotations._
-import javax.inject.Inject
-import parsers.JsonPatchBodyParser
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import repository.UnitLinksRepository
 import uk.gov.ons.sbr.models.patch.Patch
-import uk.gov.ons.sbr.models.unitlinks.UnitType.{ LegalUnit, PayAsYouEarn, ValueAddedTax }
-import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitType }
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import uk.gov.ons.sbr.models.unitlinks.UnitType.{LegalUnit, PayAsYouEarn, ValueAddedTax}
+import uk.gov.ons.sbr.models.unitlinks.{UnitId, UnitLinks, UnitType}
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 
 import scala.concurrent.Future
 
@@ -24,7 +23,11 @@ import scala.concurrent.Future
  * results in exceptions at runtime.
  */
 @Api("Search")
-class UnitLinksController @Inject() (repository: UnitLinksRepository, handlePatch: PatchHandler[Future[Result]]) extends Controller with UnitLinksApi {
+@Singleton
+class UnitLinksController @Inject() (controllerComponents: ControllerComponents,
+                                     repository: UnitLinksRepository,
+                                     jsonPatchBodyParser: BodyParser[Patch],
+                                     handlePatch: PatchHandler[Future[Result]]) extends AbstractSbrController(controllerComponents) with UnitLinksApi {
   override def retrieveUnitLinks(id: String, periodStr: String, unitTypeStr: String): Action[AnyContent] = Action.async {
     val unitKey = unitKeyFor(UnitType.fromAcronym(unitTypeStr), id, periodStr)
     repository.retrieveUnitLinks(unitKey).map { errorOrOptUnitLinks =>
@@ -64,7 +67,7 @@ class UnitLinksController @Inject() (repository: UnitLinksRepository, handlePatc
   def patchVatUnitLinks(
     @ApiParam(value = "VAT reference", example = "123456789012", required = true) vatref: String,
     @ApiParam(value = "Period (unit load date)", example = "201803", required = true) periodStr: String
-  ): Action[Patch] = Action.async(JsonPatchBodyParser) { request =>
+  ): Action[Patch] = Action.async(jsonPatchBodyParser) { request =>
     processUnitLinkPatch(ValueAddedTax, vatref, periodStr, request.body)
   }
 
@@ -101,7 +104,7 @@ class UnitLinksController @Inject() (repository: UnitLinksRepository, handlePatc
     @ApiParam(value = "PAYE reference", example = "575H7Z71278", required = true) payeref: String,
     @ApiParam(value = "Period (unit load date)", example = "201803", required = true) periodStr: String
   ): Action[Patch] =
-    Action.async(JsonPatchBodyParser) { request =>
+    Action.async(jsonPatchBodyParser) { request =>
       processUnitLinkPatch(PayAsYouEarn, payeref, periodStr, request.body)
     }
 
@@ -136,7 +139,7 @@ class UnitLinksController @Inject() (repository: UnitLinksRepository, handlePatc
   def patchLeuUnitLinks(
     @ApiParam(value = "The Legal Unit identifier", example = "1234567890123456", required = true) ubrn: String,
     @ApiParam(value = "Period (unit load date)", example = "201803", required = true) periodStr: String
-  ): Action[Patch] = Action.async(JsonPatchBodyParser) { request =>
+  ): Action[Patch] = Action.async(jsonPatchBodyParser) { request =>
     processUnitLinkPatch(LegalUnit, ubrn, periodStr, request.body)
   }
 

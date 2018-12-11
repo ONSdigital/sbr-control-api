@@ -2,23 +2,21 @@ package repository.hbase.enterprise
 
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import repository.RestRepository.{ ErrorMessage, Row }
+import repository.RestRepository.{ErrorMessage, Row}
 import repository.hbase.HBase.DefaultColumnFamily
 import repository.hbase.PeriodTableName
-import repository.{ EnterpriseUnitRepository, RestRepository, RowMapper }
+import repository.{EnterpriseUnitRepository, RestRepository, RowMapper}
 import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.{ Enterprise, Ern }
+import uk.gov.ons.sbr.models.enterprise.{Enterprise, Ern}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class HBaseRestEnterpriseUnitRepositoryConfig(tableName: String)
 
 class HBaseRestEnterpriseUnitRepository @Inject() (
     restRepository: RestRepository,
     config: HBaseRestEnterpriseUnitRepositoryConfig,
-    rowMapper: RowMapper[Enterprise]
-) extends EnterpriseUnitRepository with LazyLogging {
+    rowMapper: RowMapper[Enterprise])(implicit ec: ExecutionContext) extends EnterpriseUnitRepository with LazyLogging {
 
   override def retrieveEnterpriseUnit(ern: Ern, period: Period): Future[Either[ErrorMessage, Option[Enterprise]]] = {
     logger.info(s"Retrieving Enterprise with [$ern] for [$period].")
@@ -30,10 +28,10 @@ class HBaseRestEnterpriseUnitRepository @Inject() (
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[Enterprise]] = {
     logger.debug(s"Enterprise Unit response is [$errorOrRow]")
-    errorOrRow.right.flatMap { optRow =>
+    errorOrRow.flatMap { optRow =>
       optRow.map(fromRow).fold[Either[ErrorMessage, Option[Enterprise]]](Right(None)) { errorOrEnterprise =>
         logger.debug(s"From row to Enterprise Unit conversion result is [$errorOrEnterprise].")
-        errorOrEnterprise.right.map(Some(_))
+        errorOrEnterprise.map(Some(_))
       }
     }
   }

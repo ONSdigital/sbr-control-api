@@ -1,18 +1,19 @@
 package services
 
 import javax.inject.Inject
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import repository._
-import services.AdminUnitLinkPatchService.{ ParentLegalUnit, toPatchStatus }
+import services.AdminUnitLinkPatchService.{ParentLegalUnit, toPatchStatus}
 import uk.gov.ons.sbr.models.UnitKey
-import uk.gov.ons.sbr.models.patch.{ Patch, ReplaceOperation, TestOperation }
+import uk.gov.ons.sbr.models.patch.{Patch, ReplaceOperation, TestOperation}
 import uk.gov.ons.sbr.models.unitlinks.UnitType.LegalUnit
-import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
+import uk.gov.ons.sbr.models.unitlinks.{UnitId, UnitType}
 import utils.JsResultSupport
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class AdminUnitLinkPatchService @Inject() (repository: UnitLinksRepository, unitRegisterService: UnitRegisterService) extends PatchService {
+class AdminUnitLinkPatchService @Inject() (repository: UnitLinksRepository,
+                                           unitRegisterService: UnitRegisterService)
+                                          (implicit ec: ExecutionContext) extends PatchService {
   override def applyPatchTo(unitKey: UnitKey, patch: Patch): Future[PatchStatus] =
     patch match {
       case TestOperation(ParentLegalUnit, fromValue) :: ReplaceOperation(ParentLegalUnit, toValue) :: Nil =>

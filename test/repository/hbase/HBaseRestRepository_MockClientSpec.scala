@@ -2,16 +2,16 @@ package repository.hbase
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ EitherValues, FreeSpec, Matchers, OneInstancePerTest }
-import play.api.http.{ Status, Writeable }
-import play.api.libs.json.{ JsSuccess, JsValue, Json, Reads }
-import play.api.libs.ws.{ WSClient, WSRequest, WSResponse }
+import org.scalatest.{EitherValues, FreeSpec, Matchers, OneInstancePerTest}
+import play.api.http.Status
+import play.api.libs.json.{JsSuccess, JsValue, Json, Reads}
+import play.api.libs.ws.{BodyWritable, WSClient, WSRequest, WSResponse}
 import repository.EditFailed
 import repository.RestRepository.Row
 import utils.BaseUrl
 
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /*
  * This spec mocks the wsClient, which disregards the rule "don't mock types you don't own" (see "Growing
@@ -19,6 +19,9 @@ import scala.concurrent.{ Await, Future }
  * where possible.  This was introduced to simplify asserting that the client-side timeout is configured correctly,
  * as this is not observable via Wiremock.  It also allows us to assert that the configured host / port are used,
  * as the wsTestClient used by the acceptance test overrides these.
+ *
+ * True to form, this test was broken by the upgrade to Play 2.6, as request now requires a BodyWritable[T] rather
+ * than a Writable[T].
  */
 class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with MockFactory with ScalaFutures with EitherValues with OneInstancePerTest {
 
@@ -43,12 +46,12 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
       BaseUrl(protocol = Protocol, host = Host, port = Port, prefix = Some("HBase")),
       "namespace", "username", "password", timeout = ClientTimeout
     )
-    val restRepository = new HBaseRestRepository(config, wsClient, hbaseResponseReaderMaker)
+    val restRepository = new HBaseRestRepository(config, wsClient, hbaseResponseReaderMaker)(ExecutionContext.global)
 
     val wsRequest = mock[WSRequest]
 
     def expectRequestHeadersAndAuth(): Unit = {
-      (wsRequest.withHeaders _).expects(*).returning(wsRequest)
+      (wsRequest.withHttpHeaders _).expects(*).returning(wsRequest)
       (wsRequest.withAuth _).expects(*, *, *).returning(wsRequest)
       () // explicitly return unit to avoid warning about disregarded return value
     }
@@ -58,7 +61,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
       val getResponse = stub[WSResponse]
       val body = Json.parse("{}")
       val readsRows = stub[Reads[Seq[Row]]]
-      (getRequest.withHeaders _).when(*).returns(getRequest)
+      (getRequest.withHttpHeaders _).when(*).returns(getRequest)
       (getRequest.withAuth _).when(*, *, *).returning(getRequest)
       (getRequest.withRequestTimeout _).when(*).returns(getRequest)
 
@@ -128,7 +131,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         (wsClient.url _).when(where[String] { _.endsWith(EditUrlSuffix) }).returns(wsRequest)
         expectRequestHeadersAndAuth()
         (wsRequest.withRequestTimeout _).expects(ClientTimeout.milliseconds).returning(wsRequest)
-        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
+        (wsRequest.put(_: JsValue)(_: BodyWritable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
 
         Await.result(restRepository.updateField(Table, RowKey, checkField = ColumnName -> OldValue, updateField = ColumnName -> NewValue), AwaitTime)
       }
@@ -141,7 +144,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         }).returning(wsRequest)
         expectRequestHeadersAndAuth()
         (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
-        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
+        (wsRequest.put(_: JsValue)(_: BodyWritable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
 
         Await.result(restRepository.updateField(Table, RowKey, checkField = ColumnName -> OldValue, updateField = ColumnName -> NewValue), AwaitTime)
       }
@@ -155,7 +158,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         (wsClient.url _).when(where[String] { _.endsWith(EditUrlSuffix) }).returns(wsRequest)
         expectRequestHeadersAndAuth()
         (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
-        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(
+        (wsRequest.put(_: JsValue)(_: BodyWritable[JsValue])).expects(*, *).returning(
           Future.failed(new Exception("Connection failed"))
         )
 
@@ -170,7 +173,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         (wsClient.url _).when(where[String] { _.endsWith(CreateUrlSuffix) }).returns(wsRequest)
         expectRequestHeadersAndAuth()
         (wsRequest.withRequestTimeout _).expects(ClientTimeout.milliseconds).returning(wsRequest)
-        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
+        (wsRequest.put(_: JsValue)(_: BodyWritable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
 
         Await.result(restRepository.createOrReplace(Table, RowKey, field = ColumnName -> NewValue), AwaitTime)
       }
@@ -179,7 +182,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         (wsClient.url _).when(where[String] { url => url.startsWith(s"$Protocol://$Host:$Port") && url.endsWith(CreateUrlSuffix) }).returning(wsRequest)
         expectRequestHeadersAndAuth()
         (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
-        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
+        (wsRequest.put(_: JsValue)(_: BodyWritable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
 
         Await.result(restRepository.createOrReplace(Table, RowKey, field = ColumnName -> NewValue), AwaitTime)
       }
@@ -188,7 +191,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         (wsClient.url _).when(where[String] { _.endsWith(CreateUrlSuffix) }).returns(wsRequest)
         expectRequestHeadersAndAuth()
         (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
-        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(
+        (wsRequest.put(_: JsValue)(_: BodyWritable[JsValue])).expects(*, *).returning(
           Future.failed(new Exception("Connection failed"))
         )
 
@@ -204,7 +207,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         (wsClient.url _).when(where[String] { _.endsWith(DeleteUrlSuffix) }).returns(wsRequest)
         expectRequestHeadersAndAuth()
         (wsRequest.withRequestTimeout _).expects(ClientTimeout.milliseconds).returning(wsRequest)
-        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
+        (wsRequest.put(_: JsValue)(_: BodyWritable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
 
         Await.result(restRepository.deleteField(Table, RowKey, checkField = ColumnName -> OldValue, ColumnName), AwaitTime)
       }
@@ -214,7 +217,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         (wsClient.url _).when(where[String] { url => url.startsWith(s"$Protocol://$Host:$Port") && url.endsWith(DeleteUrlSuffix) }).returning(wsRequest)
         expectRequestHeadersAndAuth()
         (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
-        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
+        (wsRequest.put(_: JsValue)(_: BodyWritable[JsValue])).expects(*, *).returning(Future.successful(wsResponse))
 
         Await.result(restRepository.deleteField(Table, RowKey, checkField = ColumnName -> OldValue, ColumnName), AwaitTime)
       }
@@ -224,7 +227,7 @@ class HBaseRestRepository_MockClientSpec extends FreeSpec with Matchers with Moc
         (wsClient.url _).when(where[String] { _.endsWith(DeleteUrlSuffix) }).returns(wsRequest)
         expectRequestHeadersAndAuth()
         (wsRequest.withRequestTimeout _).expects(*).returning(wsRequest)
-        (wsRequest.put(_: JsValue)(_: Writeable[JsValue])).expects(*, *).returning(
+        (wsRequest.put(_: JsValue)(_: BodyWritable[JsValue])).expects(*, *).returning(
           Future.failed(new Exception("Connection failed"))
         )
 

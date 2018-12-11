@@ -1,7 +1,6 @@
 package uk.gov.ons.sbr.models.patch
 
-import org.scalatest.{ FreeSpec, Matchers }
-import play.api.data.validation.ValidationError
+import org.scalatest.{FreeSpec, Matchers}
 import play.api.libs.json._
 
 class OperationSpec extends FreeSpec with Matchers {
@@ -58,7 +57,7 @@ class OperationSpec extends FreeSpec with Matchers {
         "has an unrecognised value" in {
           val jsonOperation = Json.parse("""{"op": "update", "path": "/a/b/c", "value": "foo"}""")
 
-          jsonOperation.validate[Operation] shouldBe JsError(JsPath \ "op" -> ValidationError("Unrecognised operation [update]"))
+          jsonOperation.validate[Operation] shouldBe JsError(JsPath \ "op" -> JsonValidationError("Unrecognised operation [update]"))
         }
       }
 

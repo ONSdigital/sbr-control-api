@@ -1,21 +1,17 @@
 package controllers.v1
 
-import javax.inject.{ Inject, Singleton }
-
 import com.typesafe.scalalogging.LazyLogging
-
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.json.Json.toJson
-import play.api.mvc.{ Action, AnyContent, Controller, Result }
-import io.swagger.annotations.Api
-
-import uk.gov.ons.sbr.models.Period
-import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, Ubrn }
-
+import controllers.AbstractSbrController
 import controllers.v1.ControllerResultProcessor._
 import controllers.v1.api.LegalUnitApi
+import io.swagger.annotations.Api
+import javax.inject.{Inject, Singleton}
+import play.api.libs.json.Json.toJson
+import play.api.mvc._
 import repository.LegalUnitRepository
+import uk.gov.ons.sbr.models.Period
+import uk.gov.ons.sbr.models.enterprise.Ern
+import uk.gov.ons.sbr.models.legalunit.{LegalUnit, Ubrn}
 
 /*
  * Note that we are relying on regex patterns in the routes definitions to apply argument validation.
@@ -23,7 +19,8 @@ import repository.LegalUnitRepository
  */
 @Api("Search")
 @Singleton
-class LegalUnitController @Inject() (repository: LegalUnitRepository) extends Controller with LegalUnitApi with LazyLogging {
+class LegalUnitController @Inject() (controllerComponents: ControllerComponents,
+                                     repository: LegalUnitRepository) extends AbstractSbrController(controllerComponents) with LegalUnitApi with LazyLogging {
   override def retrieveLegalUnit(ernStr: String, periodStr: String, ubrnStr: String): Action[AnyContent] = Action.async {
     repository.retrieveLegalUnit(Ern(ernStr), Period.fromString(periodStr), Ubrn(ubrnStr)).map { errorOrLegalUnit =>
       errorOrLegalUnit.fold(resultOnFailure, resultOnSuccessWithAtMostOneUnit[LegalUnit])

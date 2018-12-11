@@ -1,8 +1,8 @@
 package controllers
 
-import org.scalatest.{ FreeSpec, Matchers }
-import play.api.test.FakeRequest
+import org.scalatest.{FreeSpec, Matchers}
 import play.api.test.Helpers._
+import play.api.test.{FakeRequest, StubControllerComponentsFactory}
 
 /*
  * This just tests the action in this controller.
@@ -11,10 +11,10 @@ import play.api.test.Helpers._
  */
 class BadRequestControllerSpec extends FreeSpec with Matchers {
 
-  private trait Fixture {
+  private trait Fixture extends StubControllerComponentsFactory {
     val UnusedArgument = "unused"
 
-    val controller = new BadRequestController()
+    val controller = new BadRequestController(stubControllerComponents())
   }
 
   "A request" - {

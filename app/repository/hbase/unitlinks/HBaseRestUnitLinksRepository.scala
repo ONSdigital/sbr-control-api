@@ -1,18 +1,17 @@
 package repository.hbase.unitlinks
 
-import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import repository.RestRepository.{ ErrorMessage, Field, Row, RowKey }
+import javax.inject.Inject
+import repository.RestRepository.{ErrorMessage, Field, Row, RowKey}
 import repository._
 import repository.hbase.unitlinks.HBaseRestUnitLinksRepository._
-import repository.hbase.{ Column, PeriodTableName }
-import services.{ UnitFound, UnitNotFound, UnitRegisterFailure, UnitRegisterService }
-import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitLinks, UnitLinksNoPeriod, UnitType }
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import repository.hbase.{Column, PeriodTableName}
+import services.{UnitFound, UnitNotFound, UnitRegisterFailure, UnitRegisterService}
+import uk.gov.ons.sbr.models.unitlinks.{UnitId, UnitLinks, UnitLinksNoPeriod, UnitType}
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 
 import scala.Function.uncurried
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class HBaseRestUnitLinksRepositoryConfig(tableName: String)
 
@@ -20,8 +19,7 @@ class HBaseRestUnitLinksRepository @Inject() (
     restRepository: RestRepository,
     config: HBaseRestUnitLinksRepositoryConfig,
     rowMapper: RowMapper[UnitLinksNoPeriod],
-    unitRegisterService: UnitRegisterService
-) extends UnitLinksRepository with LazyLogging {
+    unitRegisterService: UnitRegisterService)(implicit ec: ExecutionContext) extends UnitLinksRepository with LazyLogging {
 
   override def retrieveUnitLinks(unitKey: UnitKey): Future[Either[ErrorMessage, Option[UnitLinks]]] = {
     logger.info(s"Retrieving UnitLinks for [$unitKey]")
@@ -32,10 +30,10 @@ class HBaseRestUnitLinksRepository @Inject() (
 
   private def fromErrorOrRow(withPeriod: Period)(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[UnitLinks]] = {
     logger.debug(s"Unit Links response is [$errorOrRow]")
-    errorOrRow.right.flatMap { optRow =>
+    errorOrRow.flatMap { optRow =>
       optRow.map(fromRow).fold[Either[ErrorMessage, Option[UnitLinks]]](Right(None)) { errorOrUnitLinks =>
         logger.debug(s"From Row to Unit Links conversion is [$errorOrUnitLinks]")
-        errorOrUnitLinks.right.map { unitLinksNoPeriod =>
+        errorOrUnitLinks.map { unitLinksNoPeriod =>
           Some(UnitLinks.from(withPeriod, unitLinksNoPeriod))
         }
       }

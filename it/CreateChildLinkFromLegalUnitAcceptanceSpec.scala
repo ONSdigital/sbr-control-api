@@ -80,7 +80,7 @@ class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the creation of a child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "add", "path": "/children/$VatRef", "value": "$VatUnitAcronym"}]"""))
 
       Then("a Success response is returned")
@@ -100,7 +100,7 @@ class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the creation of a child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "add", "path": "/children/$VatRef", "value": "$VatUnitAcronym"}]"""))
 
       Then("a Success response is returned")
@@ -116,7 +116,7 @@ class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the creation of a child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "add", "path": "/children/$VatRef", "value": "$VatUnitAcronym"}]"""))
 
       Then(s"a Unprocessable Entity response is returned")
@@ -138,7 +138,7 @@ class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the creation of a child link from $TargetUBRN to the PAYE unit with reference $PayeRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "add", "path": "/children/$PayeRef", "value": "$PayeUnitAcronym"}]"""))
 
       Then("a Success response is returned")
@@ -158,7 +158,7 @@ class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the creation of a child link from $TargetUBRN to the PAYE unit with reference $PayeRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "add", "path": "/children/$PayeRef", "value": "$PayeUnitAcronym"}]"""))
 
       Then("a Success response is returned")
@@ -174,7 +174,7 @@ class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the creation of a child link from $TargetUBRN to the PAYE unit with reference $PayeRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "add", "path": "/children/$PayeRef", "value": "$PayeUnitAcronym"}]"""))
 
       Then(s"a Unprocessable Entity response is returned")
@@ -192,7 +192,7 @@ class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the creation of a child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "add", "path": "/children/$VatRef", "value": "$VatUnitAcronym"}]"""))
 
       Then(s"a Not Found response is returned")
@@ -204,7 +204,7 @@ class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the creation of a child link from UBRN 12345678901234567 (which has 17 digits) to the VAT unit with reference $VatRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/12345678901234567").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "add", "path": "/children/$VatRef", "value": "$VatUnitAcronym"}]"""))
 
       Then(s"a Bad Request response is returned")
@@ -216,7 +216,7 @@ class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the creation of a child link from $TargetUBRN to the VAT unit with reference $VatRef is requested with a media type of $JSON")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JSON).
+        withHttpHeaders(CONTENT_TYPE -> JSON).
         patch(s"""[{"op": "add", "path": "/children/$VatRef", "value": "$VatUnitAcronym"}]"""))
 
       Then(s"an Unsupported Media Type response is returned")
@@ -227,7 +227,7 @@ class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
       When(s"the creation of a child link from $TargetUBRN to the VAT unit with reference $VatRef is requested with invalid json")
       val invalidJson = "[}"
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(invalidJson))
 
       Then(s"a Bad Request response is returned")
@@ -239,7 +239,7 @@ class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the creation of a child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "create", "path": "/children/$VatRef", "value": "$VatUnitAcronym"}]"""))
 
       Then(s"a Bad Request response is returned")
@@ -251,7 +251,7 @@ class CreateChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the creation of a child link from $TargetUBRN to an Enterprise is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "add", "path": "/children/1234567890", "value": "$EnterpriseAcronym"}]"""))
 
       Then(s"a Unprocessable Entity response is returned")

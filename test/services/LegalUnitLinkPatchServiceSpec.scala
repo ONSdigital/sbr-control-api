@@ -4,15 +4,15 @@ import java.time.Month.MARCH
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ FreeSpec, Matchers }
-import play.api.libs.json.{ JsNumber, JsString }
+import org.scalatest.{FreeSpec, Matchers}
+import play.api.libs.json.{JsNumber, JsString}
 import repository._
-import uk.gov.ons.sbr.models.patch.{ AddOperation, RemoveOperation, ReplaceOperation, TestOperation }
+import uk.gov.ons.sbr.models.patch.{AddOperation, RemoveOperation, ReplaceOperation, TestOperation}
 import uk.gov.ons.sbr.models.unitlinks.UnitId
-import uk.gov.ons.sbr.models.unitlinks.UnitType.{ CompaniesHouse, LegalUnit, PayAsYouEarn, ValueAddedTax, toAcronym }
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import uk.gov.ons.sbr.models.unitlinks.UnitType.{CompaniesHouse, LegalUnit, PayAsYouEarn, ValueAddedTax, toAcronym}
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class LegalUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFactory with ScalaFutures {
 
@@ -24,7 +24,7 @@ class LegalUnitLinkPatchServiceSpec extends FreeSpec with Matchers with MockFact
 
     val repository = mock[UnitLinksRepository]
     val unitRegisterService = mock[UnitRegisterService]
-    val patchService = new LegalUnitLinkPatchService(repository, unitRegisterService)
+    val patchService = new LegalUnitLinkPatchService(repository, unitRegisterService)(ExecutionContext.global)
   }
 
   private trait VatFixture extends Fixture {

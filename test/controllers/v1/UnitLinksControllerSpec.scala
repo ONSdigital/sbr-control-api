@@ -4,31 +4,35 @@ import java.time.Month.AUGUST
 
 import handlers.PatchHandler
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{ FreeSpec, Matchers, OptionValues }
+import org.scalatest.{FreeSpec, Matchers, OptionValues}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import parsers.JsonPatchBodyParser
 import parsers.JsonPatchBodyParser.JsonPatchMediaType
 import play.api.http.HeaderNames.CONTENT_TYPE
-import play.api.libs.json.{ JsString, Json }
+import play.api.libs.json.{JsString, Json}
 import play.api.mvc.Result
 import play.api.mvc.Results.NoContent
-import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.api.test.{FakeRequest, StubControllerComponentsFactory, StubPlayBodyParsersFactory}
 import play.mvc.Http.MimeTypes.JSON
 import repository.UnitLinksRepository
 import support.sample.SampleUnitLinks
-import uk.gov.ons.sbr.models.patch.{ AddOperation, ReplaceOperation, TestOperation }
+import uk.gov.ons.sbr.models.patch.{AddOperation, ReplaceOperation, TestOperation}
 import uk.gov.ons.sbr.models.unitlinks.UnitId
-import uk.gov.ons.sbr.models.unitlinks.UnitType.{ LegalUnit, PayAsYouEarn, ValueAddedTax, toAcronym }
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import uk.gov.ons.sbr.models.unitlinks.UnitType.{LegalUnit, PayAsYouEarn, ValueAddedTax, toAcronym}
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 
 import scala.concurrent.Future
 
 class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPerSuite with MockFactory with OptionValues {
 
-  private trait Fixture {
+  private trait Fixture extends StubControllerComponentsFactory with StubPlayBodyParsersFactory {
+    implicit lazy val materializer = app.materializer
     val repository = mock[UnitLinksRepository]
     val patchHandler = mock[PatchHandler[Future[Result]]]
-    val controller = new UnitLinksController(repository, patchHandler)
+    val controllerComponents = stubControllerComponents()
+    val jsonPatchBodyParser = new JsonPatchBodyParser(stubPlayBodyParsers.tolerantJson)(controllerComponents.executionContext)
+    val controller = new UnitLinksController(controllerComponents, repository, jsonPatchBodyParser, patchHandler)
   }
 
   private trait ReadFixture extends Fixture with SampleUnitLinks {
@@ -41,7 +45,6 @@ class UnitLinksControllerSpec extends FreeSpec with Matchers with GuiceOneAppPer
     val IncorrectLegalUnitId = UnitId("1230000000000100")
     val TargetLegalUnitId = UnitId("1230000000000200")
     val SamplePeriod = Period.fromYearMonth(2018, AUGUST)
-    implicit lazy val materializer = app.materializer
   }
 
   private trait EditParentFixture extends EditFixture {

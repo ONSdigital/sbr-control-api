@@ -2,16 +2,15 @@ package repository.hbase.legalunit
 
 import javax.inject.Inject
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import com.typesafe.scalalogging.LazyLogging
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.legalunit.{ LegalUnit, Ubrn }
+import uk.gov.ons.sbr.models.legalunit.{LegalUnit, Ubrn}
 import utils.EitherSupport
-import repository.RestRepository.{ ErrorMessage, Row }
+import repository.RestRepository.{ErrorMessage, Row}
 import repository.hbase.HBase.DefaultColumnFamily
-import repository.{ LegalUnitRepository, RestRepository, RowMapper }
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import repository.{LegalUnitRepository, RestRepository, RowMapper}
 import repository.hbase.PeriodTableName
 
 case class HBaseRestLegalUnitRepositoryConfig(tableName: String)
@@ -19,8 +18,7 @@ case class HBaseRestLegalUnitRepositoryConfig(tableName: String)
 class HBaseRestLegalUnitRepository @Inject() (
     config: HBaseRestLegalUnitRepositoryConfig,
     restRepository: RestRepository,
-    rowMapper: RowMapper[LegalUnit]
-) extends LegalUnitRepository with LazyLogging {
+    rowMapper: RowMapper[LegalUnit])(implicit ec: ExecutionContext) extends LegalUnitRepository with LazyLogging {
 
   override def retrieveLegalUnit(ern: Ern, period: Period, ubrn: Ubrn): Future[Either[ErrorMessage, Option[LegalUnit]]] = {
     logger.info(s"Retrieving Legal Unit with [$ern] [$ubrn] for [$period].")
@@ -36,8 +34,8 @@ class HBaseRestLegalUnitRepository @Inject() (
     PeriodTableName(config.tableName, period)
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[LegalUnit]] = {
-    val errorOrRows = errorOrRow.right.map(_.toSeq)
-    fromErrorOrRows(errorOrRows).right.map { legalUnits =>
+    val errorOrRows = errorOrRow.map(_.toSeq)
+    fromErrorOrRows(errorOrRows).map { legalUnits =>
       require(legalUnits.size <= 1)
       legalUnits.headOption
     }
@@ -49,7 +47,7 @@ class HBaseRestLegalUnitRepository @Inject() (
    */
   private def fromErrorOrRows(errorOrRows: Either[ErrorMessage, Seq[Row]]): Either[ErrorMessage, Seq[LegalUnit]] = {
     logger.debug(s"Legal Unit response is [$errorOrRows].")
-    errorOrRows.right.flatMap { rows =>
+    errorOrRows.flatMap { rows =>
       val errorOrLegalUnits = EitherSupport.sequence(rows.map(fromRow))
       logger.debug(s"From rows to Legal Units conversion result is [$errorOrLegalUnits].")
       errorOrLegalUnits

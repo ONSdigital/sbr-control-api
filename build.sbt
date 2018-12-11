@@ -1,9 +1,8 @@
-import play.sbt.PlayScala
-import sbtbuildinfo.BuildInfoPlugin.autoImport._
-import sbtassembly.AssemblyPlugin.autoImport._
 import com.typesafe.sbt.SbtNativePackager.Universal
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.dockerExposedPorts
-import sbt.ExclusionRule
+import play.sbt.PlayScala
+import sbtassembly.AssemblyPlugin.autoImport._
+import sbtbuildinfo.BuildInfoPlugin.autoImport._
 
 val publishRepo = settingKey[String]("publishRepo")
 
@@ -15,9 +14,8 @@ publishRepo := sys.props.getOrElse("publishRepo", default = "Unused transient re
 lazy val ITest = config("it") extend Test
 
 lazy val Versions = new {
-  val scala = "2.11.11"
+  val scala = "2.12.7"
   val appVersion = "0.1-SNAPSHOT"
-  val scapegoatVersion = "1.1.0"
 }
 
 lazy val Constant = new {
@@ -28,8 +26,7 @@ lazy val Constant = new {
 }
 
 lazy val Resolvers = Seq(
-  Resolver.typesafeRepo("releases"),
-  "Hadoop Releases" at "https://repository.cloudera.com/content/repositories/releases/"
+  Resolver.typesafeRepo("releases")
 )
 
 lazy val testSettings = Seq(
@@ -49,13 +46,14 @@ lazy val publishingSettings = Seq(
   releaseIgnoreUntrackedFiles := true
 )
 
-lazy val exTransDeps: Seq[ExclusionRule] = Seq(
-  ExclusionRule("org.webjars", "npm")
-)
-
 /*
  * -Ywarn-unused-import was removed because otherwise a large number of warnings are generated for
  *                      sbr-control-api/conf/routes which is a Play issue we can do nothing about
+ *
+ * In the upgrade to Scala 2.12 we have unfortunately had to disable unused warnings completely with
+ * -Xlint:-unused (i.e enable Xlint except for unused).
+ * This is because in addition to some Play requirements that were being flagged as unused, private
+ * implicit vals were being flagged as unused even when used as a result of implicit resolution.
  */
 lazy val commonSettings = Seq (
   scalaVersion := Versions.scala,
@@ -71,17 +69,18 @@ lazy val commonSettings = Seq (
     "-deprecation", // warning and location for usages of deprecated APIs
     "-feature", // warning and location for usages of features that should be imported explicitly
     "-unchecked", // additional warnings where generated code depends on assumptions
-    "-Xlint", // recommended additional warnings
     "-Xcheckinit", // runtime error when a val is not initialized due to trait hierarchies (instead of NPE somewhere else)
+    "-Xlint:-unused", // recommended additional warnings
     "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver
     "-Ywarn-value-discard", // Warn when non-Unit expression results are unused
     "-Ywarn-inaccessible", // Warn about inaccessible types in method signatures
     "-Ywarn-dead-code", // Warn when dead code is identified
-    "-Ywarn-unused", // Warn when local and private vals, vars, defs, and types are unused
     "-Ywarn-numeric-widen" // Warn when numerics are widened
   ),
+  scalacOptions in Scapegoat += "-P:scapegoat:overrideLevels:TryGet=Warning",  // our usage of Try.get in Period.fromString is safe given route param regex validation
   resolvers ++= Resolvers,
-  coverageExcludedPackages := ".*Routes.*;.*ReverseRoutes.*;.*javascript.*"
+  coverageExcludedPackages := ".*Routes.*;.*ReverseRoutes.*;.*javascript.*",
+  scapegoatVersion in ThisBuild := "1.3.8"
 )
 
 lazy val api = (project in file("."))
@@ -113,33 +112,58 @@ lazy val api = (project in file("."))
     }),
     javaOptions in Test += "-DSBR_DB_PORT=8075",
     javaOptions in Universal += "-Dorg.aspectj.tracing.factory=default",
-    javaAgents += "org.aspectj" % "aspectjweaver" % "1.8.13",
+    javaAgents += "org.aspectj" % "aspectjweaver" % "1.9.2",
     // di router -> swagger
     routesGenerator := InjectedRoutesGenerator,
     buildInfoOptions += BuildInfoOption.ToMap,
     buildInfoOptions += BuildInfoOption.ToJson,
     buildInfoOptions += BuildInfoOption.BuildTime,
-    libraryDependencies ++= Seq (
+    conflictManager := ConflictManager.strict,
+    libraryDependencies ++= Seq(
       filters,
       ws,
-      "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "2.0.0"           % Test,
-      "org.scalatest"                %%    "scalatest"           %    "3.0.4"           % Test,
-      "com.github.tomakehurst"       %     "wiremock"            %    "1.58"            % Test,
+      guice,
+      "org.scalatestplus.play"       %%    "scalatestplus-play"  %    "3.1.2"           % Test,
+      "org.scalatest"                %%    "scalatest"           %    "3.0.5"           % Test,
+      "com.github.tomakehurst"       %     "wiremock"            %    "2.19.0"          % Test,
       "org.scalamock"                %%    "scalamock"           %    "4.1.0"           % Test,
-      "io.lemonlabs"                 %%    "scala-uri"           %    "0.5.0",
-      "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.5.0",
-      "com.typesafe"                 %     "config"              %    "1.3.1",
+      "com.typesafe.scala-logging"   %%    "scala-logging"       %    "3.9.0",
+      "com.typesafe"                 %     "config"              %    "1.3.3",
       // kamon (for tracing)
-      "io.kamon"                     %%    "kamon-play-2.5"      %    "1.0.1",
+      "io.kamon"                     %%    "kamon-play-2.6"      %    "1.1.1",
       "io.kamon"                     %%    "kamon-zipkin"        %    "1.0.0",
-      "io.kamon"                     %%    "kamon-logback"       %    "1.0.0",
+      "io.kamon"                     %%    "kamon-logback"       %    "1.0.3",
       // Swagger
-      "io.swagger"                   %%    "swagger-play2"       %    "1.5.3",
-      "org.webjars"                  %     "swagger-ui"          %    "3.1.4",
-      // Hadoop & HBase (for creating the tableName)
-      "org.apache.hadoop" % "hadoop-common" % "2.6.0",
-      "org.apache.hbase" % "hbase-common" % "1.0.0",
-      "org.apache.hbase" % "hbase-client" % "1.0.0" excludeAll ExclusionRule("commons-logging", "commons-logging")
+      "io.swagger"                   %%    "swagger-play2"       %    "1.6.0",
+      "org.webjars"                  %     "swagger-ui"          %    "3.19.5"
+    ),
+    dependencyOverrides ++= Seq(
+      "org.scala-lang.modules"     %% "scala-parser-combinators" % "1.1.0",
+      "org.reactivestreams"         % "reactive-streams"         % "1.0.2",
+      "com.typesafe"                % "config"                   % "1.3.3",
+      "io.kamon"                   %% "kamon-core"               % "1.1.0",
+      "com.google.code.findbugs"    % "jsr305"                   % "3.0.2",
+      "org.apache.commons"          % "commons-lang3"            % "3.6",
+      "org.scalatest"              %% "scalatest"                % "3.0.5",
+      "com.google.guava"            % "guava"                    % "22.0",
+      "com.typesafe.play"          %% "play-test"                % "2.6.20",
+      "com.typesafe.play"          %% "play-ws"                  % "2.6.20",
+      "com.typesafe.play"          %% "play-ahc-ws"              % "2.6.20",
+      "com.fasterxml.jackson.core"  % "jackson-databind"         % "2.8.11.2",
+      "org.apache.httpcomponents"   % "httpclient"               % "4.5.5",
+
+      // wiremock requires jetty 9.2.24.v20180105 but play-test's selenium dependency is transitively pulling in a binary incompatible 9.4.5.v20170502
+      "org.eclipse.jetty" % "jetty-http" % "9.2.24.v20180105",
+      "org.eclipse.jetty" % "jetty-io"   % "9.2.24.v20180105",
+      "org.eclipse.jetty" % "jetty-util" % "9.2.24.v20180105",
+
+      // conflicts resulting from io.swagger:swagger-play2 (treat swagger as low priority and select latest versions)
+      "com.typesafe.play" %% "twirl-api"             % "1.3.15",
+      "com.typesafe.play" %% "play-server"           % "2.6.20",
+      "com.typesafe.play" %% "filters-helpers"       % "2.6.20",
+      "com.typesafe.play" %% "play-logback"          % "2.6.20",
+      "com.typesafe.play" %% "play-akka-http-server" % "2.6.20",
+      "org.slf4j"          % "slf4j-api"             % "1.7.25"
     ),
     // Assembly
     assemblyJarName in assembly := s"${name.value}-${version.value}.jar",

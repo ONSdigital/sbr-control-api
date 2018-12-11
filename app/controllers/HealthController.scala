@@ -1,13 +1,16 @@
 package controllers
 
-import io.swagger.annotations.{ Api, ApiOperation, ApiResponse, ApiResponses }
-import org.joda.time.DateTime
+import java.time._
+import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
-import play.api.mvc.{ Controller, Action }
+import io.swagger.annotations.{Api, ApiOperation, ApiResponse, ApiResponses}
+import javax.inject.{Inject, Singleton}
+import play.api.mvc.ControllerComponents
 
 @Api("Utils")
-class HealthController extends Controller {
-  private[this] val startTime = System.currentTimeMillis()
+@Singleton
+class HealthController @Inject() (controllerComponents: ControllerComponents) extends AbstractSbrController(controllerComponents) {
+  private[this] val startedAt: Instant = Instant.now()
 
   //public api
   @ApiOperation(
@@ -19,13 +22,12 @@ class HealthController extends Controller {
     new ApiResponse(code = 200, message = "Success - Displays a json object of basic api health.")
   ))
   def health = Action {
-    val uptimeInMillis = uptime()
-    Ok(s"{Status: Ok, Uptime: ${uptimeInMillis}ms, Date and Time: " + new DateTime(startTime) + "}").as(JSON)
+    Ok(s"""{"Status": "Ok", "Uptime": "${uptime.toMillis}ms", "Date and Time": "${startLocalDateTime.format(ISO_LOCAL_DATE_TIME)}"}""").as(JSON)
   }
 
-  private def uptime(): Long = {
-    val uptimeInMillis = System.currentTimeMillis() - startTime
-    uptimeInMillis
-  }
+  private def uptime: Duration =
+    Duration.between(startedAt, Instant.now())
 
+  private def startLocalDateTime: LocalDateTime =
+    LocalDateTime.ofInstant(startedAt, ZoneId.of("Europe/London"))
 }

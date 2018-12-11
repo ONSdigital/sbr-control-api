@@ -3,10 +3,10 @@ package controllers.v1
 import java.time.Month.FEBRUARY
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{ FreeSpec, Matchers, OptionValues }
+import org.scalatest.{FreeSpec, Matchers, OptionValues}
 import play.api.libs.json.Json
-import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.api.test.{FakeRequest, StubControllerComponentsFactory}
 import play.mvc.Http.MimeTypes.JSON
 import repository.ReportingUnitRepository
 import support.sample.SampleReportingUnit
@@ -18,14 +18,14 @@ import scala.concurrent.Future
 
 class ReportingUnitControllerSpec extends FreeSpec with Matchers with MockFactory with OptionValues {
 
-  private trait Fixture extends SampleReportingUnit {
+  private trait Fixture extends StubControllerComponentsFactory with SampleReportingUnit {
     val TargetErn = Ern("1234567890")
     val TargetPeriod = Period.fromYearMonth(2018, FEBRUARY)
     val TargetRurn = Rurn("33000000000")
     val TargetReportingUnit = aReportingUnit(TargetErn, TargetRurn)
 
     val repository: ReportingUnitRepository = mock[ReportingUnitRepository]
-    val controller = new ReportingUnitController(repository)
+    val controller = new ReportingUnitController(stubControllerComponents(), repository)
   }
 
   "A request" - {

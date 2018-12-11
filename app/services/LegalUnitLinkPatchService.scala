@@ -2,18 +2,19 @@ package services
 
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsString
 import repository._
 import services.LegalUnitLinkPatchService._
 import uk.gov.ons.sbr.models.UnitKey
-import uk.gov.ons.sbr.models.patch.{ AddOperation, Patch, RemoveOperation, TestOperation }
-import uk.gov.ons.sbr.models.unitlinks.UnitType.{ PayAsYouEarn, ValueAddedTax }
-import uk.gov.ons.sbr.models.unitlinks.{ UnitId, UnitType }
+import uk.gov.ons.sbr.models.patch.{AddOperation, Patch, RemoveOperation, TestOperation}
+import uk.gov.ons.sbr.models.unitlinks.UnitType.{PayAsYouEarn, ValueAddedTax}
+import uk.gov.ons.sbr.models.unitlinks.{UnitId, UnitType}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class LegalUnitLinkPatchService @Inject() (repository: UnitLinksRepository, unitRegisterService: UnitRegisterService) extends PatchService with LazyLogging {
+class LegalUnitLinkPatchService @Inject() (repository: UnitLinksRepository,
+                                           unitRegisterService: UnitRegisterService)
+                                          (implicit ec: ExecutionContext) extends PatchService with LazyLogging {
   override def applyPatchTo(unitKey: UnitKey, patch: Patch): Future[PatchStatus] =
     patch match {
       case AddOperation(path, Vat) :: Nil if isChildPath(path) =>

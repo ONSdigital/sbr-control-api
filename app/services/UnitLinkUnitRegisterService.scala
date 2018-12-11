@@ -1,13 +1,12 @@
 package services
 import javax.inject.Inject
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import repository.RestRepository
 import repository.hbase.PeriodTableName
 import repository.hbase.unitlinks.HBaseRestUnitLinksRepository.ColumnFamily
-import repository.hbase.unitlinks.{ HBaseRestUnitLinksRepositoryConfig, UnitLinksRowKey }
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import repository.hbase.unitlinks.{HBaseRestUnitLinksRepositoryConfig, UnitLinksRowKey}
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /*
  * This service abstracts over how we determine whether or not a (non-admin) unit exists in the register.
@@ -28,8 +27,7 @@ import scala.concurrent.Future
  */
 class UnitLinkUnitRegisterService @Inject() (
     restRepository: RestRepository,
-    config: HBaseRestUnitLinksRepositoryConfig
-) extends UnitRegisterService {
+    config: HBaseRestUnitLinksRepositoryConfig)(implicit ec: ExecutionContext) extends UnitRegisterService {
   override def isRegisteredUnit(unitKey: UnitKey): Future[UnitRegisterResult] = {
     restRepository.findRow(tableName(unitKey.period), UnitLinksRowKey(unitKey.unitId, unitKey.unitType), ColumnFamily).map {
       _.fold(

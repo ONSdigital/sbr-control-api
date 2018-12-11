@@ -5,14 +5,14 @@ import java.time.Month.AUGUST
 import handlers.http.HttpPatchHandler
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{ FreeSpec, Matchers }
-import play.api.mvc.Results.{ Conflict, InternalServerError, NoContent, NotFound, UnprocessableEntity }
+import org.scalatest.{FreeSpec, Matchers}
+import play.api.mvc.Results.{Conflict, InternalServerError, NoContent, NotFound, UnprocessableEntity}
 import services._
 import uk.gov.ons.sbr.models.unitlinks.UnitId
 import uk.gov.ons.sbr.models.unitlinks.UnitType.LegalUnit
-import uk.gov.ons.sbr.models.{ Period, UnitKey }
+import uk.gov.ons.sbr.models.{Period, UnitKey}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class HttpPatchHandlerSpec extends FreeSpec with Matchers with MockFactory with ScalaFutures {
 
@@ -21,7 +21,7 @@ class HttpPatchHandlerSpec extends FreeSpec with Matchers with MockFactory with 
     val TargetPatch = Seq.empty
 
     val patchService = mock[PatchService]
-    val patchHandler = new HttpPatchHandler(patchService)
+    val patchHandler = new HttpPatchHandler(patchService)(ExecutionContext.global)
   }
 
   "A Http PatchHandler" - {

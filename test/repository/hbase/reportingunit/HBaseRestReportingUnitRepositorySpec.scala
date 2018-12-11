@@ -3,18 +3,17 @@ package repository.hbase.reportingunit
 import java.time.Month._
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{ EitherValues, FreeSpec, Matchers }
 import org.scalatest.concurrent.ScalaFutures
-
+import org.scalatest.{EitherValues, FreeSpec, Matchers}
+import repository.RestRepository.Row
 import repository.hbase.HBase._
-import repository.{ RestRepository, RowMapper }
+import repository.{RestRepository, RowMapper}
 import support.sample.SampleReportingUnit
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.reportingunit.{ ReportingUnit, Rurn }
-import scala.concurrent.Future
+import uk.gov.ons.sbr.models.reportingunit.{ReportingUnit, Rurn}
 
-import repository.RestRepository.Row
+import scala.concurrent.{ExecutionContext, Future}
 
 class HBaseRestReportingUnitRepositorySpec extends FreeSpec with Matchers with MockFactory with ScalaFutures with EitherValues {
   private trait Fixture {
@@ -26,7 +25,7 @@ class HBaseRestReportingUnitRepositorySpec extends FreeSpec with Matchers with M
     val restRepository: RestRepository = mock[RestRepository]
     val rowMapper: RowMapper[ReportingUnit] = mock[RowMapper[ReportingUnit]]
     val config = HBaseRestReportingUnitRepositoryConfig(TargetBaseTable)
-    val repository = new HBaseRestReportingUnitRepository(config, restRepository, rowMapper)
+    val repository = new HBaseRestReportingUnitRepository(config, restRepository, rowMapper)(ExecutionContext.global)
   }
 
   private trait SingleResultFixture extends Fixture with SampleReportingUnit {

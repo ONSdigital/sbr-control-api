@@ -10,12 +10,9 @@ object Binders {
   implicit def OptionBindable[T: PathBindable] = new PathBindable[Option[T]] {
     def bind(key: String, value: String): Either[String, Option[T]] =
       implicitly[PathBindable[T]].
-        bind(key, value).
-        fold(
-          left => Left(left),
-          right => Right(Some(right))
-        )
+        bind(key, value).map(Some(_))
 
-    def unbind(key: String, value: Option[T]): String = value map (_.toString) getOrElse ""
+    def unbind(key: String, value: Option[T]): String =
+      value map (_.toString) getOrElse ""
   }
 }

@@ -1,16 +1,18 @@
 package repository.hbase
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.concurrent.{ PatienceConfiguration, ScalaFutures }
-import org.scalatest.time.{ Millis, Span }
-import org.scalatest.{ EitherValues, Matchers, Outcome }
+import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
+import org.scalatest.time.{Millis, Span}
+import org.scalatest.{EitherValues, Matchers, Outcome}
 import play.api.http.Port
-import play.api.libs.json.{ JsResult, JsSuccess, Json, Reads }
+import play.api.libs.json.{JsResult, JsSuccess, Json, Reads}
 import play.api.libs.ws.WSClient
 import play.api.test.WsTestClient
 import repository.RestRepository.Row
 import support.wiremock.WireMockHBase
 import utils.BaseUrl
+
+import scala.concurrent.ExecutionContext
 
 abstract class AbstractEditHBaseRestRepositoryWiremockSpec extends org.scalatest.fixture.FreeSpec with WireMockHBase with Matchers with EitherValues with MockFactory with ScalaFutures with PatienceConfiguration {
   val Table = "table"
@@ -82,7 +84,7 @@ abstract class AbstractEditHBaseRestRepositoryWiremockSpec extends org.scalatest
     FixtureParam(
       config,
       auth,
-      new HBaseRestRepository(config, wsClient, responseReaderMaker),
+      new HBaseRestRepository(config, wsClient, responseReaderMaker)(ExecutionContext.global),
       responseReaderMaker,
       makeUrl(config)
     )

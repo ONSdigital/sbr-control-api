@@ -72,7 +72,7 @@ class DeleteChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the deletion of the child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""|[{"op": "test", "path": "/children/$VatRef", "value": "$VatUnitAcronym"},
                   | {"op": "remove", "path": "/children/$VatRef"}]""".stripMargin))
 
@@ -92,7 +92,7 @@ class DeleteChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the deletion of the child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""|[{"op": "test", "path": "/children/$VatRef", "value": "$VatUnitAcronym"},
                   | {"op": "remove", "path": "/children/$VatRef"}]""".stripMargin))
 
@@ -119,7 +119,7 @@ class DeleteChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the deletion of the child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""|[{"op": "test", "path": "/children/$VatRef", "value": "$VatUnitAcronym"},
                   | {"op": "remove", "path": "/children/$VatRef"}]""".stripMargin))
 
@@ -145,7 +145,7 @@ class DeleteChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the deletion of the child link from $TargetUBRN to the PAYE unit with reference $PayeRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""|[{"op": "test", "path": "/children/$PayeRef", "value": "$PayeUnitAcronym"},
                   | {"op": "remove", "path": "/children/$PayeRef"}]""".stripMargin))
 
@@ -165,7 +165,7 @@ class DeleteChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the deletion of the child link from $TargetUBRN to the PAYE unit with reference $PayeRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""|[{"op": "test", "path": "/children/$PayeRef", "value": "$PayeUnitAcronym"},
                   | {"op": "remove", "path": "/children/$PayeRef"}]""".stripMargin))
 
@@ -192,7 +192,7 @@ class DeleteChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the deletion of the child link from $TargetUBRN to the PAYE unit with reference $PayeRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""|[{"op": "test", "path": "/children/$PayeRef", "value": "$PayeUnitAcronym"},
                   | {"op": "remove", "path": "/children/$PayeRef"}]""".stripMargin))
 
@@ -212,7 +212,7 @@ class DeleteChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the deletion of the child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "test", "path": "/children/$VatRef", "value": "$VatUnitAcronym"},
                  |{"op": "remove", "path": "/children/$VatRef"}]""".stripMargin))
 
@@ -226,7 +226,7 @@ class DeleteChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the deletion of the child link from $TargetUBRN to a Companies House unit is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""[{"op": "test", "path": "/children/$childRef", "value": "$CompaniesHouseAcronym"},
                  |{"op": "remove", "path": "/children/$childRef"}]""".stripMargin))
 
@@ -250,7 +250,7 @@ class DeleteChildLinkFromLegalUnitAcceptanceSpec extends AbstractServerAcceptanc
 
       When(s"the deletion of the child link from $TargetUBRN to the VAT unit with reference $VatRef is requested")
       val response = await(wsClient.url(s"/v1/periods/${Period.asString(RegisterPeriod)}/types/$LegalUnitAcronym/units/$TargetUBRN").
-        withHeaders(CONTENT_TYPE -> JsonPatchMediaType).
+        withHttpHeaders(CONTENT_TYPE -> JsonPatchMediaType).
         patch(s"""|[{"op": "test", "path": "/children/$VatRef", "value": "$VatUnitAcronym"},
                   | {"op": "remove", "path": "/children/$VatRef"}]""".stripMargin))
 

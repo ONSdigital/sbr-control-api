@@ -1,26 +1,24 @@
 package repository.hbase.localunit
 
-import javax.inject.Inject
-
-import scala.concurrent.Future
 import com.typesafe.scalalogging.LazyLogging
+import javax.inject.Inject
+import repository.RestRepository.{ErrorMessage, Row}
+import repository.hbase.HBase.DefaultColumnFamily
+import repository.hbase.PeriodTableName
+import repository.{LocalUnitRepository, RestRepository, RowMapper}
 import uk.gov.ons.sbr.models.Period
 import uk.gov.ons.sbr.models.enterprise.Ern
-import uk.gov.ons.sbr.models.localunit.{ LocalUnit, Lurn }
+import uk.gov.ons.sbr.models.localunit.{LocalUnit, Lurn}
 import utils.EitherSupport
-import repository.RestRepository.{ ErrorMessage, Row }
-import repository.hbase.HBase.DefaultColumnFamily
-import repository.{ LocalUnitRepository, RestRepository, RowMapper }
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import repository.hbase.PeriodTableName
+
+import scala.concurrent.{ExecutionContext, Future}
 
 case class HBaseRestLocalUnitRepositoryConfig(tableName: String)
 
 class HBaseRestLocalUnitRepository @Inject() (
     config: HBaseRestLocalUnitRepositoryConfig,
     restRepository: RestRepository,
-    rowMapper: RowMapper[LocalUnit]
-) extends LocalUnitRepository with LazyLogging {
+    rowMapper: RowMapper[LocalUnit])(implicit ec: ExecutionContext) extends LocalUnitRepository with LazyLogging {
 
   override def retrieveLocalUnit(ern: Ern, period: Period, lurn: Lurn): Future[Either[ErrorMessage, Option[LocalUnit]]] = {
     logger.info(s"Retrieving Local Unit with [$ern] [$lurn] for [$period].")
@@ -36,8 +34,8 @@ class HBaseRestLocalUnitRepository @Inject() (
     PeriodTableName(config.tableName, period)
 
   private def fromErrorOrRow(errorOrRow: Either[ErrorMessage, Option[Row]]): Either[ErrorMessage, Option[LocalUnit]] = {
-    val errorOrRows = errorOrRow.right.map(_.toSeq)
-    fromErrorOrRows(errorOrRows).right.map { localUnits =>
+    val errorOrRows = errorOrRow.map(_.toSeq)
+    fromErrorOrRows(errorOrRows).map { localUnits =>
       require(localUnits.size <= 1)
       localUnits.headOption
     }
@@ -49,7 +47,7 @@ class HBaseRestLocalUnitRepository @Inject() (
    */
   private def fromErrorOrRows(errorOrRows: Either[ErrorMessage, Seq[Row]]): Either[ErrorMessage, Seq[LocalUnit]] = {
     logger.debug(s"Local Unit response is [$errorOrRows].")
-    errorOrRows.right.flatMap { rows =>
+    errorOrRows.flatMap { rows =>
       val errorOrLocalUnits = EitherSupport.sequence(rows.map(fromRow))
       logger.debug(s"From rows to Local Units conversion result is [$errorOrLocalUnits].")
       errorOrLocalUnits
