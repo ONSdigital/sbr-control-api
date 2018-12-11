@@ -77,6 +77,7 @@ lazy val commonSettings = Seq (
     "-Ywarn-dead-code", // Warn when dead code is identified
     "-Ywarn-numeric-widen" // Warn when numerics are widened
   ),
+  scalacOptions in Scapegoat += "-P:scapegoat:overrideLevels:TryGet=Warning",  // our usage of Try.get in Period.fromString is safe given route param regex validation
   resolvers ++= Resolvers,
   coverageExcludedPackages := ".*Routes.*;.*ReverseRoutes.*;.*javascript.*",
   scapegoatVersion in ThisBuild := "1.3.8"

@@ -14,7 +14,7 @@ class XResponseTimeHeaderFilter @Inject() (implicit val mat: Materializer, ec: E
     nextFilter(requestHeader).map { result =>
       val endTime = System.currentTimeMillis
       val responseTime = endTime - startTime
-      val env = sys.props.get("environment").getOrElse("default")
+      val env = sys.props.getOrElse("environment", default = "default")
 
       if (env == "local") {
         result.withHeaders(
