@@ -51,7 +51,7 @@ class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
           optionalInt(name = "jobs", optValue = ent.jobs),
           int(name = "workingProprietors", value = ent.workingProprietors),
           int(name = "employment", value = ent.employment),
-          string(name = "prn", value = ent.prn.toString())
+          string(name = "prn", value = ent.prn.bigDecimal.toPlainString)
         )
       }
         ${
@@ -94,6 +94,13 @@ class EnterpriseSpec extends FreeSpec with Matchers with OptionValues {
         )
 
         Json.toJson(sampleEnterpriseWithPartialImputation) shouldBe Json.parse(expectedJsonOutput(sampleEnterpriseWithPartialImputation))
+      }
+
+      // representation should contain the full value in non-scientific format
+      "when the prn is very small" in new Fixture {
+        val sampleEnterpriseWithVerySmallPrn = SampleEnterpriseWithAllFields.copy(prn = BigDecimal("0.000000004"))
+
+        Json.toJson(sampleEnterpriseWithVerySmallPrn) shouldBe Json.parse(expectedJsonOutput(sampleEnterpriseWithVerySmallPrn))
       }
     }
   }

@@ -4,5 +4,5 @@ import play.api.libs.json.{ JsString, JsValue, Writes }
 
 private[models] object WritesBigDecimal extends Writes[BigDecimal] {
   def writes(bd: BigDecimal): JsValue =
-    JsString(bd.toString())
+    JsString(bd.bigDecimal.toPlainString)
 }
